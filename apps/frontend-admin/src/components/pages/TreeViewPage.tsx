@@ -157,14 +157,14 @@ export function TreeViewPage() {
   }
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-full bg-white">
       {/* 왼쪽 사이드바 - TreeView */}
       <div className="w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
         {/* 사이드바 헤더 */}
         <div className="p-4 border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-              STORYBOOK
+              TAXONOMY TREE
             </h2>
             <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -201,32 +201,26 @@ export function TreeViewPage() {
         {/* 상단 탭 영역 */}
         <div className="bg-white border-b border-gray-200 px-6 py-3 shadow-sm">
           <div className="flex items-center space-x-1 text-sm">
-            <span className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded font-medium">revlon test</span>
+            <span className="px-3 py-1.5 bg-gray-100 text-gray-800 rounded font-medium">Current Path</span>
             <span className="text-gray-400 mx-1">›</span>
-            <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">revlon</span>
+            <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">Root</span>
             <span className="text-gray-400 mx-1">›</span>
-            <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">revlon-lipstick</span>
+            <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">Node 1</span>
             <span className="text-gray-400 mx-1">›</span>
-            <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">revlon-mascara</span>
-            <div className="ml-6 flex items-center space-x-1">
-              <span className="text-gray-400 mx-1">›</span>
-              <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">revlon-eye-pencil</span>
-              <span className="text-gray-400 mx-1">›</span>
-              <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">revlon-eye-pencilcil</span>
-            </div>
-            <div className="ml-6 flex items-center space-x-1">
-              <span className="text-gray-400 mx-1">›</span>
-              <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">revlon2</span>
-              <span className="text-gray-400 mx-1">›</span>
-              <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">revlon-lipstick2</span>
-            </div>
+            <span className="px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded cursor-pointer transition-colors">AI</span>
           </div>
         </div>
 
         {/* 메인 컨텐츠 */}
         <div className="flex-1 p-6">
           <div className="h-full bg-white rounded-lg shadow-sm border border-gray-200 flex items-center justify-center">
-            <p className="text-gray-500">TreeView 컨텐츠 영역</p>
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Taxonomy Tree View</h3>
+              <p className="text-gray-500 mb-4">선택한 노드의 상세 정보가 여기에 표시됩니다</p>
+              <div className="text-sm text-gray-400">
+                현재 버전: {currentVersion}
+              </div>
+            </div>
           </div>
         </div>
       </div>
