@@ -1,0 +1,210 @@
+# Docker Compose for Dynamic Taxonomy RAG System
+# 전체 시스템 로컬 배포용 설정
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # 핵심 서비스
+  # =============================================================================
+  
+  # PostgreSQL + pgvector 데이터베이스
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: dt-rag-postgres
+    environment:
+      POSTGRES_DB: dt_rag
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dt-rag-network
+    restart: unless-stopped
+  
+  # Redis (Celery 백그라운드 작업용)
+  redis:
+    image: redis:7-alpine
+    container_name: dt-rag-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dt-rag-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+  
+  # FastAPI 애플리케이션
+  api:
+    build: 
+      context: .
+      dockerfile: dt-rag/Dockerfile
+    container_name: dt-rag-api
+    environment:
+      # 데이터베이스 설정
+      DATABASE_URL: postgresql://postgres:postgres_password@postgres:5432/dt_rag
+      
+      # Redis 설정
+      REDIS_URL: redis://redis:6379/0
+      
+      # 임베딩 API 설정 (환경변수 또는 secrets 사용)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-your-anthropic-key}
+      
+      # 애플리케이션 설정
+      LOG_LEVEL: INFO
+      WORKERS: 4
+      
+      # HITL 워커 설정
+      HITL_POLLING_INTERVAL: 5.0
+      HITL_BATCH_SIZE: 10
+      HITL_MAX_PROCESSING_TIME: 300
+      
+      # 비용 제한
+      DAILY_COST_LIMIT_USD: 10.0
+      
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs
+      - uploaded_docs:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - dt-rag-network
+    restart: unless-stopped
+  
+  # HITL 워커 (백그라운드 처리)
+  hitl-worker:
+    build:
+      context: .
+      dockerfile: dt-rag/Dockerfile
+    container_name: dt-rag-hitl-worker
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres_password@postgres:5432/dt_rag
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-your-openai-key}
+      LOG_LEVEL: INFO
+    command: ["python", "-m", "apps.hitl.worker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - dt-rag-network
+    restart: unless-stopped
+    deploy:
+      replicas: 2  # 2개 워커 인스턴스
+  
+  # =============================================================================
+  # 모니터링 및 관찰가능성
+  # =============================================================================
+  
+  # Prometheus (메트릭 수집)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: dt-rag-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    networks:
+      - dt-rag-network
+    restart: unless-stopped
+  
+  # Grafana (메트릭 시각화)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dt-rag-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - dt-rag-network
+    restart: unless-stopped
+  
+  # =============================================================================
+  # 개발 도구 (선택적)
+  # =============================================================================
+  
+  # pgAdmin (데이터베이스 관리, 개발 환경에서만)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dt-rag-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@dtrag.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - dt-rag-network
+    restart: unless-stopped
+    profiles:
+      - dev  # 개발 환경에서만 실행: docker-compose --profile dev up
+
+# =============================================================================
+# 네트워크 및 볼륨 설정  
+# =============================================================================
+
+networks:
+  dt-rag-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  uploaded_docs:
+    driver: local
