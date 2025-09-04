@@ -208,18 +208,36 @@ async def health_check():
         raise HTTPException(status_code=503, detail="Service unavailable")
 
 
-# Prometheus metrics endpoint
+# Enhanced monitoring endpoints
 @app.get("/metrics", tags=["Monitoring"])
 async def prometheus_metrics():
-    """Prometheus 메트릭 엔드포인트"""
+    """Prometheus 메트릭 엔드포인트 (통합 시스템)"""
     from .middleware.monitoring import get_prometheus_metrics
     from fastapi.responses import PlainTextResponse
     
     metrics_data = await get_prometheus_metrics()
     return PlainTextResponse(
-        content=metrics_data.decode('utf-8'),
+        content=metrics_data,
         media_type="text/plain"
     )
+
+@app.get("/system/health", tags=["Monitoring"])
+async def system_health():
+    """시스템 건강 상태 및 알림"""
+    from .middleware.monitoring import get_system_health
+    return await get_system_health()
+
+@app.get("/system/metrics", tags=["Monitoring"])
+async def system_metrics():
+    """시스템 메트릭 요약 (JSON)"""
+    from .metrics import get_metrics_summary
+    return get_metrics_summary()
+
+@app.get("/system/costs", tags=["Monitoring"])
+async def cost_status():
+    """비용 가드 상태"""
+    from .metrics import metrics_collector
+    return metrics_collector.get_cost_guard_status()
 
 # Include routers
 app.include_router(
