@@ -213,14 +213,27 @@ uvicorn apps.api.main:app --reload --port 8000
 ```bash
 curl -X POST "http://localhost:8000/classify" -H "Content-Type: application/json" \
 -d '{"text": "인공지능과 머신러닝"}'
-# 응답: {"canonical": ["AI", "ML"], "confidence": 0.85, "alternatives": [...]}
+# 응답: {
+#   "request_id": "req_123e4567-e89b-12d3",
+#   "canonical": ["AI", "ML"], 
+#   "confidence": 0.85, 
+#   "taxonomy_version": 3,
+#   "alternatives": [...],
+#   "timestamp": "2025-01-15T10:30:00Z"
+# }
 ```
 
 - `POST /search` - 하이브리드 검색 (BM25 + Vector)
 ```bash
 curl -X POST "http://localhost:8000/search" -H "Content-Type: application/json" \
 -d '{"query": "딥러닝 모델", "limit": 10}'
-# 응답: {"results": [...], "total": 25, "query_time_ms": 45}
+# 응답: {
+#   "request_id": "req_789a0123-b456-78c9",
+#   "results": [...], 
+#   "total": 25, 
+#   "query_time_ms": 45,
+#   "taxonomy_version": 3
+# }
 ```
 
 #### 분류 체계 관리
@@ -262,9 +275,9 @@ curl -H "X-API-Key: your-api-key-here" "http://localhost:8000/classify"
 
 | 역할 | 권한 | 접근 가능한 엔드포인트 |
 |------|------|------------------------|
-| **Admin** | 전체 관리 | 모든 엔드포인트 + 롤백/시스템 관리 |
-| **Ops** | 운영 관리 | 분류, 검색, 모니터링, HITL 관리 |
-| **User** | 기본 사용 | 분류, 검색, 문서 업로드 |
+| **Admin** | 전체 관리 | 모든 엔드포인트 + 롤백/시스템 관리 + HITL 관리 |
+| **Ops** | 운영 관리 | 분류, 검색, 모니터링, **HITL 전용** (`/hitl/*`) |
+| **User** | 기본 사용 | 분류, 검색, 문서 업로드 (HITL 접근 불가) |
 
 ### 에러 응답 및 재시도 정책
 
@@ -448,6 +461,8 @@ docker-compose logs --since="2h" --until="1h"
 ```
 
 ## 📈 성능 최적화
+
+> ⚠️ **성능 수치 고지**: 아래 모든 성능 지표는 랩 환경 기준이며, 실제 코퍼스 크기, 하드웨어 사양, 튜닝 파라미터에 따라 변동될 수 있습니다.
 
 ### 데이터베이스 인덱스
 
