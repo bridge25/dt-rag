@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
-from .routers import classify, search, taxonomy
+from .routers import classify, search, taxonomy, ingest
 from .middleware.database import DatabaseMiddleware
 from .middleware.auth import AuthMiddleware
 from .middleware.monitoring import MonitoringMiddleware
@@ -238,6 +238,11 @@ app.include_router(
     taxonomy.router,
     prefix="/taxonomy",
     tags=["Taxonomy"]
+)
+
+app.include_router(
+    ingest.router,
+    tags=["Ingestion"]
 )
 
 
