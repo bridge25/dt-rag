@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Virtual scrolling 최적화 */
+.react-window-list {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.react-window-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.react-window-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.react-window-list::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}
+
+.react-window-list::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* TreeNode 최적화 */
+.tree-node-container {
+  will-change: transform;
+}
+
+.tree-node-label {
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.tree-node-path {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
