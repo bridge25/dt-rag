@@ -14,6 +14,10 @@ from common_schemas.models import (
     SearchHit,
     SearchRequest,
     SearchResponse,
+    FromCategoryRequest,
+    AgentManifest,
+    RetrievalConfig,
+    FeaturesConfig,
 )
 
 
@@ -146,6 +150,54 @@ def test_classify_request_validation():
     assert len(request.hint_paths) > 0
 
 
+def test_agent_manifest_contract():
+    """B-O1: Agent Manifest Builder 계약 테스트"""
+    # FromCategoryRequest 생성
+    request = FromCategoryRequest(
+        version="1.8.1",
+        node_paths=[["AI", "RAG"], ["AI", "ML"]],
+        options={"mcp_tools": ["calculator", "searcher"]}
+    )
+    
+    # 필수 필드 검증
+    assert request.version
+    assert len(request.node_paths) > 0
+    assert request.options.get("mcp_tools") == ["calculator", "searcher"]
+    
+    # AgentManifest 생성 (B-O1 로직 재현)
+    manifest = AgentManifest(
+        name=f"Agent-{'/'.join(request.node_paths[0])}",
+        taxonomy_version=request.version,
+        allowed_category_paths=request.node_paths,
+        retrieval=RetrievalConfig(
+            bm25_topk=12,
+            vector_topk=12,
+            rerank={"candidates": 50, "final_topk": 5},
+            filter={"canonical_in": True}
+        ),
+        features=FeaturesConfig(
+            debate=False,
+            hitl_below_conf=0.70,
+            cost_guard=True
+        ),
+        mcp_tools_allowlist=request.options.get("mcp_tools", [])
+    )
+    
+    # 필수 필드 검증
+    assert manifest.name == "Agent-AI/RAG"
+    assert manifest.taxonomy_version == "1.8.1"
+    assert manifest.allowed_category_paths == [["AI", "RAG"], ["AI", "ML"]]
+    assert manifest.retrieval.filter["canonical_in"] is True  # 강제 설정 확인
+    assert manifest.retrieval.bm25_topk == 12
+    assert manifest.retrieval.vector_topk == 12
+    assert manifest.retrieval.rerank["candidates"] == 50
+    assert manifest.retrieval.rerank["final_topk"] == 5
+    assert manifest.features.debate is False
+    assert manifest.features.hitl_below_conf == 0.70
+    assert manifest.features.cost_guard is True
+    assert manifest.mcp_tools_allowlist == ["calculator", "searcher"]
+
+
 def test_validation_errors():
     """유효성 검사 오류 테스트"""
     
@@ -161,6 +213,17 @@ def test_validation_errors():
     # 필수 필드 누락
     with pytest.raises(ValidationError):
         SearchRequest()  # q 필드 누락
+    
+    # FromCategoryRequest 필수 필드 누락
+    with pytest.raises(ValidationError):
+        FromCategoryRequest()  # version, node_paths 누락
+    
+    # 빈 node_paths
+    with pytest.raises(ValidationError):
+        FromCategoryRequest(
+            version="1.8.1",
+            node_paths=[]  # 빈 리스트
+        )
     
     # 빈 reasoning (근거≥2 위반)
     response = ClassifyResponse(
