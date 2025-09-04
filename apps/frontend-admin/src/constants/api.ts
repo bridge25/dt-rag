@@ -19,7 +19,9 @@ export const API_ENDPOINTS = {
   // Chat endpoints
   CHAT: {
     MESSAGES: '/api/chat/messages',
-    SEND: '/api/chat/send'
+    SEND: '/api/chat/send',
+    CONVERSATION: '/api/chat/conversation',
+    HISTORY: '/api/chat/history'
   }
 } as const
 
