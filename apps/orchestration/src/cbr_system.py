@@ -307,20 +307,29 @@ class CBRUsageLogger:
         except Exception as e:
             logger.error(f"로그 쓰기 실패: {e}")
 
-def create_query_vector_mock(query: str) -> List[float]:
-    """Mock 쿼리 벡터 생성 (실제로는 임베딩 모델 사용)"""
-    # 간단한 해시 기반 벡터 생성 (실제 구현에서는 sentence-transformers 등 사용)
-    import hashlib
-    
-    # 쿼리의 해시를 사용하여 일관된 벡터 생성
-    hash_obj = hashlib.md5(query.encode('utf-8'))
-    hash_bytes = hash_obj.digest()
-    
-    # 5차원 벡터로 변환 (0~1 범위)
-    vector = []
-    for i in range(5):
-        byte_val = hash_bytes[i % len(hash_bytes)]
-        normalized_val = byte_val / 255.0
-        vector.append(normalized_val)
-    
-    return vector
+# 실제 임베딩 모델 초기화
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+# 전역 임베딩 모델 (한번만 로드)
+_embedding_model = None
+
+def get_embedding_model():
+    """싱글톤 패턴으로 임베딩 모델 반환"""
+    global _embedding_model
+    if _embedding_model is None:
+        # 경량 다국어 모델 사용 (한국어 지원)
+        _embedding_model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+    return _embedding_model
+
+def create_query_vector_real(query: str) -> List[float]:
+    """실제 임베딩 모델 기반 쿼리 벡터 생성"""
+    try:
+        model = get_embedding_model()
+        # 실제 임베딩 생성
+        embedding = model.encode(query, convert_to_numpy=True)
+        return embedding.tolist()
+    except Exception as e:
+        logger.error(f"임베딩 생성 실패: {e}")
+        # 실패 시 에러 발생 (시뮬레이션으로 폴백하지 않음)
+        raise ValueError(f"임베딩 생성 실패: {e}")
