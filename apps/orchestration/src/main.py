@@ -5,46 +5,73 @@ import sys
 import time
 import httpx
 import asyncio
+import random
+import logging
 sys.path.append('../../../packages')
 
-# A팀 API 클라이언트 (PRD 준수)
+# A팀 API 클라이언트 (PRD 준수 + Connection Pool + Retry Logic)
 class ATaxonomyAPIClient:
-    def __init__(self, base_url: str = "http://localhost:8001"):
+    def __init__(self, base_url: str = "http://localhost:8001", api_key: str = None):
         self.base_url = base_url
-        self.client = httpx.AsyncClient()
+        self.headers = {"Content-Type": "application/json"}
+        if api_key:
+            self.headers["X-API-Key"] = api_key
+        
+        # Connection Pool 설정
+        limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
+        timeout = httpx.Timeout(connect=5.0, read=10.0, write=10.0, pool=10.0)
+        
+        self.client = httpx.AsyncClient(
+            limits=limits,
+            timeout=timeout,
+            headers=self.headers
+        )
+    
+    async def _request_with_retry(self, method: str, url: str, **kwargs) -> dict:
+        """지수 백오프를 사용한 재시도 로직"""
+        max_retries = 3
+        backoff_factor = 1.0
+        
+        for attempt in range(max_retries + 1):
+            try:
+                if method.upper() == "POST":
+                    response = await self.client.post(url, **kwargs)
+                else:
+                    response = await self.client.get(url, **kwargs)
+                
+                response.raise_for_status()
+                return response.json()
+                
+            except httpx.HTTPStatusError as e:
+                # 429 (Too Many Requests) 또는 5xx 에러만 재시도
+                if e.response.status_code in [429, 500, 502, 503, 504]:
+                    if attempt < max_retries:
+                        # 지수 백오프 + 지터
+                        delay = backoff_factor * (2 ** attempt) + random.uniform(0, 0.2)
+                        logging.warning(f"API 호출 실패 (시도 {attempt + 1}/{max_retries + 1}): {e.response.status_code}. {delay:.2f}초 후 재시도")
+                        await asyncio.sleep(delay)
+                        continue
+                raise HTTPException(status_code=e.response.status_code, detail=f"A팀 API 호출 실패: {str(e)}")
+                
+            except Exception as e:
+                if attempt < max_retries:
+                    delay = backoff_factor * (2 ** attempt) + random.uniform(0, 0.2)
+                    logging.warning(f"API 연결 오류 (시도 {attempt + 1}/{max_retries + 1}): {str(e)}. {delay:.2f}초 후 재시도")
+                    await asyncio.sleep(delay)
+                    continue
+                raise HTTPException(status_code=500, detail=f"A팀 API 연결 실패: {str(e)}")
     
     async def classify(self, request: dict) -> dict:
-        """A팀 /classify API 호출"""
-        try:
-            response = await self.client.post(f"{self.base_url}/classify", json=request)
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPError as e:
-            raise HTTPException(status_code=502, detail=f"A팀 API 호출 실패: {str(e)}")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"분류 처리 중 오류: {str(e)}")
+        """A팀 /classify API 호출 (재시도 로직 포함)"""
+        return await self._request_with_retry("POST", f"{self.base_url}/classify", json=request)
     
     async def search(self, request: dict) -> dict:
-        """A팀 /search API 호출"""
-        try:
-            response = await self.client.post(f"{self.base_url}/search", json=request)
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPError as e:
-            raise HTTPException(status_code=502, detail=f"A팀 검색 API 호출 실패: {str(e)}")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"검색 처리 중 오류: {str(e)}")
+        """A팀 /search API 호출 (재시도 로직 포함)"""
+        return await self._request_with_retry("POST", f"{self.base_url}/search", json=request)
     
     async def get_taxonomy_tree(self, version: str) -> dict:
-        """A팀 /taxonomy/{version}/tree API 호출"""
-        try:
-            response = await self.client.get(f"{self.base_url}/taxonomy/{version}/tree")
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPError as e:
-            raise HTTPException(status_code=502, detail=f"A팀 분류체계 API 호출 실패: {str(e)}")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"분류체계 조회 중 오류: {str(e)}")
+        """A팀 /taxonomy/{version}/tree API 호출 (재시도 로직 포함)"""
+        return await self._request_with_retry("GET", f"{self.base_url}/taxonomy/{version}/tree")
 
 try:
     from common_schemas.models import (
