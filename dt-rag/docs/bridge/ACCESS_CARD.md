@@ -1,18 +1,35 @@
 # ACCESS CARD — Staging
 
-- **BASE URL**: `http://localhost:8000`       <!-- Default staging endpoint -->
-- **SPEC**: OpenAPI v1.8.1 · Schemas 0.1.3
+## 📍 Environment Configuration
+
+### 🏠 Local Development
+- **BASE URL**: `http://localhost:8000`
+- **Use Case**: Local development and testing
+- **Setup**:
+  ```bash
+  export STAGING_API_BASE=http://localhost:8000
+  export API_KEY=***   # ❗️키는 커밋 금지, 별도 채널로 배포
+  ```
+
+### 🌐 Remote Staging  
+- **BASE URL**: `https://api.staging.example.com` 
+- **Use Case**: Remote integration and CI/CD
+- **Setup**: Use Repository Variables and Secrets
+  ```bash
+  export STAGING_API_BASE="${{ vars.STAGING_API_BASE }}"    # Repository Variable
+  export API_KEY="${{ secrets.STAGING_API_KEY }}"          # Repository Secret
+  ```
+- **GitHub Settings**: 
+  - Variable: `STAGING_API_BASE` = `https://api.staging.example.com`
+  - Secret: `STAGING_API_KEY` = `<actual_api_key>`
+
+## 📋 Common Specifications
+- **SPEC**: OpenAPI v1.8.1 · Schemas 0.1.3  
 - **Health**: `GET /healthz` → 200
 - **Auth**: Header `X-API-Key: <PROVIDED_OUT_OF_BAND>`
 - **Timeouts**: 10s
 - **Rate limits**: 10 r/s (per-user), 100 r/s (per-IP)
 - **Required headers**: `Content-Type: application/json`
-
-### How to set env (local)
-```bash
-export STAGING_API_BASE=http://localhost:8000
-export API_KEY=***   # ❗️키는 커밋 금지, 별도 채널로 배포
-```
 
 ### API Endpoints
 

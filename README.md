@@ -24,9 +24,23 @@ npm install
 ```
 
 ## 🔌 Staging 접속 좌표 & 🧪 Quick Smoke
-- 접속 정보: [ACCESS_CARD](dt-rag/docs/bridge/ACCESS_CARD.md)
-- 스모크: `STAGING_API_BASE=... API_KEY=... ./dt-rag/scripts/smoke.sh`
-- 시드/기대값: [minimal seeds](dt-rag/docs/seeds/minimal/EXPECTED.md)
+
+![staging-smoke](https://github.com/bridge25/Unmanned/actions/workflows/staging-smoke.yml/badge.svg)
+
+### 🌐 Environment Setup
+- **Local**: BASE_URL=`http://localhost:8000`
+- **Remote**: BASE_URL=`https://api.staging.example.com` (Repo Variables: `STAGING_API_BASE`)
+- **Full Guide**: [ACCESS_CARD](dt-rag/docs/bridge/ACCESS_CARD.md)
+
+### 🧪 Smoke Testing
+```bash
+STAGING_API_BASE=... API_KEY=... ./dt-rag/scripts/smoke.sh
+```
+
+### 📋 Test Resources
+- **Test Data**: [minimal seeds](dt-rag/docs/seeds/minimal/EXPECTED.md)
+- **Expected Results**: Version 1.8.1 baseline
+- **CI/CD**: Automated testing on PR/push
 
 ## 🏗️ System Architecture
 

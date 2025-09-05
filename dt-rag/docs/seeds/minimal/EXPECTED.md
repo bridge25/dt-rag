@@ -1,5 +1,12 @@
 # Expected Results (Minimal Seeds)
 
+## 📋 Test Baseline Configuration
+- **Taxonomy Version**: **1.8.1** (스모크/시드 기준선)
+- **OpenAPI Spec**: v1.8.1
+- **Common Schemas**: v0.1.3
+- **Test Environment**: Staging
+- **Last Updated**: 2025-09-05
+
 ## API Endpoint Expectations
 
 ### 1. GET /taxonomy/1.8.1/tree
@@ -8,7 +15,8 @@
 - Format: JSON array
 - Content: 배열[0]에 루트 노드 존재
 - Root node must have `label` field
-- Version field: "1.8.1"
+- **Version field: "1.8.1"** (strictly enforced)
+- **Version Validation**: Smoke test will fail if version != "1.8.1"
 
 **Example:**
 ```json
@@ -75,9 +83,10 @@
 ### 4. GET /healthz
 **Expected Response:**
 - Status: 200 OK
-- `status` field: "healthy" 
-- `version` field present
+- `status` field: "healthy" (exactly this value)
+- **`version` field: "1.8.1"** (version consistency check)
 - Response time < 1000ms
+- **Health Validation**: Smoke test will fail if status != "healthy"
 
 ## Document Processing Expectations
 
