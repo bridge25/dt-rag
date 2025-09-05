@@ -1,5 +1,6 @@
 """
 Document Search 엔드포인트
+실제 BM25 + Vector 하이브리드 검색 구현
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 """
 
@@ -7,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from deps import verify_api_key, generate_request_id, get_taxonomy_version
+from database import SearchDAO
 import time
 
 router = APIRouter()
@@ -36,109 +38,53 @@ class SearchResponse(BaseModel):
     taxonomy_version: str = "1.8.1"
 
 @router.post("/search", response_model=SearchResponse)
-def search_documents(
+async def search_documents(
     request: SearchRequest,
     api_key: str = Depends(verify_api_key)
 ):
     """
     Bridge Pack 스펙: POST /search
+    실제 BM25 + Vector 하이브리드 검색 수행
     Expected Request: {"q":"taxonomy tree", "filters":{"canonical_in":[["AI","RAG"]]}, ...}
     Expected Response: Bridge Pack ACCESS_CARD.md 참조
     """
     start_time = time.time()
     
     try:
-        query = request.q.lower()
+        # 실제 하이브리드 검색 수행
+        search_results = await SearchDAO.hybrid_search(
+            query=request.q,
+            filters=request.filters,
+            topk=request.final_topk
+        )
         
-        # MVP: 쿼리 키워드 기반 모의 검색 결과 생성
-        mock_hits = []
-        
-        # 1. RAG 관련 검색
-        if any(keyword in query for keyword in ["rag", "retrieval", "augmented"]):
-            mock_hits.extend([
-                SearchHit(
-                    chunk_id="chunk_rag_001",
-                    score=0.95,
-                    text="RAG taxonomy specification and implementation guide...",
-                    taxonomy_path=["AI", "RAG"],
-                    source={
-                        "doc_id": "rag-guide-v1.8.1",
-                        "title": "RAG Implementation Guide",
-                        "url": "https://docs.example.com/rag-guide"
-                    }
-                ),
-                SearchHit(
-                    chunk_id="chunk_rag_002", 
-                    score=0.89,
-                    text="Retrieval-Augmented Generation systems for dynamic taxonomy...",
-                    taxonomy_path=["AI", "RAG", "Dynamic"],
-                    source={
-                        "doc_id": "dynamic-rag-paper",
-                        "title": "Dynamic RAG Systems",
-                        "url": "https://arxiv.org/abs/2024.dynamic-rag"
-                    }
-                )
-            ])
-        
-        # 2. Taxonomy 관련 검색
-        if any(keyword in query for keyword in ["taxonomy", "tree", "classification"]):
-            mock_hits.extend([
-                SearchHit(
-                    chunk_id="chunk_tax_001",
-                    score=0.88,
-                    text="Taxonomy tree structure for hierarchical document classification...",
-                    taxonomy_path=["AI", "Taxonomy", "Hierarchical"],
-                    source={
-                        "doc_id": "taxonomy-structure",
-                        "title": "Hierarchical Taxonomy Design",
-                        "url": "https://docs.example.com/taxonomy"
-                    }
-                )
-            ])
-        
-        # 3. 기본 AI 검색 결과
-        if len(mock_hits) == 0:
-            mock_hits.append(
-                SearchHit(
-                    chunk_id=f"chunk_general_{hash(query) % 1000:03d}",
-                    score=0.72,
-                    text=f"General AI content related to query: {request.q}",
-                    taxonomy_path=["AI", "General"],
-                    source={
-                        "doc_id": "general-ai-docs",
-                        "title": "General AI Documentation",
-                        "url": "https://docs.example.com/ai"
-                    }
-                )
+        # SearchHit 객체로 변환 (Bridge Pack 스펙 준수)
+        hits = []
+        for result in search_results:
+            hit = SearchHit(
+                chunk_id=result["chunk_id"],
+                score=result["score"],
+                text=result.get("text"),
+                taxonomy_path=result.get("taxonomy_path"),
+                source=result.get("metadata", {})
             )
+            hits.append(hit)
         
-        # 필터 적용 (canonical_in)
-        if request.filters and "canonical_in" in request.filters:
-            canonical_filter = request.filters["canonical_in"]
-            if isinstance(canonical_filter, list) and len(canonical_filter) > 0:
-                # 필터링된 결과만 유지
-                filtered_hits = []
-                for hit in mock_hits:
-                    if hit.taxonomy_path:
-                        for allowed_path in canonical_filter:
-                            if isinstance(allowed_path, list) and len(allowed_path) >= 2:
-                                if (hit.taxonomy_path[:len(allowed_path)] == allowed_path):
-                                    filtered_hits.append(hit)
-                                    break
-                mock_hits = filtered_hits
-        
-        # final_topk만큼 결과 제한
-        final_hits = mock_hits[:request.final_topk]
-        
-        # 응답 생성
+        # 처리 시간 계산
         latency = time.time() - start_time
         
+        # 소스 문서 수 계산
+        source_docs = set()
+        for hit in hits:
+            if hit.source and "title" in hit.source:
+                source_docs.add(hit.source["title"])
+        
         return SearchResponse(
-            hits=final_hits,
+            hits=hits,
             latency=round(latency, 3),
             request_id=generate_request_id(),
-            total_candidates=request.rerank_candidates,
-            sources_count=len(set(hit.source.get("doc_id") if hit.source else None for hit in final_hits)),
+            total_candidates=len(search_results),
+            sources_count=len(source_docs),
             taxonomy_version=get_taxonomy_version()
         )
         

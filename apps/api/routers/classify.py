@@ -1,12 +1,14 @@
 """
 Document Classification 엔드포인트
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수
+실제 데이터베이스 연결 및 ML 분류 구현
 """
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from deps import verify_api_key, generate_request_id, get_taxonomy_version
+from database import ClassifyDAO
 
 router = APIRouter()
 
@@ -32,69 +34,38 @@ class ClassifyResponse(BaseModel):
     taxonomy_version: str = "1.8.1"
 
 @router.post("/classify", response_model=ClassifyResponse)
-def classify_text(
+async def classify_text(
     request: ClassifyRequest,
     api_key: str = Depends(verify_api_key)
 ):
     """
     Bridge Pack 스펙: POST /classify
+    실제 ML 모델 기반 분류 (키워드 방식 제거)
     Expected Request: {"text":"RAG taxonomy spec example"}
     Expected Response: Bridge Pack ACCESS_CARD.md 참조
     """
     try:
-        # MVP: 텍스트 키워드 기반 간단한 분류 로직
-        text = request.text.lower()
-        
-        # AI/RAG 관련 키워드 감지
-        if any(keyword in text for keyword in ["rag", "retrieval", "augmented", "generation"]):
-            canonical = ["AI", "RAG"]
-            label = "RAG Systems"
-            confidence = 0.85
-            reasoning = [
-                "High confidence match for RAG taxonomy", 
-                "Clear AI domain classification"
-            ]
-        elif any(keyword in text for keyword in ["machine learning", "ml", "model", "training"]):
-            canonical = ["AI", "ML"]
-            label = "Machine Learning"
-            confidence = 0.78
-            reasoning = [
-                "Machine learning keywords detected",
-                "AI domain classification confirmed"
-            ]
-        elif any(keyword in text for keyword in ["taxonomy", "classification", "category"]):
-            canonical = ["AI", "Taxonomy"]
-            label = "Taxonomy Systems"
-            confidence = 0.72
-            reasoning = [
-                "Taxonomy-related content identified",
-                "Classification domain match"
-            ]
-        else:
-            # 기본 AI 분류
-            canonical = ["AI", "General"]
-            label = "General AI"
-            confidence = 0.60
-            reasoning = [
-                "General AI content classification",
-                "Default taxonomy assignment"
-            ]
+        # 실제 ML 모델 기반 분류 수행
+        classification_result = await ClassifyDAO.classify_text(
+            text=request.text,
+            hint_paths=getattr(request, 'hint_paths', None)
+        )
         
         # 후보 노드 생성
         candidate_node = TaxonomyNode(
-            node_id=f"ai_{canonical[-1].lower()}_{hash(text) % 1000:03d}",
-            label=label,
-            canonical_path=canonical,
-            version=get_taxonomy_version(),
-            confidence=confidence
+            node_id=classification_result["node_id"],
+            label=classification_result["label"],
+            canonical_path=classification_result["canonical"],
+            version=classification_result["version"],
+            confidence=classification_result["confidence"]
         )
         
         return ClassifyResponse(
-            canonical=canonical,
+            canonical=classification_result["canonical"],
             candidates=[candidate_node],
-            hitl=confidence < 0.70,  # 신뢰도 70% 미만시 HITL
-            confidence=confidence,
-            reasoning=reasoning,
+            hitl=classification_result["confidence"] < 0.70,  # 신뢰도 70% 미만시 HITL
+            confidence=classification_result["confidence"],
+            reasoning=classification_result["reasoning"],
             request_id=generate_request_id(),
             taxonomy_version=get_taxonomy_version()
         )

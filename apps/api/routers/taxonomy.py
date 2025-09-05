@@ -1,11 +1,13 @@
 """
 Taxonomy Tree 엔드포인트
+실제 PostgreSQL 데이터베이스에서 분류체계 로드
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 """
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any, Optional
 from deps import verify_api_key
+from database import TaxonomyDAO
 
 router = APIRouter()
 
@@ -98,12 +100,13 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
     ]
 
 @router.get("/taxonomy/{version}/tree")
-def get_taxonomy_tree(
+async def get_taxonomy_tree(
     version: str,
     api_key: str = Depends(verify_api_key)
 ):
     """
     Bridge Pack 스펙: GET /taxonomy/{version}/tree
+    실제 PostgreSQL 데이터베이스에서 분류체계 로드
     Expected Response: smoke.sh 테스트에서 .[0].label 접근
     """
     try:
@@ -114,16 +117,16 @@ def get_taxonomy_tree(
                 detail=f"Taxonomy version '{version}' not found. Available: 1.8.1, latest"
             )
         
-        # v1.8.1 트리 반환 (MVP)
-        if version in ["1.8.1", "latest"]:
-            tree = get_taxonomy_tree_v181()
-            
-            # Bridge Pack smoke.sh 호환성 확인
-            # smoke.sh에서 .[0].label과 {label,version:"1.8.1"} 접근
-            if len(tree) > 0:
-                tree[0]["version"] = "1.8.1"  # smoke.sh 호환성 보장
-            
-            return tree
+        # 실제 데이터베이스에서 분류체계 조회
+        actual_version = "1.8.1" if version == "latest" else version
+        tree = await TaxonomyDAO.get_tree(actual_version)
+        
+        # Bridge Pack smoke.sh 호환성 확인
+        # smoke.sh에서 .[0].label과 {label,version:"1.8.1"} 접근
+        if len(tree) > 0:
+            tree[0]["version"] = "1.8.1"  # smoke.sh 호환성 보장
+        
+        return tree
         
     except HTTPException:
         raise
