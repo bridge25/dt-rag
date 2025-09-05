@@ -22,6 +22,21 @@ export const API_ENDPOINTS = {
     SEND: '/api/chat/send',
     CONVERSATION: '/api/chat/conversation',
     HISTORY: '/api/chat/history'
+  },
+  
+  // Dashboard endpoints
+  DASHBOARD: {
+    METRICS: '/api/dashboard/metrics',
+    HEALTH: '/api/dashboard/health',
+    METRIC_HISTORY: '/api/dashboard/metrics/history',
+    ROLLBACKS: '/api/dashboard/rollbacks',
+    ROLLBACK_INITIATE: '/api/dashboard/rollback',
+    ROLLBACK_STATUS: '/api/dashboard/rollback/status',
+    VERSIONS: '/api/dashboard/versions',
+    EXPORT_LOGS: '/api/dashboard/logs/export',
+    BACKUP_CREATE: '/api/dashboard/backup',
+    ALERT_RULES: '/api/dashboard/alerts',
+    CONFIG: '/api/dashboard/config'
   }
 } as const
 
