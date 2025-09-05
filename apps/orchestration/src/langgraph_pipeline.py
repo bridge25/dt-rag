@@ -8,6 +8,7 @@ Week-1 목표: 완전한 7-Step 파이프라인 골격 + 메타데이터 수집
 import asyncio
 import time
 import logging
+import httpx
 from typing import TypedDict, List, Dict, Any, Optional
 from datetime import datetime
 
@@ -116,13 +117,19 @@ class SimpleGraph:
 
 
 class LangGraphPipeline:
-    """B-O3 7-Step 파이프라인 (LangGraph 없이 구현)"""
+    """B-O3 7-Step 파이프라인 (A팀 API 연동, PRD 준수)"""
     
-    def __init__(self):
+    def __init__(self, a_team_base_url: str = "http://localhost:8001"):
+        self.a_team_base_url = a_team_base_url
+        self.client = httpx.AsyncClient()
         self.graph = self._build_graph()
         # 복원력 시스템 통합
-        from pipeline_resilience import get_resilience_manager
-        self.resilience_manager = get_resilience_manager()
+        try:
+            from pipeline_resilience import get_resilience_manager
+            self.resilience_manager = get_resilience_manager()
+        except ImportError:
+            logger.warning("pipeline_resilience 모듈을 찾을 수 없습니다. 기본 실행 모드로 진행합니다.")
+            self.resilience_manager = None
         
     def _build_graph(self) -> SimpleGraph:
         """7-Step 파이프라인 그래프 구성"""
@@ -171,59 +178,77 @@ class LangGraphPipeline:
         return state
     
     async def _step2_hybrid_retrieval(self, state: PipelineState) -> PipelineState:
-        """Step 2: Hybrid Retrieval (BM25 + Vector 검색)"""
+        """Step 2: Hybrid Retrieval (A팀 /search API 호출, PRD 준수)"""
         step_start = time.time()
         logger.info(f"Step 2: Hybrid Retrieval - Intent: {state['intent']}")
         
-        # 병렬 처리 최적화: BM25와 Vector 검색을 동시 실행
-        async def bm25_search():
-            """BM25 검색 (topk=12)"""
-            return [
-                {
-                    "chunk_id": f"bm25_{i}",
-                    "score": 0.9 - i * 0.1,
-                    "text": f"BM25 검색 결과 {i+1}: {state['query']} 관련 내용",
-                    "source": {"url": f"https://example.com/doc{i}", "title": f"문서 {i+1}"}
-                }
-                for i in range(min(12, 5))  # 스캐폴딩: 5개만
-            ]
+        try:
+            # A팀 /search API 호출 (PRD 준수)
+            search_request = {
+                "q": state['query'],
+                "filters": None,  # TODO: intent에 따른 필터 적용
+                "bm25_topk": 12,
+                "vector_topk": 12,
+                "rerank_candidates": 50,
+                "final_topk": 5
+            }
+            
+            response = await self.client.post(
+                f"{self.a_team_base_url}/search",
+                json=search_request
+            )
+            
+            if response.status_code == 200:
+                search_result = response.json()
+                retrieved_docs = search_result.get("hits", [])
+                
+                # A팀 응답을 B팀 형식으로 변환
+                formatted_docs = []
+                for i, doc in enumerate(retrieved_docs):
+                    formatted_doc = {
+                        "chunk_id": doc.get("chunk_id", f"doc_{i}"),
+                        "score": doc.get("score", 0.0),
+                        "text": doc.get("text", ""),
+                        "source": {
+                            "url": doc.get("source", {}).get("url", ""),
+                            "title": doc.get("source", {}).get("title", f"문서 {i+1}")
+                        }
+                    }
+                    formatted_docs.append(formatted_doc)
+                
+                logger.info(f"A팀 /search API 호출 성공: {len(formatted_docs)}개 문서")
+                
+                step_time = time.time() - step_start
+                
+                state.update({
+                    "bm25_results": [],  # A팀에서 이미 통합 처리됨
+                    "vector_results": [],  # A팀에서 이미 통합 처리됨  
+                    "retrieved_docs": formatted_docs,
+                    "retrieval_filter_applied": True,
+                    "step_timings": {**state.get("step_timings", {}), "step2_retrieve": step_time}
+                })
+                
+                logger.info(f"Step 2 완료: retrieved={len(formatted_docs)} docs, time={step_time:.3f}s")
+                return state
+                
+            else:
+                logger.error(f"A팀 /search API 호출 실패: {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"A팀 /search API 호출 오류: {str(e)}")
         
-        async def vector_search():
-            """Vector 검색 (topk=12)"""
-            return [
-                {
-                    "chunk_id": f"vector_{i}",
-                    "score": 0.85 - i * 0.05,
-                    "text": f"Vector 검색 결과 {i+1}: {state['query']} 유사 내용",
-                    "source": {"url": f"https://example.com/vec{i}", "title": f"벡터 문서 {i+1}"}
-                }
-                for i in range(min(12, 5))  # 스캐폴딩: 5개만
-            ]
-        
-        # 병렬 실행으로 검색 시간 50% 단축
-        bm25_results, vector_results = await asyncio.gather(
-            bm25_search(),
-            vector_search()
-        )
-        
-        # 결과 통합 (union/dedup)
-        retrieved_docs = bm25_results + vector_results
-        
-        # TODO: Cross-Encoder Rerank (50→5) 구현
-        # 현재는 score 기준 정렬
-        retrieved_docs = sorted(retrieved_docs, key=lambda x: x['score'], reverse=True)[:5]
-        
+        # A팀 API 호출 실패 시 빈 결과로 처리 (PRD 준수)
         step_time = time.time() - step_start
         
         state.update({
-            "bm25_results": bm25_results,
-            "vector_results": vector_results,
-            "retrieved_docs": retrieved_docs,
-            "retrieval_filter_applied": True,  # TODO: 실제 필터 적용 구현
+            "bm25_results": [],
+            "vector_results": [],
+            "retrieved_docs": [],
+            "retrieval_filter_applied": False,
             "step_timings": {**state.get("step_timings", {}), "step2_retrieve": step_time}
         })
         
-        logger.info(f"Step 2 완료: retrieved={len(retrieved_docs)} docs, time={step_time:.3f}s")
+        logger.warning("Step 2 완료: A팀 API 호출 실패, 빈 결과 반환")
         return state
     
     async def _step3_answer_planning(self, state: PipelineState) -> PipelineState:
@@ -428,8 +453,9 @@ class LangGraphPipeline:
         logger.info(f"Query: {request.query}")
         logger.info(f"Taxonomy Version: {request.taxonomy_version}")
         
-        # 복원력 시스템 시작
-        await self.resilience_manager.start()
+        # 복원력 시스템 시작 (있을 경우에만)
+        if self.resilience_manager:
+            await self.resilience_manager.start()
         
         try:
             # 초기 상태 설정
@@ -460,10 +486,13 @@ class LangGraphPipeline:
                 "retry_count": 0
             }
             
-            # 복원력 기능으로 LangGraph 실행
-            final_state = await self.resilience_manager.execute_with_resilience(
-                self.graph.ainvoke, initial_state
-            )
+            # LangGraph 실행 (복원력 기능 있으면 적용, 없으면 직접 실행)
+            if self.resilience_manager:
+                final_state = await self.resilience_manager.execute_with_resilience(
+                    self.graph.ainvoke, initial_state
+                )
+            else:
+                final_state = await self.graph.ainvoke(initial_state)
             
             # 응답 구성
             total_time = time.time() - pipeline_start
@@ -487,9 +516,10 @@ class LangGraphPipeline:
             logger.info(f"Sources: {response.citations_count}")
             logger.info(f"Cost: ₩{response.cost:.3f}")
             
-            # 시스템 건강도 로깅
-            health = self.resilience_manager.get_system_health()
-            logger.info(f"메모리 상태: {health['memory']['status']} ({health['memory']['usage']['current_mb']:.1f}MB)")
+            # 시스템 건강도 로깅 (복원력 시스템이 있을 경우에만)
+            if self.resilience_manager:
+                health = self.resilience_manager.get_system_health()
+                logger.info(f"메모리 상태: {health['memory']['status']} ({health['memory']['usage']['current_mb']:.1f}MB)")
             
             return response
             
@@ -497,8 +527,9 @@ class LangGraphPipeline:
             logger.error(f"Pipeline 실행 오류: {str(e)}", exc_info=True)
             raise
         finally:
-            # 복원력 시스템 정리
-            await self.resilience_manager.stop()
+            # 복원력 시스템 정리 (있을 경우에만)
+            if self.resilience_manager:
+                await self.resilience_manager.stop()
 
 
 # 전역 파이프라인 인스턴스

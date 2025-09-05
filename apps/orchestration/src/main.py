@@ -3,7 +3,30 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 import sys
 import time
+import httpx
+import asyncio
 sys.path.append('../../../packages')
+
+# A팀 API 클라이언트 (PRD 준수)
+class ATaxonomyAPIClient:
+    def __init__(self, base_url: str = "http://localhost:8001"):
+        self.base_url = base_url
+        self.client = httpx.AsyncClient()
+    
+    async def classify(self, request: dict) -> dict:
+        """A팀 /classify API 호출"""
+        response = await self.client.post(f"{self.base_url}/classify", json=request)
+        return response.json()
+    
+    async def search(self, request: dict) -> dict:
+        """A팀 /search API 호출"""
+        response = await self.client.post(f"{self.base_url}/search", json=request)
+        return response.json()
+    
+    async def get_taxonomy_tree(self, version: str) -> dict:
+        """A팀 /taxonomy/{version}/tree API 호출"""
+        response = await self.client.get(f"{self.base_url}/taxonomy/{version}/tree")
+        return response.json()
 
 try:
     from common_schemas.models import (
@@ -106,6 +129,9 @@ except ImportError:
 
 app = FastAPI(title="Dynamic Taxonomy RAG - Orchestration")
 
+# A팀 API 클라이언트 인스턴스 (PRD 준수)
+a_team_client = ATaxonomyAPIClient()
+
 @app.get("/health")
 async def health():
     return {"status": "healthy", "service": "orchestration"}
@@ -113,34 +139,38 @@ async def health():
 @app.post("/classify", response_model=ClassifyResponse)
 async def classify(request: ClassifyRequest):
     """
-    7-Step LangGraph 매니페스트 빌더
-    
-    Phase 1: 룰 기반 1차 분류 (민감도/패턴 매칭)
-    Phase 2: LLM 2차 분류 (후보 경로 + 근거≥2)
-    Phase 3: 교차검증 로직 (룰 vs LLM 결과 비교)
-    Phase 4: Confidence<0.7 → HITL 처리
+    B팀 오케스트레이션: A팀 분류 API를 호출하여 결과 반환 (PRD 준수)
     """
-    
-    # TODO: 실제 LangGraph 7-Step 파이프라인 구현
-    # 현재는 스캐폴딩 응답
-    
-    # Phase 1: 룰 기반 분류 (임시)
-    canonical_path = ["AI", "RAG"]  # 실제 룰 엔진으로 교체 필요
-    
-    # Phase 2: LLM 분류 (임시)
-    confidence = 0.8
-    
-    # Phase 3: 교차검증 (임시)
-    # Phase 4: HITL 처리
-    needs_hitl = confidence < 0.7
-    
-    return ClassifyResponse(
-        canonical=canonical_path,
-        candidates=[],
-        hitl=needs_hitl,
-        confidence=confidence,
-        reasoning=["스캐폴딩 단계", "실제 구현 필요", "LangGraph 7-Step 파이프라인 구현 예정"]
-    )
+    try:
+        # A팀 /classify API 호출 (PRD 준수)
+        a_team_request = {
+            "chunk_id": request.chunk_id,
+            "text": request.text,
+            "hint_paths": request.hint_paths
+        }
+        
+        result = await a_team_client.classify(a_team_request)
+        
+        # A팀 응답을 B팀 응답 형식으로 변환
+        return ClassifyResponse(
+            canonical=result.get("canonical", []),
+            candidates=[
+                TaxonomyNode(**candidate) for candidate in result.get("candidates", [])
+            ],
+            hitl=result.get("hitl", False),
+            confidence=result.get("confidence", 0.0),
+            reasoning=result.get("reasoning", ["A팀 분류 API 호출"])
+        )
+        
+    except Exception as e:
+        # A팀 API 호출 실패 시 폴백
+        return ClassifyResponse(
+            canonical=["Unknown"],
+            candidates=[],
+            hitl=True,
+            confidence=0.0,
+            reasoning=[f"A팀 API 호출 실패: {str(e)}", "수동 검토 필요"]
+        )
 
 @app.post("/chat/run")
 async def run_chat_pipeline(request: dict):
@@ -193,111 +223,42 @@ async def run_chat_pipeline(request: dict):
 @app.post("/search", response_model=SearchResponse)
 async def search(request: SearchRequest):
     """
-    B-O2: 하이브리드 검색 + Cross-Encoder Reranking + 스코프 제한 필터
-    BM25 + Vector 검색 → 50→5 rerank → canonical_path 필터링
+    B팀 오케스트레이션: A팀 검색 API를 호출하여 결과 반환 (PRD 준수)
     """
-    from retrieval_filter import apply_retrieval_filter
-    import uuid
-    
-    request_id = f"search_{int(time.time() * 1000)}"
-    
-    # TODO: 실제 하이브리드 검색 구현 (현재는 Mock 데이터)
-    # Mock 검색 결과 생성
-    mock_search_results = [
-        {
-            "chunk_id": "chunk_001",
-            "score": 0.95,
-            "text": "RAG 시스템 구축 방법에 대한 설명입니다...",
-            "taxonomy_path": ["AI", "RAG"],
-            "source": {
-                "url": "https://example.com/rag-guide",
-                "title": "RAG 시스템 가이드",
-                "date": "2025-09-04",
-                "version": "v1.0",
-                "span": [0, 100]
-            }
-        },
-        {
-            "chunk_id": "chunk_002", 
-            "score": 0.87,
-            "text": "머신러닝 모델 훈련에 대한 내용입니다...",
-            "taxonomy_path": ["AI", "ML"],
-            "source": {
-                "url": "https://example.com/ml-training",
-                "title": "ML 모델 훈련 가이드",
-                "date": "2025-09-04",
-                "version": "v1.1",
-                "span": [50, 150]
-            }
-        },
-        {
-            "chunk_id": "chunk_003",
-            "score": 0.72,
-            "text": "블록체인 기술 개요입니다...",
-            "taxonomy_path": ["Blockchain", "Basics"],
-            "source": {
-                "url": "https://example.com/blockchain",
-                "title": "블록체인 기초",
-                "date": "2025-09-04",
-                "version": "v2.0",
-                "span": [100, 200]
-            }
+    try:
+        # A팀 /search API 호출 (PRD 준수)
+        a_team_request = {
+            "q": request.q,
+            "filters": request.filters,
+            "bm25_topk": request.bm25_topk,
+            "vector_topk": request.vector_topk,
+            "rerank_candidates": request.rerank_candidates,
+            "final_topk": request.final_topk
         }
-    ]
-    
-    # B-O2: canonical_in 필터가 활성화된 경우 스코프 제한 적용
-    if request.filters and request.filters.get("canonical_in"):
-        # 허용된 카테고리 경로 추출
-        allowed_paths = request.filters.get("canonical_paths", [])
         
-        if allowed_paths:
-            # 스코프 제한 필터 적용
-            filter_result = apply_retrieval_filter(
-                search_results=mock_search_results,
-                allowed_category_paths=allowed_paths,
-                query=request.q,
-                request_id=request_id
-            )
-            
-            # 필터링된 결과를 SearchHit 형태로 변환
-            hits = []
-            for result in filter_result.filtered_results:
-                hits.append({
-                    "chunk_id": result["chunk_id"],
-                    "score": result["score"],
-                    "text": result["text"],
-                    "taxonomy_path": result["taxonomy_path"],
-                    "source": result["source"]
-                })
-            
-            return SearchResponse(
-                hits=hits,
-                latency=0.123,
-                request_id=request_id,
-                total_candidates=filter_result.original_count,
-                sources_count=len(hits),
-                taxonomy_version="1.8.1"
-            )
-    
-    # 필터가 없는 경우 모든 결과 반환
-    hits = []
-    for result in mock_search_results:
-        hits.append({
-            "chunk_id": result["chunk_id"],
-            "score": result["score"], 
-            "text": result["text"],
-            "taxonomy_path": result["taxonomy_path"],
-            "source": result["source"]
-        })
-    
-    return SearchResponse(
-        hits=hits,
-        latency=0.098,
-        request_id=request_id,
-        total_candidates=len(hits),
-        sources_count=len(hits),
-        taxonomy_version="1.8.1"
-    )
+        result = await a_team_client.search(a_team_request)
+        
+        # A팀 응답을 B팀 응답 형식으로 변환
+        return SearchResponse(
+            hits=result.get("hits", []),
+            latency=result.get("latency", 0.0),
+            request_id=result.get("request_id", f"search_{int(time.time() * 1000)}"),
+            total_candidates=result.get("total_candidates"),
+            sources_count=result.get("sources_count"),
+            taxonomy_version=result.get("taxonomy_version")
+        )
+        
+    except Exception as e:
+        # A팀 API 호출 실패 시 폴백
+        request_id = f"search_{int(time.time() * 1000)}"
+        return SearchResponse(
+            hits=[],
+            latency=0.0,
+            request_id=request_id,
+            total_candidates=0,
+            sources_count=0,
+            taxonomy_version="unknown"
+        )
 
 @app.post("/agents/from-category", response_model=AgentManifest)
 async def create_agent_from_category(request: FromCategoryRequest):
@@ -362,8 +323,8 @@ async def suggest_cbr_cases(request: CBRSuggestRequest):
     # 쿼리 벡터 생성 (Mock - 실제로는 임베딩 모델 사용)
     query_vector = create_query_vector_mock(request.query)
     
-    # 유사한 케이스 검색
-    similar_cases = cbr_engine.find_similar_cases(
+    # A팀 case_bank에서 유사한 케이스 검색 (PRD 준수)
+    similar_cases = await cbr_engine.find_similar_cases(
         query_vector=query_vector,
         category_path=request.category_path,
         k=request.k,
@@ -371,8 +332,8 @@ async def suggest_cbr_cases(request: CBRSuggestRequest):
         similarity_method="cosine"
     )
     
-    # 케이스 데이터 로드하여 응답 구성
-    all_cases_data = cbr_engine.case_bank.load_cases()
+    # A팀 case_bank에서 케이스 데이터 로드하여 응답 구성
+    all_cases_data = await cbr_engine.case_bank.load_cases()
     case_data_map = {case["case_id"]: case for case in all_cases_data}
     
     # CBRCase 객체 생성
@@ -447,9 +408,21 @@ async def submit_cbr_feedback(feedback: CBRFeedback):
 
 @app.get("/taxonomy/{version}/tree")
 async def get_taxonomy_tree(version: str):
-    """트리 구조 조회"""
-    # TODO: 택소노미 트리 API 구현
-    return {"version": version, "tree": []}
+    """
+    B팀 오케스트레이션: A팀 택소노미 트리 API 호출 (PRD 준수)
+    """
+    try:
+        # A팀 /taxonomy/{version}/tree API 호출 (PRD 준수)
+        result = await a_team_client.get_taxonomy_tree(version)
+        return result
+        
+    except Exception as e:
+        # A팀 API 호출 실패 시 폴백
+        return {
+            "version": version, 
+            "tree": [],
+            "error": f"A팀 API 호출 실패: {str(e)}"
+        }
 
 if __name__ == "__main__":
     import uvicorn

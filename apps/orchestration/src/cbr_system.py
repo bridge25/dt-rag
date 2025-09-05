@@ -1,11 +1,12 @@
 """
 B-O4: CBR (Case-Based Reasoning) 시스템
-CaseBank read-only 조회 + 유사도 로그/성과 레이블 적재
+A팀 case_bank 테이블 연동 + 유사도 로그/성과 레이블 적재 (PRD 준수)
 """
 
 import json
 import logging
 import numpy as np
+import httpx
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
@@ -91,123 +92,62 @@ class VectorSimilarity:
             return 0.0
 
 class CaseBankManager:
-    """케이스 뱅크 관리"""
+    """A팀 case_bank 테이블 연동 매니저 (PRD 준수)"""
     
-    def __init__(self, case_bank_path: str = "./case_bank"):
+    def __init__(self, a_team_base_url: str = "http://localhost:8001"):
         """
         Args:
-            case_bank_path: 케이스 뱅크 저장 경로
+            a_team_base_url: A팀 API 기본 URL
         """
-        self.case_bank_path = case_bank_path
-        self.cases_file = os.path.join(case_bank_path, "cases.jsonl")
-        self.metadata_file = os.path.join(case_bank_path, "metadata.json")
-        
-        # 디렉토리 생성
-        os.makedirs(case_bank_path, exist_ok=True)
-        
-        # Mock 데이터 초기화
-        self._initialize_mock_cases()
+        self.a_team_base_url = a_team_base_url
+        self.client = httpx.AsyncClient()
     
-    def _initialize_mock_cases(self):
-        """Mock 케이스 데이터 초기화"""
-        if not os.path.exists(self.cases_file):
-            mock_cases = [
-                {
-                    "case_id": "case_001",
-                    "query_vector": [0.8, 0.6, 0.9, 0.7, 0.5],
-                    "response_text": "RAG 시스템 구축을 위해서는 먼저 문서를 벡터화하고, 검색 인덱스를 구성한 후, 검색-생성 파이프라인을 연결해야 합니다.",
-                    "metadata": {
-                        "case_id": "case_001",
-                        "category_path": ["AI", "RAG"],
-                        "quality_score": 0.9,
-                        "usage_count": 15,
-                        "success_rate": 0.85,
-                        "created_at": "2025-08-01T10:00:00Z",
-                        "last_used_at": "2025-09-04T14:30:00Z"
-                    }
-                },
-                {
-                    "case_id": "case_002", 
-                    "query_vector": [0.7, 0.8, 0.6, 0.9, 0.4],
-                    "response_text": "머신러닝 모델 훈련 시에는 데이터 전처리, 특성 선택, 모델 선택, 하이퍼파라미터 튜닝 순서로 진행하는 것이 효과적입니다.",
-                    "metadata": {
-                        "case_id": "case_002",
-                        "category_path": ["AI", "ML"],
-                        "quality_score": 0.8,
-                        "usage_count": 12,
-                        "success_rate": 0.75,
-                        "created_at": "2025-08-02T11:00:00Z",
-                        "last_used_at": "2025-09-03T16:20:00Z"
-                    }
-                },
-                {
-                    "case_id": "case_003",
-                    "query_vector": [0.6, 0.5, 0.8, 0.7, 0.9],
-                    "response_text": "자연어 처리에서는 토크나이제이션, 임베딩, 어텐션 메커니즘을 통해 문맥을 이해하고 적절한 응답을 생성할 수 있습니다.",
-                    "metadata": {
-                        "case_id": "case_003", 
-                        "category_path": ["AI", "NLP"],
-                        "quality_score": 0.85,
-                        "usage_count": 8,
-                        "success_rate": 0.9,
-                        "created_at": "2025-08-03T09:30:00Z",
-                        "last_used_at": "2025-09-02T13:45:00Z"
-                    }
-                },
-                {
-                    "case_id": "case_004",
-                    "query_vector": [0.4, 0.7, 0.5, 0.6, 0.8],
-                    "response_text": "딥러닝 모델의 성능을 향상시키려면 배치 정규화, 드롭아웃, 학습률 스케줄링 등의 기법을 적용할 수 있습니다.",
-                    "metadata": {
-                        "case_id": "case_004",
-                        "category_path": ["AI", "Deep Learning"],
-                        "quality_score": 0.75,
-                        "usage_count": 6,
-                        "success_rate": 0.8,
-                        "created_at": "2025-08-04T14:15:00Z",
-                        "last_used_at": "2025-09-01T11:30:00Z"
-                    }
-                },
-                {
-                    "case_id": "case_005",
-                    "query_vector": [0.9, 0.4, 0.7, 0.8, 0.6],
-                    "response_text": "벡터 데이터베이스는 고차원 벡터의 빠른 유사도 검색을 위해 특별히 최적화된 데이터베이스입니다.",
-                    "metadata": {
-                        "case_id": "case_005",
-                        "category_path": ["AI", "RAG", "Vector DB"],
-                        "quality_score": 0.95,
-                        "usage_count": 20,
-                        "success_rate": 0.92,
-                        "created_at": "2025-07-28T16:45:00Z",
-                        "last_used_at": "2025-09-04T10:15:00Z"
-                    }
-                }
-            ]
+    async def get_case_bank_data(self, category_path: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """
+        A팀 case_bank 테이블에서 케이스 데이터 조회 (PRD 준수)
+        
+        Args:
+            category_path: 카테고리 경로 필터
             
-            # JSONL 형태로 저장
-            with open(self.cases_file, 'w', encoding='utf-8') as f:
-                for case in mock_cases:
-                    f.write(json.dumps(case, ensure_ascii=False) + '\n')
-                    
-            logger.info(f"Mock 케이스 데이터 초기화 완료: {len(mock_cases)}개")
-    
-    def load_cases(self) -> List[Dict[str, Any]]:
-        """케이스 데이터 로드"""
-        cases = []
+        Returns:
+            List[Dict[str, Any]]: 케이스 데이터 목록
+        """
+        try:
+            # A팀 case_bank API 호출
+            params = {}
+            if category_path:
+                params["category_path"] = ",".join(category_path)
+                
+            response = await self.client.get(
+                f"{self.a_team_base_url}/case_bank",
+                params=params
+            )
+            
+            if response.status_code == 200:
+                cases_data = response.json()
+                logger.info(f"A팀 case_bank 조회 완료: {len(cases_data)}개")
+                return cases_data
+            else:
+                logger.error(f"A팀 case_bank API 호출 실패: {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"A팀 case_bank 조회 실패: {str(e)}")
         
-        if os.path.exists(self.cases_file):
-            try:
-                with open(self.cases_file, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        if line.strip():
-                            cases.append(json.loads(line.strip()))
-                            
-                logger.info(f"케이스 로드 완료: {len(cases)}개")
-                
-            except Exception as e:
-                logger.error(f"케이스 로드 실패: {e}")
-                
-        return cases
+        # A팀 API 호출 실패 시 빈 목록 반환
+        logger.warning("A팀 case_bank 연동 실패, 빈 목록 반환")
+        return []
+    
+    async def load_cases(self, category_path: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+        """
+        A팀 case_bank 테이블에서 케이스 데이터 로드 (PRD 준수)
+        
+        Args:
+            category_path: 카테고리 경로 필터
+            
+        Returns:
+            List[Dict[str, Any]]: 케이스 데이터 목록
+        """
+        return await self.get_case_bank_data(category_path)
     
     def filter_by_category(
         self,
@@ -240,13 +180,13 @@ class CaseBankManager:
         return True
 
 class CBRRecommendationEngine:
-    """CBR 추천 엔진"""
+    """CBR 추천 엔진 (A팀 case_bank 연동)"""
     
-    def __init__(self, case_bank_path: str = "./case_bank"):
-        self.case_bank = CaseBankManager(case_bank_path)
+    def __init__(self, a_team_base_url: str = "http://localhost:8001"):
+        self.case_bank = CaseBankManager(a_team_base_url)
         self.similarity_calculator = VectorSimilarity()
     
-    def find_similar_cases(
+    async def find_similar_cases(
         self,
         query_vector: List[float],
         category_path: Optional[List[str]] = None,
@@ -255,7 +195,7 @@ class CBRRecommendationEngine:
         similarity_method: str = "cosine"
     ) -> List[SimilarityResult]:
         """
-        유사한 케이스 찾기 (k-NN)
+        A팀 case_bank에서 유사한 케이스 찾기 (k-NN) (PRD 준수)
         
         Args:
             query_vector: 쿼리 벡터
@@ -267,19 +207,13 @@ class CBRRecommendationEngine:
         Returns:
             List[SimilarityResult]: 유사도 순으로 정렬된 케이스 목록
         """
-        # 케이스 로드
-        all_cases = self.case_bank.load_cases()
-        
-        # 카테고리 필터 적용
-        if category_path:
-            filtered_cases = self.case_bank.filter_by_category(all_cases, category_path)
-        else:
-            filtered_cases = all_cases
+        # A팀 case_bank에서 케이스 로드 (카테고리 필터 적용)
+        all_cases = await self.case_bank.load_cases(category_path)
         
         # 유사도 계산
         similarities = []
         
-        for case in filtered_cases:
+        for case in all_cases:
             case_vector = case.get("query_vector", [])
             
             if not case_vector:
