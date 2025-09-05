@@ -1,6 +1,6 @@
 export const API_ENDPOINTS = {
-  // Base URLs
-  BASE_URL: process.env.NEXT_PUBLIC_TAXONOMY_API_URL || 'http://localhost:8000',
+  // Base URLs - Environment Variable Based
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
   
   // Taxonomy endpoints
   TAXONOMY: {

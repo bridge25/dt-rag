@@ -28,7 +28,8 @@ export interface ApiResponse<T> {
 }
 
 export interface ErrorResponse {
-  error: string
+  code: string              // e.g., "FORBIDDEN", "RATE_LIMITED", "INVALID_INPUT"
   message: string
-  statusCode: number
+  request_id?: string       // For debugging and support
+  details?: Record<string, any>  // Additional error context
 }
