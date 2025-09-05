@@ -40,7 +40,7 @@ echo "[1/4] taxonomy tree"
 resp1=$(H "$STAGING_API_BASE/taxonomy/1.8.1/tree")
 if has_jq; then 
     # Validate tree structure and version
-    echo "$resp1" | jq '.[0] | {label,version:"1.8.1"}' >/dev/null || {
+    echo "$resp1" | jq '.[0] | {label: .label, version: "1.8.1"}' >/dev/null || {
         echo "❌ taxonomy tree validation failed" >&2
         exit 1
     }
