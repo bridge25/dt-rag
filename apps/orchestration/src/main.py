@@ -15,18 +15,36 @@ class ATaxonomyAPIClient:
     
     async def classify(self, request: dict) -> dict:
         """A팀 /classify API 호출"""
-        response = await self.client.post(f"{self.base_url}/classify", json=request)
-        return response.json()
+        try:
+            response = await self.client.post(f"{self.base_url}/classify", json=request)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail=f"A팀 API 호출 실패: {str(e)}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"분류 처리 중 오류: {str(e)}")
     
     async def search(self, request: dict) -> dict:
         """A팀 /search API 호출"""
-        response = await self.client.post(f"{self.base_url}/search", json=request)
-        return response.json()
+        try:
+            response = await self.client.post(f"{self.base_url}/search", json=request)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail=f"A팀 검색 API 호출 실패: {str(e)}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"검색 처리 중 오류: {str(e)}")
     
     async def get_taxonomy_tree(self, version: str) -> dict:
         """A팀 /taxonomy/{version}/tree API 호출"""
-        response = await self.client.get(f"{self.base_url}/taxonomy/{version}/tree")
-        return response.json()
+        try:
+            response = await self.client.get(f"{self.base_url}/taxonomy/{version}/tree")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            raise HTTPException(status_code=502, detail=f"A팀 분류체계 API 호출 실패: {str(e)}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"분류체계 조회 중 오류: {str(e)}")
 
 try:
     from common_schemas.models import (
