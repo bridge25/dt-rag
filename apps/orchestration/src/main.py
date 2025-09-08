@@ -355,7 +355,7 @@ async def suggest_cbr_cases(request: CBRSuggestRequest):
     B-O4: CBR 조회/로그 수집 (Neural Selector 데이터)
     k-NN 조회 엔드포인트 + 유사도 계산 + 성과 로깅
     """
-    from cbr_system import CBRRecommendationEngine, CBRUsageLogger, create_query_vector_mock
+    from cbr_system import CBRRecommendationEngine, CBRUsageLogger, create_query_vector_real
     import uuid
     
     start_time = time.time()
@@ -365,8 +365,8 @@ async def suggest_cbr_cases(request: CBRSuggestRequest):
     cbr_engine = CBRRecommendationEngine()
     cbr_logger = CBRUsageLogger()
     
-    # 쿼리 벡터 생성 (Mock - 실제로는 임베딩 모델 사용)
-    query_vector = create_query_vector_mock(request.query)
+    # 쿼리 벡터 생성 (실제 임베딩 모델 사용)
+    query_vector = create_query_vector_real(request.query)
     
     # A팀 case_bank에서 유사한 케이스 검색 (PRD 준수)
     similar_cases = await cbr_engine.find_similar_cases(
