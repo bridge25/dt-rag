@@ -1,0 +1,2 @@
+{"request_id": "test_request_001", "timestamp": "2025-09-04T13:18:27.540183", "selected_case_ids": ["case_001", "case_005"], "user_rating": 5, "success_flag": true, "feedback_text": "매우 유용한 추천이었습니다.", "user_id": null, "event_type": "cbr_feedback"}
+{"request_id": "cbr_1756992131447", "timestamp": "2025-09-04T13:22:29.244809", "selected_case_ids": ["case_005", "case_001"], "user_rating": 4, "success_flag": true, "feedback_text": "추천된 케이스들이 매우 유용했습니다. RAG 성능 최적화에 도움이 되었어요.", "user_id": null, "event_type": "cbr_feedback"}
