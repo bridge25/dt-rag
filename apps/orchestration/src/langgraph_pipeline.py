@@ -192,14 +192,49 @@ class LangGraphPipeline:
                 "rerank_candidates": 50,
                 "final_topk": 5
             }
-            
-            response = await self.client.post(
-                f"{self.a_team_base_url}/search",
-                json=search_request
-            )
-            
-            if response.status_code == 200:
-                search_result = response.json()
+            # Retry-After aware call to A-team /search
+            max_retries = int(os.getenv("MAX_RETRIES", os.getenv("ORCH_RETRY_MAX", "3")))
+            backoff = float(os.getenv("ORCH_RETRY_BACKOFF", "1.0"))
+            jitter = float(os.getenv("ORCH_RETRY_JITTER_MAX", "0.2"))
+            max_cap = float(os.getenv("ORCH_RETRY_MAX_DELAY", "10.0"))
+            for attempt in range(max_retries + 1):
+                try:
+                    response = await self.client.post(
+                        f"{self.a_team_base_url}/search",
+                        json=search_request
+                    )
+                    response.raise_for_status()
+                    break
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code in [429, 500, 502, 503, 504] and attempt < max_retries:
+                        ra = e.response.headers.get("Retry-After")
+                        parsed = None
+                        if ra:
+                            try:
+                                parsed = float(ra)
+                            except Exception:
+                                try:
+                                    import email.utils, time as _t
+                                    dt = email.utils.parsedate_to_datetime(ra)
+                                    parsed = max(0.0, dt.timestamp() - _t.time())
+                                except Exception:
+                                    parsed = None
+                        base = backoff * (2 ** attempt)
+                        delay = (parsed if parsed is not None else base) + random.uniform(0, jitter)
+                        delay = min(delay, max_cap)
+                        logger.warning(f"/search retry {attempt+1}/{max_retries+1} after {e.response.status_code}; sleep {delay:.2f}s")
+                        await asyncio.sleep(delay)
+                        continue
+                    raise
+                except Exception as e:
+                    if attempt < max_retries:
+                        delay = min(backoff * (2 ** attempt) + random.uniform(0, jitter), max_cap)
+                        logger.warning(f"/search exception retry {attempt+1}/{max_retries+1}; sleep {delay:.2f}s: {e}")
+                        await asyncio.sleep(delay)
+                        continue
+                    raise
+
+            search_result = response.json()
                 retrieved_docs = search_result.get("hits", [])
                 
                 # A팀 응답을 B팀 형식으로 변환
