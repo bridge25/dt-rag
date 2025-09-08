@@ -55,6 +55,7 @@ class ATaxonomyAPIClient:
         max_retries = int(os.getenv("MAX_RETRIES", os.getenv("ORCH_RETRY_MAX", "3")))
         backoff_factor = float(os.getenv("ORCH_RETRY_BACKOFF", "1.0"))
         jitter_max = float(os.getenv("ORCH_RETRY_JITTER_MAX", "0.2"))
+        max_delay_cap = float(os.getenv("ORCH_RETRY_MAX_DELAY", "10.0"))
         
         for attempt in range(max_retries + 1):
             try:
