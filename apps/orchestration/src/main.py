@@ -5,13 +5,93 @@ import sys
 import time
 import httpx
 import asyncio
+<<<<<<< Updated upstream
 sys.path.append('../../../packages')
 
 # A팀 API 클라이언트 (PRD 준수)
+=======
+import random
+import logging
+import os
+sys.path.append('../../../packages')
+
+# Basic logging configuration (can be overridden via env)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_FORMAT = os.getenv("LOG_FORMAT", "%(asctime)s %(levelname)s %(name)s - %(message)s")
+logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
+
+# A팀 API 클라이언트 (PRD 준수 + Connection Pool + Retry Logic)
+>>>>>>> Stashed changes
 class ATaxonomyAPIClient:
     def __init__(self, base_url: str = "http://localhost:8001"):
         self.base_url = base_url
+<<<<<<< Updated upstream
         self.client = httpx.AsyncClient()
+=======
+        self.headers = {"Content-Type": "application/json"}
+        if api_key:
+            self.headers["X-API-Key"] = api_key
+        # Environment overrides
+        env_base = os.getenv("ORCH_A_TEAM_BASE_URL") or os.getenv("A_TEAM_BASE_URL")
+        if env_base:
+            self.base_url = env_base
+        env_api_key = os.getenv("ORCH_A_TEAM_API_KEY") or os.getenv("A_TEAM_API_KEY")
+        if env_api_key and "X-API-Key" not in self.headers:
+            self.headers["X-API-Key"] = env_api_key
+        
+        # Connection Pool 설정
+        max_keepalive = int(os.getenv("ORCH_HTTP_MAX_KEEPALIVE", "20"))
+        max_connections = int(os.getenv("ORCH_HTTP_MAX_CONNECTIONS", "100"))
+        limits = httpx.Limits(max_keepalive_connections=max_keepalive, max_connections=max_connections)
+        # If a generic HTTP timeout is provided, use it for all phases
+        generic_t = os.getenv("HTTP_TIMEOUT")
+        connect_t = float(os.getenv("ORCH_HTTP_TIMEOUT_CONNECT", "5.0")) if generic_t is None else float(generic_t)
+        read_t = float(os.getenv("ORCH_HTTP_TIMEOUT_READ", "10.0")) if generic_t is None else float(generic_t)
+        write_t = float(os.getenv("ORCH_HTTP_TIMEOUT_WRITE", "10.0")) if generic_t is None else float(generic_t)
+        pool_t = float(os.getenv("ORCH_HTTP_TIMEOUT_POOL", "10.0")) if generic_t is None else float(generic_t)
+        timeout = httpx.Timeout(connect=connect_t, read=read_t, write=write_t, pool=pool_t)
+        
+        self.client = httpx.AsyncClient(
+            limits=limits,
+            timeout=timeout,
+            headers=self.headers
+        )
+    
+    async def _request_with_retry(self, method: str, url: str, **kwargs) -> dict:
+        """지수 백오프를 사용한 재시도 로직"""
+        max_retries = int(os.getenv("MAX_RETRIES", os.getenv("ORCH_RETRY_MAX", "3")))
+        backoff_factor = float(os.getenv("ORCH_RETRY_BACKOFF", "1.0"))
+        jitter_max = float(os.getenv("ORCH_RETRY_JITTER_MAX", "0.2"))
+        
+        for attempt in range(max_retries + 1):
+            try:
+                if method.upper() == "POST":
+                    response = await self.client.post(url, **kwargs)
+                else:
+                    response = await self.client.get(url, **kwargs)
+                
+                response.raise_for_status()
+                return response.json()
+                
+            except httpx.HTTPStatusError as e:
+                # 429 (Too Many Requests) 또는 5xx 에러만 재시도
+                if e.response.status_code in [429, 500, 502, 503, 504]:
+                    if attempt < max_retries:
+                        # 지수 백오프 + 지터
+                        delay = backoff_factor * (2 ** attempt) + random.uniform(0, jitter_max)
+                        logging.warning(f"API 호출 실패 (시도 {attempt + 1}/{max_retries + 1}): {e.response.status_code}. {delay:.2f}초 후 재시도")
+                        await asyncio.sleep(delay)
+                        continue
+                raise HTTPException(status_code=e.response.status_code, detail=f"A팀 API 호출 실패: {str(e)}")
+                
+            except Exception as e:
+                if attempt < max_retries:
+                    delay = backoff_factor * (2 ** attempt) + random.uniform(0, jitter_max)
+                    logging.warning(f"API 연결 오류 (시도 {attempt + 1}/{max_retries + 1}): {str(e)}. {delay:.2f}초 후 재시도")
+                    await asyncio.sleep(delay)
+                    continue
+                raise HTTPException(status_code=500, detail=f"A팀 API 연결 실패: {str(e)}")
+>>>>>>> Stashed changes
     
     async def classify(self, request: dict) -> dict:
         """A팀 /classify API 호출"""
@@ -131,6 +211,14 @@ app = FastAPI(title="Dynamic Taxonomy RAG - Orchestration")
 
 # A팀 API 클라이언트 인스턴스 (PRD 준수)
 a_team_client = ATaxonomyAPIClient()
+
+# Graceful resource cleanup: close shared HTTP client on shutdown
+@app.on_event("shutdown")
+async def shutdown_event():
+    try:
+        await a_team_client.client.aclose()
+    except Exception as e:
+        logging.warning(f"Failed to close A-team AsyncClient: {e}")
 
 @app.get("/health")
 async def health():
