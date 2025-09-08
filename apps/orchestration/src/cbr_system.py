@@ -100,7 +100,20 @@ class CaseBankManager:
             a_team_base_url: A팀 API 기본 URL
         """
         self.a_team_base_url = a_team_base_url
-        self.client = httpx.AsyncClient()
+        # HTTP client configuration from environment
+        env_base = os.getenv("ORCH_A_TEAM_BASE_URL") or os.getenv("A_TEAM_BASE_URL")
+        if env_base:
+            self.a_team_base_url = env_base
+        max_keepalive = int(os.getenv("ORCH_HTTP_MAX_KEEPALIVE", "20"))
+        max_connections = int(os.getenv("ORCH_HTTP_MAX_CONNECTIONS", "100"))
+        limits = httpx.Limits(max_keepalive_connections=max_keepalive, max_connections=max_connections)
+        generic_t = os.getenv("HTTP_TIMEOUT")
+        connect_t = float(os.getenv("ORCH_HTTP_TIMEOUT_CONNECT", "5.0")) if generic_t is None else float(generic_t)
+        read_t = float(os.getenv("ORCH_HTTP_TIMEOUT_READ", "10.0")) if generic_t is None else float(generic_t)
+        write_t = float(os.getenv("ORCH_HTTP_TIMEOUT_WRITE", "10.0")) if generic_t is None else float(generic_t)
+        pool_t = float(os.getenv("ORCH_HTTP_TIMEOUT_POOL", "10.0")) if generic_t is None else float(generic_t)
+        timeout = httpx.Timeout(connect=connect_t, read=read_t, write=write_t, pool=pool_t)
+        self.client = httpx.AsyncClient(limits=limits, timeout=timeout)
     
     async def get_case_bank_data(self, category_path: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         """
@@ -122,9 +135,12 @@ class CaseBankManager:
                 f"{self.a_team_base_url}/case_bank",
                 params=params
             )
-            
-            if response.status_code == 200:
+            response.raise_for_status()
+            try:
                 cases_data = response.json()
+            except ValueError:
+                logger.error("Invalid JSON from A-team /case_bank response")
+                cases_data = []
                 logger.info(f"A팀 case_bank 조회 완료: {len(cases_data)}개")
                 return cases_data
             else:

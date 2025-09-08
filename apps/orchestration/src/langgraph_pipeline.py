@@ -9,6 +9,7 @@ import asyncio
 import time
 import logging
 import httpx
+import os
 from typing import TypedDict, List, Dict, Any, Optional
 from datetime import datetime
 
@@ -120,8 +121,18 @@ class LangGraphPipeline:
     """B-O3 7-Step 파이프라인 (A팀 API 연동, PRD 준수)"""
     
     def __init__(self, a_team_base_url: str = "http://localhost:8001"):
-        self.a_team_base_url = a_team_base_url
-        self.client = httpx.AsyncClient()
+        env_base = os.getenv("ORCH_A_TEAM_BASE_URL") or os.getenv("A_TEAM_BASE_URL")
+        self.a_team_base_url = env_base or a_team_base_url
+        max_keepalive = int(os.getenv("ORCH_HTTP_MAX_KEEPALIVE", "20"))
+        max_connections = int(os.getenv("ORCH_HTTP_MAX_CONNECTIONS", "100"))
+        limits = httpx.Limits(max_keepalive_connections=max_keepalive, max_connections=max_connections)
+        generic_t = os.getenv("HTTP_TIMEOUT")
+        connect_t = float(os.getenv("ORCH_HTTP_TIMEOUT_CONNECT", "5.0")) if generic_t is None else float(generic_t)
+        read_t = float(os.getenv("ORCH_HTTP_TIMEOUT_READ", "10.0")) if generic_t is None else float(generic_t)
+        write_t = float(os.getenv("ORCH_HTTP_TIMEOUT_WRITE", "10.0")) if generic_t is None else float(generic_t)
+        pool_t = float(os.getenv("ORCH_HTTP_TIMEOUT_POOL", "10.0")) if generic_t is None else float(generic_t)
+        timeout = httpx.Timeout(connect=connect_t, read=read_t, write=write_t, pool=pool_t)
+        self.client = httpx.AsyncClient(limits=limits, timeout=timeout)
         self.graph = self._build_graph()
         # 복원력 시스템 통합
         try:
@@ -192,15 +203,17 @@ class LangGraphPipeline:
                 "rerank_candidates": 50,
                 "final_topk": 5
             }
-            
             response = await self.client.post(
                 f"{self.a_team_base_url}/search",
                 json=search_request
             )
-            
-            if response.status_code == 200:
+            response.raise_for_status()
+            try:
                 search_result = response.json()
-                retrieved_docs = search_result.get("hits", [])
+            except ValueError:
+                logger.error("Invalid JSON from A-team /search response")
+                search_result = {"hits": []}
+            retrieved_docs = search_result.get("hits", [])
                 
                 # A팀 응답을 B팀 형식으로 변환
                 formatted_docs = []
