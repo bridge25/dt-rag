@@ -5,11 +5,6 @@ import sys
 import time
 import httpx
 import asyncio
-<<<<<<< Updated upstream
-sys.path.append('../../../packages')
-
-# A팀 API 클라이언트 (PRD 준수)
-=======
 import random
 import logging
 import os
@@ -21,16 +16,13 @@ LOG_FORMAT = os.getenv("LOG_FORMAT", "%(asctime)s %(levelname)s %(name)s - %(mes
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 
 # A팀 API 클라이언트 (PRD 준수 + Connection Pool + Retry Logic)
->>>>>>> Stashed changes
 class ATaxonomyAPIClient:
-    def __init__(self, base_url: str = "http://localhost:8001"):
+    def __init__(self, base_url: str = "http://localhost:8001", api_key: Optional[str] = None):
         self.base_url = base_url
-<<<<<<< Updated upstream
-        self.client = httpx.AsyncClient()
-=======
         self.headers = {"Content-Type": "application/json"}
         if api_key:
             self.headers["X-API-Key"] = api_key
+            
         # Environment overrides
         env_base = os.getenv("ORCH_A_TEAM_BASE_URL") or os.getenv("A_TEAM_BASE_URL")
         if env_base:
@@ -43,6 +35,7 @@ class ATaxonomyAPIClient:
         max_keepalive = int(os.getenv("ORCH_HTTP_MAX_KEEPALIVE", "20"))
         max_connections = int(os.getenv("ORCH_HTTP_MAX_CONNECTIONS", "100"))
         limits = httpx.Limits(max_keepalive_connections=max_keepalive, max_connections=max_connections)
+        
         # If a generic HTTP timeout is provided, use it for all phases
         generic_t = os.getenv("HTTP_TIMEOUT")
         connect_t = float(os.getenv("ORCH_HTTP_TIMEOUT_CONNECT", "5.0")) if generic_t is None else float(generic_t)
@@ -71,7 +64,11 @@ class ATaxonomyAPIClient:
                     response = await self.client.get(url, **kwargs)
                 
                 response.raise_for_status()
-                return response.json()
+                try:
+                    return response.json()
+                except ValueError:
+                    logging.error("Invalid JSON from A-team API response")
+                    return {}
                 
             except httpx.HTTPStatusError as e:
                 # 429 (Too Many Requests) 또는 5xx 에러만 재시도
@@ -91,22 +88,18 @@ class ATaxonomyAPIClient:
                     await asyncio.sleep(delay)
                     continue
                 raise HTTPException(status_code=500, detail=f"A팀 API 연결 실패: {str(e)}")
->>>>>>> Stashed changes
     
     async def classify(self, request: dict) -> dict:
-        """A팀 /classify API 호출"""
-        response = await self.client.post(f"{self.base_url}/classify", json=request)
-        return response.json()
+        """A팀 /classify API 호출 (재시도 로직 적용)"""
+        return await self._request_with_retry("POST", f"{self.base_url}/classify", json=request)
     
     async def search(self, request: dict) -> dict:
-        """A팀 /search API 호출"""
-        response = await self.client.post(f"{self.base_url}/search", json=request)
-        return response.json()
+        """A팀 /search API 호출 (재시도 로직 적용)"""
+        return await self._request_with_retry("POST", f"{self.base_url}/search", json=request)
     
     async def get_taxonomy_tree(self, version: str) -> dict:
-        """A팀 /taxonomy/{version}/tree API 호출"""
-        response = await self.client.get(f"{self.base_url}/taxonomy/{version}/tree")
-        return response.json()
+        """A팀 /taxonomy/{version}/tree API 호출 (재시도 로직 적용)"""
+        return await self._request_with_retry("GET", f"{self.base_url}/taxonomy/{version}/tree")
 
 try:
     from common_schemas.models import (
