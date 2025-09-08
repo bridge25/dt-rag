@@ -217,6 +217,65 @@ async def shutdown_event():
 async def health():
     return {"status": "healthy", "service": "orchestration"}
 
+# Gateway routes under /api/* for Frontend integration
+
+@app.post("/api/classify", response_model=ClassifyResponse)
+async def api_classify(request: ClassifyRequest):
+    # Reuse B-team classify logic against A-team API with hardening
+    try:
+        a_team_request = {
+            "chunk_id": request.chunk_id,
+            "text": request.text,
+            "hint_paths": request.hint_paths,
+        }
+        result = await a_team_client.classify(a_team_request)
+        return ClassifyResponse(
+            canonical=result.get("canonical", []),
+            candidates=[TaxonomyNode(**c) for c in result.get("candidates", [])],
+            hitl=result.get("hitl", False),
+            confidence=result.get("confidence", 0.0),
+            reasoning=result.get("reasoning", ["A-team classify invoked"]),
+        )
+    except Exception as e:
+        return ClassifyResponse(
+            canonical=["Unknown"], candidates=[], hitl=True, confidence=0.0,
+            reasoning=[f"A-team classify error: {str(e)}", "Manual review required"],
+        )
+
+@app.post("/api/search", response_model=SearchResponse)
+async def api_search(request: SearchRequest):
+    try:
+        a_team_request = {
+            "q": request.q,
+            "filters": request.filters,
+            "bm25_topk": request.bm25_topk,
+            "vector_topk": request.vector_topk,
+            "rerank_candidates": request.rerank_candidates,
+            "final_topk": request.final_topk,
+        }
+        result = await a_team_client.search(a_team_request)
+        return SearchResponse(
+            hits=result.get("hits", []),
+            latency=result.get("latency", 0.0),
+            request_id=result.get("request_id", f"search_{int(time.time()*1000)}"),
+            total_candidates=result.get("total_candidates"),
+            sources_count=result.get("sources_count"),
+            taxonomy_version=result.get("taxonomy_version"),
+        )
+    except Exception:
+        # Return empty but valid response shape
+        return SearchResponse(
+            hits=[], latency=0.0, request_id=f"search_{int(time.time()*1000)}",
+            total_candidates=0, sources_count=0, taxonomy_version="unknown",
+        )
+
+@app.get("/api/taxonomy/tree/{version}")
+async def api_taxonomy_tree(version: str):
+    try:
+        return await a_team_client.get_taxonomy_tree(version)
+    except Exception as e:
+        return {"version": version, "tree": [], "error": f"A-team taxonomy error: {str(e)}"}
+
 @app.post("/classify", response_model=ClassifyResponse)
 async def classify(request: ClassifyRequest):
     """
