@@ -1,6 +1,6 @@
 # packages/common-schemas/models.py (문서의 공통 스키마 예시 블록을 아래로 교체)
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict
 
 class TaxonomyNode(BaseModel):
@@ -37,12 +37,20 @@ class SearchHit(BaseModel):
     taxonomy_path: Optional[List[str]] = None
 
 class SearchRequest(BaseModel):
-    q: str
+    # Allow payloads with either "q" or "query"; prefer attribute access via .q
+    model_config = ConfigDict(populate_by_name=True)
+
+    q: str = Field(alias="query")
     filters: Optional[Dict] = None     # 예: {"canonical_in":[["AI","RAG"]]}
     bm25_topk: int = 12
     vector_topk: int = 12
     rerank_candidates: int = 50
     final_topk: int = 5
+
+    # Backwards/sideways compatibility for code that accesses req.query
+    @property
+    def query(self) -> str:  # type: ignore[override]
+        return self.q
 
 class SearchResponse(BaseModel):
     hits: List[SearchHit]
