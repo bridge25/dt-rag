@@ -52,6 +52,8 @@ PR 생성/업데이트 → CI 워크플로우 자동 시작
 ```
 
 #### **Node.js 프로젝트** (package.json 있을 시)
+Node.js 관련 단계는 **`package.json`이 존재할 때만** 자동 실행됩니다. (없으면 전부 스킵)
+
 ```yaml
 ✅ Node.js 22 설정
 ✅ 의존성 설치 (npm 캐시 활용)
@@ -231,7 +233,10 @@ npm test   # Node.js 테스트
 **스킵되는 파일 패턴:**
 - `docs/` 디렉토리의 모든 파일
 - `README.md`
+- `.github/pull_request_template.md`  
 - 모든 `.md` 파일
+
+**중요**: 코드 파일이 한 줄이라도 포함되면 **전체 검증**으로 전환됩니다.
 
 **효과:**
 - 처리시간: 5-10분 → 30초 (90% 단축)
@@ -247,6 +252,8 @@ alembic upgrade head    # 최신으로 업그레이드
 alembic downgrade -1    # 한 단계 롤백
 alembic upgrade head    # 다시 업그레이드
 ```
+
+⚠️ **중요**: 리비전이 1개 이하인 경우에는 `alembic downgrade -1` 단계가 자동으로 **스킵**됩니다(로그에 안내가 출력됩니다).
 
 **효과:**
 - 배포 실패 시 안전한 롤백 보장
@@ -291,6 +298,14 @@ CI 실패 시 Claude/GPT/Codex용 맞춤형 프롬프트 자동 생성:
 
 ### **Q6. PostgreSQL 설정이 필요한가요?**
 **A**: 로컬 개발 시에만 필요합니다. CI는 자동으로 PostgreSQL + pgvector 환경을 제공합니다.
+
+### **Q7. 브랜치 보호 설정은 어디서 하나요?**
+**A**: GitHub 웹 인터페이스에서 설정합니다:
+1. **Settings** → **Branches** → **Add rule** 클릭
+2. **Branch name pattern**: `master` 입력  
+3. **Required status checks**: `PR Validate (Build/Test/Lint/DB + Auto Report)` 선택
+4. **Required reviews**: 1명 이상 승인 설정
+5. **Restrict pushes**: 직접 푸시 차단 체크
 
 ---
 
