@@ -1,0 +1,232 @@
+name: PR Validate (Build/Test/Lint/DB + Auto Report)
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: app_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/app_test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ---------- Python (있을 때만) ----------
+      - name: Set up Python
+        if: hashFiles('requirements.txt') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        if: hashFiles('requirements.txt') != ''
+        run: |
+          python -m pip install -U pip wheel
+          pip install -r requirements.txt
+          pip install pytest pytest-cov ruff alembic
+
+      - name: DB migrate dry-run (Alembic)
+        if: hashFiles('alembic.ini') != ''
+        run: |
+          alembic upgrade head
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Lint (ruff → annotations)
+        if: hashFiles('requirements.txt') != ''
+        run: |
+          ruff check . --output-format=github
+        continue-on-error: true
+
+      - name: Test (pytest → JUnit)
+        id: pytest
+        if: hashFiles('requirements.txt') != ''
+        run: |
+          mkdir -p reports
+          set +e
+          pytest -q --disable-warnings --maxfail=0 --junitxml=reports/pytest.xml
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          exit 0
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      # ---------- Node/JS (있을 때만) ----------
+      - name: Set up Node
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Node deps
+        if: hashFiles('package.json') != ''
+        run: npm ci
+
+      - name: Lint (eslint → annotations)
+        if: hashFiles('package.json') != ''
+        run: |
+          npx eslint . -f stylish || true
+
+      - name: Contract Lint (OpenAPI optional)
+        if: hashFiles('openapi.@(yaml|yml|json)') != ''
+        run: |
+          npx -y @redocly/cli@latest lint openapi.yaml || npx -y @stoplight/spectral-cli@latest lint openapi.yaml
+
+      - name: Test (npm test)
+        id: npmtest
+        if: hashFiles('package.json') != ''
+        run: |
+          set +e
+          npm test
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          exit 0
+
+      # ---------- 아티팩트/요약/라벨/코멘트 ----------
+      - name: Upload reports artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            reports/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Build Job Summary (Checks tab)
+        if: always()
+        run: |
+          echo "## PR Validate Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Py tests exit: ${{ steps.pytest.outputs.exit_code || 'n/a' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- JS tests exit: ${{ steps.npmtest.outputs.exit_code || 'n/a' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- DB: pgvector/pg16 service up" >> $GITHUB_STEP_SUMMARY
+          echo "- Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Artifacts: reports (JUnit/XML, logs)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Label PR on failure
+        if: failure() || steps.pytest.outputs.exit_code == '1' || steps.npmtest.outputs.exit_code == '1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['ci-failed']
+            });
+
+      - name: Post structured comment (Claude/Codex/GPT prompts)
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const run = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const py = `${{ steps.pytest.outputs.exit_code || 'n/a' }}`;
+            const js = `${{ steps.npmtest.outputs.exit_code || 'n/a' }}`;
+            const body = `
+**PR Validate Report**
+
+- **Python tests exit**: ${py}
+- **Node tests exit**: ${js}
+- **DB**: Postgres16 + pgvector service is running
+- **Logs**: ${run}
+- **Artifacts**: download "reports" (JUnit/XML, logs)
+
+If failed, check:
+1) Lint output (inline annotations in "Files changed" & "Checks")
+2) Unit test failures (reports/pytest.xml or npm test log)
+3) DB migrations (alembic upgrade head)
+4) Reproduce locally as in \`AGENTS.md\`
+
+---
+
+<details><summary><b>🟣 [ClaudeFix Prompt] — 클로드코드용</b></summary>
+
+Copy & paste into Claude Code. Work on branch <b>${pr.head.ref}</b>.
+
+\`\`\`
+Role: Senior Dev (Claude Code)
+Goal: Make CI green for PR #${pr.number} — "${pr.title}"
+
+Context
+- Repo: ${process.env.GITHUB_REPOSITORY}
+- Branch: ${pr.head.ref}
+- CI run: ${run}
+- DB: Postgres16+pgvector, DATABASE_URL=${process.env.DATABASE_URL}
+- Artifacts: "reports" (JUnit/XML, logs)
+- Follow AGENTS.md (install, lint, test; DO-NOT-TOUCH paths)
+
+Tasks
+1) Reproduce locally per AGENTS.md (including DB).
+2) Minimal edits to pass tests/migrations/lint.
+3) Push commits to branch ${pr.head.ref} (feat/fix/chore).
+4) Reply in PR with before/after & what changed.
+\`\`\`
+</details>
+
+<details><summary><b>🔵 [CodexFix Prompt] — Codex용</b></summary>
+
+Use ChatGPT Codex connected to this repo. Target branch: <b>${pr.head.ref}</b>.
+
+\`\`\`
+System: You are a strict fixer agent in a sandbox. Obey AGENTS.md, avoid protected paths.
+User: PR #${pr.number} is failing. CI: ${run}. DB is Postgres16+pgvector, DATABASE_URL=${process.env.DATABASE_URL}.
+Goal: Make tests, migrations, and lint pass with minimal changes, then commit to ${pr.head.ref}.
+\`\`\`
+</details>
+
+<details><summary><b>🟢 [GPTFix Prompt] — GPT에게 붙여넣기</b></summary>
+
+\`\`\`
+Role: Pair-Programmer
+Ask: Generate the minimal unified diff to make PR #${pr.number} green (tests, migrations, lint).
+Inputs:
+- Repo: ${process.env.GITHUB_REPOSITORY}
+- Branch: ${pr.head.ref}
+- CI run: ${run}
+- DB: Postgres16+pgvector (DATABASE_URL=${process.env.DATABASE_URL})
+- Notes: Respect AGENTS.md; keep commits small and clear.
+Deliverables:
+1) Short diagnosis.
+2) Unified diff patches for each file.
+3) Commit message suggestions (Conventional Commits).
+\`\`\`
+</details>
+`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body
+            });
+
+      - name: Fail if any suite failed
+        if: ${{ steps.pytest.outputs.exit_code == '1' || steps.npmtest.outputs.exit_code == '1' }}
+        run: exit 1
