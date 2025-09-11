@@ -3,6 +3,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -45,6 +49,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache pip
+        if: hashFiles('requirements.txt') != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: pip-${{ runner.os }}-
+
       - name: Install Python deps
         if: hashFiles('requirements.txt') != ''
         run: |
@@ -84,6 +96,14 @@ jobs:
         with:
           node-version: 22
 
+      - name: Cache npm
+        if: hashFiles('package.json') != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
+
       - name: Install Node deps
         if: hashFiles('package.json') != ''
         run: npm ci
@@ -94,16 +114,18 @@ jobs:
           npx eslint . -f stylish || true
 
       - name: Contract Lint (OpenAPI optional)
-        if: hashFiles('openapi.@(yaml|yml|json)') != ''
+        if: hashFiles('openapi.yaml', 'openapi.yml', 'openapi.json') != ''
         run: |
-          npx -y @redocly/cli@latest lint openapi.yaml || npx -y @stoplight/spectral-cli@latest lint openapi.yaml
+          FILE=$(ls openapi.yaml openapi.yml openapi.json 2>/dev/null | head -n1)
+          npx -y @redocly/cli@latest lint "$FILE" || npx -y @stoplight/spectral-cli@latest lint "$FILE"
 
       - name: Test (npm test)
         id: npmtest
         if: hashFiles('package.json') != ''
         run: |
+          mkdir -p reports
           set +e
-          npm test
+          npm test --silent 2>&1 | tee reports/npm-test.log
           echo "exit_code=$?" >> $GITHUB_OUTPUT
           exit 0
 
@@ -117,6 +139,25 @@ jobs:
             reports/**
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Prepare failure summary
+        if: always()
+        run: |
+          echo "## 🔍 Failure Summary" > failure_summary.md
+          echo "" >> failure_summary.md
+          if [ -f reports/pytest.xml ]; then
+            echo "### Python Test Failures (Top 10)" >> failure_summary.md
+            echo '```' >> failure_summary.md
+            grep -E "(FAILED|ERROR)" reports/pytest.xml | head -10 >> failure_summary.md || true
+            echo '```' >> failure_summary.md
+            echo "" >> failure_summary.md
+          fi
+          if [ -f reports/npm-test.log ]; then
+            echo "### Node.js Test Failures (Top 10)" >> failure_summary.md
+            echo '```' >> failure_summary.md
+            head -20 reports/npm-test.log >> failure_summary.md || true
+            echo '```' >> failure_summary.md
+          fi
 
       - name: Build Job Summary (Checks tab)
         if: always()
@@ -146,10 +187,19 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
             const pr = context.payload.pull_request;
             const run = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
             const py = `${{ steps.pytest.outputs.exit_code || 'n/a' }}`;
             const js = `${{ steps.npmtest.outputs.exit_code || 'n/a' }}`;
+            
+            let failureSummary = '';
+            try {
+              failureSummary = fs.readFileSync('failure_summary.md', 'utf8');
+            } catch (e) {
+              // If no failure summary file, continue without it
+            }
+            
             const body = `
 **PR Validate Report**
 
@@ -164,6 +214,8 @@ If failed, check:
 2) Unit test failures (reports/pytest.xml or npm test log)
 3) DB migrations (alembic upgrade head)
 4) Reproduce locally as in \`AGENTS.md\`
+
+${failureSummary ? `\n${failureSummary}\n` : ''}
 
 ---
 
