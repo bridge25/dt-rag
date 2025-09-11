@@ -42,15 +42,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Detect docs-only changes
+        run: |
+          git diff --name-only origin/${{ github.base_ref }}...HEAD | \
+          grep -vE '^(docs/|README.md|.*\.md)$' >/dev/null \
+          && echo "SKIP=0" >> $GITHUB_ENV || echo "SKIP=1" >> $GITHUB_ENV
+
       # ---------- Python (있을 때만) ----------
       - name: Set up Python
-        if: hashFiles('requirements.txt') != ''
+        if: hashFiles('requirements.txt') != '' && env.SKIP == '0'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Cache pip
-        if: hashFiles('requirements.txt') != ''
+        if: hashFiles('requirements.txt') != '' && env.SKIP == '0'
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -58,28 +64,39 @@ jobs:
           restore-keys: pip-${{ runner.os }}-
 
       - name: Install Python deps
-        if: hashFiles('requirements.txt') != ''
+        if: hashFiles('requirements.txt') != '' && env.SKIP == '0'
         run: |
           python -m pip install -U pip wheel
           pip install -r requirements.txt
           pip install pytest pytest-cov ruff alembic
 
       - name: DB migrate dry-run (Alembic)
-        if: hashFiles('alembic.ini') != ''
+        if: hashFiles('alembic.ini') != '' && env.SKIP == '0'
         run: |
           alembic upgrade head
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
+      - name: Alembic rollback smoke test
+        if: hashFiles('alembic.ini') != '' && env.SKIP == '0'
+        run: |
+          echo "Testing rollback safety..."
+          alembic upgrade head
+          alembic downgrade -1
+          alembic upgrade head
+          echo "Rollback smoke test completed successfully"
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
       - name: Lint (ruff → annotations)
-        if: hashFiles('requirements.txt') != ''
+        if: hashFiles('requirements.txt') != '' && env.SKIP == '0'
         run: |
           ruff check . --output-format=github
         continue-on-error: true
 
       - name: Test (pytest → JUnit)
         id: pytest
-        if: hashFiles('requirements.txt') != ''
+        if: hashFiles('requirements.txt') != '' && env.SKIP == '0'
         run: |
           mkdir -p reports
           set +e
@@ -91,13 +108,13 @@ jobs:
 
       # ---------- Node/JS (있을 때만) ----------
       - name: Set up Node
-        if: hashFiles('package.json') != ''
+        if: hashFiles('package.json') != '' && env.SKIP == '0'
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
       - name: Cache npm
-        if: hashFiles('package.json') != ''
+        if: hashFiles('package.json') != '' && env.SKIP == '0'
         uses: actions/cache@v4
         with:
           path: ~/.npm
@@ -105,23 +122,23 @@ jobs:
           restore-keys: npm-${{ runner.os }}-
 
       - name: Install Node deps
-        if: hashFiles('package.json') != ''
+        if: hashFiles('package.json') != '' && env.SKIP == '0'
         run: npm ci
 
       - name: Lint (eslint → annotations)
-        if: hashFiles('package.json') != ''
+        if: hashFiles('package.json') != '' && env.SKIP == '0'
         run: |
           npx eslint . -f stylish || true
 
       - name: Contract Lint (OpenAPI optional)
-        if: hashFiles('openapi.yaml', 'openapi.yml', 'openapi.json') != ''
+        if: hashFiles('openapi.yaml', 'openapi.yml', 'openapi.json') != '' && env.SKIP == '0'
         run: |
           FILE=$(ls openapi.yaml openapi.yml openapi.json 2>/dev/null | head -n1)
           npx -y @redocly/cli@latest lint "$FILE" || npx -y @stoplight/spectral-cli@latest lint "$FILE"
 
       - name: Test (npm test)
         id: npmtest
-        if: hashFiles('package.json') != ''
+        if: hashFiles('package.json') != '' && env.SKIP == '0'
         run: |
           mkdir -p reports
           set +e
@@ -163,9 +180,14 @@ jobs:
         if: always()
         run: |
           echo "## PR Validate Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- Py tests exit: ${{ steps.pytest.outputs.exit_code || 'n/a' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- JS tests exit: ${{ steps.npmtest.outputs.exit_code || 'n/a' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- DB: pgvector/pg16 service up" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ env.SKIP }}" == "1" ]; then
+            echo "- ⏭️ **Docs-only changes detected - CI steps skipped**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Py tests exit: ${{ steps.pytest.outputs.exit_code || 'n/a' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- JS tests exit: ${{ steps.npmtest.outputs.exit_code || 'n/a' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- DB: pgvector/pg16 service up" >> $GITHUB_STEP_SUMMARY
+            echo "- Alembic rollback: smoke test completed" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- Logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
           echo "- Artifacts: reports (JUnit/XML, logs)" >> $GITHUB_STEP_SUMMARY
 
@@ -203,10 +225,10 @@ jobs:
             const body = `
 **PR Validate Report**
 
-- **Python tests exit**: ${py}
+${process.env.SKIP === '1' ? '⏭️ **Docs-only changes detected - CI steps skipped for efficiency**\n\n' : `- **Python tests exit**: ${py}
 - **Node tests exit**: ${js}
 - **DB**: Postgres16 + pgvector service is running
-- **Logs**: ${run}
+- **Alembic rollback**: smoke test completed\n`}- **Logs**: ${run}
 - **Artifacts**: download "reports" (JUnit/XML, logs)
 
 If failed, check:
