@@ -1,1 +1,11 @@
+# Code ownership rules for automated review assignment
+# Update these with actual GitHub usernames of your team members
+
+# Global ownership - all files require review from at least one team member
 * @member1 @member2 @member3
+
+# Specific ownership examples (uncomment and customize as needed):
+# .github/workflows/ @devops-lead @ci-maintainer
+# apps/api/ @backend-team  
+# apps/frontend-admin/ @frontend-team
+# docs/ @docs-team

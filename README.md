@@ -5,7 +5,8 @@
 > **Version**: 1.8.1  
 > **Team**: A팀 (Taxonomy & Data Platform)  
 > **Dependencies**: PostgreSQL 15+, pgvector extension  
-> **Migration Type**: DDL Hardening (스택드 PR-2)
+> **Migration Type**: DDL Hardening (스택드 PR-2)  
+> **CI/CD Status**: ✅ Automated governance active
 
 ## 🎯 Overview
 
