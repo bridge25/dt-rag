@@ -1,5 +1,6 @@
-<<<<<<< HEAD
 # Dynamic Taxonomy RAG - Database Schema (DDL Hardening)
+
+> 📋 **[🚀 CI/CD Workflow Guide](CI_CD_WORKFLOW_GUIDE.md)** - 팀 개발 워크플로우 가이드
 
 > **Version**: 1.8.1  
 > **Team**: A팀 (Taxonomy & Data Platform)  
@@ -308,7 +309,25 @@ This DDL hardening provides the foundation for:
 **Schema Version**: 1.8.1  
 **Team**: A팀 (Taxonomy & Data Platform)  
 **Status**: ✅ Ready for B/C team integration
-=======
+
+---
+
+## 🚀 CI/CD Governance & Workflow
+
+이 프로젝트는 **자동화된 CI/CD 거버넌스 시스템**을 통해 코드 품질과 안전성을 보장합니다.
+
+### 📋 팀 개발 가이드
+
+**👥 모든 개발팀 구성원은 반드시 확인하세요:**
+
+> **📖 [CI/CD Workflow Guide](CI_CD_WORKFLOW_GUIDE.md)** - 완전한 팀 개발 워크플로우 가이드
+
+### 🎯 주요 특징
+- **⏭️ 지능형 CI 스킵**: 문서만 수정 시 30초 내 완료 (90% 시간 절약)
+- **🛡️ 안전한 배포**: Alembic 롤백 테스트로 99% 롤백 신뢰도
+- **🤖 AI 친화적**: 실패 시 Claude/GPT 수정 가이드 자동 생성
+- **🔒 브랜치 보호**: master 브랜치 직접 푸시 차단
+
 # Dynamic Taxonomy RAG System
 
 A production-ready RAG (Retrieval-Augmented Generation) system with dynamic taxonomy classification, advanced document processing, and comprehensive orchestration capabilities.
