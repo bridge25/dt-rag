@@ -107,7 +107,7 @@ CREATE TABLE embeddings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Constraints
-    CONSTRAINT valid_model_name CHECK (length(model_name) > 0),
+    CONSTRAINT valid_model_name CHECK (length(model_name) > 0)
     -- NOTE: vector(1536) type itself enforces dimension; do not call array_length on vector
 );
 
