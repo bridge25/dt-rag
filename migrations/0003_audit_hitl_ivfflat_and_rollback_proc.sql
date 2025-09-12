@@ -3,6 +3,25 @@
 -- Purpose: Audit logging, HITL queue, vector indexes, and taxonomy rollback procedures
 -- Dependencies: 0001_initial_schema.sql, 0002_span_range_and_indexes.sql
 
+-- Check dependencies exist before proceeding
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'chunks') THEN
+        RAISE NOTICE 'Warning: chunks table does not exist. This migration requires 0001_initial_schema.sql to be applied first.';
+        RAISE EXCEPTION 'Missing dependency: chunks table from 0001_initial_schema.sql';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'embeddings') THEN
+        RAISE NOTICE 'Warning: embeddings table does not exist. This migration requires 0001_initial_schema.sql to be applied first.';
+        RAISE EXCEPTION 'Missing dependency: embeddings table from 0001_initial_schema.sql';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_nodes') THEN
+        RAISE NOTICE 'Warning: taxonomy_nodes table does not exist. This migration requires 0001_initial_schema.sql to be applied first.';
+        RAISE EXCEPTION 'Missing dependency: taxonomy_nodes table from 0001_initial_schema.sql';
+    END IF;
+END $$;
+
 -- 1. Audit Log Table (comprehensive system tracking)
 CREATE TABLE audit_log (
     log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
