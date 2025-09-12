@@ -32,14 +32,14 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop all tables created in initial schema"""
-    # Drop tables in reverse dependency order
-    op.drop_table('doc_taxonomy')
-    op.drop_table('embeddings') 
-    op.drop_table('chunks')
-    op.drop_table('documents')
-    op.drop_table('taxonomy_migrations')
-    op.drop_table('taxonomy_edges')
-    op.drop_table('taxonomy_nodes')
+    # Drop tables in reverse dependency order using IF EXISTS
+    op.execute('DROP TABLE IF EXISTS doc_taxonomy CASCADE')
+    op.execute('DROP TABLE IF EXISTS embeddings CASCADE')
+    op.execute('DROP TABLE IF EXISTS chunks CASCADE')
+    op.execute('DROP TABLE IF EXISTS documents CASCADE')
+    op.execute('DROP TABLE IF EXISTS taxonomy_migrations CASCADE')
+    op.execute('DROP TABLE IF EXISTS taxonomy_edges CASCADE')
+    op.execute('DROP TABLE IF EXISTS taxonomy_nodes CASCADE')
     
     # Drop extensions (optional - may be used by other schemas)
     # op.execute('DROP EXTENSION IF EXISTS vector')
