@@ -273,7 +273,7 @@ BEGIN
     
     -- Procedure comments (with proper signature)
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'taxonomy_rollback') THEN
-        COMMENT ON PROCEDURE taxonomy_rollback(INTEGER) IS 'Safe rollback procedure with full audit trail';
+        COMMENT ON PROCEDURE taxonomy_rollback(to_v INTEGER) IS 'Safe rollback procedure with full audit trail';
     END IF;
     
     -- Index comments
