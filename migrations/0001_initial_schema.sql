@@ -108,7 +108,7 @@ CREATE TABLE embeddings (
     
     -- Constraints
     CONSTRAINT valid_model_name CHECK (length(model_name) > 0),
-    CONSTRAINT valid_vector_dimension CHECK (array_length(vec, 1) = 1536)
+    -- NOTE: vector(1536) type itself enforces dimension; do not call array_length on vector
 );
 
 -- 7. Document-Taxonomy mapping (many-to-many)
