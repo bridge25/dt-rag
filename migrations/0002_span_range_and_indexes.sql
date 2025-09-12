@@ -102,15 +102,15 @@ BEGIN
         COMMENT ON INDEX idx_embeddings_bm25 IS 'GIN index for BM25 token array searches';
     END IF;
     
-    -- Function comments
+    -- Function comments (with proper signatures)
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'chunk_span_length') THEN
-        COMMENT ON FUNCTION chunk_span_length IS 'Calculate character length of a span range';
+        COMMENT ON FUNCTION chunk_span_length(int4range) IS 'Calculate character length of a span range';
     END IF;
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'spans_overlap') THEN
-        COMMENT ON FUNCTION spans_overlap IS 'Check if two span ranges overlap';
+        COMMENT ON FUNCTION spans_overlap(int4range, int4range) IS 'Check if two span ranges overlap';
     END IF;
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'taxonomy_depth') THEN
-        COMMENT ON FUNCTION taxonomy_depth IS 'Get depth/level of taxonomy path';
+        COMMENT ON FUNCTION taxonomy_depth(TEXT[]) IS 'Get depth/level of taxonomy path';
     END IF;
 END $$;
 

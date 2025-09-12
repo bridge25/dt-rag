@@ -271,9 +271,9 @@ BEGIN
         COMMENT ON TABLE hitl_queue IS 'Human-in-the-Loop queue for low confidence classifications';
     END IF;
     
-    -- Procedure comments
+    -- Procedure comments (with proper signature)
     IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'taxonomy_rollback') THEN
-        COMMENT ON PROCEDURE taxonomy_rollback IS 'Safe rollback procedure with full audit trail';
+        COMMENT ON PROCEDURE taxonomy_rollback(INTEGER) IS 'Safe rollback procedure with full audit trail';
     END IF;
     
     -- Index comments
