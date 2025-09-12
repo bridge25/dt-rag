@@ -1,6 +1,6 @@
 # packages/common-schemas/models.py (문서의 공통 스키마 예시 블록을 아래로 교체)
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional, Dict
 
 class TaxonomyNode(BaseModel):
@@ -62,8 +62,15 @@ class SearchResponse(BaseModel):
 
 class FromCategoryRequest(BaseModel):
     version: str
-    node_paths: List[List[str]]
+    node_paths: List[List[str]] = Field(..., min_length=1)
     options: Optional[Dict] = Field(default_factory=dict)
+
+    @field_validator('node_paths')
+    @classmethod
+    def node_paths_not_empty(cls, v):
+        if not v or len(v) == 0:
+            raise ValueError('node_paths cannot be empty')
+        return v
 
 class RetrievalConfig(BaseModel):
     bm25_topk: int = 12
