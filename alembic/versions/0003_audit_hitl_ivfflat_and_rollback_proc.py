@@ -38,6 +38,11 @@ def upgrade() -> None:
         if ch == ';' and not in_dollar:
             stmt = ''.join(buf).strip()
             if stmt:
+                lines = [ln.strip() for ln in stmt.splitlines() if ln.strip()]
+                if not lines or all(ln.startswith('--') for ln in lines):
+                    buf = []
+                    i += 1
+                    continue
                 stmts.append(stmt)
             buf = []
             i += 1
@@ -46,7 +51,9 @@ def upgrade() -> None:
         i += 1
     tail = ''.join(buf).strip()
     if tail:
-        stmts.append(tail)
+        lines = [ln.strip() for ln in tail.splitlines() if ln.strip()]
+        if lines and not all(ln.startswith('--') for ln in lines):
+            stmts.append(tail)
 
     for stmt in stmts:
         cleaned = "\n".join(
