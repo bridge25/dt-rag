@@ -49,7 +49,11 @@ def upgrade() -> None:
         stmts.append(tail)
 
     for stmt in stmts:
-        op.execute(stmt)
+        try:
+            op.execute(stmt)
+        except Exception as e:
+            print("\n[alembic 0003] FAILED STATEMENT:\n" + stmt[:1000] + "\n--- END STMT ---\n")
+            raise
 
 
 def downgrade() -> None:
