@@ -292,45 +292,69 @@ BEGIN
     END IF;
 END $$;
 
--- Verification queries - conditional
+-- Verification (PL/pgSQL notices to avoid result-destination errors inside DO blocks)
 \echo 'Seeding completed. Verification:'
 \echo '================================'
 
 DO $$
+DECLARE
+    n INTEGER;
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_nodes') THEN
-        SELECT 'Taxonomy Nodes:' as table_name, COUNT(*) as count FROM taxonomy_nodes
-        UNION ALL
-        SELECT 'Taxonomy Edges:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_edges') THEN (SELECT COUNT(*) FROM taxonomy_edges) ELSE 0 END)
-        UNION ALL
-        SELECT 'Documents:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'documents') THEN (SELECT COUNT(*) FROM documents) ELSE 0 END)
-        UNION ALL
-        SELECT 'Chunks:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'chunks') THEN (SELECT COUNT(*) FROM chunks) ELSE 0 END)
-        UNION ALL
-        SELECT 'Embeddings:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'embeddings') THEN (SELECT COUNT(*) FROM embeddings) ELSE 0 END)
-        UNION ALL
-        SELECT 'Doc Taxonomy:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'doc_taxonomy') THEN (SELECT COUNT(*) FROM doc_taxonomy) ELSE 0 END)
-        UNION ALL
-        SELECT 'HITL Queue:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN (SELECT COUNT(*) FROM hitl_queue) ELSE 0 END)
-        UNION ALL
-        SELECT 'Audit Log:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN (SELECT COUNT(*) FROM audit_log) ELSE 0 END);
+        SELECT COUNT(*) INTO n FROM taxonomy_nodes; RAISE NOTICE 'Taxonomy Nodes: %', n;
     ELSE
-        SELECT 'No tables found - migrations may not have run' as message;
+        RAISE NOTICE 'Taxonomy Nodes: 0';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_edges') THEN
+        SELECT COUNT(*) INTO n FROM taxonomy_edges; RAISE NOTICE 'Taxonomy Edges: %', n;
+    ELSE
+        RAISE NOTICE 'Taxonomy Edges: 0';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'documents') THEN
+        SELECT COUNT(*) INTO n FROM documents; RAISE NOTICE 'Documents: %', n;
+    ELSE
+        RAISE NOTICE 'Documents: 0';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'chunks') THEN
+        SELECT COUNT(*) INTO n FROM chunks; RAISE NOTICE 'Chunks: %', n;
+    ELSE
+        RAISE NOTICE 'Chunks: 0';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'embeddings') THEN
+        SELECT COUNT(*) INTO n FROM embeddings; RAISE NOTICE 'Embeddings: %', n;
+    ELSE
+        RAISE NOTICE 'Embeddings: 0';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'doc_taxonomy') THEN
+        SELECT COUNT(*) INTO n FROM doc_taxonomy; RAISE NOTICE 'Doc Taxonomy: %', n;
+    ELSE
+        RAISE NOTICE 'Doc Taxonomy: 0';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN
+        SELECT COUNT(*) INTO n FROM hitl_queue; RAISE NOTICE 'HITL Queue: %', n;
+    ELSE
+        RAISE NOTICE 'HITL Queue: 0';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN
+        SELECT COUNT(*) INTO n FROM audit_log; RAISE NOTICE 'Audit Log: %', n;
+    ELSE
+        RAISE NOTICE 'Audit Log: 0';
     END IF;
 END $$;
 
 \echo ''
 \echo 'Sample taxonomy tree (version 1):'
-
-DO $$
-BEGIN
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_nodes') THEN
-        SELECT 
-            array_to_string(canonical_path, ' > ') as taxonomy_path,
-            node_name,
-            description
-        FROM taxonomy_nodes 
-        WHERE version = 1 
-        ORDER BY canonical_path;
-    END IF;
-END $$;
+SELECT 
+    array_to_string(canonical_path, ' > ') as taxonomy_path,
+    node_name,
+    description
+FROM taxonomy_nodes 
+WHERE version = 1 
+ORDER BY canonical_path;
