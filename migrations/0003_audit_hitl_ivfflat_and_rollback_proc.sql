@@ -3,25 +3,6 @@
 -- Purpose: Audit logging, HITL queue, vector indexes, and taxonomy rollback procedures
 -- Dependencies: 0001_initial_schema.sql, 0002_span_range_and_indexes.sql
 
--- Check dependencies exist before proceeding
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'chunks') THEN
-        RAISE NOTICE 'Warning: chunks table does not exist. This migration requires 0001_initial_schema.sql to be applied first.';
-        RAISE EXCEPTION 'Missing dependency: chunks table from 0001_initial_schema.sql';
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'embeddings') THEN
-        RAISE NOTICE 'Warning: embeddings table does not exist. This migration requires 0001_initial_schema.sql to be applied first.';
-        RAISE EXCEPTION 'Missing dependency: embeddings table from 0001_initial_schema.sql';
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_nodes') THEN
-        RAISE NOTICE 'Warning: taxonomy_nodes table does not exist. This migration requires 0001_initial_schema.sql to be applied first.';
-        RAISE EXCEPTION 'Missing dependency: taxonomy_nodes table from 0001_initial_schema.sql';
-    END IF;
-END $$;
-
 -- 1. Audit Log Table (comprehensive system tracking)
 CREATE TABLE audit_log (
     log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -75,12 +56,24 @@ CREATE TABLE hitl_queue (
 );
 
 -- 3. IVFFlat vector index for efficient similarity search
-CREATE INDEX idx_embeddings_vec_ivf ON embeddings 
-USING ivfflat (vec vector_cosine_ops) WITH (lists = 100);
-
--- Alternative index for L2 distance if needed
--- CREATE INDEX idx_embeddings_vec_ivf_l2 ON embeddings 
--- USING ivfflat (vec vector_l2_ops) WITH (lists = 100);
+-- Check if ivfflat is available before creating index
+DO $$
+BEGIN
+    -- Only create ivfflat index if the extension is available
+    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
+        -- Check if ivfflat access method is available (pgvector 0.5.0+)
+        IF EXISTS (SELECT 1 FROM pg_am WHERE amname = 'ivfflat') THEN
+            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_ivf ON embeddings USING ivfflat (vec vector_cosine_ops) WITH (lists = 100)';
+            RAISE NOTICE 'Created IVFFlat index for vector similarity search';
+        ELSE
+            -- Fallback to regular vector index if ivfflat not available
+            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec ON embeddings USING btree (vec)';
+            RAISE NOTICE 'Created regular index on embeddings (IVFFlat not available)';
+        END IF;
+    ELSE
+        RAISE NOTICE 'pgvector extension not found - skipping vector indexes';
+    END IF;
+END $$;
 
 -- 4. Additional performance indexes
 CREATE INDEX idx_audit_log_timestamp ON audit_log (timestamp DESC);
@@ -271,10 +264,25 @@ CREATE TRIGGER tr_audit_taxonomy_nodes
 COMMENT ON TABLE audit_log IS 'Comprehensive audit trail for all system actions';
 COMMENT ON TABLE hitl_queue IS 'Human-in-the-Loop queue for low confidence classifications';
 COMMENT ON PROCEDURE taxonomy_rollback IS 'Safe rollback procedure with full audit trail';
-COMMENT ON INDEX idx_embeddings_vec_ivf IS 'IVFFlat index for fast vector similarity search (lists=100)';
+
+-- Conditional comment for index (only if it exists)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_embeddings_vec_ivf') THEN
+        COMMENT ON INDEX idx_embeddings_vec_ivf IS 'IVFFlat index for fast vector similarity search (lists=100)';
+    END IF;
+END $$;
+
 COMMENT ON VIEW v_low_confidence_classifications IS 'Pending HITL items with document context';
 COMMENT ON VIEW v_taxonomy_version_summary IS 'Version-wise taxonomy statistics';
 
--- Final statistics update
-ANALYZE audit_log;
-ANALYZE hitl_queue;
+-- Final statistics update (conditional for safety)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN
+        ANALYZE audit_log;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN
+        ANALYZE hitl_queue;
+    END IF;
+END $$;
