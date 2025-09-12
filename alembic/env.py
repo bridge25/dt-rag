@@ -21,8 +21,9 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from common_schemas.models import Base  # Import SQLAlchemy Base if available
-target_metadata = getattr(Base, 'metadata', None)
+# Note: This project uses raw SQL migrations instead of SQLAlchemy models
+# No SQLAlchemy Base model is available in common_schemas.models (Pydantic only)
+target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

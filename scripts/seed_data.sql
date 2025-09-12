@@ -11,10 +11,30 @@ DELETE FROM taxonomy_edges;
 DELETE FROM taxonomy_nodes;
 DELETE FROM taxonomy_migrations;
 
--- Reset sequences
-ALTER SEQUENCE taxonomy_nodes_node_id_seq RESTART WITH 1;
-ALTER SEQUENCE taxonomy_edges_edge_id_seq RESTART WITH 1;
-ALTER SEQUENCE taxonomy_migrations_migration_id_seq RESTART WITH 1;
+-- Clear data from tables that might not exist in all environments
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN
+        DELETE FROM hitl_queue;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN
+        DELETE FROM audit_log;
+    END IF;
+END $$;
+
+-- Reset sequences (conditional)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_name = 'taxonomy_nodes_node_id_seq') THEN
+        ALTER SEQUENCE taxonomy_nodes_node_id_seq RESTART WITH 1;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_name = 'taxonomy_edges_edge_id_seq') THEN
+        ALTER SEQUENCE taxonomy_edges_edge_id_seq RESTART WITH 1;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_name = 'taxonomy_migrations_migration_id_seq') THEN
+        ALTER SEQUENCE taxonomy_migrations_migration_id_seq RESTART WITH 1;
+    END IF;
+END $$;
 
 -- Sample Taxonomy Nodes (Version 1)
 INSERT INTO taxonomy_nodes (node_id, version, canonical_path, node_name, description) VALUES
@@ -80,17 +100,30 @@ SELECT
 FROM doc_data d;
 
 -- Sample Embeddings (with mock vectors)
+-- Create a function to generate proper 1536-dimensional vectors
+CREATE OR REPLACE FUNCTION generate_mock_vector() RETURNS vector AS $$
+DECLARE
+    vec_array float[];
+    i integer;
+BEGIN
+    vec_array := ARRAY[]::float[];
+    FOR i IN 1..1536 LOOP
+        vec_array := array_append(vec_array, random()::float);
+    END LOOP;
+    RETURN vec_array::vector;
+END;
+$$ LANGUAGE plpgsql;
+
 WITH chunk_data AS (
   SELECT chunk_id FROM chunks
 )
 INSERT INTO embeddings (chunk_id, vec, model_name, bm25_tokens)
 SELECT 
   chunk_id,
-  ('[' || array_to_string(array_agg(random()::text), ',') || ']')::vector,
+  generate_mock_vector(),
   'text-embedding-ada-002',
   ARRAY['machine', 'learning', 'artificial', 'intelligence', 'data', 'algorithm']
-FROM chunk_data, generate_series(1, 1536) gs
-GROUP BY chunk_id;
+FROM chunk_data;
 
 -- Sample Document-Taxonomy Mappings
 WITH doc_samples AS (
@@ -111,30 +144,35 @@ SELECT
   'llm'
 FROM doc_samples d;
 
--- Sample HITL Queue entries (low confidence classifications)
-WITH low_conf_chunks AS (
-  SELECT c.chunk_id, c.text 
-  FROM chunks c 
-  JOIN documents d ON c.doc_id = d.doc_id 
-  LIMIT 2
-)
-INSERT INTO hitl_queue (chunk_id, original_classification, suggested_paths, confidence, priority, status)
-SELECT 
-  chunk_id,
-  jsonb_build_object(
-    'canonical', ARRAY['AI'],
-    'candidates', jsonb_build_array(
-      jsonb_build_object('path', ARRAY['AI', 'Machine Learning'], 'score', 0.6),
-      jsonb_build_object('path', ARRAY['AI', 'NLP'], 'score', 0.55)
-    ),
-    'confidence', 0.6,
-    'reasoning', ARRAY['Ambiguous technical content', 'Multiple possible categories']
-  ),
-  ARRAY['AI', 'Technology'],
-  0.6,
-  2, -- high priority
-  'pending'
-FROM low_conf_chunks;
+-- Sample HITL Queue entries (low confidence classifications) - conditional
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN
+        WITH low_conf_chunks AS (
+          SELECT c.chunk_id, c.text 
+          FROM chunks c 
+          JOIN documents d ON c.doc_id = d.doc_id 
+          LIMIT 2
+        )
+        INSERT INTO hitl_queue (chunk_id, original_classification, suggested_paths, confidence, priority, status)
+        SELECT 
+          chunk_id,
+          jsonb_build_object(
+            'canonical', ARRAY['AI'],
+            'candidates', jsonb_build_array(
+              jsonb_build_object('path', ARRAY['AI', 'Machine Learning'], 'score', 0.6),
+              jsonb_build_object('path', ARRAY['AI', 'NLP'], 'score', 0.55)
+            ),
+            'confidence', 0.6,
+            'reasoning', ARRAY['Ambiguous technical content', 'Multiple possible categories']
+          ),
+          ARRAY['AI', 'Technology'],
+          0.6,
+          2, -- high priority
+          'pending'
+        FROM low_conf_chunks;
+    END IF;
+END $$;
 
 -- Sample Migration Record
 INSERT INTO taxonomy_migrations (from_version, to_version, migration_type, changes) VALUES
@@ -145,23 +183,37 @@ INSERT INTO taxonomy_migrations (from_version, to_version, migration_type, chang
   'timestamp', CURRENT_TIMESTAMP
 ));
 
--- Sample Audit Log entries
-INSERT INTO audit_log (action, actor, target, detail) VALUES
-('taxonomy_create', 'system', '1', jsonb_build_object('canonical_path', ARRAY['AI'], 'version', 1)),
-('document_upload', 'test_user', null, jsonb_build_object('document_count', 5, 'total_chunks', 5)),
-('search', 'user123', null, jsonb_build_object('query', 'machine learning', 'results_count', 3, 'latency_ms', 45)),
-('classify', 'system', null, jsonb_build_object('chunk_id', 'sample', 'confidence', 0.89, 'path', ARRAY['AI', 'Machine Learning'])),
-('hitl_queue_add', 'system', null, jsonb_build_object('reason', 'Low confidence classification', 'confidence', 0.6));
+-- Sample Audit Log entries - conditional
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN
+        INSERT INTO audit_log (action, actor, target, detail) VALUES
+        ('taxonomy_create', 'system', '1', jsonb_build_object('canonical_path', ARRAY['AI'], 'version', 1)),
+        ('document_upload', 'test_user', null, jsonb_build_object('document_count', 5, 'total_chunks', 5)),
+        ('search', 'user123', null, jsonb_build_object('query', 'machine learning', 'results_count', 3, 'latency_ms', 45)),
+        ('classify', 'system', null, jsonb_build_object('chunk_id', 'sample', 'confidence', 0.89, 'path', ARRAY['AI', 'Machine Learning'])),
+        ('hitl_queue_add', 'system', null, jsonb_build_object('reason', 'Low confidence classification', 'confidence', 0.6));
+    END IF;
+END $$;
 
--- Update statistics for query planner
+-- Update statistics for query planner (conditional for optional tables)
 ANALYZE taxonomy_nodes;
 ANALYZE taxonomy_edges;
 ANALYZE documents;
 ANALYZE chunks;
 ANALYZE embeddings;
 ANALYZE doc_taxonomy;
-ANALYZE audit_log;
-ANALYZE hitl_queue;
+
+-- Analyze optional tables if they exist
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN
+        ANALYZE audit_log;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN
+        ANALYZE hitl_queue;
+    END IF;
+END $$;
 
 -- Verification queries
 \echo 'Seeding completed. Verification:'
@@ -178,9 +230,9 @@ SELECT 'Embeddings:', COUNT(*) FROM embeddings
 UNION ALL
 SELECT 'Doc Taxonomy:', COUNT(*) FROM doc_taxonomy
 UNION ALL
-SELECT 'HITL Queue:', COUNT(*) FROM hitl_queue
+SELECT 'HITL Queue:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN (SELECT COUNT(*) FROM hitl_queue) ELSE 0 END)
 UNION ALL
-SELECT 'Audit Log:', COUNT(*) FROM audit_log;
+SELECT 'Audit Log:', (CASE WHEN EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN (SELECT COUNT(*) FROM audit_log) ELSE 0 END);
 
 \echo ''
 \echo 'Sample taxonomy tree (version 1):'
