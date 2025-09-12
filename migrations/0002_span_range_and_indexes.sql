@@ -88,13 +88,31 @@ ANALYZE embeddings;
 ANALYZE doc_taxonomy;
 ANALYZE documents;
 
--- Comments for maintenance
-COMMENT ON INDEX idx_chunks_span_gist IS 'GiST index for efficient int4range overlap and containment queries';
-COMMENT ON INDEX idx_taxonomy_canonical IS 'GIN index for taxonomy path array searches';
-COMMENT ON INDEX idx_embeddings_bm25 IS 'GIN index for BM25 token array searches';
-COMMENT ON FUNCTION chunk_span_length IS 'Calculate character length of a span range';
-COMMENT ON FUNCTION spans_overlap IS 'Check if two span ranges overlap';
-COMMENT ON FUNCTION taxonomy_depth IS 'Get depth/level of taxonomy path';
+-- Comments for maintenance (conditional)
+DO $$
+BEGIN
+    -- Index comments
+    IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_chunks_span_gist') THEN
+        COMMENT ON INDEX idx_chunks_span_gist IS 'GiST index for efficient int4range overlap and containment queries';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_taxonomy_canonical') THEN
+        COMMENT ON INDEX idx_taxonomy_canonical IS 'GIN index for taxonomy path array searches';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_embeddings_bm25') THEN
+        COMMENT ON INDEX idx_embeddings_bm25 IS 'GIN index for BM25 token array searches';
+    END IF;
+    
+    -- Function comments
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'chunk_span_length') THEN
+        COMMENT ON FUNCTION chunk_span_length IS 'Calculate character length of a span range';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'spans_overlap') THEN
+        COMMENT ON FUNCTION spans_overlap IS 'Check if two span ranges overlap';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'taxonomy_depth') THEN
+        COMMENT ON FUNCTION taxonomy_depth IS 'Get depth/level of taxonomy path';
+    END IF;
+END $$;
 
 -- Performance tuning settings (session-level)
 SET work_mem = '256MB';

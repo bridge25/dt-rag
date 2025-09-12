@@ -260,21 +260,35 @@ CREATE TRIGGER tr_audit_taxonomy_nodes
     AFTER INSERT OR UPDATE OR DELETE ON taxonomy_nodes
     FOR EACH ROW EXECUTE FUNCTION audit_taxonomy_changes();
 
--- Comments for documentation
-COMMENT ON TABLE audit_log IS 'Comprehensive audit trail for all system actions';
-COMMENT ON TABLE hitl_queue IS 'Human-in-the-Loop queue for low confidence classifications';
-COMMENT ON PROCEDURE taxonomy_rollback IS 'Safe rollback procedure with full audit trail';
-
--- Conditional comment for index (only if it exists)
+-- Comments for documentation (conditional)
 DO $$
 BEGIN
+    -- Table comments
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'audit_log') THEN
+        COMMENT ON TABLE audit_log IS 'Comprehensive audit trail for all system actions';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'hitl_queue') THEN
+        COMMENT ON TABLE hitl_queue IS 'Human-in-the-Loop queue for low confidence classifications';
+    END IF;
+    
+    -- Procedure comments
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'taxonomy_rollback') THEN
+        COMMENT ON PROCEDURE taxonomy_rollback IS 'Safe rollback procedure with full audit trail';
+    END IF;
+    
+    -- Index comments
     IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_embeddings_vec_ivf') THEN
         COMMENT ON INDEX idx_embeddings_vec_ivf IS 'IVFFlat index for fast vector similarity search (lists=100)';
     END IF;
+    
+    -- View comments
+    IF EXISTS (SELECT 1 FROM information_schema.views WHERE table_name = 'v_low_confidence_classifications') THEN
+        COMMENT ON VIEW v_low_confidence_classifications IS 'Pending HITL items with document context';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.views WHERE table_name = 'v_taxonomy_version_summary') THEN
+        COMMENT ON VIEW v_taxonomy_version_summary IS 'Version-wise taxonomy statistics';
+    END IF;
 END $$;
-
-COMMENT ON VIEW v_low_confidence_classifications IS 'Pending HITL items with document context';
-COMMENT ON VIEW v_taxonomy_version_summary IS 'Version-wise taxonomy statistics';
 
 -- Final statistics update (conditional for safety)
 DO $$

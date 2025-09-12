@@ -135,15 +135,40 @@ CREATE INDEX idx_chunks_doc_id ON chunks(doc_id);
 CREATE INDEX idx_embeddings_chunk_id ON embeddings(chunk_id);
 CREATE INDEX idx_doc_taxonomy_doc_id ON doc_taxonomy(doc_id);
 
--- Comments for documentation
-COMMENT ON TABLE taxonomy_nodes IS 'Versioned taxonomy node definitions with DAG structure';
-COMMENT ON TABLE taxonomy_edges IS 'Parent-child relationships between taxonomy nodes';
-COMMENT ON TABLE taxonomy_migrations IS 'Version tracking and migration history';
-COMMENT ON TABLE documents IS 'Source documents with metadata';
-COMMENT ON TABLE chunks IS 'Text segments with character span ranges';
-COMMENT ON TABLE embeddings IS 'Vector embeddings with BM25 tokens';
-COMMENT ON TABLE doc_taxonomy IS 'Document classification mappings';
-
-COMMENT ON COLUMN chunks.span IS 'int4range: character positions in source document';
-COMMENT ON COLUMN embeddings.vec IS 'vector(1536): OpenAI ada-002 embeddings';
-COMMENT ON COLUMN taxonomy_nodes.canonical_path IS 'TEXT[]: hierarchical path like ["AI", "Machine Learning"]';
+-- Comments for documentation (conditional to avoid errors if tables don't exist)
+DO $$
+BEGIN
+    -- Table comments
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_nodes') THEN
+        COMMENT ON TABLE taxonomy_nodes IS 'Versioned taxonomy node definitions with DAG structure';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_edges') THEN
+        COMMENT ON TABLE taxonomy_edges IS 'Parent-child relationships between taxonomy nodes';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_migrations') THEN
+        COMMENT ON TABLE taxonomy_migrations IS 'Version tracking and migration history';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'documents') THEN
+        COMMENT ON TABLE documents IS 'Source documents with metadata';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'chunks') THEN
+        COMMENT ON TABLE chunks IS 'Text segments with character span ranges';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'embeddings') THEN
+        COMMENT ON TABLE embeddings IS 'Vector embeddings with BM25 tokens';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'doc_taxonomy') THEN
+        COMMENT ON TABLE doc_taxonomy IS 'Document classification mappings';
+    END IF;
+    
+    -- Column comments
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'chunks' AND column_name = 'span') THEN
+        COMMENT ON COLUMN chunks.span IS 'int4range: character positions in source document';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'embeddings' AND column_name = 'vec') THEN
+        COMMENT ON COLUMN embeddings.vec IS 'vector(1536): OpenAI ada-002 embeddings';
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'taxonomy_nodes' AND column_name = 'canonical_path') THEN
+        COMMENT ON COLUMN taxonomy_nodes.canonical_path IS 'TEXT[]: hierarchical path like ["AI", "Machine Learning"]';
+    END IF;
+END $$;
