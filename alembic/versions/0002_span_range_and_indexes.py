@@ -49,9 +49,16 @@ def upgrade() -> None:
         stmts.append(tail)
 
     for stmt in stmts:
+        # Skip pure-comment/empty statements
+        cleaned = "\n".join(
+            ln for ln in (stmt or "").splitlines()
+            if ln.strip() and not ln.strip().startswith("--")
+        ).strip()
+        if not cleaned:
+            continue
         try:
             op.execute(stmt)
-        except Exception as e:
+        except Exception:
             print("\n[alembic 0002] FAILED STATEMENT:\n" + stmt[:1000] + "\n--- END STMT ---\n")
             raise
 
