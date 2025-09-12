@@ -44,9 +44,15 @@ def downgrade() -> None:
     op.execute('DROP FUNCTION IF EXISTS add_to_hitl_queue(UUID, JSONB, TEXT[], REAL)')
     op.execute('DROP PROCEDURE IF EXISTS taxonomy_rollback(INTEGER)')
     
-    # Drop tables
-    op.drop_table('hitl_queue')
-    op.drop_table('audit_log')
+    # Drop tables (conditional - using raw SQL to handle IF EXISTS)
+    op.execute('DROP TABLE IF EXISTS hitl_queue CASCADE')
+    op.execute('DROP TABLE IF EXISTS audit_log CASCADE')
     
-    # Drop vector index
+    # Drop indexes conditionally
     op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_ivf')
+    op.execute('DROP INDEX IF EXISTS idx_audit_log_timestamp')
+    op.execute('DROP INDEX IF EXISTS idx_audit_log_action_actor')
+    op.execute('DROP INDEX IF EXISTS idx_audit_log_target')
+    op.execute('DROP INDEX IF EXISTS idx_hitl_queue_status_priority')
+    op.execute('DROP INDEX IF EXISTS idx_hitl_queue_confidence')
+    op.execute('DROP INDEX IF EXISTS idx_hitl_queue_assigned')
