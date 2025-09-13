@@ -178,8 +178,9 @@ class TestDatabaseIntegration:
         }
         
         with db_connection.cursor() as cursor:
-            index_names = list(critical_indexes.keys())
-            cursor.execute("""
+            # Use string formatting to avoid parameter binding issues
+            index_list = "', '".join(critical_indexes.keys())
+            cursor.execute(f"""
                 SELECT indexname,
                        CASE
                          WHEN indexdef LIKE '%USING gist%' THEN 'gist'
@@ -190,8 +191,8 @@ class TestDatabaseIntegration:
                        END as index_type
                 FROM pg_indexes
                 WHERE schemaname = 'public'
-                  AND indexname = ANY(%s);
-            """, (index_names,))
+                  AND indexname IN ('{index_list}');
+            """)
             
             found_indexes = {row[0]: row[1] for row in cursor.fetchall()}
             
