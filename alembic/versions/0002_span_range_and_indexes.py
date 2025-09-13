@@ -16,15 +16,59 @@ depends_on = None
 
 
 def upgrade() -> None:
-    """Execute SQL migration file: 0002_span_range_and_indexes.sql"""
+    """Execute SQL file statement-by-statement (handles DO $$ blocks)."""
     import os
     migration_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'migrations')
     sql_file = os.path.join(migration_dir, '0002_span_range_and_indexes.sql')
-    
-    with open(sql_file, 'r') as f:
-        sql_commands = f.read()
-    
-    op.execute(sql_commands)
+
+    with open(sql_file, 'r', encoding='utf-8') as f:
+        sql = f.read()
+
+    stmts = []
+    buf = []
+    i = 0
+    in_dollar = False
+    while i < len(sql):
+        if sql[i:i+2] == '$$':
+            in_dollar = not in_dollar
+            buf.append('$$')
+            i += 2
+            continue
+        ch = sql[i]
+        if ch == ';' and not in_dollar:
+            stmt = ''.join(buf).strip()
+            if stmt:
+                # skip pure comment-only statements
+                lines = [ln.strip() for ln in stmt.splitlines() if ln.strip()]
+                if not lines or all(ln.startswith('--') for ln in lines):
+                    buf = []
+                    i += 1
+                    continue
+                stmts.append(stmt)
+            buf = []
+            i += 1
+            continue
+        buf.append(ch)
+        i += 1
+    tail = ''.join(buf).strip()
+    if tail:
+        lines = [ln.strip() for ln in tail.splitlines() if ln.strip()]
+        if lines and not all(ln.startswith('--') for ln in lines):
+            stmts.append(tail)
+
+    for stmt in stmts:
+        # Skip pure-comment/empty statements
+        cleaned = "\n".join(
+            ln for ln in (stmt or "").splitlines()
+            if ln.strip() and not ln.strip().startswith("--")
+        ).strip()
+        if not cleaned:
+            continue
+        try:
+            op.execute(stmt)
+        except Exception:
+            print("\n[alembic 0002] FAILED STATEMENT:\n" + stmt[:1000] + "\n--- END STMT ---\n")
+            raise
 
 
 def downgrade() -> None:

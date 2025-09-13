@@ -6,6 +6,8 @@
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS btree_gist;
+-- gen_random_uuid() requires pgcrypto in many Postgres setups
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Drop tables if they exist (for clean re-runs)
 DROP TABLE IF EXISTS doc_taxonomy CASCADE;
@@ -107,8 +109,7 @@ CREATE TABLE embeddings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Constraints
-    CONSTRAINT valid_model_name CHECK (length(model_name) > 0),
-    CONSTRAINT valid_vector_dimension CHECK (array_length(vec, 1) = 1536)
+    CONSTRAINT valid_model_name CHECK (length(model_name) > 0)
 );
 
 -- 7. Document-Taxonomy mapping (many-to-many)
