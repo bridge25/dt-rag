@@ -247,8 +247,9 @@ def health_check():
     
     return {
         "status": "healthy", 
-        "service": "orchestration", 
+        "service": "orchestration",
         "version": "0.1.0",
+        "workflow_retrigger": "2025-09-13T19:36:00Z",
         "features": {
             "B-O1": "agent-manifest-builder",
             "B-O2": f"retrieval-filter-{filter_status}",
