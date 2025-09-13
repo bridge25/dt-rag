@@ -89,10 +89,12 @@ class TestDatabaseSchema:
             except psycopg2.IntegrityError as e:
                 # This is expected - the CHECK constraint should prevent empty arrays
                 assert "valid_path_format" in str(e) or "canonical_path" in str(e)
+                db_connection.rollback()  # Rollback after IntegrityError
                 pass  # Test passes
             except Exception as e:
+                db_connection.rollback()  # Rollback after any other exception
                 pytest.fail(f"Unexpected exception type: {type(e).__name__}: {e}")
-            
+
             # Test invalid version constraint
             with pytest.raises(psycopg2.IntegrityError):
                 cursor.execute("""
