@@ -173,4 +173,3 @@ BEGIN
         COMMENT ON COLUMN taxonomy_nodes.canonical_path IS 'TEXT[]: hierarchical path like ["AI", "Machine Learning"]';
     END IF;
 END $$;
-# CI trigger 2025. 09. 13. (토) 19:33:16 KST
