@@ -14,7 +14,7 @@ from datetime import datetime
 class TestDatabaseSchema:
     """Test suite for database schema validation"""
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="function")  # Changed to function scope for isolation
     def db_connection(self):
         """Create database connection for testing"""
         # Use test database URL from environment or default
@@ -22,8 +22,14 @@ class TestDatabaseSchema:
         
         conn = psycopg2.connect(database_url)
         conn.autocommit = False
-        yield conn
-        conn.close()
+        
+        try:
+            yield conn
+        finally:
+            # Always rollback to clean state after each test
+            if not conn.closed:
+                conn.rollback()
+            conn.close()
 
     def test_extensions_loaded(self, db_connection):
         """Test that required PostgreSQL extensions are loaded"""
@@ -69,13 +75,23 @@ class TestDatabaseSchema:
             node_id = cursor.fetchone()[0]
             assert node_id is not None
             
-            # Test invalid path constraint (empty array)
-            with pytest.raises(psycopg2.IntegrityError):
+            # Commit the valid insertion first
+            db_connection.commit()
+            
+            # Test invalid path constraint (empty array should violate CHECK constraint)
+            try:
                 cursor.execute("""
                     INSERT INTO taxonomy_nodes (canonical_path, node_name, version)
                     VALUES (ARRAY[]::TEXT[], 'Invalid', 1);
                 """)
-            db_connection.rollback()
+                # If we get here without exception, the constraint is not working
+                pytest.fail("Expected IntegrityError for empty canonical_path array, but insert succeeded")
+            except psycopg2.IntegrityError as e:
+                # This is expected - the CHECK constraint should prevent empty arrays
+                assert "valid_path_format" in str(e) or "canonical_path" in str(e)
+                pass  # Test passes
+            except Exception as e:
+                pytest.fail(f"Unexpected exception type: {type(e).__name__}: {e}")
             
             # Test invalid version constraint
             with pytest.raises(psycopg2.IntegrityError):
@@ -139,14 +155,17 @@ class TestDatabaseSchema:
             embedding_id = cursor.fetchone()[0]
             assert embedding_id is not None
             
-            # Test invalid dimension vector
-            invalid_vector = '[' + ','.join(['0.1'] * 512) + ']'  # Wrong dimension
-            with pytest.raises(psycopg2.IntegrityError):
+            # Commit the valid insertion first
+            db_connection.commit()
+            
+            # Test invalid dimension vector (using wrong dimension: 512 instead of 1536)
+            invalid_vector = '[' + ','.join(['0.1'] * 512) + ']'  # Wrong dimension - should be 1536
+            with pytest.raises(psycopg2.errors.DataException):  # Changed from IntegrityError to DataException
                 cursor.execute("""
                     INSERT INTO embeddings (chunk_id, vec)
                     VALUES (%s, %s::vector);
                 """, (chunk_id, invalid_vector))
-            db_connection.rollback()
+            # No need for explicit rollback - pytest will handle transaction cleanup
 
     def test_confidence_constraints(self, db_connection):
         """Test confidence value constraints across tables"""
