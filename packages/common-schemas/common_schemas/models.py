@@ -127,3 +127,4 @@ class CBRFeedback(BaseModel):
     user_rating: int = Field(ge=1, le=5)
     success_flag: bool
     feedback_text: Optional[str] = None
+# Test trigger 2025. 09. 13. (토) 19:33:24 KST
