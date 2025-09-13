@@ -8,6 +8,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 -- gen_random_uuid() requires pgcrypto in many Postgres setups
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+-- pg_trgm is required for trigram text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Drop tables if they exist (for clean re-runs)
 DROP TABLE IF EXISTS doc_taxonomy CASCADE;
@@ -30,7 +32,7 @@ CREATE TABLE taxonomy_nodes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Constraints
-    CONSTRAINT valid_path_format CHECK (array_length(canonical_path, 1) >= 1),
+    CONSTRAINT valid_path_format CHECK (cardinality(canonical_path) >= 1),
     CONSTRAINT valid_node_name CHECK (length(node_name) > 0),
     CONSTRAINT valid_version CHECK (version > 0)
 );
@@ -125,7 +127,7 @@ CREATE TABLE doc_taxonomy (
     -- Constraints
     CONSTRAINT valid_confidence CHECK (confidence >= 0.0 AND confidence <= 1.0),
     CONSTRAINT valid_source CHECK (source IN ('manual', 'llm', 'rule', 'hybrid')),
-    CONSTRAINT valid_path_length CHECK (array_length(path, 1) >= 1)
+    CONSTRAINT valid_path_length CHECK (cardinality(path) >= 1)
 );
 
 -- Basic indexes for performance
