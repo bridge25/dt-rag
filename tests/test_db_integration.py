@@ -178,19 +178,20 @@ class TestDatabaseIntegration:
         }
         
         with db_connection.cursor() as cursor:
+            index_names = list(critical_indexes.keys())
             cursor.execute("""
-                SELECT indexname, 
-                       CASE 
+                SELECT indexname,
+                       CASE
                          WHEN indexdef LIKE '%USING gist%' THEN 'gist'
                          WHEN indexdef LIKE '%USING ivfflat%' THEN 'ivfflat'
                          WHEN indexdef LIKE '%USING gin%' THEN 'gin'
                          WHEN indexdef LIKE '%USING btree%' THEN 'btree'
                          ELSE 'unknown'
                        END as index_type
-                FROM pg_indexes 
+                FROM pg_indexes
                 WHERE schemaname = 'public'
-                  AND indexname IN %s;
-            """, (tuple(critical_indexes.keys()),))
+                  AND indexname = ANY(%s);
+            """, (index_names,))
             
             found_indexes = {row[0]: row[1] for row in cursor.fetchall()}
             
