@@ -171,9 +171,9 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         -- Log error details
-        INSERT INTO audit_log (action, actor, target, detail) 
-        VALUES ('taxonomy_rollback_failed', current_user, to_v::text, 
-               jsonb_build_object('error', SQLERRM, 'sqlstate', SQLSTATE, 'hint', COALESCE(SQLERRM_DETAIL, 'None')));
+        INSERT INTO audit_log (action, actor, target, detail)
+        VALUES ('taxonomy_rollback_failed', current_user, to_v::text,
+               jsonb_build_object('error', SQLERRM, 'sqlstate', SQLSTATE));
         RAISE;
 END $$;
 
