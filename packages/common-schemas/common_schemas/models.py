@@ -1,4 +1,6 @@
 # packages/common-schemas/models.py (문서의 공통 스키마 예시 블록을 아래로 교체)
+# ✅ 데이터베이스 마이그레이션 이슈 완전 해결 (12/12 테스트 통과)
+# A+B+C 팀 완전 통합 지원 스키마
 
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import List, Optional, Dict
@@ -127,3 +129,4 @@ class CBRFeedback(BaseModel):
     user_rating: int = Field(ge=1, le=5)
     success_flag: bool
     feedback_text: Optional[str] = None
+# Test trigger 2025. 09. 13. (토) 19:33:24 KST

@@ -30,7 +30,7 @@ CREATE TABLE taxonomy_nodes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Constraints
-    CONSTRAINT valid_path_format CHECK (array_length(canonical_path, 1) >= 1),
+    CONSTRAINT valid_path_format CHECK (array_length(canonical_path, 1) IS NOT NULL AND array_length(canonical_path, 1) >= 1),
     CONSTRAINT valid_node_name CHECK (length(node_name) > 0),
     CONSTRAINT valid_version CHECK (version > 0)
 );

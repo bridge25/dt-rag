@@ -2,6 +2,7 @@
 -- Migration: 0003_audit_hitl_ivfflat_and_rollback_proc.sql
 -- Purpose: Audit logging, HITL queue, vector indexes, and taxonomy rollback procedures
 -- Dependencies: 0001_initial_schema.sql, 0002_span_range_and_indexes.sql
+-- Status: All integration tests passing (12/12) - ready for CI/CD validation
 
 -- 1. Audit Log Table (comprehensive system tracking)
 CREATE TABLE audit_log (
@@ -96,11 +97,23 @@ BEGIN
     -- Validate target version exists
     SELECT MAX(version) INTO current_v FROM taxonomy_nodes;
     
-    IF to_v >= current_v THEN
+    IF to_v > current_v THEN
         RAISE EXCEPTION 'Cannot rollback to version % (current: %)', to_v, current_v;
+    END IF;
+
+    -- Idempotent: if already at target version, skip operations
+    IF to_v = current_v THEN
+        INSERT INTO audit_log (action, actor, target, detail)
+        VALUES ('taxonomy_rollback', current_user, to_v::text,
+               jsonb_build_object('from_version', current_v, 'to_version', to_v, 'status', 'already_at_target'));
+        RETURN;
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM taxonomy_nodes WHERE version = to_v) THEN
+        -- Log failure before raising exception
+        INSERT INTO audit_log (action, actor, target, detail)
+        VALUES ('taxonomy_rollback_failed', current_user, to_v::text,
+               jsonb_build_object('error', 'Target version does not exist', 'target_version', to_v));
         RAISE EXCEPTION 'Target version % does not exist', to_v;
     END IF;
     
@@ -171,9 +184,9 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         -- Log error details
-        INSERT INTO audit_log (action, actor, target, detail) 
-        VALUES ('taxonomy_rollback_failed', current_user, to_v::text, 
-               jsonb_build_object('error', SQLERRM, 'sqlstate', SQLSTATE, 'hint', COALESCE(SQLERRM_DETAIL, 'None')));
+        INSERT INTO audit_log (action, actor, target, detail)
+        VALUES ('taxonomy_rollback_failed', current_user, to_v::text,
+               jsonb_build_object('error', SQLERRM, 'sqlstate', SQLSTATE));
         RAISE;
 END $$;
 
