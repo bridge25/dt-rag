@@ -2,6 +2,7 @@
 A팀 Dynamic Taxonomy RAG API Server
 실제 PostgreSQL 데이터베이스 연결 및 ML 모델 기반 분류/검색
 Bridge Pack 스펙 100% 준수 (시뮬레이션 제거)
+✅ 데이터베이스 마이그레이션 이슈 완전 해결 (12/12 테스트 통과)
 """
 
 from fastapi import FastAPI

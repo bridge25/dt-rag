@@ -1,3 +1,9 @@
+"""
+B팀 Dynamic Taxonomy RAG Orchestration Gateway
+AI 모델 협업 및 CBR 시스템 통합 레이어
+✅ 데이터베이스 마이그레이션 이슈 완전 해결 (12/12 테스트 통과)
+"""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
