@@ -310,9 +310,9 @@ class TestDatabaseIntegration:
                 # Create taxonomy mappings
                 cursor.execute("""
                     INSERT INTO doc_taxonomy (doc_id, path, confidence, source)
-                    VALUES 
-                        (%s, ARRAY['AI', 'Machine Learning'], 0.9, 'test'),
-                        (%s, ARRAY['Technology', 'Web Development'], 0.8, 'test')
+                    VALUES
+                        (%s, ARRAY['AI', 'Machine Learning'], 0.9, 'manual'),
+                        (%s, ARRAY['Technology', 'Web Development'], 0.8, 'manual')
                     ON CONFLICT DO NOTHING;
                 """, (docs.get('AI Document'), docs.get('Tech Document')))
             

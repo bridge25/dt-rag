@@ -96,8 +96,16 @@ BEGIN
     -- Validate target version exists
     SELECT MAX(version) INTO current_v FROM taxonomy_nodes;
     
-    IF to_v >= current_v THEN
+    IF to_v > current_v THEN
         RAISE EXCEPTION 'Cannot rollback to version % (current: %)', to_v, current_v;
+    END IF;
+
+    -- Idempotent: if already at target version, skip operations
+    IF to_v = current_v THEN
+        INSERT INTO audit_log (action, actor, target, detail)
+        VALUES ('taxonomy_rollback', current_user, to_v::text,
+               jsonb_build_object('from_version', current_v, 'to_version', to_v, 'status', 'already_at_target'));
+        RETURN;
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM taxonomy_nodes WHERE version = to_v) THEN
@@ -171,9 +179,9 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         -- Log error details
-        INSERT INTO audit_log (action, actor, target, detail) 
-        VALUES ('taxonomy_rollback_failed', current_user, to_v::text, 
-               jsonb_build_object('error', SQLERRM, 'sqlstate', SQLSTATE, 'hint', COALESCE(SQLERRM_DETAIL, 'None')));
+        INSERT INTO audit_log (action, actor, target, detail)
+        VALUES ('taxonomy_rollback_failed', current_user, to_v::text,
+               jsonb_build_object('error', SQLERRM, 'sqlstate', SQLSTATE));
         RAISE;
 END $$;
 
