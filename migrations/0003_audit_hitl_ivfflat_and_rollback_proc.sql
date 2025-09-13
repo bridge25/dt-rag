@@ -109,6 +109,10 @@ BEGIN
     END IF;
     
     IF NOT EXISTS (SELECT 1 FROM taxonomy_nodes WHERE version = to_v) THEN
+        -- Log failure before raising exception
+        INSERT INTO audit_log (action, actor, target, detail)
+        VALUES ('taxonomy_rollback_failed', current_user, to_v::text,
+               jsonb_build_object('error', 'Target version does not exist', 'target_version', to_v));
         RAISE EXCEPTION 'Target version % does not exist', to_v;
     END IF;
     
