@@ -366,29 +366,36 @@ class TestDatabaseIntegration:
             # Count existing audit entries
             cursor.execute("SELECT COUNT(*) FROM audit_log;")
             initial_count = cursor.fetchone()[0]
-            
-            # Perform an auditable action (create taxonomy node)
+
+            # Create base version 1 taxonomy node first
             cursor.execute("""
                 INSERT INTO taxonomy_nodes (version, canonical_path, node_name)
-                VALUES (99, ARRAY['Audit', 'Test'], 'Audit Test Node');
+                VALUES (1, ARRAY['Base'], 'Base Node v1')
+                ON CONFLICT DO NOTHING;
             """)
-            
+
+            # Perform an auditable action (create higher version taxonomy node)
+            cursor.execute("""
+                INSERT INTO taxonomy_nodes (version, canonical_path, node_name)
+                VALUES (2, ARRAY['Audit', 'Test'], 'Audit Test Node v2');
+            """)
+
             # Check if audit trigger recorded the action
             cursor.execute("SELECT COUNT(*) FROM audit_log WHERE action = 'taxonomy_create';")
             create_count = cursor.fetchone()[0]
-            
+
             assert create_count > 0, "Audit trigger should record taxonomy creation"
-            
-            # Test rollback audit logging
+
+            # Test rollback audit logging - rollback from version 2 to version 1
             cursor.execute("CALL taxonomy_rollback(1);")
-            
+
             # Check rollback audit entries
             cursor.execute("""
-                SELECT COUNT(*) FROM audit_log 
+                SELECT COUNT(*) FROM audit_log
                 WHERE action LIKE 'taxonomy_rollback%';
             """)
             rollback_count = cursor.fetchone()[0]
-            
+
             assert rollback_count > 0, "Rollback operations should be audited"
             
             # Verify audit log structure
