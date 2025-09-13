@@ -353,4 +353,4 @@ class TestDatabaseSchema:
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])trigger 2025. 09. 13. (토) 19:28:08 KST
+    pytest.main([__file__, "-v"])
