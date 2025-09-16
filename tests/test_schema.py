@@ -89,7 +89,7 @@ class TestDatabaseSchema:
             except psycopg2.IntegrityError as e:
                 # This is expected - the CHECK constraint should prevent empty arrays
                 assert "valid_path_format" in str(e) or "canonical_path" in str(e)
-                db_connection.rollback()  # Rollback after IntegrityError
+                db_connection.rollback()  # Rollback the failed transaction here
                 pass  # Test passes
             except Exception as e:
                 db_connection.rollback()  # Rollback after any other exception
