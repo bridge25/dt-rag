@@ -9,7 +9,7 @@ info:
     - 비용: 평균 비용/쿼리 ≤₩10
     - 품질: Faithfulness ≥ 0.85 (RAGAS 기반)
     - 운영: 롤백 TTR ≤ 15분
-  version: "1.8.1"
+  version: "1.8.1-retrigger"
   contact:
     name: A팀 (Taxonomy & Data Platform)
     email: team-a@example.com

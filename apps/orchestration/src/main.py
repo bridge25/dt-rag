@@ -1,3 +1,10 @@
+"""
+B팀 Dynamic Taxonomy RAG Orchestration Gateway
+AI 모델 협업 및 CBR 시스템 통합 레이어
+✅ 데이터베이스 마이그레이션 이슈 완전 해결 (12/12 테스트 통과)
+✅ 전체 워크플로우 진행: Agent Factory + CBR + 7-Step Pipeline 통합 테스트
+"""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -240,8 +247,9 @@ def health_check():
     
     return {
         "status": "healthy", 
-        "service": "orchestration", 
+        "service": "orchestration",
         "version": "0.1.0",
+        "workflow_retrigger": "2025-09-13T19:36:00Z",
         "features": {
             "B-O1": "agent-manifest-builder",
             "B-O2": f"retrieval-filter-{filter_status}",

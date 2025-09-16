@@ -92,6 +92,7 @@ class TestDatabaseSchema:
                 db_connection.rollback()  # Rollback the failed transaction here
                 pass  # Test passes
             except Exception as e:
+                db_connection.rollback()  # Rollback after any other exception
                 pytest.fail(f"Unexpected exception type: {type(e).__name__}: {e}")
 
             # Test invalid version constraint
