@@ -204,7 +204,8 @@ class TestDatabaseIntegration:
 
                 # First check if the vector extension is available
                 cursor.execute("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
-                vector_extension_exists = cursor.fetchone() is not None
+                result = cursor.fetchone()
+                vector_extension_exists = result is not None
 
                 # If vector extension doesn't exist, skip ivfflat index check
                 if not vector_extension_exists:
@@ -213,6 +214,11 @@ class TestDatabaseIntegration:
                 if not critical_indexes:
                     return  # Skip if no indexes to check after filtering
 
+                # Convert to tuple for SQL IN clause
+                index_names_tuple = tuple(critical_indexes.keys())
+                if not index_names_tuple:
+                    return  # Skip if empty tuple
+                
                 cursor.execute("""
                     SELECT indexname,
                            CASE
@@ -225,7 +231,7 @@ class TestDatabaseIntegration:
                     FROM pg_indexes
                     WHERE schemaname = 'public'
                       AND indexname IN %s;
-                """, (tuple(critical_indexes.keys()),))
+                """, (index_names_tuple,))
 
                 results = cursor.fetchall()
                 found_indexes = {row[0]: row[1] for row in results} if results else {}
