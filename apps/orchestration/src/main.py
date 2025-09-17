@@ -14,6 +14,7 @@ import sqlite3
 import httpx
 import logging
 import uuid
+import json
 from datetime import datetime
 from common_schemas.models import SearchRequest, SearchResponse, SearchHit
 from typing import List, Dict, Any, Optional
@@ -36,17 +37,15 @@ class AgentManifest(BaseModel):
     retrieval: Dict[str, Any]
     features: Dict[str, Any]
     mcp_tools_allowlist: List[str]
-# 상대 import를 절대 import로 변경 또는 주석처리
+# 실제 import 사용
+from langgraph_pipeline import get_pipeline
 # from retrieval_filter import CategoryFilter, create_category_filter  # 임시 주석 처리
-# from langgraph_pipeline import get_pipeline  # 파일이 없으면 주석처리
 # from cbr_system import CBRSystem, create_cbr_system, SuggestionRequest, CaseSuggestion, CBRLog, FeedbackType, SimilarityMethod  # 파일이 없으면 주석처리
 
-# 임시 함수 및 클래스 정의
-def get_pipeline():
-    return None
-
+# CBR 시스템 생성 함수 구현
 def create_cbr_system(path):
-    return None
+    """CBR 시스템 인스턴스 생성"""
+    return SimpleCBR(path)
 
 def create_category_filter(paths):
     class DummyFilter:
@@ -511,48 +510,57 @@ def hybrid_search(req: SearchRequest):
         total_count=len(hits)
     )
 
-@app.post("/chat/run", response_model=ChatResponse)  
+@app.post("/chat/run", response_model=ChatResponse)
 async def chat_run(req: ChatRequest):
     """LangGraph 7-Step 채팅 파이프라인 (B-O3 구현)"""
-    logger.info(f"B-O3 7-Step 파이프라인 실행: agent_id={req.agent_id}, messages={len(req.messages)}")
+    logger.info(f"B-O3 7-Step 파이프라인 실행: conversation_id={req.conversation_id}, message={req.message}")
     
     try:
         # LangGraph 파이프라인 인스턴스 가져오기
         pipeline = get_pipeline()
-        
+
+        # ChatRequest를 PipelineRequest로 변환
+        from langgraph_pipeline import PipelineRequest
+        pipeline_req = PipelineRequest(
+            query=req.message,
+            taxonomy_version="1.8.1",
+            chunk_id=None,
+            filters=req.context.get("filters") if req.context else None,
+            options=req.context if req.context else {}
+        )
+
         # 7-Step 파이프라인 실행
-        # Step 1: Intent Classification (사용자 의도 파악)
-        # Step 2: Retrieve (하이브리드 검색, B-O2 필터 적용)  
-        # Step 3: Plan (답변 전략 계획)
-        # Step 4: Tools/Debate (필요시 도구 사용, debate 스위치)
-        # Step 5: Compose (답변 구성)
-        # Step 6: Cite (출처 인용 ≥2개)
-        # Step 7: Respond (최종 응답 생성)
+        pipeline_response = await pipeline.execute(pipeline_req)
+
+        # PipelineResponse를 ChatResponse로 변환
+        response = ChatResponse(
+            response=pipeline_response.answer,
+            conversation_id=req.conversation_id or str(uuid.uuid4()),
+            sources=[{
+                "url": source["url"],
+                "title": source["title"],
+                "date": source.get("date", ""),
+                "version": source.get("version", "")
+            } for source in pipeline_response.sources]
+        )
         
-        response = await pipeline.run_pipeline(req)
-        
-        logger.info(f"B-O3 파이프라인 완료 - Confidence: {response.confidence:.3f}, Latency: {response.latency:.3f}s")
+        logger.info(f"B-O3 파이프라인 완료 - Confidence: {pipeline_response.confidence:.3f}, Latency: {pipeline_response.latency:.3f}s")
         return response
         
     except Exception as e:
         logger.error(f"B-O3 파이프라인 실행 오류: {e}")
         # 오류 시 기본 응답
-        fallback_sources = [
-            ChatSource(
-                url="https://system.example.com/error-fallback",
-                title="시스템 오류 대응 가이드",
-                date="2025-09-03",
-                version="1.4.2"
-            )
-        ]
-        
+        fallback_sources = [{
+            "url": "https://system.example.com/error-fallback",
+            "title": "시스템 오류 대응 가이드",
+            "date": "2025-09-03",
+            "version": "1.4.2"
+        }]
+
         return ChatResponse(
-            answer=f"죄송합니다. 7-Step 파이프라인 실행 중 오류가 발생했습니다: {str(e)}",
-            sources=fallback_sources,
-            confidence=0.1,
-            cost=0.001,
-            latency=0.5,
-            taxonomy_version="1.4.2"
+            response=f"죄송합니다. 7-Step 파이프라인 실행 중 오류가 발생했습니다: {str(e)}",
+            conversation_id=req.conversation_id or str(uuid.uuid4()),
+            sources=fallback_sources
         )
 
 @app.post("/cbr/suggest", response_model=CBRSuggestResponse)

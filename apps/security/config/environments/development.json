@@ -1,0 +1,121 @@
+{
+  "security_level": "development",
+  "enable_debug": true,
+  "enable_metrics": true,
+  "metrics_endpoint": "/security/metrics",
+  "health_endpoint": "/security/status",
+
+  "auth": {
+    "jwt_secret": "dev-secret-key-change-in-production",
+    "jwt_algorithm": "HS256",
+    "jwt_expiry_hours": 48,
+    "max_login_attempts": 10,
+    "lockout_duration_minutes": 5,
+    "password_min_length": 8,
+    "require_special_chars": false,
+    "enable_mfa": false,
+    "session_timeout_minutes": 720
+  },
+
+  "rbac": {
+    "default_role": "viewer",
+    "enable_attribute_based_access": false,
+    "enable_time_based_access": false,
+    "enable_location_based_access": false,
+    "max_concurrent_sessions": 10
+  },
+
+  "audit": {
+    "storage_type": "sqlite",
+    "log_directory": "./audit_logs",
+    "max_log_file_size": 50000000,
+    "retention_days": 30,
+    "enable_encryption": false,
+    "enable_signing": false,
+    "compression_enabled": false,
+    "cache_size": 100
+  },
+
+  "pii": {
+    "confidence_threshold": 0.7,
+    "enable_context_analysis": true,
+    "supported_languages": ["en", "ko"],
+    "custom_patterns": {},
+    "exclusion_patterns": ["test@example.com", "123-45-6789"],
+    "enable_presidio": true
+  },
+
+  "compliance": {
+    "supported_regulations": ["GDPR", "CCPA", "PIPA"],
+    "storage_path": "./compliance_data",
+    "auto_response_enabled": false,
+    "breach_notification_enabled": false,
+    "data_retention_checks": false
+  },
+
+  "monitoring": {
+    "enable_ml_detection": false,
+    "alert_thresholds": {
+      "failed_login_attempts": 10,
+      "unusual_access_threshold": 5.0,
+      "bulk_download_threshold": 1000,
+      "session_duration_threshold": 12
+    },
+    "enable_real_time_monitoring": true,
+    "alert_retention_days": 30,
+    "incident_auto_creation": false
+  },
+
+  "scanning": {
+    "enable_bandit": true,
+    "enable_safety": true,
+    "enable_semgrep": false,
+    "enable_custom_rules": true,
+    "max_file_size": 10485760,
+    "excluded_paths": [
+      "*/node_modules/*",
+      "*/venv/*",
+      "*/.git/*",
+      "*/tests/*",
+      "*/test/*",
+      "*/__pycache__/*",
+      "*/coverage/*"
+    ],
+    "scan_schedule_cron": "0 6 * * *"
+  },
+
+  "middleware": {
+    "enable_auth": false,
+    "enable_rate_limiting": false,
+    "enable_input_validation": true,
+    "enable_output_sanitization": true,
+    "enable_security_headers": true,
+    "enable_csrf_protection": false,
+    "exempt_endpoints": [
+      "/",
+      "/health",
+      "/healthz",
+      "/docs",
+      "/redoc",
+      "/openapi.json",
+      "/security/auth/login",
+      "/security/auth/register"
+    ],
+    "rate_limit_requests": 1000,
+    "rate_limit_window": 3600,
+    "max_request_size": 52428800,
+    "max_json_fields": 5000,
+    "blocked_ips": [],
+    "allowed_ips": []
+  },
+
+  "encryption": {
+    "algorithm": "AES-256-GCM",
+    "key_derivation": "PBKDF2",
+    "key_iterations": 100000,
+    "enable_database_encryption": false,
+    "enable_log_encryption": false,
+    "enable_communication_encryption": true,
+    "key_rotation_days": 365
+  }
+}
