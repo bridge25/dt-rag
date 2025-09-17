@@ -1,0 +1,679 @@
+{
+  "subagent": "api-designer",
+  "timestamp": "2025-09-14T15:26:43.789456",
+  "search_results": [
+    {
+      "query": "FastAPI 0.115 2025 async performance features",
+      "url": "https://fastapi.tiangolo.com/release-notes/",
+      "title": "FastAPI 0.115.x Performance and Async Features",
+      "content": "FastAPI 0.115.x series delivered multiple updates through 2025 with over 3,000 requests per second capability, enhanced OAuth2 security, improved async/await patterns, and automatic OpenAPI documentation generation with exceptional scalability.",
+      "relevance_score": 0.95,
+      "timestamp": "2025-09-14 15:26:43.789492",
+      "subagent": "api-designer",
+      "category": "performance"
+    },
+    {
+      "query": "OpenAPI 3.1 Pydantic v2 JSON Schema integration",
+      "url": "https://docs.pydantic.dev/latest/concepts/json_schema/",
+      "title": "OpenAPI 3.1 Specification with Pydantic v2 Schema Generation",
+      "content": "OpenAPI 3.1 fully compatible with JSON Schema Draft 2020-12, enhanced Pydantic v2 schema merging, BaseModel.model_json_schema generation, and automatic validation with runtime data serialization for robust API documentation.",
+      "relevance_score": 0.92,
+      "timestamp": "2025-09-14 15:26:44.795234",
+      "subagent": "api-designer",
+      "category": "framework"
+    },
+    {
+      "query": "API design best practices 2025 REST GraphQL gRPC microservices",
+      "url": "https://dev.to/cryptosandy/api-design-best-practices-in-2025-rest-graphql-and-grpc-2666",
+      "title": "Modern API Design Patterns: REST, GraphQL, gRPC Best Practices 2025",
+      "content": "2025 API design emphasizes adaptability, efficiency, and security with REST for simplicity, GraphQL for flexible queries, gRPC for high-performance microservices, OAuth 2.0 security, HTTP/2 optimization, and Protocol Buffers for binary communication.",
+      "relevance_score": 0.94,
+      "timestamp": "2025-09-14 15:26:44.795251",
+      "subagent": "api-designer",
+      "category": "best_practices"
+    },
+    {
+      "query": "Swagger OpenAPI documentation tools 2025 code generation",
+      "url": "https://swagger.io/docs/specification/about/",
+      "title": "Swagger Tools and OpenAPI Code Generation 2025",
+      "content": "Latest Swagger tools support OpenAPI 3.1 with enhanced code generation, interactive documentation, API testing capabilities, and multi-language SDK generation for improved developer experience and API adoption.",
+      "relevance_score": 0.88,
+      "timestamp": "2025-09-14 15:26:45.801567",
+      "subagent": "api-designer",
+      "category": "tools"
+    },
+    {
+      "query": "API versioning strategies headers URL path semantic versioning",
+      "url": "https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design",
+      "title": "API Versioning Strategies and Implementation Patterns",
+      "content": "Microsoft Azure best practices for API versioning include semantic versioning (v1.2.3), URL path versioning (/api/v1/), custom headers (API-Version), content negotiation, and backward compatibility strategies for production APIs.",
+      "relevance_score": 0.89,
+      "timestamp": "2025-09-14 15:26:45.801584",
+      "subagent": "api-designer",
+      "category": "versioning"
+    },
+    {
+      "query": "API security authentication JWT OAuth2 rate limiting OWASP",
+      "url": "https://owasp.org/www-project-api-security/",
+      "title": "OWASP API Security Top 10 2023 and Best Practices",
+      "content": "OWASP API Security focuses on broken authentication, excessive data exposure, lack of resources and rate limiting, broken function level authorization, mass assignment, security misconfiguration, injection flaws, improper asset management, insufficient logging, and lack of protection from automated attacks.",
+      "relevance_score": 0.91,
+      "timestamp": "2025-09-14 15:26:46.807923",
+      "subagent": "api-designer",
+      "category": "security"
+    }
+  ],
+  "frameworks": {
+    "fastapi": {
+      "name": "FastAPI",
+      "version": "0.115.14+",
+      "documentation_urls": [
+        "https://fastapi.tiangolo.com/",
+        "https://fastapi.tiangolo.com/tutorial/",
+        "https://fastapi.tiangolo.com/async/"
+      ],
+      "key_features": [
+        "Async/await support with 3,000+ requests/second",
+        "Automatic OpenAPI and JSON Schema generation",
+        "Pydantic v2 integration for data validation",
+        "Built-in security with OAuth2 and JWT",
+        "Interactive API documentation (Swagger UI, ReDoc)",
+        "Type hints with IDE support and autocompletion",
+        "WebSocket support for real-time applications"
+      ],
+      "installation": "pip install fastapi[all] uvicorn",
+      "performance_considerations": [
+        "Concurrent request handling with asyncio",
+        "ASGI server optimization (Uvicorn/Hypercorn)",
+        "Database connection pooling for async operations",
+        "Caching strategies with Redis/Memcached integration",
+        "Request/response compression and streaming"
+      ],
+      "integration_patterns": [
+        "SQLAlchemy 2.0 async integration",
+        "Celery background task processing",
+        "Docker containerization with multi-stage builds",
+        "Kubernetes deployment with health checks",
+        "Prometheus metrics and OpenTelemetry tracing"
+      ]
+    },
+    "pydantic": {
+      "name": "Pydantic",
+      "version": "2.9+",
+      "documentation_urls": [
+        "https://docs.pydantic.dev/latest/",
+        "https://docs.pydantic.dev/latest/concepts/json_schema/",
+        "https://docs.pydantic.dev/latest/migration/"
+      ],
+      "key_features": [
+        "Runtime data validation and serialization",
+        "OpenAPI 3.1 compatible JSON schema generation",
+        "BaseModel.model_json_schema() method",
+        "Enhanced schema merging with json_schema_extra",
+        "TypeAdapter for non-model types",
+        "Strict mode and custom validators",
+        "Decimal and UUID type support"
+      ],
+      "installation": "pip install pydantic[email]",
+      "performance_considerations": [
+        "V2 performance improvements (5-50x faster)",
+        "Rust-based validation core",
+        "Lazy validation for large datasets",
+        "Schema caching and reuse patterns"
+      ],
+      "integration_patterns": [
+        "FastAPI automatic schema generation",
+        "SQLAlchemy ORM integration",
+        "Django REST framework serializers",
+        "OpenAPI document generation"
+      ]
+    },
+    "openapi": {
+      "name": "OpenAPI",
+      "version": "3.1.1",
+      "documentation_urls": [
+        "https://spec.openapis.org/oas/v3.1.1.html",
+        "https://swagger.io/specification/",
+        "https://github.com/OAI/OpenAPI-Specification"
+      ],
+      "key_features": [
+        "JSON Schema Draft 2020-12 compatibility",
+        "Enhanced webhook support",
+        "Improved callback definitions",
+        "Discriminator object for polymorphism",
+        "Examples object for better documentation",
+        "Security schemes including OAuth 2.1",
+        "Path templating and parameter serialization"
+      ],
+      "installation": "pip install openapi-schema-pydantic",
+      "performance_considerations": [
+        "Schema validation optimization",
+        "Documentation rendering performance",
+        "Code generation efficiency",
+        "Bundle size optimization for client SDKs"
+      ],
+      "integration_patterns": [
+        "Swagger UI interactive documentation",
+        "ReDoc documentation generation",
+        "Code generation for multiple languages",
+        "API testing and mocking tools"
+      ]
+    },
+    "graphql": {
+      "name": "GraphQL",
+      "version": "Core Spec October 2021",
+      "documentation_urls": [
+        "https://graphql.org/learn/",
+        "https://graphql.org/learn/best-practices/",
+        "https://strawberry.rocks/"
+      ],
+      "key_features": [
+        "Single endpoint for all operations",
+        "Client-specified data requirements",
+        "Strong type system with schema definition",
+        "Real-time subscriptions support",
+        "Introspection for tooling and documentation",
+        "Field-level caching and optimization",
+        "Federation for microservices architecture"
+      ],
+      "installation": "pip install strawberry-graphql[fastapi]",
+      "performance_considerations": [
+        "Query complexity analysis and limiting",
+        "DataLoader pattern for N+1 problem resolution",
+        "Persisted queries for performance",
+        "Field-level caching strategies",
+        "Pagination with cursor-based approaches"
+      ],
+      "integration_patterns": [
+        "Apollo Federation for microservices",
+        "FastAPI integration with Strawberry",
+        "Database query optimization",
+        "Authentication and authorization middleware"
+      ]
+    },
+    "grpc": {
+      "name": "gRPC",
+      "version": "1.66+",
+      "documentation_urls": [
+        "https://grpc.io/docs/",
+        "https://grpc.io/docs/languages/python/",
+        "https://developers.google.com/protocol-buffers"
+      ],
+      "key_features": [
+        "Protocol Buffers binary serialization",
+        "HTTP/2 multiplexing and streaming",
+        "Bidirectional streaming support",
+        "Built-in load balancing and health checking",
+        "Cross-language code generation",
+        "Deadline/timeout and cancellation support",
+        "Pluggable authentication and authorization"
+      ],
+      "installation": "pip install grpcio grpcio-tools",
+      "performance_considerations": [
+        "Binary protocol efficiency vs JSON",
+        "Connection pooling and reuse",
+        "Streaming for large data transfers",
+        "Compression (gzip) configuration",
+        "Keep-alive settings optimization"
+      ],
+      "integration_patterns": [
+        "Microservices inter-service communication",
+        "Load balancing with service mesh",
+        "Kubernetes service discovery",
+        "Monitoring with OpenTelemetry"
+      ]
+    }
+  },
+  "best_practices": [
+    {
+      "category": "api_design_patterns",
+      "title": "RESTful Resource Design",
+      "description": "Design APIs around resources using nouns, consistent HTTP methods (GET, POST, PUT, DELETE), and hierarchical URL structure with proper status codes (200, 201, 404, 500).",
+      "implementation": "Use /users/{id}/orders pattern, implement HATEOAS for discoverability, version APIs with /api/v1/ prefix or custom headers"
+    },
+    {
+      "category": "performance_optimization",
+      "title": "Async/Await and Caching Strategies",
+      "description": "Implement asynchronous processing for I/O operations, use Redis/Memcached for response caching, implement connection pooling for databases.",
+      "implementation": "FastAPI async endpoints, HTTP caching headers (Cache-Control, ETag), database query optimization with indexes"
+    },
+    {
+      "category": "security_implementation",
+      "title": "Authentication and Authorization",
+      "description": "Implement OAuth 2.0/JWT for stateless authentication, use HTTPS everywhere, implement rate limiting and input validation to prevent common attacks.",
+      "implementation": "Use fastapi-users for auth, implement CORS properly, validate all inputs with Pydantic, use API keys for service-to-service communication"
+    },
+    {
+      "category": "documentation_standards",
+      "title": "OpenAPI Documentation and SDK Generation",
+      "description": "Maintain comprehensive API documentation with examples, error codes, and usage patterns. Generate client SDKs automatically from OpenAPI schemas.",
+      "implementation": "Use FastAPI automatic OpenAPI generation, provide realistic examples, implement schema validation, generate TypeScript/Python SDKs"
+    },
+    {
+      "category": "api_versioning",
+      "title": "Backward Compatible Versioning",
+      "description": "Implement semantic versioning (v1.2.3), support multiple API versions simultaneously, plan deprecation strategies with proper notifications.",
+      "implementation": "URL path versioning (/api/v1/), custom headers (API-Version: 2.0), maintain backward compatibility for at least 2 major versions"
+    },
+    {
+      "category": "error_handling",
+      "title": "Consistent Error Response Format",
+      "description": "Standardize error responses with consistent structure, meaningful error codes, and actionable error messages for better developer experience.",
+      "implementation": "Use RFC 7807 Problem Details format, implement global exception handlers, provide error correlation IDs for debugging"
+    }
+  ],
+  "code_examples": [
+    {
+      "title": "FastAPI Advanced CRUD API with Authentication",
+      "description": "Production-ready FastAPI application with async CRUD operations, JWT authentication, database integration, and comprehensive error handling",
+      "code": "from fastapi import FastAPI, Depends, HTTPException, status, Security\nfrom fastapi.security import HTTPBearer, HTTPAuthorizationCredentials\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker\nfrom sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column\nfrom sqlalchemy import String, Integer, DateTime, select, update, delete\nfrom pydantic import BaseModel, Field, ConfigDict\nfrom datetime import datetime, timedelta\nfrom typing import List, Optional, Annotated\nimport jwt\nimport bcrypt\nfrom contextlib import asynccontextmanager\nimport logging\n\n# Database Configuration\nDATABASE_URL = \"postgresql+asyncpg://user:password@localhost/dbname\"\nengine = create_async_engine(DATABASE_URL, echo=True)\nSessionLocal = async_sessionmaker(engine, class_=AsyncSession)\n\nclass Base(DeclarativeBase):\n    pass\n\nclass User(Base):\n    __tablename__ = \"users\"\n    \n    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)\n    username: Mapped[str] = mapped_column(String(50), unique=True, index=True)\n    email: Mapped[str] = mapped_column(String(100), unique=True, index=True)\n    hashed_password: Mapped[str] = mapped_column(String(255))\n    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)\n    is_active: Mapped[bool] = mapped_column(default=True)\n\n# Pydantic Models\nclass UserBase(BaseModel):\n    username: str = Field(..., min_length=3, max_length=50)\n    email: str = Field(..., regex=r'^[^@]+@[^@]+\\.[^@]+$')\n\nclass UserCreate(UserBase):\n    password: str = Field(..., min_length=8)\n\nclass UserUpdate(BaseModel):\n    username: Optional[str] = Field(None, min_length=3, max_length=50)\n    email: Optional[str] = Field(None, regex=r'^[^@]+@[^@]+\\.[^@]+$')\n    is_active: Optional[bool] = None\n\nclass UserResponse(UserBase):\n    model_config = ConfigDict(from_attributes=True)\n    \n    id: int\n    created_at: datetime\n    is_active: bool\n\nclass Token(BaseModel):\n    access_token: str\n    token_type: str\n    expires_in: int\n\nclass ErrorResponse(BaseModel):\n    error: str\n    message: str\n    details: Optional[dict] = None\n    timestamp: datetime = Field(default_factory=datetime.utcnow)\n\n# Security Configuration\nSECRET_KEY = \"your-secret-key-here\"\nALGORITHM = \"HS256\"\nACCESS_TOKEN_EXPIRE_MINUTES = 30\n\nsecurity = HTTPBearer()\n\n# Utility Functions\ndef hash_password(password: str) -> str:\n    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')\n\ndef verify_password(password: str, hashed_password: str) -> bool:\n    return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))\n\ndef create_access_token(data: dict) -> str:\n    to_encode = data.copy()\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    to_encode.update({\"exp\": expire})\n    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)\n\nasync def get_db() -> AsyncSession:\n    async with SessionLocal() as session:\n        try:\n            yield session\n        finally:\n            await session.close()\n\nasync def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security),\n                         db: AsyncSession = Depends(get_db)) -> User:\n    try:\n        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])\n        username: str = payload.get(\"sub\")\n        if username is None:\n            raise HTTPException(status_code=401, detail=\"Invalid authentication credentials\")\n    except jwt.PyJWTError:\n        raise HTTPException(status_code=401, detail=\"Invalid authentication credentials\")\n    \n    result = await db.execute(select(User).where(User.username == username))\n    user = result.scalar_one_or_none()\n    if user is None:\n        raise HTTPException(status_code=401, detail=\"User not found\")\n    return user\n\n# FastAPI Application\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    # Startup\n    async with engine.begin() as conn:\n        await conn.run_sync(Base.metadata.create_all)\n    yield\n    # Shutdown\n    await engine.dispose()\n\napp = FastAPI(\n    title=\"Advanced CRUD API\",\n    description=\"Production-ready FastAPI with authentication and async operations\",\n    version=\"1.0.0\",\n    lifespan=lifespan\n)\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"http://localhost:3000\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n# Global Exception Handler\n@app.exception_handler(HTTPException)\nasync def http_exception_handler(request, exc):\n    return JSONResponse(\n        status_code=exc.status_code,\n        content=ErrorResponse(\n            error=exc.__class__.__name__,\n            message=exc.detail\n        ).model_dump()\n    )\n\n# Authentication Endpoints\n@app.post(\"/api/v1/auth/register\", response_model=UserResponse, status_code=201)\nasync def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):\n    # Check if user exists\n    result = await db.execute(\n        select(User).where(\n            (User.username == user_data.username) | (User.email == user_data.email)\n        )\n    )\n    if result.scalar_one_or_none():\n        raise HTTPException(status_code=400, detail=\"User already exists\")\n    \n    # Create new user\n    hashed_password = hash_password(user_data.password)\n    new_user = User(\n        username=user_data.username,\n        email=user_data.email,\n        hashed_password=hashed_password\n    )\n    \n    db.add(new_user)\n    await db.commit()\n    await db.refresh(new_user)\n    \n    return new_user\n\n@app.post(\"/api/v1/auth/login\", response_model=Token)\nasync def login(username: str, password: str, db: AsyncSession = Depends(get_db)):\n    result = await db.execute(select(User).where(User.username == username))\n    user = result.scalar_one_or_none()\n    \n    if not user or not verify_password(password, user.hashed_password):\n        raise HTTPException(status_code=401, detail=\"Invalid credentials\")\n    \n    access_token = create_access_token({\"sub\": user.username})\n    return Token(\n        access_token=access_token,\n        token_type=\"bearer\",\n        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60\n    )\n\n# CRUD Endpoints\n@app.get(\"/api/v1/users\", response_model=List[UserResponse])\nasync def get_users(skip: int = 0, limit: int = 100, \n                   current_user: User = Depends(get_current_user),\n                   db: AsyncSession = Depends(get_db)):\n    result = await db.execute(select(User).offset(skip).limit(limit))\n    return result.scalars().all()\n\n@app.get(\"/api/v1/users/{user_id}\", response_model=UserResponse)\nasync def get_user(user_id: int, current_user: User = Depends(get_current_user),\n                  db: AsyncSession = Depends(get_db)):\n    result = await db.execute(select(User).where(User.id == user_id))\n    user = result.scalar_one_or_none()\n    if not user:\n        raise HTTPException(status_code=404, detail=\"User not found\")\n    return user\n\n@app.put(\"/api/v1/users/{user_id}\", response_model=UserResponse)\nasync def update_user(user_id: int, user_update: UserUpdate,\n                     current_user: User = Depends(get_current_user),\n                     db: AsyncSession = Depends(get_db)):\n    result = await db.execute(select(User).where(User.id == user_id))\n    user = result.scalar_one_or_none()\n    if not user:\n        raise HTTPException(status_code=404, detail=\"User not found\")\n    \n    update_data = user_update.model_dump(exclude_unset=True)\n    if update_data:\n        await db.execute(update(User).where(User.id == user_id).values(**update_data))\n        await db.commit()\n        await db.refresh(user)\n    \n    return user\n\n@app.delete(\"/api/v1/users/{user_id}\", status_code=204)\nasync def delete_user(user_id: int, current_user: User = Depends(get_current_user),\n                     db: AsyncSession = Depends(get_db)):\n    result = await db.execute(select(User).where(User.id == user_id))\n    user = result.scalar_one_or_none()\n    if not user:\n        raise HTTPException(status_code=404, detail=\"User not found\")\n    \n    await db.execute(delete(User).where(User.id == user_id))\n    await db.commit()\n\n# Health Check\n@app.get(\"/health\")\nasync def health_check():\n    return {\"status\": \"healthy\", \"timestamp\": datetime.utcnow()}\n\nif __name__ == \"__main__\":\n    import uvicorn\n    uvicorn.run(app, host=\"0.0.0.0\", port=8000)",
+      "language": "python"
+    },
+    {
+      "title": "OpenAPI Schema Generator with Pydantic v2",
+      "description": "Advanced OpenAPI schema generation with Pydantic v2 models, custom field validation, and automatic documentation",
+      "code": "from pydantic import BaseModel, Field, EmailStr, validator, root_validator\nfrom pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue\nfrom typing import List, Optional, Union, Literal, Dict, Any\nfrom datetime import datetime, date\nfrom decimal import Decimal\nfrom enum import Enum\nimport json\nfrom uuid import UUID, uuid4\n\nclass UserRole(str, Enum):\n    ADMIN = \"admin\"\n    USER = \"user\"\n    MODERATOR = \"moderator\"\n\nclass AddressType(str, Enum):\n    HOME = \"home\"\n    WORK = \"work\"\n    OTHER = \"other\"\n\nclass Address(BaseModel):\n    \"\"\"User address information with validation\"\"\"\n    \n    street: str = Field(..., min_length=1, max_length=255, description=\"Street address\")\n    city: str = Field(..., min_length=1, max_length=100, description=\"City name\")\n    state: str = Field(..., min_length=2, max_length=50, description=\"State or province\")\n    postal_code: str = Field(..., regex=r'^\\d{5}(-\\d{4})?$', description=\"ZIP or postal code\")\n    country: str = Field(default=\"US\", min_length=2, max_length=2, description=\"ISO country code\")\n    address_type: AddressType = Field(default=AddressType.HOME, description=\"Type of address\")\n    is_primary: bool = Field(default=False, description=\"Primary address flag\")\n    \n    model_config = {\n        \"json_schema_extra\": {\n            \"examples\": [\n                {\n                    \"street\": \"123 Main St\",\n                    \"city\": \"Anytown\",\n                    \"state\": \"CA\",\n                    \"postal_code\": \"12345\",\n                    \"country\": \"US\",\n                    \"address_type\": \"home\",\n                    \"is_primary\": True\n                }\n            ]\n        }\n    }\n\nclass UserPreferences(BaseModel):\n    \"\"\"User preferences and settings\"\"\"\n    \n    theme: Literal[\"light\", \"dark\", \"auto\"] = Field(default=\"auto\")\n    language: str = Field(default=\"en\", regex=r'^[a-z]{2}$')\n    timezone: str = Field(default=\"UTC\", description=\"IANA timezone identifier\")\n    notifications_enabled: bool = Field(default=True)\n    marketing_emails: bool = Field(default=False)\n    \nclass UserProfile(BaseModel):\n    \"\"\"Comprehensive user profile with advanced validation\"\"\"\n    \n    id: UUID = Field(default_factory=uuid4, description=\"Unique user identifier\")\n    username: str = Field(..., min_length=3, max_length=50, \n                         regex=r'^[a-zA-Z0-9_-]+$',\n                         description=\"Username (alphanumeric, underscore, hyphen only)\")\n    email: EmailStr = Field(..., description=\"Valid email address\")\n    first_name: str = Field(..., min_length=1, max_length=50, description=\"First name\")\n    last_name: str = Field(..., min_length=1, max_length=50, description=\"Last name\")\n    date_of_birth: Optional[date] = Field(None, description=\"Date of birth\")\n    phone_number: Optional[str] = Field(None, regex=r'^\\+?[1-9]\\d{1,14}$', \n                                       description=\"International phone number\")\n    role: UserRole = Field(default=UserRole.USER, description=\"User role\")\n    addresses: List[Address] = Field(default=[], max_items=5, description=\"User addresses\")\n    preferences: UserPreferences = Field(default_factory=UserPreferences)\n    profile_picture_url: Optional[str] = Field(None, regex=r'^https?://.*', \n                                              description=\"Profile picture URL\")\n    bio: Optional[str] = Field(None, max_length=500, description=\"User biography\")\n    account_balance: Decimal = Field(default=Decimal('0.00'), \n                                   ge=Decimal('0'),\n                                   decimal_places=2,\n                                   description=\"Account balance\")\n    created_at: datetime = Field(default_factory=datetime.utcnow)\n    last_login: Optional[datetime] = Field(None)\n    is_active: bool = Field(default=True)\n    is_verified: bool = Field(default=False)\n    metadata: Dict[str, Any] = Field(default_factory=dict, \n                                   description=\"Additional user metadata\")\n    \n    @validator('date_of_birth')\n    def validate_age(cls, v):\n        if v and (datetime.now().date() - v).days < 18 * 365:\n            raise ValueError('User must be at least 18 years old')\n        return v\n    \n    @validator('addresses')\n    def validate_primary_address(cls, v):\n        primary_count = sum(1 for addr in v if addr.is_primary)\n        if primary_count > 1:\n            raise ValueError('Only one primary address allowed')\n        return v\n    \n    @root_validator\n    def validate_profile_completeness(cls, values):\n        # Custom business logic validation\n        if values.get('is_verified') and not values.get('phone_number'):\n            raise ValueError('Verified users must have a phone number')\n        return values\n    \n    model_config = {\n        \"json_schema_extra\": {\n            \"examples\": [\n                {\n                    \"username\": \"john_doe\",\n                    \"email\": \"john.doe@company.com\",\n                    \"first_name\": \"John\",\n                    \"last_name\": \"Doe\",\n                    \"date_of_birth\": \"1990-01-15\",\n                    \"phone_number\": \"+1-555-0123\",\n                    \"role\": \"user\",\n                    \"addresses\": [\n                        {\n                            \"street\": \"123 Main St\",\n                            \"city\": \"Anytown\",\n                            \"state\": \"CA\",\n                            \"postal_code\": \"12345\",\n                            \"country\": \"US\",\n                            \"address_type\": \"home\",\n                            \"is_primary\": True\n                        }\n                    ],\n                    \"bio\": \"Software developer with a passion for clean code\",\n                    \"account_balance\": \"100.50\"\n                }\n            ]\n        }\n    }\n\nclass APIResponse(BaseModel):\n    \"\"\"Standardized API response wrapper\"\"\"\n    \n    success: bool = Field(description=\"Operation success status\")\n    message: str = Field(description=\"Response message\")\n    data: Optional[Union[UserProfile, List[UserProfile], Dict[str, Any]]] = Field(\n        None, description=\"Response data\")\n    errors: Optional[List[str]] = Field(None, description=\"Error messages\")\n    pagination: Optional[Dict[str, int]] = Field(None, description=\"Pagination info\")\n    timestamp: datetime = Field(default_factory=datetime.utcnow)\n    request_id: UUID = Field(default_factory=uuid4)\n    \nclass CustomJsonSchemaGenerator(GenerateJsonSchema):\n    \"\"\"Custom JSON schema generator for enhanced OpenAPI documentation\"\"\"\n    \n    def generate_schema(self, schema) -> JsonSchemaValue:\n        json_schema = super().generate_schema(schema)\n        \n        # Add custom properties\n        json_schema['$schema'] = 'https://json-schema.org/draft/2020-12/schema'\n        \n        # Enhance examples\n        if 'examples' not in json_schema and hasattr(schema, 'examples'):\n            json_schema['examples'] = schema.examples\n            \n        return json_schema\n\ndef generate_openapi_schema() -> Dict[str, Any]:\n    \"\"\"Generate comprehensive OpenAPI schema with all models\"\"\"\n    \n    # Generate schemas for all models\n    user_profile_schema = UserProfile.model_json_schema(\n        schema_generator=CustomJsonSchemaGenerator\n    )\n    address_schema = Address.model_json_schema(\n        schema_generator=CustomJsonSchemaGenerator\n    )\n    api_response_schema = APIResponse.model_json_schema(\n        schema_generator=CustomJsonSchemaGenerator\n    )\n    \n    openapi_schema = {\n        \"openapi\": \"3.1.0\",\n        \"info\": {\n            \"title\": \"User Management API\",\n            \"version\": \"2.0.0\",\n            \"description\": \"Comprehensive user management API with advanced validation\",\n            \"contact\": {\n                \"name\": \"API Support\",\n                \"email\": \"support@example.com\"\n            },\n            \"license\": {\n                \"name\": \"MIT\",\n                \"url\": \"https://opensource.org/licenses/MIT\"\n            }\n        },\n        \"servers\": [\n            {\"url\": \"https://api.example.com/v2\", \"description\": \"Production server\"},\n            {\"url\": \"https://staging-api.example.com/v2\", \"description\": \"Staging server\"}\n        ],\n        \"components\": {\n            \"schemas\": {\n                \"UserProfile\": user_profile_schema,\n                \"Address\": address_schema,\n                \"APIResponse\": api_response_schema,\n                \"Error\": {\n                    \"type\": \"object\",\n                    \"properties\": {\n                        \"error_code\": {\"type\": \"string\"},\n                        \"message\": {\"type\": \"string\"},\n                        \"details\": {\"type\": \"object\"}\n                    },\n                    \"required\": [\"error_code\", \"message\"]\n                }\n            },\n            \"securitySchemes\": {\n                \"BearerAuth\": {\n                    \"type\": \"http\",\n                    \"scheme\": \"bearer\",\n                    \"bearerFormat\": \"JWT\"\n                },\n                \"ApiKeyAuth\": {\n                    \"type\": \"apiKey\",\n                    \"in\": \"header\",\n                    \"name\": \"X-API-Key\"\n                }\n            }\n        },\n        \"paths\": {\n            \"/users\": {\n                \"get\": {\n                    \"summary\": \"List users\",\n                    \"description\": \"Retrieve a paginated list of users\",\n                    \"parameters\": [\n                        {\n                            \"name\": \"page\",\n                            \"in\": \"query\",\n                            \"schema\": {\"type\": \"integer\", \"minimum\": 1, \"default\": 1}\n                        },\n                        {\n                            \"name\": \"limit\",\n                            \"in\": \"query\",\n                            \"schema\": {\"type\": \"integer\", \"minimum\": 1, \"maximum\": 100, \"default\": 20}\n                        }\n                    ],\n                    \"responses\": {\n                        \"200\": {\n                            \"description\": \"Successful response\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\"$ref\": \"#/components/schemas/APIResponse\"}\n                                }\n                            }\n                        }\n                    },\n                    \"security\": [{\"BearerAuth\": []}]\n                },\n                \"post\": {\n                    \"summary\": \"Create user\",\n                    \"description\": \"Create a new user profile\",\n                    \"requestBody\": {\n                        \"required\": True,\n                        \"content\": {\n                            \"application/json\": {\n                                \"schema\": {\"$ref\": \"#/components/schemas/UserProfile\"}\n                            }\n                        }\n                    },\n                    \"responses\": {\n                        \"201\": {\n                            \"description\": \"User created successfully\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\"$ref\": \"#/components/schemas/APIResponse\"}\n                                }\n                            }\n                        },\n                        \"400\": {\n                            \"description\": \"Validation error\",\n                            \"content\": {\n                                \"application/json\": {\n                                    \"schema\": {\"$ref\": \"#/components/schemas/Error\"}\n                                }\n                            }\n                        }\n                    },\n                    \"security\": [{\"BearerAuth\": []}]\n                }\n            }\n        }\n    }\n    \n    return openapi_schema\n\n# Usage Example\nif __name__ == \"__main__\":\n    # Generate and save OpenAPI schema\n    schema = generate_openapi_schema()\n    \n    with open('openapi_schema.json', 'w') as f:\n        json.dump(schema, f, indent=2, default=str)\n    \n    # Validate sample data\n    sample_user = {\n        \"username\": \"john_doe\",\n        \"email\": \"john.doe@example.com\",\n        \"first_name\": \"John\",\n        \"last_name\": \"Doe\",\n        \"role\": \"user\"\n    }\n    \n    try:\n        user = UserProfile(**sample_user)\n        print(f\"Valid user created: {user.username}\")\n        print(f\"JSON Schema: {UserProfile.model_json_schema()}\")\n    except Exception as e:\n        print(f\"Validation error: {e}\")",
+      "language": "python"
+    },
+    {
+      "title": "Multi-Protocol API Gateway with Rate Limiting",
+      "description": "Production-grade API gateway supporting REST, GraphQL, and gRPC with rate limiting, authentication, and monitoring",
+      "code": "from fastapi import FastAPI, Request, HTTPException, Depends, status\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom fastapi.responses import JSONResponse\nfrom strawberry.fastapi import GraphQLRouter\nfrom slowapi import Limiter, _rate_limit_exceeded_handler\nfrom slowapi.util import get_remote_address\nfrom slowapi.errors import RateLimitExceeded\nfrom prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST\nfrom contextlib import asynccontextmanager\nimport strawberry\nimport grpc\nfrom concurrent import futures\nimport asyncio\nimport redis.asyncio as redis\nimport jwt\nfrom typing import List, Optional, Dict, Any\nfrom datetime import datetime, timedelta\nfrom pydantic import BaseModel\nimport time\nimport logging\nimport structlog\nfrom opentelemetry import trace\nfrom opentelemetry.exporter.jaeger.thrift import JaegerExporter\nfrom opentelemetry.sdk.trace import TracerProvider\nfrom opentelemetry.sdk.trace.export import BatchSpanProcessor\nfrom opentelemetry.instrumentation.fastapi import FastAPIInstrumentor\nfrom opentelemetry.instrumentation.grpc import GrpcInstrumentor\n\n# Structured Logging Configuration\nstructlog.configure(\n    processors=[\n        structlog.stdlib.filter_by_level,\n        structlog.stdlib.add_logger_name,\n        structlog.stdlib.add_log_level,\n        structlog.stdlib.PositionalArgumentsFormatter(),\n        structlog.processors.TimeStamper(fmt=\"iso\"),\n        structlog.processors.StackInfoRenderer(),\n        structlog.processors.format_exc_info,\n        structlog.processors.JSONRenderer()\n    ],\n    context_class=dict,\n    logger_factory=structlog.stdlib.LoggerFactory(),\n    wrapper_class=structlog.stdlib.BoundLogger,\n    cache_logger_on_first_use=True,\n)\n\nlogger = structlog.get_logger()\n\n# Tracing Configuration\ntrace.set_tracer_provider(TracerProvider())\ntracer = trace.get_tracer(__name__)\n\njaeger_exporter = JaegerExporter(\n    agent_host_name=\"localhost\",\n    agent_port=6831,\n)\n\nspan_processor = BatchSpanProcessor(jaeger_exporter)\ntrace.get_tracer_provider().add_span_processor(span_processor)\n\n# Metrics Configuration\nREQUEST_COUNT = Counter(\n    'api_requests_total', \n    'Total API requests', \n    ['method', 'endpoint', 'status']\n)\nREQUEST_DURATION = Histogram(\n    'api_request_duration_seconds',\n    'API request duration in seconds',\n    ['method', 'endpoint']\n)\nRATELIMIT_EXCEEDED = Counter(\n    'rate_limit_exceeded_total',\n    'Rate limit exceeded events',\n    ['endpoint', 'client_ip']\n)\n\n# Redis Configuration for Rate Limiting\nredis_client = None\n\n# Rate Limiter Configuration\nlimiter = Limiter(key_func=get_remote_address)\n\n# Authentication Models\nclass TokenData(BaseModel):\n    username: Optional[str] = None\n    scopes: List[str] = []\n\nclass User(BaseModel):\n    id: int\n    username: str\n    email: str\n    scopes: List[str]\n    is_active: bool\n\n# GraphQL Schema Definition\n@strawberry.type\nclass UserType:\n    id: int\n    username: str\n    email: str\n    is_active: bool\n\n@strawberry.type\nclass Query:\n    @strawberry.field\n    async def users(self) -> List[UserType]:\n        # Mock data - replace with actual database query\n        return [\n            UserType(id=1, username=\"admin\", email=\"admin@example.com\", is_active=True),\n            UserType(id=2, username=\"user1\", email=\"user1@example.com\", is_active=True)\n        ]\n    \n    @strawberry.field\n    async def user(self, id: int) -> Optional[UserType]:\n        # Mock data - replace with actual database query\n        users = await self.users()\n        return next((user for user in users if user.id == id), None)\n\n@strawberry.type\nclass Mutation:\n    @strawberry.mutation\n    async def create_user(self, username: str, email: str) -> UserType:\n        # Mock implementation - replace with actual database operation\n        new_id = int(time.time())  # Simple ID generation\n        return UserType(id=new_id, username=username, email=email, is_active=True)\n\nschema = strawberry.Schema(query=Query, mutation=Mutation)\n\n# Authentication Functions\nSECRET_KEY = \"your-super-secret-key\"\nALGORITHM = \"HS256\"\n\nasync def verify_token(token: str) -> User:\n    \"\"\"Verify JWT token and return user information\"\"\"\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])\n        username: str = payload.get(\"sub\")\n        scopes: List[str] = payload.get(\"scopes\", [])\n        \n        if username is None:\n            raise HTTPException(\n                status_code=status.HTTP_401_UNAUTHORIZED,\n                detail=\"Invalid authentication credentials\",\n                headers={\"WWW-Authenticate\": \"Bearer\"},\n            )\n            \n        # Mock user lookup - replace with actual database query\n        user = User(\n            id=1, \n            username=username, \n            email=f\"{username}@example.com\",\n            scopes=scopes,\n            is_active=True\n        )\n        return user\n    except jwt.PyJWTError:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Invalid authentication credentials\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},\n        )\n\nasync def get_current_user(request: Request) -> User:\n    \"\"\"Extract and verify user from authorization header\"\"\"\n    auth_header = request.headers.get(\"Authorization\")\n    if not auth_header or not auth_header.startswith(\"Bearer \"):\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Authorization header missing or invalid\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},\n        )\n    \n    token = auth_header.split(\" \")[1]\n    return await verify_token(token)\n\n# Custom Middleware\nclass MetricsMiddleware:\n    def __init__(self, app):\n        self.app = app\n    \n    async def __call__(self, scope, receive, send):\n        if scope[\"type\"] != \"http\":\n            return await self.app(scope, receive, send)\n        \n        start_time = time.time()\n        request = Request(scope, receive)\n        method = request.method\n        path = request.url.path\n        \n        # Process request\n        response = await self.app(scope, receive, send)\n        \n        # Record metrics\n        duration = time.time() - start_time\n        REQUEST_DURATION.labels(method=method, endpoint=path).observe(duration)\n        \n        return response\n\n# Application Lifecycle\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    # Startup\n    global redis_client\n    redis_client = redis.Redis(\n        host='localhost', \n        port=6379, \n        db=0, \n        decode_responses=True\n    )\n    \n    logger.info(\"API Gateway starting up\")\n    \n    yield\n    \n    # Shutdown\n    if redis_client:\n        await redis_client.close()\n    logger.info(\"API Gateway shutting down\")\n\n# FastAPI Application\napp = FastAPI(\n    title=\"Multi-Protocol API Gateway\",\n    description=\"Production-grade API gateway supporting REST, GraphQL, and gRPC\",\n    version=\"1.0.0\",\n    lifespan=lifespan\n)\n\n# Add middleware\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"http://localhost:3000\", \"https://yourdomain.com\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n# Add rate limiting error handler\napp.state.limiter = limiter\napp.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)\n\n# Instrument with OpenTelemetry\nFastAPIInstrumentor.instrument_app(app)\nGrpcInstrumentor().instrument()\n\n# GraphQL Router\ngraphql_app = GraphQLRouter(schema)\napp.include_router(graphql_app, prefix=\"/graphql\")\n\n# REST API Endpoints with Rate Limiting\n@app.post(\"/api/v1/auth/token\")\n@limiter.limit(\"5/minute\")\nasync def login(request: Request, username: str, password: str):\n    \"\"\"Generate JWT token for authentication\"\"\"\n    \n    # Mock authentication - replace with actual user verification\n    if username == \"admin\" and password == \"secret\":\n        token_data = {\n            \"sub\": username,\n            \"scopes\": [\"read\", \"write\"],\n            \"exp\": datetime.utcnow() + timedelta(minutes=30)\n        }\n        token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)\n        \n        REQUEST_COUNT.labels(method=\"POST\", endpoint=\"/auth/token\", status=\"200\").inc()\n        \n        return {\n            \"access_token\": token,\n            \"token_type\": \"bearer\",\n            \"expires_in\": 1800\n        }\n    \n    REQUEST_COUNT.labels(method=\"POST\", endpoint=\"/auth/token\", status=\"401\").inc()\n    raise HTTPException(status_code=401, detail=\"Invalid credentials\")\n\n@app.get(\"/api/v1/users\")\n@limiter.limit(\"100/minute\")\nasync def get_users(request: Request, current_user: User = Depends(get_current_user)):\n    \"\"\"Get list of users (protected endpoint)\"\"\"\n    \n    with tracer.start_as_current_span(\"get_users\") as span:\n        span.set_attribute(\"user.id\", current_user.id)\n        span.set_attribute(\"user.username\", current_user.username)\n        \n        # Check permissions\n        if \"read\" not in current_user.scopes:\n            REQUEST_COUNT.labels(method=\"GET\", endpoint=\"/users\", status=\"403\").inc()\n            raise HTTPException(status_code=403, detail=\"Insufficient permissions\")\n        \n        # Mock data - replace with actual database query\n        users = [\n            {\"id\": 1, \"username\": \"admin\", \"email\": \"admin@example.com\"},\n            {\"id\": 2, \"username\": \"user1\", \"email\": \"user1@example.com\"}\n        ]\n        \n        REQUEST_COUNT.labels(method=\"GET\", endpoint=\"/users\", status=\"200\").inc()\n        \n        logger.info(\"Users retrieved\", user_id=current_user.id, count=len(users))\n        \n        return {\n            \"success\": True,\n            \"data\": users,\n            \"total\": len(users)\n        }\n\n@app.post(\"/api/v1/users\")\n@limiter.limit(\"10/minute\")\nasync def create_user(request: Request, user_data: dict, \n                     current_user: User = Depends(get_current_user)):\n    \"\"\"Create a new user (protected endpoint)\"\"\"\n    \n    with tracer.start_as_current_span(\"create_user\") as span:\n        span.set_attribute(\"user.id\", current_user.id)\n        \n        # Check permissions\n        if \"write\" not in current_user.scopes:\n            REQUEST_COUNT.labels(method=\"POST\", endpoint=\"/users\", status=\"403\").inc()\n            raise HTTPException(status_code=403, detail=\"Insufficient permissions\")\n        \n        # Mock user creation - replace with actual database operation\n        new_user = {\n            \"id\": int(time.time()),\n            \"username\": user_data.get(\"username\"),\n            \"email\": user_data.get(\"email\"),\n            \"created_at\": datetime.utcnow().isoformat()\n        }\n        \n        REQUEST_COUNT.labels(method=\"POST\", endpoint=\"/users\", status=\"201\").inc()\n        \n        logger.info(\"User created\", \n                   creator_id=current_user.id, \n                   new_user_id=new_user[\"id\"])\n        \n        return {\n            \"success\": True,\n            \"data\": new_user,\n            \"message\": \"User created successfully\"\n        }\n\n# Health Check and Metrics\n@app.get(\"/health\")\nasync def health_check():\n    \"\"\"Health check endpoint\"\"\"\n    return {\n        \"status\": \"healthy\",\n        \"timestamp\": datetime.utcnow().isoformat(),\n        \"version\": \"1.0.0\"\n    }\n\n@app.get(\"/metrics\")\nasync def metrics():\n    \"\"\"Prometheus metrics endpoint\"\"\"\n    return JSONResponse(\n        content=generate_latest(),\n        media_type=CONTENT_TYPE_LATEST\n    )\n\n# gRPC Server Setup (would run in separate process)\nasync def setup_grpc_server():\n    \"\"\"Setup gRPC server for high-performance internal communication\"\"\"\n    \n    # This would typically be in a separate file/service\n    # Here's a basic setup example\n    \n    class UserService:\n        async def GetUser(self, request, context):\n            # Mock implementation\n            return {\"id\": request.id, \"username\": f\"user_{request.id}\"}\n    \n    server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))\n    # Add services here\n    # server.add_UserServiceServicer_to_server(UserService(), server)\n    \n    listen_addr = '[::]:50051'\n    server.add_insecure_port(listen_addr)\n    \n    logger.info(f\"gRPC server starting on {listen_addr}\")\n    await server.start()\n    await server.wait_for_termination()\n\n# Custom Exception Handlers\n@app.exception_handler(HTTPException)\nasync def http_exception_handler(request: Request, exc: HTTPException):\n    \"\"\"Custom HTTP exception handler with logging\"\"\"\n    \n    logger.warning(\n        \"HTTP exception\",\n        status_code=exc.status_code,\n        detail=exc.detail,\n        path=request.url.path,\n        method=request.method\n    )\n    \n    REQUEST_COUNT.labels(\n        method=request.method,\n        endpoint=request.url.path,\n        status=str(exc.status_code)\n    ).inc()\n    \n    return JSONResponse(\n        status_code=exc.status_code,\n        content={\n            \"error\": exc.__class__.__name__,\n            \"message\": exc.detail,\n            \"timestamp\": datetime.utcnow().isoformat()\n        }\n    )\n\nif __name__ == \"__main__\":\n    import uvicorn\n    \n    # Run FastAPI server\n    uvicorn.run(\n        app, \n        host=\"0.0.0.0\", \n        port=8000,\n        log_config=None,  # Use structlog instead\n        access_log=False  # Use custom middleware\n    )",
+      "language": "python"
+    }
+  ],
+  "performance_benchmarks": [
+    {
+      "metric": "FastAPI Request Throughput",
+      "baseline": "Standard Python Flask: 1,000 requests/second",
+      "optimized": "FastAPI with async: 3,000+ requests/second",
+      "improvement_factor": "3x performance improvement with async/await patterns"
+    },
+    {
+      "metric": "API Response Time",
+      "baseline": "Synchronous endpoints: 100-500ms average response time",
+      "optimized": "Async endpoints with connection pooling: 10-50ms average response time",
+      "improvement_factor": "5-10x faster response times with proper async implementation"
+    },
+    {
+      "metric": "gRPC vs REST Performance",
+      "grpc_performance": "Binary Protocol Buffers: 30-50% smaller payload size",
+      "rest_performance": "JSON over HTTP/1.1: Standard baseline",
+      "comparison": "gRPC provides 2-3x better performance for high-frequency microservice communication"
+    },
+    {
+      "metric": "OpenAPI Documentation Generation",
+      "pydantic_v1": "Schema generation time: 100ms for 50 models",
+      "pydantic_v2": "Schema generation time: 20ms for 50 models (5x faster)",
+      "improvement": "Pydantic v2 rust-based core provides significant performance gains"
+    }
+  ],
+  "security_guidelines": [
+    {
+      "category": "authentication_authorization",
+      "title": "JWT and OAuth 2.0 Implementation",
+      "description": "Implement stateless authentication with JWT tokens, use refresh tokens for long-lived sessions, implement proper scope-based authorization with RBAC patterns.",
+      "risk_level": "high",
+      "mitigation": "Use industry-standard libraries (authlib, python-jose), implement token rotation, store sensitive data in secure HTTP-only cookies"
+    },
+    {
+      "category": "input_validation",
+      "title": "Comprehensive Request Validation",
+      "description": "Validate all API inputs using Pydantic models, implement request size limits, use parameterized queries to prevent SQL injection, sanitize all user inputs.",
+      "risk_level": "high",
+      "mitigation": "Use Pydantic field validators, implement custom validation rules, use SQLAlchemy ORM with parameterized queries"
+    },
+    {
+      "category": "rate_limiting_dos",
+      "title": "API Rate Limiting and DDoS Protection",
+      "description": "Implement rate limiting per user/IP, use sliding window algorithms, implement circuit breakers for external dependencies, monitor for suspicious traffic patterns.",
+      "risk_level": "medium",
+      "mitigation": "Use Redis-backed rate limiters (slowapi), implement progressive rate limits, use cloud-based DDoS protection services"
+    },
+    {
+      "category": "data_protection",
+      "title": "Sensitive Data Handling",
+      "description": "Encrypt sensitive data at rest and in transit, use HTTPS everywhere, implement proper key management, avoid logging sensitive information.",
+      "risk_level": "high",
+      "mitigation": "Use TLS 1.3, implement field-level encryption, use cloud KMS for key management, sanitize logs"
+    },
+    {
+      "category": "api_security_monitoring",
+      "title": "Security Monitoring and Logging",
+      "description": "Log all authentication attempts, monitor for API abuse patterns, implement security headers (HSTS, CSP), use structured logging for security analysis.",
+      "risk_level": "medium",
+      "mitigation": "Implement OWASP API Security Top 10 monitoring, use SIEM tools, set up automated alerting for security events"
+    }
+  ],
+  "troubleshooting": [
+    {
+      "issue": "FastAPI 422 Validation Error with Pydantic v2 models",
+      "symptoms": ["422 Unprocessable Entity responses", "ValidationError: field required", "Model validation fails silently", "OpenAPI schema generation errors"],
+      "root_causes": ["Pydantic v1 to v2 migration issues", "Field default values not properly set", "Custom validators using v1 syntax", "Model configuration conflicts"],
+      "solutions": ["Update to model_config instead of Config class", "Use Field() with proper default values", "Update @validator to @field_validator", "Check model_json_schema() generation"],
+      "verification": "Test API endpoints with curl -X POST -H 'Content-Type: application/json' -d '{}' and verify proper validation error messages",
+      "references": ["https://docs.pydantic.dev/latest/migration/", "https://fastapi.tiangolo.com/tutorial/body/"]
+    },
+    {
+      "issue": "JWT token expiration causing frequent 401 errors",
+      "symptoms": ["Frequent 401 Unauthorized responses", "Users logged out unexpectedly", "Mobile apps failing after short time", "Token refresh not working"],
+      "root_causes": ["Short token expiration time (< 15 minutes)", "No refresh token implementation", "Clock skew between services", "Token blacklisting issues"],
+      "solutions": ["Implement proper refresh token flow", "Set reasonable expiration times (30 minutes for access, 7 days for refresh)", "Add clock skew tolerance (leeway=60 seconds)", "Use Redis for token blacklisting"],
+      "verification": "Monitor token refresh success rate and authentication failure rates in production logs",
+      "references": ["https://auth0.com/blog/refresh-tokens-what-are-they-and-when-to-use-them/", "https://tools.ietf.org/html/rfc6749#section-1.5"]
+    },
+    {
+      "issue": "Rate limiting causing legitimate requests to be blocked",
+      "symptoms": ["429 Too Many Requests for normal users", "API becoming unusable during peak hours", "Mobile apps failing with rate limit errors", "Bulk operations consistently failing"],
+      "root_causes": ["Rate limits set too low for production traffic", "No differentiation between user types", "Rate limiting by IP instead of user", "Burst traffic not accommodated"],
+      "solutions": ["Implement tiered rate limiting (free/premium users)", "Use sliding window with burst capacity", "Rate limit by authenticated user, not IP", "Implement exponential backoff in clients"],
+      "verification": "Monitor rate limit hit rates and ensure < 1% legitimate request blocking",
+      "references": ["https://cloud.google.com/architecture/rate-limiting-strategies-techniques", "https://github.com/labd/python-slowapi"]
+    },
+    {
+      "issue": "OpenAPI documentation not reflecting actual API behavior",
+      "symptoms": ["Generated client SDKs causing runtime errors", "Documentation examples don't work", "Schema validation mismatches", "Missing required fields in docs"],
+      "root_causes": ["Manual OpenAPI spec overrides", "Pydantic model inconsistencies", "Response models not properly defined", "Custom serializers not documented"],
+      "solutions": ["Use FastAPI automatic schema generation", "Define proper response_model for all endpoints", "Add realistic examples to Pydantic models", "Validate generated OpenAPI against actual responses"],
+      "verification": "Generate client SDK and run integration tests against live API",
+      "references": ["https://fastapi.tiangolo.com/tutorial/metadata/", "https://swagger.io/docs/specification/describing-responses/"]
+    }
+  ],
+  "common_pitfalls": [
+    {
+      "mistake": "Using synchronous database operations in FastAPI async endpoints",
+      "consequences": "Blocking event loop, severe performance degradation, timeout errors under load",
+      "prevention": "Always use async database drivers (asyncpg, aiomysql) and ORM async methods (SQLAlchemy 2.0 async)",
+      "recovery": "Migrate to asyncio-compatible database operations and connection pooling"
+    },
+    {
+      "mistake": "Not implementing proper error handling and returning Python exceptions as JSON",
+      "consequences": "Exposing internal implementation details, security vulnerabilities, poor client experience",
+      "prevention": "Use FastAPI exception handlers and standardized error response models with proper HTTP status codes",
+      "recovery": "Implement global exception handlers and sanitize all error responses"
+    },
+    {
+      "mistake": "Hardcoding API URLs and configuration in client applications",
+      "consequences": "Deployment inflexibility, environment-specific builds, difficult API versioning",
+      "prevention": "Use environment variables, service discovery, or configuration endpoints for API URLs",
+      "recovery": "Implement API configuration endpoints and update clients to use dynamic URLs"
+    },
+    {
+      "mistake": "Not validating API responses in production",
+      "consequences": "Schema drift, client application crashes, data consistency issues",
+      "prevention": "Implement response validation using Pydantic response models and automated testing",
+      "recovery": "Add response model validation to all endpoints and monitor schema compliance"
+    }
+  ],
+  "latest_trends_2025": [
+    {
+      "trend": "FastAPI 0.115.x with Enhanced Async Performance",
+      "release_date": "2025-08-20",
+      "key_features": ["3,000+ requests/second capability", "Improved OAuth2 security patterns", "Better async/await error handling", "Enhanced WebSocket performance"],
+      "migration_notes": "Update to latest uvicorn and ensure proper async patterns throughout application"
+    },
+    {
+      "trend": "OpenAPI 3.1.1 with JSON Schema Draft 2020-12 Support",
+      "release_date": "2025-07-10",
+      "key_features": ["Full JSON Schema compatibility", "Enhanced webhook specifications", "Improved discriminator objects", "Better examples and documentation"],
+      "adoption_status": "Production-ready, supported by major tooling"
+    },
+    {
+      "trend": "API-First Development with Contract Testing",
+      "description": "Shift towards defining APIs before implementation using OpenAPI specs",
+      "use_cases": ["Contract testing with Pact", "Mock server generation", "Client SDK auto-generation", "API governance and validation"],
+      "implementation_example": "Define OpenAPI spec first, generate FastAPI stub code, implement endpoints with pre-defined contracts"
+    },
+    {
+      "trend": "GraphQL Federation 2.0 for Microservices",
+      "release_date": "2025-06-15",
+      "key_features": ["Improved schema composition", "Better error handling across services", "Enhanced caching strategies", "Simplified federation configuration"],
+      "adoption_status": "Growing adoption in enterprise microservice architectures"
+    }
+  ],
+  "production_patterns": [
+    {
+      "scenario": "High-throughput REST API with 10,000+ requests/second",
+      "scale": "10k+ QPS, 100M+ daily requests, 99.9% uptime requirement",
+      "architecture": "FastAPI with uvicorn, Redis caching, PostgreSQL with connection pooling, CDN for static responses",
+      "performance_metrics": {
+        "latency_p50": "25ms",
+        "latency_p99": "150ms",
+        "throughput": "12,000 QPS sustained",
+        "cost_per_request": "$0.0001"
+      },
+      "lessons_learned": ["Database connection pooling essential for high concurrency", "Response caching reduced 70% of database queries", "Proper async/await patterns crucial for performance"],
+      "monitoring_setup": "Prometheus metrics, Grafana dashboards, alerting on p99 latency > 200ms and error rate > 0.1%"
+    },
+    {
+      "scenario": "Multi-tenant SaaS API with complex authorization",
+      "scale": "1000+ tenants, 500k+ daily active users, role-based access control",
+      "architecture": "FastAPI with tenant-based routing, JWT with custom claims, Redis for session caching, PostgreSQL with row-level security",
+      "performance_metrics": {
+        "latency_p50": "45ms",
+        "latency_p99": "200ms",
+        "throughput": "5,000 QPS",
+        "auth_overhead": "5ms average"
+      },
+      "lessons_learned": ["Tenant isolation at database level prevents data leakage", "JWT custom claims reduce database lookups for permissions", "Rate limiting per tenant prevents noisy neighbor issues"],
+      "monitoring_setup": "Per-tenant metrics, security event logging, automated anomaly detection for unusual access patterns"
+    }
+  ],
+  "scaling_strategies": [
+    {
+      "from_scale": "100 API calls/day",
+      "to_scale": "10K API calls/day",
+      "changes_required": [
+        "Implement async FastAPI with proper connection pooling",
+        "Add Redis for caching and session storage",
+        "Implement basic rate limiting with slowapi",
+        "Add request/response logging and monitoring",
+        "Set up proper error handling and validation"
+      ],
+      "cost_implications": "Infrastructure costs 3-4x, need Redis instance and load balancer",
+      "timeline": "2-3 weeks implementation",
+      "performance_impact": {
+        "api_latency": "Reduced from 500ms to 50ms average",
+        "concurrent_requests": "100+ simultaneous connections",
+        "error_rate": "<0.1% with proper validation"
+      }
+    },
+    {
+      "from_scale": "10K API calls/day",
+      "to_scale": "1M API calls/day",
+      "changes_required": [
+        "Deploy API cluster with load balancing",
+        "Implement database connection pooling (pgBouncer)",
+        "Add advanced rate limiting and DDoS protection",
+        "Implement API gateway with JWT authentication",
+        "Add comprehensive monitoring and alerting",
+        "Implement circuit breakers for external services"
+      ],
+      "cost_implications": "Infrastructure costs 15-20x, requires managed services",
+      "timeline": "6-8 weeks implementation",
+      "performance_impact": {
+        "api_throughput": "5000+ requests/second with horizontal scaling",
+        "availability": "99.9% SLA with multi-region deployment",
+        "security": "Enterprise-grade authentication and authorization"
+      }
+    },
+    {
+      "from_scale": "1M API calls/day",
+      "to_scale": "100M+ API calls/day",
+      "changes_required": [
+        "Implement microservices architecture with API mesh",
+        "Deploy globally distributed API endpoints",
+        "Add edge caching and CDN integration",
+        "Implement advanced API analytics and monitoring",
+        "Add auto-scaling based on traffic patterns",
+        "Implement GraphQL federation for complex queries"
+      ],
+      "cost_implications": "Enterprise-scale infrastructure, 50-100x cost increase",
+      "timeline": "3-6 months implementation",
+      "performance_impact": {
+        "global_latency": "<100ms API response worldwide",
+        "throughput": "100K+ requests/second with edge optimization",
+        "cost_efficiency": "Reduced to $0.0001 per request through optimization"
+      }
+    }
+  ],
+  "expanded_production_patterns": [
+    {
+      "scenario": "Multi-tenant SaaS API with Usage-based Billing",
+      "scale": "10K+ tenants, 1M requests/day",
+      "architecture": "Microservices with tenant isolation and usage tracking",
+      "performance_metrics": {
+        "api_latency_p50": "45ms",
+        "api_latency_p99": "200ms",
+        "tenant_isolation": "99.99% data separation",
+        "billing_accuracy": "100% usage tracking"
+      },
+      "lessons_learned": [
+        "Tenant-level rate limiting essential for fair usage",
+        "Usage metering must be real-time for billing accuracy",
+        "API versioning per tenant allows gradual migrations",
+        "Database sharding by tenant improves performance"
+      ],
+      "monitoring_setup": "Tenant-specific dashboards with usage analytics"
+    },
+    {
+      "scenario": "High-frequency Trading API",
+      "scale": "100K requests/second, sub-millisecond latency",
+      "architecture": "gRPC-based microservices with in-memory caching",
+      "performance_metrics": {
+        "latency_p50": "0.8ms",
+        "latency_p99": "2.1ms",
+        "throughput": "150K requests/second",
+        "accuracy": "99.999% data consistency"
+      },
+      "lessons_learned": [
+        "gRPC outperforms REST for high-frequency scenarios",
+        "In-memory data grids essential for sub-ms latency",
+        "Connection pooling and keep-alive critical",
+        "Async processing for non-critical operations"
+      ],
+      "monitoring_setup": "Real-time latency monitoring with microsecond precision"
+    },
+    {
+      "scenario": "IoT Device Management API",
+      "scale": "1M+ devices, 24/7 telemetry ingestion",
+      "architecture": "Event-driven API with message queues and time-series DB",
+      "performance_metrics": {
+        "device_connectivity": "99.8% uptime",
+        "message_throughput": "50K messages/second",
+        "data_latency": "<5s from device to dashboard",
+        "storage_efficiency": "10:1 compression ratio"
+      },
+      "lessons_learned": [
+        "MQTT over WebSocket for device communication",
+        "Time-series databases essential for telemetry data",
+        "Device authentication with certificate rotation",
+        "Batch processing for analytics improves efficiency"
+      ],
+      "monitoring_setup": "Device health dashboards with predictive analytics"
+    },
+    {
+      "scenario": "Financial Services API with Regulatory Compliance",
+      "scale": "Regulatory reporting, 500K transactions/day",
+      "architecture": "Event-sourced API with immutable audit trails",
+      "performance_metrics": {
+        "audit_completeness": "100% transaction logging",
+        "compliance_score": "99.95% regulatory adherence",
+        "fraud_detection": "<100ms risk scoring",
+        "data_retention": "7-year compliant storage"
+      },
+      "lessons_learned": [
+        "Event sourcing mandatory for financial audit trails",
+        "Real-time fraud detection at API gateway level",
+        "Encrypted storage with HSM key management",
+        "Automated compliance reporting reduces errors"
+      ],
+      "monitoring_setup": "Compliance dashboard with automated regulatory reporting"
+    },
+    {
+      "scenario": "Content Delivery API for Media Streaming",
+      "scale": "Global CDN, 10M+ concurrent users",
+      "architecture": "Edge-distributed API with adaptive streaming",
+      "performance_metrics": {
+        "global_latency": "<50ms to nearest edge",
+        "cache_hit_ratio": "95% edge cache efficiency",
+        "bandwidth_optimization": "60% reduction through compression",
+        "concurrent_streams": "50K+ per edge node"
+      },
+      "lessons_learned": [
+        "Edge computing essential for global media delivery",
+        "Adaptive bitrate streaming improves user experience",
+        "Content pre-positioning based on usage patterns",
+        "Multi-CDN strategy for redundancy and performance"
+      ],
+      "monitoring_setup": "Global edge performance monitoring with user QoE metrics"
+    }
+  ],
+  "rag_development_scenarios": [
+    {
+      "scenario": "RAG System API Development and Integration",
+      "development_phase": "API Design and Implementation",
+      "collaboration_agents": ["database-architect", "hybrid-search-specialist"],
+      "development_tasks": [
+        "Design RESTful APIs for taxonomy navigation and search",
+        "Build GraphQL schema for complex RAG queries",
+        "Create WebSocket APIs for real-time taxonomy updates",
+        "Develop API versioning strategy for RAG system evolution"
+      ],
+      "technical_decisions": {
+        "api_architecture": "REST for CRUD operations + GraphQL for complex queries + WebSocket for real-time",
+        "authentication": "JWT with scope-based access control for different RAG operations",
+        "rate_limiting": "Tiered rate limiting based on query complexity and user type",
+        "versioning_strategy": "Header-based versioning with backward compatibility for taxonomy changes"
+      },
+      "development_outputs": [
+        "OpenAPI specification for RAG APIs",
+        "GraphQL schema definition",
+        "API client SDKs (Python, TypeScript)",
+        "API documentation and testing suite"
+      ]
+    },
+    {
+      "scenario": "RAG Development Tools API Suite",
+      "development_phase": "Development Tooling",
+      "collaboration_agents": ["rag-evaluation-specialist", "observability-engineer"],
+      "development_tasks": [
+        "Build APIs for evaluation pipeline management",
+        "Create development environment provisioning APIs",
+        "Design configuration management APIs for RAG experiments",
+        "Develop monitoring and metrics APIs for development insights"
+      ],
+      "technical_decisions": {
+        "tooling_apis": "FastAPI with async support for development tool integration",
+        "experiment_management": "REST APIs with experiment tracking and comparison",
+        "configuration_format": "YAML-based configuration with JSON Schema validation",
+        "metrics_integration": "Prometheus-compatible metrics API with custom evaluation metrics"
+      },
+      "development_outputs": [
+        "Development tools API specification",
+        "Experiment management interface",
+        "Configuration validation system",
+        "Metrics and monitoring APIs"
+      ]
+    }
+  ],
+  "cross_agent_development_collaboration": [
+    {
+      "collaboration_type": "API Integration Design",
+      "agents": ["api-designer", "database-architect", "security-compliance-auditor"],
+      "development_scenario": "Creating secure and performant APIs for RAG system development",
+      "workflow": [
+        "API-designer: Defines API contracts and integration patterns",
+        "Database-architect: Reviews data access patterns and optimization",
+        "Security-compliance-auditor: Validates security requirements and compliance",
+        "Joint: Implements secure, performant API layer for RAG development"
+      ],
+      "deliverables": [
+        "Comprehensive API specification",
+        "Security and compliance validation",
+        "Performance optimization guidelines",
+        "API integration documentation"
+      ]
+    }
+  ]
+}

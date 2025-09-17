@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.10.8",
     "autoprefixer": "^10.4.21",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
