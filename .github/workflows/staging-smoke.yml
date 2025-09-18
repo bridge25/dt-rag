@@ -376,3 +376,5 @@ jobs:
                 labels: ['staging', 'smoke-test', 'automated', 'bug']
               });
             }
+
+# Updated to trigger workflow
