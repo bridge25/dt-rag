@@ -85,28 +85,90 @@ class AgentManifest(BaseModel):
     features: Dict[str, Any]
     mcp_tools_allowlist: List[str]
 # 실제 import 사용 - 견고한 import 처리
-try:
-    # 상대 import 시도
-    from .langgraph_pipeline import get_pipeline
-except ImportError:
+def _import_pipeline():
+    """Pipeline import with comprehensive fallback logic"""
+    try:
+        # 패키지 모드에서 상대 import 시도
+        if __name__ != "__main__":
+            from .langgraph_pipeline import get_pipeline
+            return get_pipeline
+    except ImportError:
+        pass
+
     try:
         # 절대 import 시도
         from langgraph_pipeline import get_pipeline
+        return get_pipeline
+    except ImportError:
+        pass
+
+    try:
+        # 현재 디렉토리에서 import 시도
+        import sys
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        if current_dir not in sys.path:
+            sys.path.insert(0, current_dir)
+        from langgraph_pipeline import get_pipeline
+        return get_pipeline
     except ImportError as e:
-        # 모듈을 찾을 수 없는 경우 더미 함수 생성
+        # 모든 import 실패 시 더미 함수 생성
         print(f"Warning: Could not import langgraph_pipeline, using dummy implementation: {e}")
 
         class DummyPipeline:
             async def execute(self, request):
                 return type('obj', (object,), {
-                    'answer': f"파이프라인이 비활성화되었습니다. 쿼리: {request.query}",
+                    'answer': f"파이프라인이 비활성화되었습니다. 쿼리: {getattr(request, 'query', 'N/A')}",
                     'confidence': 0.5,
                     'latency': 0.1,
                     'sources': [{"url": "system://dummy", "title": "Dummy Source", "date": "", "version": ""}]
                 })
 
-        def get_pipeline():
+        def dummy_get_pipeline():
             return DummyPipeline()
+
+        return dummy_get_pipeline
+
+# Pipeline import 실행
+get_pipeline = _import_pipeline()
+
+def _get_pipeline_request_class():
+    """PipelineRequest class with comprehensive fallback logic"""
+    try:
+        # 패키지 모드에서 상대 import 시도
+        if __name__ != "__main__":
+            from .langgraph_pipeline import PipelineRequest
+            return PipelineRequest
+    except ImportError:
+        pass
+
+    try:
+        # 절대 import 시도
+        from langgraph_pipeline import PipelineRequest
+        return PipelineRequest
+    except ImportError:
+        pass
+
+    try:
+        # 현재 디렉토리에서 import 시도
+        import sys
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        if current_dir not in sys.path:
+            sys.path.insert(0, current_dir)
+        from langgraph_pipeline import PipelineRequest
+        return PipelineRequest
+    except ImportError:
+        # 모든 import 실패 시 더미 클래스 생성
+        class PipelineRequest:
+            def __init__(self, query, taxonomy_version, chunk_id=None, filters=None, options=None):
+                self.query = query
+                self.taxonomy_version = taxonomy_version
+                self.chunk_id = chunk_id
+                self.filters = filters or {}
+                self.options = options or {}
+
+        return PipelineRequest
 # from retrieval_filter import CategoryFilter, create_category_filter  # 임시 주석 처리
 # from cbr_system import CBRSystem, create_cbr_system, SuggestionRequest, CaseSuggestion, CBRLog, FeedbackType, SimilarityMethod  # 파일이 없으면 주석처리
 
@@ -1138,20 +1200,7 @@ async def chat_run(req: ChatRequest):
         pipeline = get_pipeline()
 
         # ChatRequest를 PipelineRequest로 변환 - 견고한 import 처리
-        try:
-            from langgraph_pipeline import PipelineRequest
-        except ImportError:
-            try:
-                from .langgraph_pipeline import PipelineRequest
-            except ImportError:
-                # PipelineRequest를 찾을 수 없는 경우 로컬 정의
-                class PipelineRequest:
-                    def __init__(self, query, taxonomy_version, chunk_id=None, filters=None, options=None):
-                        self.query = query
-                        self.taxonomy_version = taxonomy_version
-                        self.chunk_id = chunk_id
-                        self.filters = filters or {}
-                        self.options = options or {}
+        PipelineRequest = _get_pipeline_request_class()
 
         pipeline_req = PipelineRequest(
             query=req.message,
