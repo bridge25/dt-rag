@@ -14,32 +14,49 @@ on:
         default: '300'
         type: string
   push:
-    paths: 
+    paths:
       - "dt-rag/scripts/smoke.sh"
       - "dt-rag/docs/bridge/**"
       - "dt-rag/docs/seeds/minimal/**"
-      - ".github/workflows/staging-smoke.yml"
+      - "dt-rag/.github/workflows/staging-smoke.yml"
     branches:
       - main
       - "dt-rag/**"
+      - "feature/**"
   pull_request:
     paths:
-      - "dt-rag/scripts/smoke.sh" 
+      - "dt-rag/scripts/smoke.sh"
       - "dt-rag/docs/bridge/**"
       - "dt-rag/docs/seeds/minimal/**"
-      - ".github/workflows/staging-smoke.yml"
+      - "dt-rag/.github/workflows/staging-smoke.yml"
   schedule:
     - cron: "*/30 * * * *"   # Every 30 minutes for continuous monitoring
 
 env:
   STAGING_API_BASE: ${{ vars.STAGING_API_BASE || inputs.api_base || 'http://localhost:8000' }}
   API_KEY: ${{ secrets.STAGING_API_KEY }}
+  DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/dt_rag_test
+  OPENAI_API_KEY: dummy-key-for-testing
 
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ fromJSON(inputs.test_timeout || '5') }}
-    
+
+    services:
+      postgres:
+        image: ankane/pgvector
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: dt_rag_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -54,24 +71,111 @@ jobs:
           echo "🔍 Validating environment variables..."
           echo "STAGING_API_BASE: ${STAGING_API_BASE}"
           echo "API_KEY: ${API_KEY:0:8}..." # Show only first 8 chars for security
-          
+          echo "DATABASE_URL: ${DATABASE_URL}"
+          echo "OPENAI_API_KEY: ${OPENAI_API_KEY:0:8}..."
+
           if [[ -z "${API_KEY}" ]]; then
             echo "❌ ERROR: STAGING_API_KEY secret not configured"
             echo "Please configure repository secret: STAGING_API_KEY"
             exit 1
           fi
-          
+
           if [[ -z "${STAGING_API_BASE}" ]]; then
             echo "❌ ERROR: STAGING_API_BASE not configured"
             echo "Please configure repository variable: STAGING_API_BASE"
             exit 1
+          fi
+
+          # Validate URL format
+          if [[ ! "${STAGING_API_BASE}" =~ ^https?:// ]]; then
+            echo "❌ ERROR: STAGING_API_BASE must be a valid HTTP/HTTPS URL"
+            echo "Current value: ${STAGING_API_BASE}"
+            exit 1
+          fi
+
+          # Test database connectivity
+          echo "🔍 Testing PostgreSQL connectivity..."
+          if ! pg_isready -h localhost -p 5432 -U postgres; then
+            echo "❌ ERROR: PostgreSQL service not ready"
+            exit 1
+          else
+            echo "✅ PostgreSQL service is ready"
           fi
           
       - name: Check script permissions
         run: |
           ls -la dt-rag/scripts/smoke.sh
           chmod +x dt-rag/scripts/smoke.sh
-          
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Start API server
+        run: |
+          echo "🚀 Starting RAG API server..."
+          cd dt-rag/apps/api
+
+          # Install Python dependencies with optimizations
+          pip install --upgrade pip
+          pip install wheel
+
+          # Install only essential dependencies for smoke tests
+          pip install fastapi uvicorn pydantic python-multipart
+          pip install sqlalchemy asyncpg alembic
+          pip install httpx numpy scikit-learn
+          pip install pgvector
+
+          # Skip heavy ML dependencies that aren't needed for basic API tests
+          # pip install -r requirements.txt
+
+          # Check if main.py exists
+          if [[ ! -f "main.py" ]]; then
+            echo "❌ main.py not found in dt-rag/apps/api/"
+            ls -la
+            exit 1
+          fi
+
+          # Start API server in background with logging
+          echo "📡 Starting server on port 8000..."
+          python main.py > api_server.log 2>&1 &
+          API_PID=$!
+          echo "API_PID=$API_PID" >> $GITHUB_ENV
+          echo "🔍 API server started with PID: $API_PID"
+
+          # Wait for server to start with better error handling
+          echo "⏳ Waiting for server to be ready..."
+          SERVER_READY=false
+          for i in {1..30}; do
+            if curl -s -f http://localhost:8000/healthz > /dev/null 2>&1; then
+              echo "✅ API server is ready!"
+              SERVER_READY=true
+              break
+            fi
+            echo "⏳ Attempt $i/30: Server not ready yet, waiting..."
+
+            # Check if process is still running
+            if ! kill -0 $API_PID 2>/dev/null; then
+              echo "❌ API server process has died! Checking logs:"
+              cat api_server.log || echo "No logs available"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          # Final check with detailed error reporting
+          if [[ "$SERVER_READY" != "true" ]]; then
+            echo "❌ API server failed to start properly after 60 seconds"
+            echo "📋 Server logs:"
+            cat api_server.log || echo "No logs available"
+            echo "📊 Process status:"
+            ps aux | grep python || echo "No python processes found"
+            echo "🌐 Port status:"
+            netstat -tlnp | grep :8000 || echo "Port 8000 not in use"
+            exit 1
+          fi
+
       - name: Run smoke tests
         id: smoke_test
         run: |
@@ -92,8 +196,20 @@ jobs:
             echo "❌ Smoke tests failed with exit code: $exit_code"
             exit $exit_code
           fi
-          
-      - name: Upload test results
+
+      - name: Stop API server
+        if: always()
+        run: |
+          echo "🛑 Stopping API server..."
+          if [ ! -z "$API_PID" ]; then
+            kill $API_PID || true
+            echo "✅ API server stopped (PID: $API_PID)"
+          else
+            echo "⚠️ No API server PID found, attempting to kill by port..."
+            pkill -f "python main.py" || true
+          fi
+
+      - name: Upload test results and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -102,7 +218,25 @@ jobs:
             dt-rag/scripts/smoke.sh
             dt-rag/docs/bridge/ACCESS_CARD.md
             dt-rag/docs/seeds/minimal/EXPECTED.md
+            dt-rag/apps/api/api_server.log
           retention-days: 30
+
+      - name: Display test summary
+        if: always()
+        run: |
+          echo "📊 Smoke Test Execution Summary"
+          echo "================================"
+          echo "🔗 Base URL: ${STAGING_API_BASE}"
+          echo "⏰ Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "🏃 Run: ${{ github.run_number }}"
+          echo ""
+
+          if [[ -f "dt-rag/apps/api/api_server.log" ]]; then
+            echo "📋 API Server Log (last 20 lines):"
+            tail -20 dt-rag/apps/api/api_server.log || echo "No logs available"
+          fi
           
       - name: Comment on PR (if applicable)
         if: github.event_name == 'pull_request' && always()
@@ -211,7 +345,7 @@ jobs:
           )
           
           for pattern in "${secret_patterns[@]}"; do
-            if grep -r -i -E "$pattern" dt-rag/ --include="*.md" --include="*.sh"; then
+            if grep -r -i -E "$pattern" dt-rag/docs/ dt-rag/scripts/ --include="*.md" --include="*.sh"; then
               echo "❌ Potential secret found matching pattern: $pattern"
               echo "Please remove secrets from committed files"
               exit 1
@@ -301,3 +435,5 @@ jobs:
                 labels: ['staging', 'smoke-test', 'automated', 'bug']
               });
             }
+
+# Updated to trigger workflow
