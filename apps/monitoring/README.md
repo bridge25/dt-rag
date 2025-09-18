@@ -72,7 +72,7 @@ Set environment variables:
 ```bash
 # Langfuse Configuration
 export LANGFUSE_PUBLIC_KEY="pk_..."
-export LANGFUSE_SECRET_KEY="sk_..."
+export LANGFUSE_SECRET_KEY="***MASKED***"
 export LANGFUSE_HOST="https://cloud.langfuse.com"
 
 # Prometheus Configuration

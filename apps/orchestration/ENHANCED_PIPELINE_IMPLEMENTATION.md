@@ -117,7 +117,7 @@ if self.resilience_manager:
 # 환경 변수 설정
 export A_TEAM_URL="http://localhost:8001"
 export MCP_SERVER_URL="http://localhost:8080"
-export OPENAI_API_KEY="your-api-key-here"
+export OPENAI_API_KEY="***MASKED***"
 
 # 의존성 설치
 pip install httpx pydantic

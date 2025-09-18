@@ -419,7 +419,7 @@ def _cached_graph_operation(self, version: int):
 ```bash
 # Required environment variables
 DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dt_rag
-OPENAI_API_KEY=sk-...  # Optional for embeddings
+OPENAI_API_KEY=***MASKED***  # Optional for embeddings
 
 # Performance tuning
 TAXONOMY_CACHE_SIZE=1000

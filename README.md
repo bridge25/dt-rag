@@ -327,7 +327,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ```bash
 # Required environment variables
 DATABASE_URL=postgresql://user:pass@localhost:5432/dt_rag
-OPENAI_API_KEY=sk-your-key-here
+OPENAI_API_KEY=***MASKED***
 STAGING_API_BASE=https://api.staging.example.com
 ```
 

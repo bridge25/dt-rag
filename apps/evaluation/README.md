@@ -355,7 +355,7 @@ print(f"Average evaluation time: {metrics['average_evaluation_time_seconds']:.1f
 DATABASE_URL=postgresql://user:pass@localhost:5432/dt_rag
 
 # OpenAI API (for embeddings and evaluation)
-OPENAI_API_KEY=your_api_key
+OPENAI_API_KEY=***MASKED***
 
 # Evaluation settings
 EVALUATION_STORAGE_PATH=./evaluation_results

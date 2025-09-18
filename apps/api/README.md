@@ -176,7 +176,7 @@ from sdk_examples import DTRAGAsyncClient, APIConfig, SearchRequest
 async def main():
     config = APIConfig(
         base_url="http://localhost:8000",
-        api_key="your-api-key"
+        api_key="***MASKED***"
     )
 
     async with DTRAGAsyncClient(config) as client:
@@ -318,8 +318,8 @@ DATABASE_URL=postgresql://user:password@localhost:5432/dtrag
 REDIS_URL=redis://localhost:6379
 
 # Security
-JWT_SECRET_KEY=your-secret-key
-API_KEY_SALT=your-salt
+JWT_SECRET_KEY=***MASKED***
+API_KEY_SALT=***MASKED***
 
 # Performance
 RATE_LIMIT_REQUESTS_PER_MINUTE=100

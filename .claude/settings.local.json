@@ -60,7 +60,8 @@
       "Bash(winget install:*)",
       "Bash(./jq.exe:*)",
       "WebFetch(domain:docs.claude.com)",
-      "Bash(git update-index:*)"
+      "Bash(git update-index:*)",
+      "Bash(gh api:*)"
     ],
     "deny": [],
     "ask": []

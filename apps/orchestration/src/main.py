@@ -7,7 +7,7 @@ AI 모델 협업 및 CBR 시스템 통합 레이어
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import os
 import sqlite3
