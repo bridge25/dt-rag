@@ -35,12 +35,28 @@ on:
 env:
   STAGING_API_BASE: ${{ vars.STAGING_API_BASE || inputs.api_base || 'http://localhost:8000' }}
   API_KEY: ${{ secrets.STAGING_API_KEY }}
+  DATABASE_URL: postgresql://postgres:testpassword@localhost:5432/dt_rag_test
+  OPENAI_API_KEY: dummy-key-for-testing
 
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
     timeout-minutes: ${{ fromJSON(inputs.test_timeout || '5') }}
-    
+
+    services:
+      postgres:
+        image: ankane/pgvector
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: dt_rag_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -83,9 +99,18 @@ jobs:
           echo "🚀 Starting RAG API server..."
           cd apps/api
 
-          # Install Python dependencies
+          # Install Python dependencies with optimizations
           pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install wheel
+
+          # Install only essential dependencies for smoke tests
+          pip install fastapi uvicorn pydantic python-multipart
+          pip install sqlalchemy asyncpg alembic
+          pip install httpx numpy scikit-learn
+          pip install pgvector
+
+          # Skip heavy ML dependencies that aren't needed for basic API tests
+          # pip install -r requirements.txt
 
           # Start API server in background
           echo "📡 Starting server on port 8000..."
