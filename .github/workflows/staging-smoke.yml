@@ -72,7 +72,44 @@ jobs:
         run: |
           ls -la scripts/smoke.sh
           chmod +x scripts/smoke.sh
-          
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Start API server
+        run: |
+          echo "🚀 Starting RAG API server..."
+          cd apps/api
+
+          # Install Python dependencies
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+          # Start API server in background
+          echo "📡 Starting server on port 8000..."
+          python main.py &
+          API_PID=$!
+          echo "API_PID=$API_PID" >> $GITHUB_ENV
+
+          # Wait for server to start
+          echo "⏳ Waiting for server to be ready..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/healthz > /dev/null 2>&1; then
+              echo "✅ API server is ready!"
+              break
+            fi
+            echo "⏳ Attempt $i/30: Server not ready yet, waiting..."
+            sleep 2
+          done
+
+          # Final check
+          if ! curl -s http://localhost:8000/healthz > /dev/null 2>&1; then
+            echo "❌ API server failed to start properly"
+            exit 1
+          fi
+
       - name: Run smoke tests
         id: smoke_test
         run: |
@@ -93,7 +130,19 @@ jobs:
             echo "❌ Smoke tests failed with exit code: $exit_code"
             exit $exit_code
           fi
-          
+
+      - name: Stop API server
+        if: always()
+        run: |
+          echo "🛑 Stopping API server..."
+          if [ ! -z "$API_PID" ]; then
+            kill $API_PID || true
+            echo "✅ API server stopped (PID: $API_PID)"
+          else
+            echo "⚠️ No API server PID found, attempting to kill by port..."
+            pkill -f "python main.py" || true
+          fi
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
