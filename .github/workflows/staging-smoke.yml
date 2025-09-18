@@ -15,20 +15,20 @@ on:
         type: string
   push:
     paths:
-      - "scripts/smoke.sh"
-      - "docs/bridge/**"
-      - "docs/seeds/minimal/**"
-      - ".github/workflows/staging-smoke.yml"
+      - "dt-rag/scripts/smoke.sh"
+      - "dt-rag/docs/bridge/**"
+      - "dt-rag/docs/seeds/minimal/**"
+      - "dt-rag/.github/workflows/staging-smoke.yml"
     branches:
       - main
       - "dt-rag/**"
       - "feature/**"
   pull_request:
     paths:
-      - "scripts/smoke.sh"
-      - "docs/bridge/**"
-      - "docs/seeds/minimal/**"
-      - ".github/workflows/staging-smoke.yml"
+      - "dt-rag/scripts/smoke.sh"
+      - "dt-rag/docs/bridge/**"
+      - "dt-rag/docs/seeds/minimal/**"
+      - "dt-rag/.github/workflows/staging-smoke.yml"
   schedule:
     - cron: "*/30 * * * *"   # Every 30 minutes for continuous monitoring
 
@@ -86,8 +86,8 @@ jobs:
           
       - name: Check script permissions
         run: |
-          ls -la scripts/smoke.sh
-          chmod +x scripts/smoke.sh
+          ls -la dt-rag/scripts/smoke.sh
+          chmod +x dt-rag/scripts/smoke.sh
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -97,7 +97,7 @@ jobs:
       - name: Start API server
         run: |
           echo "🚀 Starting RAG API server..."
-          cd apps/api
+          cd dt-rag/apps/api
 
           # Install Python dependencies with optimizations
           pip install --upgrade pip
@@ -142,7 +142,7 @@ jobs:
           echo "📍 Target: ${STAGING_API_BASE}"
           
           # Run the smoke test script
-          ./scripts/smoke.sh
+          ./dt-rag/scripts/smoke.sh
           
           # Capture exit code
           exit_code=$?
@@ -174,9 +174,9 @@ jobs:
         with:
           name: smoke-test-results-${{ github.run_number }}
           path: |
-            scripts/smoke.sh
-            docs/bridge/ACCESS_CARD.md
-            docs/seeds/minimal/EXPECTED.md
+            dt-rag/scripts/smoke.sh
+            dt-rag/docs/bridge/ACCESS_CARD.md
+            dt-rag/docs/seeds/minimal/EXPECTED.md
           retention-days: 30
           
       - name: Comment on PR (if applicable)
@@ -225,7 +225,7 @@ jobs:
         run: |
           echo "🔍 Validating ACCESS_CARD.md..."
           
-          if [[ ! -f "docs/bridge/ACCESS_CARD.md" ]]; then
+          if [[ ! -f "dt-rag/docs/bridge/ACCESS_CARD.md" ]]; then
             echo "❌ ACCESS_CARD.md not found"
             exit 1
           fi
@@ -240,7 +240,7 @@ jobs:
           )
           
           for section in "${required_sections[@]}"; do
-            if ! grep -q "$section" docs/bridge/ACCESS_CARD.md; then
+            if ! grep -q "$section" dt-rag/docs/bridge/ACCESS_CARD.md; then
               echo "❌ Missing section: $section"
               exit 1
             fi
@@ -253,9 +253,9 @@ jobs:
           echo "🔍 Validating seed files..."
           
           seed_files=(
-            "docs/seeds/minimal/sample.md"
-            "docs/seeds/minimal/sample.html"
-            "docs/seeds/minimal/EXPECTED.md"
+            "dt-rag/docs/seeds/minimal/sample.md"
+            "dt-rag/docs/seeds/minimal/sample.html"
+            "dt-rag/docs/seeds/minimal/EXPECTED.md"
           )
           
           for file in "${seed_files[@]}"; do
@@ -286,7 +286,7 @@ jobs:
           )
           
           for pattern in "${secret_patterns[@]}"; do
-            if grep -r -i -E "$pattern" docs/ scripts/ --include="*.md" --include="*.sh"; then
+            if grep -r -i -E "$pattern" dt-rag/docs/ dt-rag/scripts/ --include="*.md" --include="*.sh"; then
               echo "❌ Potential secret found matching pattern: $pattern"
               echo "Please remove secrets from committed files"
               exit 1
