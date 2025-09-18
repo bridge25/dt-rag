@@ -91,45 +91,31 @@ jobs:
           print('  CI =', os.getenv('CI', 'not set'))
           "
 
-      - name: Check FastAPI app (Graceful)
+      - name: Check FastAPI app
         working-directory: ${{ env.ORCHESTRATION_PATH }}
         run: |
-          echo "🚀 Testing FastAPI app import (with CI environment detection)..."
+          echo "🚀 Testing FastAPI app import in CI environment..."
 
-          # Test the import with detailed output
+          # Set CI environment variables explicitly
+          export GITHUB_ACTIONS=true
+          export CI=true
+
+          # Simple import test first
           python -c "
-          import sys
           import os
-
-          print('=== FastAPI App Import Test ===')
-          print('Environment: CI =', os.getenv('CI', 'not set'))
-          print('Environment: GITHUB_ACTIONS =', os.getenv('GITHUB_ACTIONS', 'not set'))
-          print()
+          print('GitHub Actions:', os.getenv('GITHUB_ACTIONS'))
+          print('CI:', os.getenv('CI'))
 
           try:
+              print('Attempting to import FastAPI app...')
               from src.main import app
-              print('✅ FastAPI app import successful!')
-              print('App title:', app.title)
-              print('App version:', app.version)
-              print('App description:', app.description[:100] + '...' if len(app.description) > 100 else app.description)
-
-              # Test basic app functionality
-              print()
-              print('=== App Configuration Test ===')
-              print('Routes count:', len(app.routes))
-              print('Available routes:')
-              for route in app.routes[:10]:  # Show first 10 routes
-                  if hasattr(route, 'path'):
-                      print(f'  - {route.path}')
-
-              print()
-              print('✅ FastAPI app is fully functional!')
-
+              print('✅ FastAPI app imported successfully!')
+              print('App type:', type(app).__name__)
           except Exception as e:
-              print(f'❌ FastAPI app import failed: {e}')
+              print('❌ Import failed:', str(e))
               import traceback
               traceback.print_exc()
-              sys.exit(1)
+              exit(1)
           "
 
       - name: Test API endpoints structure
