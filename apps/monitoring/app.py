@@ -52,13 +52,23 @@ app = FastAPI(
     redoc_url="/redoc" if monitoring_config.environment != "production" else None
 )
 
-# Add CORS middleware
+# Add CORS middleware - Security: No wildcard headers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=monitoring_config.security.allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-API-Key",
+        "X-Requested-With",
+        "X-Request-ID",
+        "Cache-Control"
+    ],
 )
 
 

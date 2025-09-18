@@ -61,7 +61,10 @@
       "Bash(./jq.exe:*)",
       "WebFetch(domain:docs.claude.com)",
       "Bash(git update-index:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "WebSearch",
+      "Bash(echo:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

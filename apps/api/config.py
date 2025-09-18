@@ -6,6 +6,7 @@ security configuration, rate limiting, and performance tuning.
 """
 
 import os
+import secrets
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -31,8 +32,17 @@ class RedisConfig:
 
 @dataclass
 class SecurityConfig:
-    """Security and authentication configuration"""
-    secret_key: str = "your-super-secret-key-change-in-production"
+    """
+    Security and authentication configuration
+
+    SECURITY REQUIREMENTS:
+    - secret_key MUST be loaded from environment variable in production
+    - secret_key MUST be cryptographically random (min 256 bits)
+    - NEVER use hardcoded secrets in production environments
+    - JWT secrets should be rotated regularly in production
+    """
+    # This will be overridden by environment variable or generated securely
+    secret_key: str = ""  # Will be set by _generate_secure_secret() if needed
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 30
     jwt_refresh_expiration_days: int = 7
@@ -40,6 +50,56 @@ class SecurityConfig:
     password_require_special: bool = True
     api_key_header: str = "X-API-Key"
     oauth_providers: Dict[str, Dict[str, str]] = field(default_factory=dict)
+
+def _generate_secure_secret() -> str:
+    """
+    Generate a cryptographically secure secret key for JWT signing
+
+    Uses Python's secrets module to generate a URL-safe, base64-encoded
+    random string with 256 bits of entropy (recommended for JWT secrets).
+
+    Returns:
+        str: A secure random secret key suitable for JWT signing
+
+    Security Note:
+        This should only be used in development/testing environments.
+        Production environments MUST use the SECRET_KEY environment variable.
+    """
+    # Generate 32 random bytes (256 bits) and encode as URL-safe base64
+    return secrets.token_urlsafe(32)
+
+def _validate_secret_strength(secret: str) -> bool:
+    """
+    Validate the strength of a JWT secret key
+
+    Args:
+        secret: The secret key to validate
+
+    Returns:
+        bool: True if the secret meets security requirements
+
+    Security Requirements:
+        - Minimum length of 32 characters
+        - Should not be a common/weak password
+        - Should contain varied character types
+    """
+    if len(secret) < 32:
+        return False
+
+    # Check for obviously weak/default secrets
+    weak_secrets = [
+        "your-super-secret-key-change-in-production",
+        "secret",
+        "password",
+        "123456",
+        "change-me",
+        "development-key"
+    ]
+
+    if secret.lower() in [weak.lower() for weak in weak_secrets]:
+        return False
+
+    return True
 
 @dataclass
 class RateLimitConfig:
@@ -55,12 +115,32 @@ class RateLimitConfig:
 
 @dataclass
 class CORSConfig:
-    """CORS configuration"""
+    """
+    CORS configuration with security-first approach
+
+    Security Guidelines:
+    - Never use wildcard "*" for allow_origins in production
+    - Only specify explicit, trusted origins
+    - Use specific headers instead of wildcard for allow_headers
+    - Enable credentials only when necessary and with specific origins
+    """
     allow_origins: List[str] = field(default_factory=lambda: ["http://localhost:3000", "http://localhost:8080"])
     allow_credentials: bool = True
     allow_methods: List[str] = field(default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
-    allow_headers: List[str] = field(default_factory=lambda: ["*"])
-    expose_headers: List[str] = field(default_factory=lambda: ["X-Request-ID", "X-RateLimit-*"])
+    # Specific headers instead of wildcard for security
+    allow_headers: List[str] = field(default_factory=lambda: [
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-API-Key",
+        "X-Requested-With",
+        "X-Request-ID",
+        "Cache-Control"
+    ])
+    expose_headers: List[str] = field(default_factory=lambda: ["X-Request-ID", "X-RateLimit-Remaining", "X-RateLimit-Limit"])
+    max_age: int = 86400  # 24 hours
 
 @dataclass
 class MonitoringConfig:
@@ -154,18 +234,93 @@ def get_api_config() -> APIConfig:
         config.redis.url = redis_url
         config.rate_limit.redis_url = redis_url + "/1"  # Use different DB for rate limiting
 
-    # Security configuration
-    if secret_key := os.getenv("SECRET_KEY"):
+    # Security configuration - CRITICAL: JWT Secret Key Management
+    secret_key = os.getenv("SECRET_KEY")
+
+    if secret_key:
+        # Validate the provided secret key strength
+        if not _validate_secret_strength(secret_key):
+            if environment == "production":
+                raise ValueError(
+                    "Provided SECRET_KEY does not meet security requirements. "
+                    "Must be at least 32 characters and not use common/weak values."
+                )
+            else:
+                # Log warning in non-production environments but continue
+                print(f"WARNING: Weak SECRET_KEY detected in {environment} environment")
+
         config.security.secret_key = secret_key
+
     elif environment == "production":
-        raise ValueError("SECRET_KEY environment variable is required in production")
+        # Production MUST use environment variable
+        raise ValueError(
+            "SECRET_KEY environment variable is REQUIRED in production. "
+            "Generate a secure secret using: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+        )
+
+    elif environment in ["development", "testing"]:
+        # Generate secure secret for development/testing if not provided
+        config.security.secret_key = _generate_secure_secret()
+        print(f"INFO: Generated secure secret key for {environment} environment")
+
+    else:
+        # Staging and other environments should use environment variable
+        raise ValueError(
+            f"SECRET_KEY environment variable is required for {environment} environment"
+        )
 
     config.security.jwt_expiration_minutes = int(os.getenv("JWT_EXPIRATION_MINUTES", "30"))
     config.security.jwt_refresh_expiration_days = int(os.getenv("JWT_REFRESH_EXPIRATION_DAYS", "7"))
 
-    # CORS configuration
+    # CORS configuration - Environment specific security
     if cors_origins := os.getenv("CORS_ORIGINS"):
-        config.cors.allow_origins = [origin.strip() for origin in cors_origins.split(",")]
+        origins = [origin.strip() for origin in cors_origins.split(",")]
+
+        # Security validation: no wildcards in production
+        if environment == "production":
+            if "*" in origins:
+                raise ValueError(
+                    "Wildcard CORS origins are not allowed in production. "
+                    "Please specify exact origins in CORS_ORIGINS environment variable."
+                )
+            # Ensure HTTPS in production
+            for origin in origins:
+                if origin.startswith("http://") and not origin.startswith("http://localhost"):
+                    raise ValueError(
+                        f"HTTP origins are not allowed in production: {origin}. "
+                        "Please use HTTPS origins only."
+                    )
+
+        config.cors.allow_origins = origins
+
+    # Additional CORS headers if specified
+    if cors_headers := os.getenv("CORS_HEADERS"):
+        headers = [header.strip() for header in cors_headers.split(",")]
+
+        # Security validation: no wildcards
+        if "*" in headers:
+            if environment == "production":
+                raise ValueError(
+                    "Wildcard CORS headers are not allowed in production. "
+                    "Please specify exact headers in CORS_HEADERS environment variable."
+                )
+            else:
+                print(f"WARNING: Wildcard CORS headers detected in {environment} environment")
+
+        config.cors.allow_headers = headers
+
+    # CORS credentials configuration
+    if cors_credentials := os.getenv("CORS_CREDENTIALS"):
+        config.cors.allow_credentials = cors_credentials.lower() == "true"
+
+        # Security warning: credentials with wildcard origins
+        if config.cors.allow_credentials and "*" in config.cors.allow_origins:
+            if environment == "production":
+                raise ValueError(
+                    "CORS credentials cannot be enabled with wildcard origins in production"
+                )
+            else:
+                print(f"WARNING: CORS credentials with wildcard origins in {environment} environment")
 
     # Monitoring configuration
     config.monitoring.enabled = os.getenv("MONITORING_ENABLED", "true").lower() == "true"
@@ -182,14 +337,40 @@ def get_api_config() -> APIConfig:
         config.redoc_url = None
         config.debug = False
         config.allowed_hosts = ["api.dt-rag.com", "dt-rag.com"]
-        config.cors.allow_origins = ["https://dt-rag.com", "https://app.dt-rag.com"]
+
+        # Secure production CORS settings (only if not overridden by env vars)
+        if not os.getenv("CORS_ORIGINS"):
+            config.cors.allow_origins = ["https://dt-rag.com", "https://app.dt-rag.com"]
+
+        # More restrictive CORS in production
+        config.cors.allow_credentials = True
+        config.cors.max_age = 3600  # 1 hour cache for production
+
         config.monitoring.log_level = "WARNING"
         config.performance.worker_processes = int(os.getenv("WORKER_PROCESSES", "4"))
 
     elif environment == "staging":
         config.allowed_hosts = ["staging-api.dt-rag.com"]
-        config.cors.allow_origins = ["https://staging.dt-rag.com"]
+
+        # Staging CORS settings (only if not overridden by env vars)
+        if not os.getenv("CORS_ORIGINS"):
+            config.cors.allow_origins = ["https://staging.dt-rag.com", "https://staging-app.dt-rag.com"]
+
+        config.cors.max_age = 1800  # 30 minutes cache for staging
         config.monitoring.log_level = "INFO"
+
+    elif environment == "development":
+        # Development allows more origins but still secure headers
+        if not os.getenv("CORS_ORIGINS"):
+            config.cors.allow_origins = [
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://localhost:8080",
+                "http://localhost:8081",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8080"
+            ]
+        config.cors.max_age = 300  # 5 minutes cache for development
 
     elif environment == "testing":
         config.testing = True
@@ -272,8 +453,15 @@ def validate_config(config: APIConfig) -> None:
 
     # Security validation
     if config.environment == "production":
-        if config.security.secret_key == "your-super-secret-key-change-in-production":
-            raise ValueError("SECRET_KEY must be changed in production")
+        # Validate secret key is secure and not default
+        if not config.security.secret_key:
+            raise ValueError("SECRET_KEY is required in production")
+
+        if not _validate_secret_strength(config.security.secret_key):
+            raise ValueError(
+                "SECRET_KEY does not meet security requirements in production. "
+                "Must be at least 32 characters and cryptographically secure."
+            )
 
         if config.debug:
             raise ValueError("Debug mode must be disabled in production")
@@ -296,6 +484,105 @@ def validate_config(config: APIConfig) -> None:
     if config.performance.worker_connections < 100:
         raise ValueError("Worker connections must be at least 100")
 
+    # CORS validation
+    if config.environment == "production":
+        # Validate no wildcard origins in production
+        if "*" in config.cors.allow_origins:
+            raise ValueError("Wildcard CORS origins are not allowed in production")
+
+        # Validate HTTPS origins in production (except localhost for testing)
+        for origin in config.cors.allow_origins:
+            if origin.startswith("http://") and not origin.startswith("http://localhost"):
+                raise ValueError(f"HTTP origin not allowed in production: {origin}")
+
+        # Validate no wildcard headers in production
+        if "*" in config.cors.allow_headers:
+            raise ValueError("Wildcard CORS headers are not allowed in production")
+
+        # Validate credentials with specific origins
+        if config.cors.allow_credentials and "*" in config.cors.allow_origins:
+            raise ValueError("CORS credentials cannot be enabled with wildcard origins")
+
+def get_security_info() -> Dict[str, Any]:
+    """
+    Get security configuration information for administrative purposes
+
+    Returns:
+        Dict containing non-sensitive security configuration details
+
+    Note:
+        This function does NOT return actual secret keys for security reasons.
+        It only provides metadata about the security configuration.
+    """
+    config = get_api_config()
+
+    return {
+        "environment": config.environment,
+        "jwt_algorithm": config.security.jwt_algorithm,
+        "jwt_expiration_minutes": config.security.jwt_expiration_minutes,
+        "jwt_refresh_expiration_days": config.security.jwt_refresh_expiration_days,
+        "password_min_length": config.security.password_min_length,
+        "password_require_special": config.security.password_require_special,
+        "api_key_header": config.security.api_key_header,
+        "secret_key_configured": bool(config.security.secret_key),
+        "secret_key_length": len(config.security.secret_key) if config.security.secret_key else 0,
+        "secret_key_is_secure": _validate_secret_strength(config.security.secret_key) if config.security.secret_key else False,
+        "security_recommendations": _get_security_recommendations(config)
+    }
+
+def _get_security_recommendations(config: APIConfig) -> List[str]:
+    """
+    Generate security recommendations based on current configuration
+
+    Args:
+        config: The API configuration to analyze
+
+    Returns:
+        List of security recommendations
+    """
+    recommendations = []
+
+    if config.environment == "production":
+        if config.debug:
+            recommendations.append("Disable debug mode in production")
+
+        if config.docs_url or config.redoc_url:
+            recommendations.append("Disable API documentation in production")
+
+        if not config.security.secret_key or not _validate_secret_strength(config.security.secret_key):
+            recommendations.append("Use a strong SECRET_KEY (32+ characters, cryptographically random)")
+
+    if config.security.jwt_expiration_minutes > 60:
+        recommendations.append("Consider shorter JWT expiration time for better security")
+
+    if config.security.password_min_length < 12:
+        recommendations.append("Consider increasing minimum password length to 12+ characters")
+
+    if not config.security.password_require_special:
+        recommendations.append("Consider requiring special characters in passwords")
+
+    # CORS security recommendations
+    if "*" in config.cors.allow_origins:
+        recommendations.append("Replace wildcard CORS origins with specific trusted origins")
+
+    if "*" in config.cors.allow_headers:
+        recommendations.append("Replace wildcard CORS headers with specific required headers")
+
+    if config.cors.allow_credentials and len(config.cors.allow_origins) > 5:
+        recommendations.append("Consider limiting CORS origins when credentials are enabled")
+
+    # Check for HTTP origins in non-development environments
+    if config.environment not in ["development", "testing"]:
+        http_origins = [origin for origin in config.cors.allow_origins
+                       if origin.startswith("http://") and not origin.startswith("http://localhost")]
+        if http_origins:
+            recommendations.append(f"Use HTTPS for these origins: {', '.join(http_origins)}")
+
+    return recommendations
+
+# Alias for backwards compatibility
+get_config = get_api_config
+
 # Export main configuration
 __all__ = [
     "APIConfig",
@@ -307,6 +594,10 @@ __all__ = [
     "MonitoringConfig",
     "PerformanceConfig",
     "get_api_config",
+    "get_config",  # Alias for backwards compatibility
     "get_openapi_tags",
-    "validate_config"
+    "validate_config",
+    "get_security_info",
+    "_generate_secure_secret",
+    "_validate_secret_strength"
 ]

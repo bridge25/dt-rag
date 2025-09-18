@@ -16,8 +16,12 @@ import logging
 import uuid
 import json
 from datetime import datetime
+# Import common schemas with correct path
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent.parent.parent / "packages" / "common-schemas"))
+
 from common_schemas.models import SearchRequest, SearchResponse, SearchHit
-from typing import List, Dict, Any, Optional
 
 # ChatRequest와 ChatResponse는 common_schemas에 없으므로 로컬에서 정의
 class ChatRequest(BaseModel):
@@ -37,8 +41,8 @@ class AgentManifest(BaseModel):
     retrieval: Dict[str, Any]
     features: Dict[str, Any]
     mcp_tools_allowlist: List[str]
-# 실제 import 사용
-from langgraph_pipeline import get_pipeline
+# 실제 import 사용 - fixed relative import
+from .langgraph_pipeline import get_pipeline
 # from retrieval_filter import CategoryFilter, create_category_filter  # 임시 주석 처리
 # from cbr_system import CBRSystem, create_cbr_system, SuggestionRequest, CaseSuggestion, CBRLog, FeedbackType, SimilarityMethod  # 파일이 없으면 주석처리
 
@@ -315,23 +319,376 @@ class CBRSystem:
             logger.error(f"케이스 추가 오류: {e}")
             return False
 
+    def get_cbr_stats(self) -> Dict[str, Any]:
+        """CBR 시스템 통계 조회"""
+        try:
+            stats = {}
+
+            with sqlite3.connect(self.db_path) as conn:
+                # 총 케이스 수
+                cursor = conn.execute("SELECT COUNT(*) FROM cbr_cases")
+                stats["total_cases"] = cursor.fetchone()[0]
+
+                # 총 상호작용 수
+                cursor = conn.execute("SELECT COUNT(*) FROM cbr_logs")
+                stats["total_interactions"] = cursor.fetchone()[0]
+
+                # 성공한 상호작용 수
+                cursor = conn.execute("SELECT COUNT(*) FROM cbr_logs WHERE success_flag = 1")
+                successful_interactions = cursor.fetchone()[0]
+                stats["successful_interactions"] = successful_interactions
+
+                # 성공률 계산
+                if stats["total_interactions"] > 0:
+                    stats["success_rate"] = successful_interactions / stats["total_interactions"]
+                else:
+                    stats["success_rate"] = 0.0
+
+                # 평균 응답 시간
+                cursor = conn.execute("SELECT AVG(execution_time_ms) FROM cbr_logs WHERE execution_time_ms > 0")
+                avg_response_time = cursor.fetchone()[0]
+                stats["average_response_time_ms"] = avg_response_time if avg_response_time else 0.0
+
+                # 평균 품질 점수
+                cursor = conn.execute("SELECT AVG(quality_score) FROM cbr_cases")
+                avg_quality = cursor.fetchone()[0]
+                stats["average_quality_score"] = avg_quality if avg_quality else 0.0
+
+                # 총 사용 횟수
+                cursor = conn.execute("SELECT SUM(usage_count) FROM cbr_cases")
+                total_usage = cursor.fetchone()[0]
+                stats["total_usage_count"] = total_usage if total_usage else 0
+
+                # 가장 많이 사용된 케이스
+                cursor = conn.execute("""
+                    SELECT case_id, query, usage_count
+                    FROM cbr_cases
+                    ORDER BY usage_count DESC
+                    LIMIT 1
+                """)
+                top_case = cursor.fetchone()
+                if top_case:
+                    stats["most_used_case"] = {
+                        "case_id": top_case[0],
+                        "query": top_case[1],
+                        "usage_count": top_case[2]
+                    }
+                else:
+                    stats["most_used_case"] = None
+
+                # 카테고리별 케이스 분포
+                cursor = conn.execute("""
+                    SELECT category_path, COUNT(*) as count
+                    FROM cbr_cases
+                    GROUP BY category_path
+                    ORDER BY count DESC
+                    LIMIT 10
+                """)
+                category_distribution = []
+                for row in cursor.fetchall():
+                    try:
+                        category_path = json.loads(row[0]) if row[0] else []
+                    except:
+                        category_path = []
+                    category_distribution.append({
+                        "category_path": category_path,
+                        "count": row[1]
+                    })
+                stats["category_distribution"] = category_distribution
+
+                # 유사도 방법별 사용 통계
+                cursor = conn.execute("""
+                    SELECT similarity_method, COUNT(*) as count
+                    FROM cbr_logs
+                    GROUP BY similarity_method
+                    ORDER BY count DESC
+                """)
+                similarity_stats = {}
+                for row in cursor.fetchall():
+                    similarity_stats[row[0]] = row[1]
+                stats["similarity_method_usage"] = similarity_stats
+
+            return stats
+
+        except Exception as e:
+            logger.error(f"CBR 통계 조회 오류: {e}")
+            return {
+                "total_cases": 0,
+                "total_interactions": 0,
+                "successful_interactions": 0,
+                "success_rate": 0.0,
+                "average_response_time_ms": 0.0,
+                "average_quality_score": 0.0,
+                "total_usage_count": 0,
+                "most_used_case": None,
+                "category_distribution": [],
+                "similarity_method_usage": {},
+                "error": str(e)
+            }
+
+    def get_all_cases(self) -> List[CaseSuggestion]:
+        """모든 CBR 케이스 조회"""
+        try:
+            cases = []
+
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT case_id, query, category_path, content, quality_score,
+                           usage_count, success_rate, metadata, created_at, updated_at
+                    FROM cbr_cases
+                    ORDER BY quality_score DESC, usage_count DESC
+                """)
+
+                for row in cursor.fetchall():
+                    case_id, query, category_path_json, content, quality_score, usage_count, success_rate, metadata_json, created_at, updated_at = row
+
+                    # JSON 파싱
+                    try:
+                        category_path = json.loads(category_path_json) if category_path_json else []
+                    except json.JSONDecodeError:
+                        category_path = []
+
+                    try:
+                        metadata = json.loads(metadata_json) if metadata_json else {}
+                    except json.JSONDecodeError:
+                        metadata = {}
+
+                    # 추가 메타데이터 설정
+                    metadata.update({
+                        "created_at": created_at,
+                        "updated_at": updated_at,
+                        "success_rate": success_rate if success_rate else 0.0
+                    })
+
+                    case = CaseSuggestion(
+                        case_id=case_id,
+                        query=query,
+                        category_path=category_path,
+                        content=content,
+                        similarity_score=1.0,  # 전체 조회 시에는 유사도 계산 생략
+                        quality_score=quality_score if quality_score else 0.0,
+                        metadata=metadata,
+                        usage_count=usage_count if usage_count else 0
+                    )
+                    cases.append(case)
+
+            return cases
+
+        except Exception as e:
+            logger.error(f"모든 케이스 조회 오류: {e}")
+            return []
+
+    def get_case_by_id(self, case_id: str) -> Optional[CaseSuggestion]:
+        """특정 CBR 케이스 조회"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    SELECT case_id, query, category_path, content, quality_score,
+                           usage_count, success_rate, metadata, created_at, updated_at
+                    FROM cbr_cases
+                    WHERE case_id = ?
+                """, (case_id,))
+
+                row = cursor.fetchone()
+                if not row:
+                    return None
+
+                case_id, query, category_path_json, content, quality_score, usage_count, success_rate, metadata_json, created_at, updated_at = row
+
+                # JSON 파싱
+                try:
+                    category_path = json.loads(category_path_json) if category_path_json else []
+                except json.JSONDecodeError:
+                    category_path = []
+
+                try:
+                    metadata = json.loads(metadata_json) if metadata_json else {}
+                except json.JSONDecodeError:
+                    metadata = {}
+
+                # 추가 메타데이터 설정
+                metadata.update({
+                    "created_at": created_at,
+                    "updated_at": updated_at,
+                    "success_rate": success_rate if success_rate else 0.0
+                })
+
+                return CaseSuggestion(
+                    case_id=case_id,
+                    query=query,
+                    category_path=category_path,
+                    content=content,
+                    similarity_score=1.0,
+                    quality_score=quality_score if quality_score else 0.0,
+                    metadata=metadata,
+                    usage_count=usage_count if usage_count else 0
+                )
+
+        except Exception as e:
+            logger.error(f"케이스 조회 오류 (case_id={case_id}): {e}")
+            return None
+
+    def update_case(self, case_id: str, case_data: Dict[str, Any]) -> bool:
+        """CBR 케이스 업데이트"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # 기존 케이스 확인
+                cursor = conn.execute("SELECT case_id FROM cbr_cases WHERE case_id = ?", (case_id,))
+                if not cursor.fetchone():
+                    return False
+
+                # 업데이트할 필드들 구성
+                update_fields = []
+                update_values = []
+
+                if "query" in case_data:
+                    update_fields.append("query = ?")
+                    update_values.append(case_data["query"])
+
+                if "category_path" in case_data:
+                    update_fields.append("category_path = ?")
+                    update_values.append(json.dumps(case_data["category_path"]))
+
+                if "content" in case_data:
+                    update_fields.append("content = ?")
+                    update_values.append(case_data["content"])
+
+                if "quality_score" in case_data:
+                    quality_score = case_data["quality_score"]
+                    if isinstance(quality_score, (int, float)) and 0.0 <= quality_score <= 1.0:
+                        update_fields.append("quality_score = ?")
+                        update_values.append(quality_score)
+
+                if "metadata" in case_data:
+                    if isinstance(case_data["metadata"], dict):
+                        update_fields.append("metadata = ?")
+                        update_values.append(json.dumps(case_data["metadata"]))
+
+                if not update_fields:
+                    return False
+
+                # updated_at 필드 자동 추가
+                update_fields.append("updated_at = CURRENT_TIMESTAMP")
+                update_values.append(case_id)
+
+                query = f"UPDATE cbr_cases SET {', '.join(update_fields)} WHERE case_id = ?"
+
+                cursor = conn.execute(query, update_values)
+                conn.commit()
+
+                return cursor.rowcount > 0
+
+        except Exception as e:
+            logger.error(f"케이스 업데이트 오류 (case_id={case_id}): {e}")
+            return False
+
+    def delete_case(self, case_id: str) -> bool:
+        """CBR 케이스 삭제"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # 관련 로그도 함께 삭제 (참조 무결성)
+                conn.execute("""
+                    DELETE FROM cbr_logs
+                    WHERE suggested_case_ids LIKE ? OR picked_case_ids LIKE ?
+                """, (f'%"{case_id}"%', f'%"{case_id}"%'))
+
+                # 케이스 삭제
+                cursor = conn.execute("DELETE FROM cbr_cases WHERE case_id = ?", (case_id,))
+                conn.commit()
+
+                return cursor.rowcount > 0
+
+        except Exception as e:
+            logger.error(f"케이스 삭제 오류 (case_id={case_id}): {e}")
+            return False
+
+    def update_case_quality(self, case_id: str, quality_score: float) -> bool:
+        """케이스 품질 점수 업데이트"""
+        try:
+            if not isinstance(quality_score, (int, float)) or not (0.0 <= quality_score <= 1.0):
+                return False
+
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.execute("""
+                    UPDATE cbr_cases
+                    SET quality_score = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE case_id = ?
+                """, (quality_score, case_id))
+                conn.commit()
+
+                return cursor.rowcount > 0
+
+        except Exception as e:
+            logger.error(f"케이스 품질 점수 업데이트 오류 (case_id={case_id}): {e}")
+            return False
+
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Orchestration Service",
-    version="0.1.0", 
-    description="Dynamic Taxonomy RAG - LangGraph 오케스트레이션 & Agent Factory"
+    version="0.1.0",
+    description="Dynamic Taxonomy RAG - LangGraph 오케스트레이션 & Agent Factory",
+    openapi_tags=[
+        {
+            "name": "health",
+            "description": "Health check endpoints"
+        },
+        {
+            "name": "agents",
+            "description": "Agent factory operations"
+        },
+        {
+            "name": "taxonomy",
+            "description": "Taxonomy tree operations"
+        },
+        {
+            "name": "search",
+            "description": "Hybrid search operations"
+        },
+        {
+            "name": "chat",
+            "description": "LangGraph 7-step chat pipeline"
+        },
+        {
+            "name": "cbr",
+            "description": "Case-Based Reasoning (CBR) system operations"
+        },
+        {
+            "name": "cbr-cases",
+            "description": "CBR case CRUD operations"
+        },
+        {
+            "name": "filter",
+            "description": "B-O2 filtering system operations"
+        }
+    ]
 )
 
-# CORS 설정 추가 - Frontend에서 API 호출 가능하도록
+# CORS 설정 - Security: No wildcards allowed for production security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "*"],  # Frontend 도메인 허용
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080"
+    ],  # Specific origins only - no wildcards
     allow_credentials=True,
-    allow_methods=["*"],  # 모든 HTTP 메서드 허용
-    allow_headers=["*"],  # 모든 헤더 허용
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Specific methods
+    allow_headers=[
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-API-Key",
+        "X-Requested-With",
+        "X-Request-ID",
+        "Cache-Control"
+    ],  # Specific headers - no wildcards
 )
 
 TAXONOMY_BASE = "http://api:8000"
@@ -402,7 +759,29 @@ class CBRFeedbackRequest(BaseModel):
     feedback: str  # "thumbs_up", "thumbs_down", "selected", "ignored"
     success: bool = True
 
-@app.get("/health")
+# 새로운 CBR API 모델들 추가
+class CBRUpdateRequest(BaseModel):
+    query: Optional[str] = None
+    category_path: Optional[List[str]] = None
+    content: Optional[str] = None
+    quality_score: Optional[float] = Field(None, ge=0.0, le=1.0)
+    metadata: Optional[Dict[str, Any]] = None
+
+class CBRQualityUpdateRequest(BaseModel):
+    quality_score: float = Field(..., ge=0.0, le=1.0, description="Quality score between 0.0 and 1.0")
+
+class CBRCaseResponse(BaseModel):
+    case_id: str
+    query: str
+    category_path: List[str]
+    content: str
+    quality_score: float
+    metadata: Dict[str, Any]
+    usage_count: int
+    created_at: str
+    updated_at: str
+
+@app.get("/health", tags=["health"])
 def health_check():
     """헬스체크 엔드포인트 - B-O2 필터링 시스템 상태 포함"""
     # 기본 필터 테스트
@@ -431,7 +810,7 @@ def health_check():
         }
     }
 
-@app.get("/api/taxonomy/tree/{version}")
+@app.get("/api/taxonomy/tree/{version}", tags=["taxonomy"])
 async def get_taxonomy_tree(version: str):
     """Taxonomy API를 프록시하여 트리 데이터 반환"""
     try:
@@ -443,7 +822,7 @@ async def get_taxonomy_tree(version: str):
         logger.error(f"Taxonomy API 호출 실패: {e}")
         raise HTTPException(status_code=502, detail=f"Taxonomy API 호출 실패: {str(e)}")
 
-@app.post("/agents/from-category", response_model=AgentManifest)
+@app.post("/agents/from-category", response_model=AgentManifest, tags=["agents"])
 def create_agent_from_category(req: FromCategoryRequest):
     """노드 경로에서 Agent Manifest 생성 (B-O1: 완료)"""
     # 🚨 GPT 검토 반영: 입력 검증 대폭 강화
@@ -596,7 +975,7 @@ def create_agent_from_category(req: FromCategoryRequest):
     
     return manifest
 
-@app.post("/search", response_model=SearchResponse)
+@app.post("/search", response_model=SearchResponse, tags=["search"])
 def hybrid_search(req: SearchRequest):
     """하이브리드 검색 (BM25 + Vector + Rerank) with B-O2 필터링"""
     logger.info(f"검색 요청: query='{req.query}', filters={req.filters}")
@@ -680,7 +1059,7 @@ def hybrid_search(req: SearchRequest):
         total_count=len(hits)
     )
 
-@app.post("/chat/run", response_model=ChatResponse)
+@app.post("/chat/run", response_model=ChatResponse, tags=["chat"])
 async def chat_run(req: ChatRequest):
     """LangGraph 7-Step 채팅 파이프라인 (B-O3 구현)"""
     logger.info(f"B-O3 7-Step 파이프라인 실행: conversation_id={req.conversation_id}, message={req.message}")
@@ -733,7 +1112,7 @@ async def chat_run(req: ChatRequest):
             sources=fallback_sources
         )
 
-@app.post("/cbr/suggest", response_model=CBRSuggestResponse)
+@app.post("/cbr/suggest", response_model=CBRSuggestResponse, tags=["cbr"])
 def suggest_cases(request: CBRSuggestRequest):
     """B-O4: CBR k-NN 기반 케이스 추천"""
     _require_cbr()
@@ -803,7 +1182,7 @@ def suggest_cases(request: CBRSuggestRequest):
         logger.error(f"CBR 추천 실행 오류: {e}")
         raise HTTPException(status_code=500, detail=f"CBR suggestion failed: {str(e)}")
 
-@app.post("/cbr/feedback")
+@app.post("/cbr/feedback", tags=["cbr"])
 def submit_case_feedback(request: CBRFeedbackRequest):
     """CBR 케이스 피드백 수집 (Neural Selector 학습용)"""
     _require_cbr()
@@ -836,7 +1215,7 @@ def submit_case_feedback(request: CBRFeedbackRequest):
         logger.error(f"피드백 처리 오류: {e}")
         raise HTTPException(status_code=500, detail=f"Feedback processing failed: {str(e)}")
 
-@app.get("/cbr/stats")
+@app.get("/cbr/stats", tags=["cbr"])
 def get_cbr_statistics():
     """CBR 시스템 통계 조회"""
     _require_cbr()
@@ -864,40 +1243,55 @@ def get_cbr_statistics():
         logger.error(f"CBR 통계 조회 오류: {e}")
         raise HTTPException(status_code=500, detail=f"Stats retrieval failed: {str(e)}")
 
-@app.post("/cbr/case")
+@app.post("/cbr/case", tags=["cbr"])
 def add_cbr_case(case_data: Dict[str, Any]):
     """CBR 케이스 추가 (관리용)"""
     _require_cbr()
     try:
-        from .cbr_system import CaseRecord
-        from uuid import uuid4
-        
-        case = CaseRecord(
-            case_id=case_data.get("case_id", str(uuid4())),
-            query=case_data["query"],
-            category_path=case_data["category_path"],
-            content=case_data["content"],
-            metadata=case_data.get("metadata", {}),
-            quality_score=case_data.get("quality_score", 0.0)
-        )
-        
-        if cbr_system.add_case(case):
-            logger.info(f"CBR 케이스 추가 완료: {case.case_id}")
+        # 필수 필드 검증
+        required_fields = ["query", "category_path", "content"]
+        for field in required_fields:
+            if field not in case_data:
+                raise KeyError(f"'{field}' is required")
+
+        # 케이스 ID 생성 (없는 경우)
+        if "case_id" not in case_data:
+            case_data["case_id"] = str(uuid4())
+
+        # 기본값 설정
+        case_data.setdefault("metadata", {})
+        case_data.setdefault("quality_score", 0.5)
+
+        # 데이터 유효성 검증
+        if not isinstance(case_data["category_path"], list):
+            raise ValueError("category_path must be a list")
+
+        if not isinstance(case_data["metadata"], dict):
+            raise ValueError("metadata must be a dictionary")
+
+        if not isinstance(case_data["quality_score"], (int, float)) or not (0.0 <= case_data["quality_score"] <= 1.0):
+            raise ValueError("quality_score must be a float between 0.0 and 1.0")
+
+        # 케이스 추가
+        if cbr_system.add_case(case_data):
+            logger.info(f"CBR 케이스 추가 완료: {case_data['case_id']}")
             return {
                 "status": "success",
-                "case_id": case.case_id,
+                "case_id": case_data["case_id"],
                 "message": "Case added successfully"
             }
         else:
             raise HTTPException(status_code=500, detail="Failed to add case")
-            
+
     except KeyError as e:
         raise HTTPException(status_code=400, detail=f"Missing required field: {str(e)}")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid data format: {str(e)}")
     except Exception as e:
         logger.error(f"CBR 케이스 추가 실패: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to add case: {str(e)}")
 
-@app.get("/cbr/logs")
+@app.get("/cbr/logs", tags=["cbr"])
 def get_cbr_logs(limit: int = 100, success_only: bool = False):
     """CBR 상호작용 로그 조회 (Neural Selector 학습데이터)"""
     _require_cbr()
@@ -948,7 +1342,7 @@ def get_cbr_logs(limit: int = 100, success_only: bool = False):
         logger.error(f"CBR 로그 조회 실패: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve logs: {str(e)}")
 
-@app.get("/cbr/export")
+@app.get("/cbr/export", tags=["cbr"])
 def export_cbr_training_data():
     """Neural Selector 학습을 위한 CBR 데이터 내보내기"""
     _require_cbr()
@@ -975,7 +1369,7 @@ def export_cbr_training_data():
                 "content": case.content,
                 "quality_score": case.quality_score,
                 "usage_count": case.usage_count,
-                "success_rate": case.success_rate,
+                "success_rate": case.metadata.get("success_rate", 0.0),
                 "metadata": case.metadata
             })
         
@@ -1019,7 +1413,7 @@ def export_cbr_training_data():
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 # B-O2 관리용 엔드포인트들
-@app.post("/filter/validate")
+@app.post("/filter/validate", tags=["filter"])
 def validate_filter_paths(paths: List[List[str]]):
     """필터 경로 유효성 검증 엔드포인트"""
     try:
@@ -1047,7 +1441,7 @@ def validate_filter_paths(paths: List[List[str]]):
             "message": "경로 검증 중 오류가 발생했습니다"
         }
 
-@app.post("/filter/test")  
+@app.post("/filter/test", tags=["filter"])
 def test_filter_performance(test_data: Dict[str, Any]):
     """필터 성능 테스트 엔드포인트"""
     allowed_paths = test_data.get("allowed_paths", [])
@@ -1091,7 +1485,7 @@ def test_filter_performance(test_data: Dict[str, Any]):
         logger.error(f"필터 성능 테스트 오류: {e}")
         raise HTTPException(status_code=500, detail=f"Filter test failed: {str(e)}")
 
-@app.get("/metrics/filter") 
+@app.get("/metrics/filter", tags=["filter"])
 def get_filter_metrics():
     """필터링 시스템 메트릭 조회"""
     # TODO: 실제 메트릭 수집 시스템과 연동
@@ -1110,13 +1504,177 @@ def get_filter_metrics():
         },
         "security_metrics": {
             "path_traversal_attempts": 0,
-            "injection_attempts": 0, 
+            "injection_attempts": 0,
             "bypass_attempts": 0,
             "last_violation": None
         },
         "timestamp": "2025-09-03T12:00:00Z",
         "status": "operational"
     }
+
+# 새로운 CBR CRUD API 엔드포인트들 추가
+
+@app.get("/cbr/cases/{case_id}", response_model=CBRCaseResponse, tags=["cbr-cases"])
+def get_cbr_case(case_id: str):
+    """특정 CBR 케이스 조회"""
+    _require_cbr()
+
+    # case_id 유효성 검증
+    if not case_id or not case_id.strip():
+        raise HTTPException(status_code=400, detail="case_id는 빈 값일 수 없습니다")
+
+    try:
+        case = cbr_system.get_case_by_id(case_id.strip())
+
+        if not case:
+            raise HTTPException(status_code=404, detail=f"케이스를 찾을 수 없습니다: {case_id}")
+
+        logger.info(f"CBR 케이스 조회 완료: {case_id}")
+
+        return CBRCaseResponse(
+            case_id=case.case_id,
+            query=case.query,
+            category_path=case.category_path,
+            content=case.content,
+            quality_score=case.quality_score,
+            metadata=case.metadata,
+            usage_count=case.usage_count,
+            created_at=case.metadata.get("created_at", ""),
+            updated_at=case.metadata.get("updated_at", "")
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"CBR 케이스 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"케이스 조회 실패: {str(e)}")
+
+@app.put("/cbr/cases/{case_id}", tags=["cbr-cases"])
+def update_cbr_case(case_id: str, update_request: CBRUpdateRequest):
+    """CBR 케이스 업데이트"""
+    _require_cbr()
+
+    # case_id 유효성 검증
+    if not case_id or not case_id.strip():
+        raise HTTPException(status_code=400, detail="case_id는 빈 값일 수 없습니다")
+
+    # 업데이트할 데이터가 있는지 확인
+    update_data = update_request.dict(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="업데이트할 데이터가 없습니다")
+
+    # 입력 유효성 검증
+    if "query" in update_data and (not update_data["query"] or not update_data["query"].strip()):
+        raise HTTPException(status_code=400, detail="query는 빈 값일 수 없습니다")
+
+    if "content" in update_data and (not update_data["content"] or not update_data["content"].strip()):
+        raise HTTPException(status_code=400, detail="content는 빈 값일 수 없습니다")
+
+    if "category_path" in update_data:
+        if not isinstance(update_data["category_path"], list) or len(update_data["category_path"]) == 0:
+            raise HTTPException(status_code=400, detail="category_path는 비어있지 않은 리스트여야 합니다")
+
+    try:
+        # 트랜잭션으로 업데이트 수행
+        success = cbr_system.update_case(case_id.strip(), update_data)
+
+        if not success:
+            # 케이스가 존재하지 않는 경우
+            existing_case = cbr_system.get_case_by_id(case_id.strip())
+            if not existing_case:
+                raise HTTPException(status_code=404, detail=f"케이스를 찾을 수 없습니다: {case_id}")
+            else:
+                raise HTTPException(status_code=500, detail="케이스 업데이트에 실패했습니다")
+
+        logger.info(f"CBR 케이스 업데이트 완료: {case_id}")
+
+        return {
+            "status": "success",
+            "case_id": case_id,
+            "message": "케이스가 성공적으로 업데이트되었습니다",
+            "updated_fields": list(update_data.keys()),
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"CBR 케이스 업데이트 실패 (case_id={case_id}): {e}")
+        raise HTTPException(status_code=500, detail=f"케이스 업데이트 실패: {str(e)}")
+
+@app.delete("/cbr/cases/{case_id}", tags=["cbr-cases"])
+def delete_cbr_case(case_id: str):
+    """CBR 케이스 삭제"""
+    _require_cbr()
+
+    # case_id 유효성 검증
+    if not case_id or not case_id.strip():
+        raise HTTPException(status_code=400, detail="case_id는 빈 값일 수 없습니다")
+
+    try:
+        # 케이스 존재 여부 확인
+        existing_case = cbr_system.get_case_by_id(case_id.strip())
+        if not existing_case:
+            raise HTTPException(status_code=404, detail=f"케이스를 찾을 수 없습니다: {case_id}")
+
+        # 케이스 삭제 (관련 로그도 함께 삭제됨)
+        success = cbr_system.delete_case(case_id.strip())
+
+        if not success:
+            raise HTTPException(status_code=500, detail="케이스 삭제에 실패했습니다")
+
+        logger.info(f"CBR 케이스 삭제 완료: {case_id}")
+
+        return {
+            "status": "success",
+            "case_id": case_id,
+            "message": "케이스가 성공적으로 삭제되었습니다",
+            "deleted_at": datetime.utcnow().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"CBR 케이스 삭제 실패 (case_id={case_id}): {e}")
+        raise HTTPException(status_code=500, detail=f"케이스 삭제 실패: {str(e)}")
+
+@app.put("/cbr/cases/{case_id}/quality", tags=["cbr-cases"])
+def update_cbr_case_quality(case_id: str, quality_request: CBRQualityUpdateRequest):
+    """CBR 케이스 품질 점수 업데이트"""
+    _require_cbr()
+
+    # case_id 유효성 검증
+    if not case_id or not case_id.strip():
+        raise HTTPException(status_code=400, detail="case_id는 빈 값일 수 없습니다")
+
+    try:
+        # 케이스 존재 여부 확인
+        existing_case = cbr_system.get_case_by_id(case_id.strip())
+        if not existing_case:
+            raise HTTPException(status_code=404, detail=f"케이스를 찾을 수 없습니다: {case_id}")
+
+        # 품질 점수 업데이트
+        success = cbr_system.update_case_quality(case_id.strip(), quality_request.quality_score)
+
+        if not success:
+            raise HTTPException(status_code=500, detail="품질 점수 업데이트에 실패했습니다")
+
+        logger.info(f"CBR 케이스 품질 점수 업데이트 완료: {case_id} -> {quality_request.quality_score}")
+
+        return {
+            "status": "success",
+            "case_id": case_id,
+            "quality_score": quality_request.quality_score,
+            "previous_quality_score": existing_case.quality_score,
+            "message": "품질 점수가 성공적으로 업데이트되었습니다",
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"CBR 케이스 품질 점수 업데이트 실패 (case_id={case_id}): {e}")
+        raise HTTPException(status_code=500, detail=f"품질 점수 업데이트 실패: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

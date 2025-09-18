@@ -209,13 +209,33 @@ class SecurityIntegration:
             # CORS already configured, update with security settings
             pass
         else:
-            # Add secure CORS configuration
+            # Add secure CORS configuration - Security: No wildcards in any environment
+            production_origins = ["https://dt-rag.com", "https://app.dt-rag.com"]
+            development_origins = [
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://localhost:8080",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8080"
+            ]
+
             app.add_middleware(
                 CORSMiddleware,
-                allow_origins=["https://localhost:3000"] if self.config.security_level == SecurityLevel.PRODUCTION else ["*"],
+                allow_origins=production_origins if self.config.security_level == SecurityLevel.PRODUCTION else development_origins,
                 allow_credentials=True,
                 allow_methods=["GET", "POST", "PUT", "DELETE"],
-                allow_headers=["*"],
+                allow_headers=[
+                    "Accept",
+                    "Accept-Language",
+                    "Content-Language",
+                    "Content-Type",
+                    "Authorization",
+                    "X-API-Key",
+                    "X-Requested-With",
+                    "X-Request-ID",
+                    "Cache-Control",
+                    "X-Security-Version"
+                ],
                 expose_headers=["X-Request-ID", "X-Security-Version"]
             )
 

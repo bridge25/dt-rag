@@ -115,7 +115,17 @@ api:
   cors:
     allow_origins: ["http://localhost:3000", "http://localhost:8080"]
     allow_methods: ["GET", "POST", "PUT", "DELETE"]
-    allow_headers: ["*"]
+    allow_headers: [
+      "Accept",
+      "Accept-Language",
+      "Content-Language",
+      "Content-Type",
+      "Authorization",
+      "X-API-Key",
+      "X-Requested-With",
+      "X-Request-ID",
+      "Cache-Control"
+    ]
 
   # Rate limiting
   rate_limiting:
