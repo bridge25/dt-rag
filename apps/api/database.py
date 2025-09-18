@@ -58,7 +58,7 @@ class TaxonomyNode(Base):
     canonical_path: Mapped[List[str]] = mapped_column(ARRAY(String), nullable=False)
     node_name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
-    metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, default=dict)
+    doc_metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, default=dict)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -91,7 +91,7 @@ class Document(Base):
     content_type: Mapped[str] = mapped_column(String(100), default='text/plain')
     file_size: Mapped[Optional[int]] = mapped_column(Integer)
     checksum: Mapped[Optional[str]] = mapped_column(String(64))
-    metadata: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
+    chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
     processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class DocumentChunk(Base):
@@ -102,7 +102,7 @@ class DocumentChunk(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     span: Mapped[str] = mapped_column(INT4RANGE, nullable=False)  # PostgreSQL range type
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
-    metadata: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
+    chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class Embedding(Base):
@@ -736,6 +736,106 @@ class SearchDAO:
         
         await session.commit()
     
+    @staticmethod
+    async def optimize_search_indices(session) -> Dict[str, Any]:
+        """검색 인덱스 최적화"""
+        try:
+            # PostgreSQL 인덱스 최적화 쿼리들
+            optimization_queries = [
+                # Full-text search 인덱스
+                "CREATE INDEX IF NOT EXISTS idx_chunks_text_fts ON chunks USING GIN (to_tsvector('english', text))",
+                # Vector 검색 인덱스 (pgvector)
+                "CREATE INDEX IF NOT EXISTS idx_embeddings_vec_cosine ON embeddings USING ivfflat (vec vector_cosine_ops) WITH (lists = 100)",
+                # 일반 인덱스들
+                "CREATE INDEX IF NOT EXISTS idx_chunks_doc_id ON chunks (doc_id)",
+                "CREATE INDEX IF NOT EXISTS idx_embeddings_chunk_id ON embeddings (chunk_id)",
+                "CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_doc_id ON doc_taxonomy (doc_id)",
+                "CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_path ON doc_taxonomy USING GIN (path)"
+            ]
+
+            created_indices = []
+            for query in optimization_queries:
+                try:
+                    await session.execute(text(query))
+                    index_name = query.split("idx_")[1].split(" ")[0] if "idx_" in query else "unknown"
+                    created_indices.append(index_name)
+                except Exception as e:
+                    logger.warning(f"인덱스 생성 실패: {e}")
+
+            # 통계 업데이트
+            await session.execute(text("ANALYZE"))
+
+            return {
+                "success": True,
+                "indices_created": created_indices,
+                "message": f"{len(created_indices)}개 인덱스 최적화 완료"
+            }
+
+        except Exception as e:
+            logger.error(f"인덱스 최적화 실패: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "indices_created": []
+            }
+
+    @staticmethod
+    async def get_search_analytics(session) -> Dict[str, Any]:
+        """검색 시스템 분석 정보 조회"""
+        try:
+            # 기본 통계 쿼리
+            stats_queries = {
+                "total_docs": "SELECT COUNT(*) FROM documents",
+                "total_chunks": "SELECT COUNT(*) FROM chunks",
+                "embedded_chunks": "SELECT COUNT(*) FROM embeddings",
+                "taxonomy_mappings": "SELECT COUNT(*) FROM doc_taxonomy"
+            }
+
+            statistics = {}
+            for stat_name, query in stats_queries.items():
+                try:
+                    result = await session.execute(text(query))
+                    statistics[stat_name] = result.scalar() or 0
+                except Exception as e:
+                    logger.warning(f"통계 {stat_name} 조회 실패: {e}")
+                    statistics[stat_name] = 0
+
+            # 인덱스 상태 확인
+            index_query = text("""
+                SELECT indexname, tablename
+                FROM pg_indexes
+                WHERE tablename IN ('chunks', 'embeddings', 'documents', 'doc_taxonomy')
+                AND schemaname = 'public'
+            """)
+
+            index_result = await session.execute(index_query)
+            indices = [{"name": row[0], "table": row[1]} for row in index_result.fetchall()]
+
+            # 검색 준비 상태
+            search_readiness = {
+                "bm25_ready": statistics["total_chunks"] > 0,
+                "vector_ready": statistics["embedded_chunks"] > 0,
+                "hybrid_ready": statistics["total_chunks"] > 0 and statistics["embedded_chunks"] > 0,
+                "taxonomy_ready": statistics["taxonomy_mappings"] > 0
+            }
+
+            return {
+                "statistics": statistics,
+                "indices": indices,
+                "search_readiness": search_readiness,
+                "embedding_coverage": (statistics["embedded_chunks"] / max(1, statistics["total_chunks"])) * 100,
+                "last_updated": datetime.utcnow().isoformat()
+            }
+
+        except Exception as e:
+            logger.error(f"검색 분석 조회 실패: {e}")
+            return {
+                "statistics": {},
+                "indices": [],
+                "search_readiness": {},
+                "error": str(e)
+            }
+
     @staticmethod
     async def _get_fallback_search(query: str) -> List[Dict[str, Any]]:
         """폴백 검색 결과"""
