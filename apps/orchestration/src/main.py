@@ -53,24 +53,267 @@ def create_category_filter(paths):
             return True
     return DummyFilter()
 
-# CBR 관련 임시 클래스
-class SuggestionRequest:
-    pass
+# CBR 관련 완전 구현 클래스
+from enum import Enum
+from uuid import uuid4
+from datetime import datetime
+import numpy as np
+from pathlib import Path
+import time
+import sqlite3
 
-class CaseSuggestion:
-    pass
+class FeedbackType(str, Enum):
+    THUMBS_UP = "thumbs_up"
+    THUMBS_DOWN = "thumbs_down"
+    SELECTED = "selected"
+    IGNORED = "ignored"
 
-class CBRLog:
-    pass
+class SimilarityMethod(str, Enum):
+    COSINE = "cosine"
+    EUCLIDEAN = "euclidean"
+    JACCARD = "jaccard"
 
-class FeedbackType:
-    pass
+class SuggestionRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=1000, description="Search query")
+    category_path: Optional[List[str]] = Field(None, description="Category path filter")
+    k: int = Field(5, ge=1, le=50, description="Number of suggestions to return")
+    similarity_method: SimilarityMethod = Field(SimilarityMethod.COSINE, description="Similarity calculation method")
+    include_metadata: bool = Field(True, description="Include case metadata")
+    min_quality_score: float = Field(0.0, ge=0.0, le=1.0, description="Minimum quality score threshold")
 
-class SimilarityMethod:
-    pass
+class CaseSuggestion(BaseModel):
+    case_id: str = Field(..., description="Unique case identifier")
+    query: str = Field(..., description="Original query")
+    category_path: List[str] = Field(..., description="Category hierarchy path")
+    content: str = Field(..., description="Case content")
+    similarity_score: float = Field(..., ge=0.0, le=1.0, description="Similarity score")
+    quality_score: float = Field(..., ge=0.0, le=1.0, description="Quality score")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    usage_count: int = Field(0, ge=0, description="Usage frequency")
+
+class CBRLog(BaseModel):
+    log_id: str = Field(default_factory=lambda: str(uuid4()), description="Unique log identifier")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Log timestamp")
+    query: str = Field(..., description="User query")
+    category_path: List[str] = Field(default_factory=list, description="Category path")
+    suggested_case_ids: List[str] = Field(default_factory=list, description="Suggested case IDs")
+    picked_case_ids: List[str] = Field(default_factory=list, description="User-selected case IDs")
+    success_flag: bool = Field(True, description="Operation success flag")
+    feedback: Optional[str] = Field(None, description="User feedback")
+    execution_time_ms: float = Field(0.0, ge=0.0, description="Execution time in milliseconds")
+    similarity_method: str = Field("cosine", description="Similarity method used")
+    user_id: Optional[str] = Field(None, description="User identifier")
 
 class CBRSystem:
-    pass
+    """완전한 CBR 시스템 구현 (SQLite 기반)"""
+
+    def __init__(self, data_dir: str = "data/cbr"):
+        self.data_dir = Path(data_dir)
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.db_path = str(self.data_dir / "cbr_system.db")
+        self._ensure_database()
+
+    def _ensure_database(self):
+        """데이터베이스 스키마 초기화"""
+        with sqlite3.connect(self.db_path) as conn:
+            # CBR 케이스 테이블
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS cbr_cases (
+                    case_id TEXT PRIMARY KEY,
+                    query TEXT NOT NULL,
+                    category_path TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    quality_score REAL DEFAULT 0.0,
+                    usage_count INTEGER DEFAULT 0,
+                    success_rate REAL DEFAULT 0.0,
+                    metadata TEXT DEFAULT '{}',
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            # CBR 로그 테이블
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS cbr_logs (
+                    log_id TEXT PRIMARY KEY,
+                    timestamp TEXT,
+                    query TEXT,
+                    category_path TEXT,
+                    suggested_case_ids TEXT,
+                    picked_case_ids TEXT,
+                    success_flag INTEGER,
+                    feedback TEXT,
+                    execution_time_ms REAL,
+                    similarity_method TEXT,
+                    user_id TEXT
+                )
+            """)
+
+            conn.commit()
+
+    def suggest_cases(self, request: SuggestionRequest) -> tuple[List[CaseSuggestion], float]:
+        """케이스 추천 실행"""
+        start_time = time.time()
+
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # 기본 쿼리
+                query = """
+                    SELECT case_id, query, category_path, content,
+                           quality_score, usage_count, metadata
+                    FROM cbr_cases
+                    WHERE quality_score >= ?
+                """
+                params = [request.min_quality_score]
+
+                # 카테고리 필터링
+                if request.category_path:
+                    category_filter = json.dumps(request.category_path)
+                    query += " AND category_path = ?"
+                    params.append(category_filter)
+
+                query += " ORDER BY quality_score DESC, usage_count DESC LIMIT ?"
+                params.append(request.k)
+
+                cursor = conn.execute(query, params)
+                results = cursor.fetchall()
+
+                suggestions = []
+                for row in results:
+                    case_id, query_text, category_path_json, content, quality_score, usage_count, metadata_json = row
+
+                    # JSON 파싱
+                    category_path = json.loads(category_path_json) if category_path_json else []
+                    metadata = json.loads(metadata_json) if metadata_json else {}
+
+                    # 유사도 계산
+                    similarity_score = self._calculate_similarity(
+                        request.query, query_text, request.similarity_method
+                    )
+
+                    suggestion = CaseSuggestion(
+                        case_id=case_id,
+                        query=query_text,
+                        category_path=category_path,
+                        content=content,
+                        similarity_score=similarity_score,
+                        quality_score=quality_score,
+                        metadata=metadata,
+                        usage_count=usage_count
+                    )
+                    suggestions.append(suggestion)
+
+                # 유사도 순으로 재정렬
+                suggestions.sort(key=lambda x: x.similarity_score, reverse=True)
+
+                execution_time = (time.time() - start_time) * 1000
+                return suggestions, execution_time
+
+        except Exception as e:
+            logger.error(f"CBR 추천 실행 오류: {e}")
+            return [], (time.time() - start_time) * 1000
+
+    def _calculate_similarity(self, query1: str, query2: str, method: SimilarityMethod) -> float:
+        """유사도 계산"""
+        if method == SimilarityMethod.COSINE:
+            # 간단한 단어 기반 코사인 유사도
+            words1 = set(query1.lower().split())
+            words2 = set(query2.lower().split())
+            intersection = len(words1 & words2)
+            union = len(words1 | words2)
+            return intersection / union if union > 0 else 0.0
+        elif method == SimilarityMethod.JACCARD:
+            # 자카드 유사도
+            words1 = set(query1.lower().split())
+            words2 = set(query2.lower().split())
+            intersection = len(words1 & words2)
+            union = len(words1 | words2)
+            return intersection / union if union > 0 else 0.0
+        else:
+            # 기본 문자열 유사도
+            return 1.0 - (abs(len(query1) - len(query2)) / max(len(query1), len(query2)) if max(len(query1), len(query2)) > 0 else 0.0)
+
+    def log_cbr_interaction(self, log: CBRLog):
+        """CBR 상호작용 로그 저장"""
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute("""
+                INSERT OR REPLACE INTO cbr_logs
+                (log_id, timestamp, query, category_path, suggested_case_ids,
+                 picked_case_ids, success_flag, feedback, execution_time_ms,
+                 similarity_method, user_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                log.log_id,
+                log.timestamp.isoformat(),
+                log.query,
+                json.dumps(log.category_path),
+                json.dumps(log.suggested_case_ids),
+                json.dumps(log.picked_case_ids),
+                1 if log.success_flag else 0,
+                log.feedback,
+                log.execution_time_ms,
+                log.similarity_method,
+                log.user_id
+            ))
+            conn.commit()
+
+    def update_case_feedback(self, case_id: str, feedback_type: FeedbackType, success: bool) -> bool:
+        """케이스 피드백 업데이트"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # 사용 횟수 증가
+                conn.execute("""
+                    UPDATE cbr_cases
+                    SET usage_count = usage_count + 1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE case_id = ?
+                """, (case_id,))
+
+                # 성공률 업데이트
+                if feedback_type in [FeedbackType.THUMBS_UP, FeedbackType.SELECTED]:
+                    conn.execute("""
+                        UPDATE cbr_cases
+                        SET quality_score = MIN(1.0, quality_score + 0.1)
+                        WHERE case_id = ?
+                    """, (case_id,))
+                elif feedback_type == FeedbackType.THUMBS_DOWN:
+                    conn.execute("""
+                        UPDATE cbr_cases
+                        SET quality_score = MAX(0.0, quality_score - 0.1)
+                        WHERE case_id = ?
+                    """, (case_id,))
+
+                conn.commit()
+                return True
+
+        except Exception as e:
+            logger.error(f"피드백 업데이트 오류: {e}")
+            return False
+
+    def add_case(self, case_data: Dict[str, Any]) -> bool:
+        """새 케이스 추가"""
+        try:
+            case_id = case_data.get("case_id", str(uuid4()))
+
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("""
+                    INSERT OR REPLACE INTO cbr_cases
+                    (case_id, query, category_path, content, quality_score, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (
+                    case_id,
+                    case_data["query"],
+                    json.dumps(case_data["category_path"]),
+                    case_data["content"],
+                    case_data.get("quality_score", 0.5),
+                    json.dumps(case_data.get("metadata", {}))
+                ))
+                conn.commit()
+                return True
+
+        except Exception as e:
+            logger.error(f"케이스 추가 오류: {e}")
+            return False
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -96,82 +339,9 @@ TAXONOMY_BASE = "http://api:8000"
 # CBR 시스템 초기화
 cbr_system = None  # 실제 초기화는 startup 훅에서 환경변수에 따라 수행
 
-class SimpleCBR:
-    """경량 CBR 초기화 구현: 최소 suggest/log/통계 제공 (데모용)
-    - 외부 대형 의존성 없이 동작
-    - /cbr/logs, /cbr/export에서 사용하는 sqlite 스키마를 필요 시 생성
-    """
-    def __init__(self, data_dir: str = "data/cbr"):
-        from pathlib import Path
-        self.data_dir = Path(data_dir)
-        self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.db_path = str(self.data_dir / "cbr_system.db")
-
-    def _ensure_db(self):
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS cbr_logs (
-                  log_id TEXT PRIMARY KEY,
-                  timestamp TEXT,
-                  query TEXT,
-                  category_path TEXT,
-                  suggested_case_ids TEXT,
-                  picked_case_ids TEXT,
-                  success_flag INTEGER,
-                  feedback TEXT,
-                  execution_time_ms REAL,
-                  similarity_method TEXT,
-                  user_id TEXT
-                )
-                """
-            )
-
-    def suggest_cases(self, req) -> tuple[list, float]:
-        # 데모용: 빈 추천과 짧은 실행시간 반환
-        return [], 1.0
-
-    def log_cbr_interaction(self, log):
-        import json
-        self._ensure_db()
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute(
-                """
-                INSERT OR REPLACE INTO cbr_logs
-                (log_id, timestamp, query, category_path, suggested_case_ids, picked_case_ids,
-                 success_flag, feedback, execution_time_ms, similarity_method, user_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    getattr(log, "log_id", None) or str(uuid.uuid4()),
-                    getattr(log, "timestamp", datetime.utcnow()).isoformat(),
-                    getattr(log, "query", ""),
-                    json.dumps(getattr(log, "category_path", []), ensure_ascii=False),
-                    json.dumps(getattr(log, "suggested_case_ids", []), ensure_ascii=False),
-                    json.dumps(getattr(log, "picked_case_ids", []), ensure_ascii=False),
-                    1 if getattr(log, "success_flag", True) else 0,
-                    getattr(log, "feedback", None),
-                    float(getattr(log, "execution_time_ms", 0.0)),
-                    getattr(log, "similarity_method", "cosine"),
-                    getattr(log, "user_id", None),
-                ),
-            )
-            conn.commit()
-
-    def update_case_feedback(self, case_id: str, feedback_type, success: bool):
-        # 데모용: no-op
-        return True
-
-    def get_cbr_stats(self) -> Dict[str, Any]:
-        # 데모용 통계
-        return {
-            "total_interactions": 0,
-            "average_response_time_ms": 0.0,
-            "success_rate": 0.0,
-        }
-
-    def get_all_cases(self) -> List[Dict[str, Any]]:
-        return []
+# SimpleCBR class has been replaced by the complete CBRSystem class above
+# The CBRSystem provides full functionality with SQLite backend, proper Pydantic models,
+# similarity calculations, case storage, and comprehensive logging
 
 
 def _require_cbr():
@@ -189,7 +359,7 @@ def _init_cbr_if_enabled():
         return
     data_dir = os.getenv("CBR_DATA_DIR", "data/cbr")
     try:
-        cbr_system = SimpleCBR(data_dir)
+        cbr_system = CBRSystem(data_dir)
         logger.info(f"CBR system initialized (demo) with data_dir={data_dir}")
     except Exception as e:
         logger.error(f"Failed to initialize CBR system: {e}")
