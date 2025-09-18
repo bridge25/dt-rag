@@ -71,17 +71,35 @@ jobs:
           echo "🔍 Validating environment variables..."
           echo "STAGING_API_BASE: ${STAGING_API_BASE}"
           echo "API_KEY: ${API_KEY:0:8}..." # Show only first 8 chars for security
-          
+          echo "DATABASE_URL: ${DATABASE_URL}"
+          echo "OPENAI_API_KEY: ${OPENAI_API_KEY:0:8}..."
+
           if [[ -z "${API_KEY}" ]]; then
             echo "❌ ERROR: STAGING_API_KEY secret not configured"
             echo "Please configure repository secret: STAGING_API_KEY"
             exit 1
           fi
-          
+
           if [[ -z "${STAGING_API_BASE}" ]]; then
             echo "❌ ERROR: STAGING_API_BASE not configured"
             echo "Please configure repository variable: STAGING_API_BASE"
             exit 1
+          fi
+
+          # Validate URL format
+          if [[ ! "${STAGING_API_BASE}" =~ ^https?:// ]]; then
+            echo "❌ ERROR: STAGING_API_BASE must be a valid HTTP/HTTPS URL"
+            echo "Current value: ${STAGING_API_BASE}"
+            exit 1
+          fi
+
+          # Test database connectivity
+          echo "🔍 Testing PostgreSQL connectivity..."
+          if ! pg_isready -h localhost -p 5432 -U postgres; then
+            echo "❌ ERROR: PostgreSQL service not ready"
+            exit 1
+          else
+            echo "✅ PostgreSQL service is ready"
           fi
           
       - name: Check script permissions
@@ -112,26 +130,49 @@ jobs:
           # Skip heavy ML dependencies that aren't needed for basic API tests
           # pip install -r requirements.txt
 
-          # Start API server in background
+          # Check if main.py exists
+          if [[ ! -f "main.py" ]]; then
+            echo "❌ main.py not found in dt-rag/apps/api/"
+            ls -la
+            exit 1
+          fi
+
+          # Start API server in background with logging
           echo "📡 Starting server on port 8000..."
-          python main.py &
+          python main.py > api_server.log 2>&1 &
           API_PID=$!
           echo "API_PID=$API_PID" >> $GITHUB_ENV
+          echo "🔍 API server started with PID: $API_PID"
 
-          # Wait for server to start
+          # Wait for server to start with better error handling
           echo "⏳ Waiting for server to be ready..."
+          SERVER_READY=false
           for i in {1..30}; do
-            if curl -s http://localhost:8000/healthz > /dev/null 2>&1; then
+            if curl -s -f http://localhost:8000/healthz > /dev/null 2>&1; then
               echo "✅ API server is ready!"
+              SERVER_READY=true
               break
             fi
             echo "⏳ Attempt $i/30: Server not ready yet, waiting..."
+
+            # Check if process is still running
+            if ! kill -0 $API_PID 2>/dev/null; then
+              echo "❌ API server process has died! Checking logs:"
+              cat api_server.log || echo "No logs available"
+              exit 1
+            fi
             sleep 2
           done
 
-          # Final check
-          if ! curl -s http://localhost:8000/healthz > /dev/null 2>&1; then
-            echo "❌ API server failed to start properly"
+          # Final check with detailed error reporting
+          if [[ "$SERVER_READY" != "true" ]]; then
+            echo "❌ API server failed to start properly after 60 seconds"
+            echo "📋 Server logs:"
+            cat api_server.log || echo "No logs available"
+            echo "📊 Process status:"
+            ps aux | grep python || echo "No python processes found"
+            echo "🌐 Port status:"
+            netstat -tlnp | grep :8000 || echo "Port 8000 not in use"
             exit 1
           fi
 
@@ -168,7 +209,7 @@ jobs:
             pkill -f "python main.py" || true
           fi
 
-      - name: Upload test results
+      - name: Upload test results and logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -177,7 +218,25 @@ jobs:
             dt-rag/scripts/smoke.sh
             dt-rag/docs/bridge/ACCESS_CARD.md
             dt-rag/docs/seeds/minimal/EXPECTED.md
+            dt-rag/apps/api/api_server.log
           retention-days: 30
+
+      - name: Display test summary
+        if: always()
+        run: |
+          echo "📊 Smoke Test Execution Summary"
+          echo "================================"
+          echo "🔗 Base URL: ${STAGING_API_BASE}"
+          echo "⏰ Timestamp: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "🏃 Run: ${{ github.run_number }}"
+          echo ""
+
+          if [[ -f "dt-rag/apps/api/api_server.log" ]]; then
+            echo "📋 API Server Log (last 20 lines):"
+            tail -20 dt-rag/apps/api/api_server.log || echo "No logs available"
+          fi
           
       - name: Comment on PR (if applicable)
         if: github.event_name == 'pull_request' && always()
