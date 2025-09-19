@@ -138,6 +138,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             security_context = None
             if self.enable_auth and not self._is_exempt_endpoint(request.url.path):
                 security_context = await self._authenticate_request(request, client_ip, user_agent)
+                # Store security context on request state for downstream dependencies
+                request.state.security_context = security_context
 
             # 3. Input validation and sanitization
             if self.enable_input_validation:

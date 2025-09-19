@@ -284,7 +284,14 @@ async def mask_pii(
     Mask PII in text
     """
     try:
-        masked_text, findings = await security_manager.pii_detector.mask_pii_data(request.text)
+        # Get findings first using scan_text
+        findings = await security_manager.pii_detector.scan_text(
+            request.text,
+            request.field_name
+        )
+
+        # Then mask the text (returns only masked text, not tuple)
+        masked_text = await security_manager.pii_detector.mask_pii_data(request.text)
 
         return {
             "original_text": request.text,
