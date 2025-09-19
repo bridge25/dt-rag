@@ -1,0 +1,127 @@
+{
+  "test_suite": "monitoring_system_comprehensive",
+  "timestamp": 1758257572.171935,
+  "duration_seconds": 32.69630455970764,
+  "total_tests": 6,
+  "passed_tests": 5,
+  "failed_tests": 1,
+  "test_results": [
+    {
+      "test_name": "metrics_collector",
+      "success": true,
+      "details": {
+        "snapshot": {
+          "p95_latency": 2764.741897583008,
+          "total_requests": 0,
+          "cpu_usage": 50.0
+        },
+        "summary": {
+          "uptime_seconds": 2.775918,
+          "prometheus_enabled": false,
+          "metrics_count": 9
+        }
+      }
+    },
+    {
+      "test_name": "health_checker",
+      "success": true,
+      "details": {
+        "components": {
+          "system": {
+            "status": "degraded",
+            "response_time_ms": 101.09949111938477
+          },
+          "database": {
+            "status": "unhealthy",
+            "response_time_ms": null
+          },
+          "storage": {
+            "status": "healthy",
+            "response_time_ms": 8.714675903320312
+          }
+        },
+        "overall": {
+          "status": "unhealthy",
+          "uptime_seconds": 7.896392,
+          "component_count": 4
+        },
+        "cached_available": true
+      }
+    },
+    {
+      "test_name": "redis_manager",
+      "success": true,
+      "details": {
+        "connection": false,
+        "message": "Redis not available - skipping tests"
+      }
+    },
+    {
+      "test_name": "cache_integration",
+      "success": true,
+      "details": {
+        "cache_hit": true,
+        "data_integrity": true,
+        "embedding_cache": false,
+        "cache_stats": {
+          "has_hit_rates": true,
+          "has_operations": true,
+          "memory_cache_entries": 1
+        },
+        "cache_invalidation": true
+      }
+    },
+    {
+      "test_name": "monitoring_dashboard",
+      "success": false,
+      "details": {
+        "dashboard_data": {
+          "has_system_health": true,
+          "has_current_metrics": true,
+          "has_alerts": true,
+          "alert_count": 2
+        },
+        "realtime_metrics": {
+          "has_performance": true,
+          "has_system": true,
+          "timestamp": "2025-09-19T13:52:32.339529"
+        },
+        "search_analytics": {
+          "has_cache_performance": true,
+          "has_search_metrics": true
+        },
+        "performance_report": {
+          "status": "success",
+          "has_slo_compliance": true,
+          "has_recommendations": true
+        },
+        "error": "Object of type datetime is not JSON serializable"
+      }
+    },
+    {
+      "test_name": "performance_targets",
+      "success": true,
+      "details": {
+        "targets": {
+          "p95_latency_ms": 1000,
+          "cache_hit_rate_percent": 70,
+          "error_rate_percent": 1
+        },
+        "actual_performance": {
+          "p95_latency_ms": 1200,
+          "cache_hit_rate_percent": 75.0,
+          "error_rate_percent": 11.11111111111111,
+          "qps": 58823.529411764706
+        },
+        "targets_met": {
+          "p95_latency": false,
+          "cache_hit_rate": true,
+          "error_rate": false
+        },
+        "overall_success": false
+      }
+    }
+  ],
+  "success_rate": 83.33333333333334,
+  "overall_success": false
+}

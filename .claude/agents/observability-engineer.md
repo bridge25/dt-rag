@@ -96,8 +96,65 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Tests**: `/tests/monitoring/` - Monitoring system tests and validations
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\observability-engineer_knowledge.json`
-- **Content**: Pre-collected domain expertise including Langfuse integration patterns, SLO/SLI management strategies, distributed tracing techniques, alerting best practices, and automated degradation mechanisms
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### OpenTelemetry Python (Latest 2025)
+- **Version 1.27+**: Minimum Python 3.9 requirement as of July 2025
+- **Metrics Instruments**: Counter, UpDownCounter, Gauge, Histogram metrics with synchronous and asynchronous support
+- **Observable Instruments**: Callbacks for dynamic metric collection and resource attribution
+- **OTLP Export**: OpenTelemetry Protocol metric export support with semantic conventions
+- **Installation**: `pip install opentelemetry-api opentelemetry-sdk`
+
+#### Langfuse Integration Best Practices
+- **OpenAI Python Integration**: Comprehensive guide for LLM call tracking and cost analysis
+- **Trace Collection**: End-to-end request flow monitoring with performance optimization strategies
+- **Cost Tracking**: Automated cost attribution and optimization recommendations for LLM usage
+- **Performance Dashboards**: Real-time monitoring of LLM usage patterns and bottleneck identification
+
+#### SLO/SLI Management Implementation
+- **Google Cloud Best Practices**: StackDriver integration for comprehensive SLO monitoring
+- **Error Budget Management**: Burn rate monitoring and automated response strategies for SLO violations
+- **Service Level Indicators**: Latency (p95 ≤ 4s), availability (99%+), error rate, throughput metrics
+- **Automated Alerting**: Intelligent escalation procedures with proper noise reduction
+
+#### Metrics Collection Architecture
+- **Implementation Patterns**: Comprehensive guides covering optimization strategies and best practices
+- **Time-Series Management**: Efficient data storage, querying, and retention policies
+- **Custom RAG Metrics**: Domain-specific performance indicators for retrieval-augmented generation systems
+- **Real-Time Processing**: Stream processing for immediate alerting and dashboard updates
+
+#### Distributed Tracing and Monitoring
+- **End-to-End Visibility**: Request flow tracking across microservices architecture
+- **Span Analysis**: Detailed performance breakdown and bottleneck identification
+- **Correlation**: Cross-service request correlation and dependency mapping
+- **Performance Optimization**: Automated bottleneck detection and resolution recommendations
+
+#### Automated Degradation Strategies
+- **Circuit Breaker Patterns**: Fault tolerance and cascading failure prevention
+- **Health Check Systems**: Intelligent failover capabilities and dependency validation
+- **Auto-scaling**: Reactive and predictive scaling based on performance metrics
+- **Recovery Automation**: Automated recovery procedures with validation testing
+
+#### Alert Management and Incident Response
+- **Alert Accuracy**: >90% actionable alerts with <5% false positive rate
+- **Escalation Procedures**: Automated notification routing and acknowledgment workflows
+- **MTTR Optimization**: <15 minutes mean time to resolution through automation
+- **Post-Mortem Analysis**: Automated incident analysis and learning integration
+
+#### Performance Monitoring Infrastructure
+- **Grafana Dashboards**: Real-time visualization with actionable insights
+- **Prometheus Integration**: Metrics collection and PromQL query optimization
+- **Log Aggregation**: Structured logging across services with Elasticsearch/OpenSearch
+- **Cost Visibility**: 100% cost attribution with optimization recommendations
+
+#### System Reliability Engineering
+- **Error Budget Management**: Systematic tracking and burn rate analysis
+- **Capacity Planning**: Resource utilization forecasting and scaling strategies
+- **Chaos Engineering**: Failure injection and resilience testing for system hardening
+- **Service Mesh Observability**: Istio/Envoy monitoring with traffic management
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\observability-engineer_knowledge.json`
 - **Usage**: Reference this knowledge base for the latest observability tools, monitoring patterns, and performance optimization techniques. Always consult the SLO compliance data and alerting accuracy metrics when designing monitoring systems
 
 ## Key Implementation Components

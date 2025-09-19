@@ -1,0 +1,230 @@
+# RAG Evaluation Framework Configuration
+
+# RAGAS Engine Configuration
+ragas_engine:
+  use_openai: true
+  timeout_seconds: 300
+
+  # Metric thresholds and weights
+  metrics:
+    faithfulness:
+      threshold: 0.85
+      weight: 0.30
+      description: "Answer consistency with retrieved context"
+
+    answer_relevancy:
+      threshold: 0.80
+      weight: 0.25
+      description: "Answer relevance to the question"
+
+    context_precision:
+      threshold: 0.75
+      weight: 0.25
+      description: "Precision of retrieved context"
+
+    context_recall:
+      threshold: 0.80
+      weight: 0.20
+      description: "Recall of retrieved context"
+
+  # Taxonomy-specific thresholds
+  taxonomy_metrics:
+    classification_accuracy: 0.90
+    taxonomy_consistency: 0.85
+    path_precision: 0.80
+    hierarchical_coherence: 0.75
+
+# Golden Dataset Configuration
+golden_dataset:
+  storage_path: "./golden_datasets"
+
+  # Quality thresholds
+  quality_thresholds:
+    min_annotation_agreement: 0.8
+    min_completeness: 0.95
+    min_consistency: 0.9
+    min_diversity: 0.7
+    min_quality_score: 0.8
+
+  # Dataset constraints
+  constraints:
+    min_query_length: 10
+    max_query_length: 500
+    min_answer_length: 20
+    max_answer_length: 2000
+    min_contexts_per_query: 1
+    max_contexts_per_query: 10
+
+  # Validation settings
+  validation:
+    enable_duplicate_detection: true
+    similarity_threshold: 0.9
+    enable_diversity_check: true
+    min_domain_count: 2
+
+# A/B Testing Configuration
+ab_testing:
+  # Statistical settings
+  default_significance_level: 0.05
+  default_statistical_power: 0.80
+  default_minimum_detectable_effect: 0.05
+
+  # Multiple testing correction
+  multiple_testing_correction: "benjamini_hochberg"  # options: bonferroni, holm, benjamini_hochberg
+
+  # Experiment constraints
+  min_sample_size_per_variant: 100
+  max_experiment_duration_days: 30
+  min_experiment_duration_days: 7
+
+  # Early stopping rules
+  early_stopping:
+    enable: true
+    confidence_threshold: 0.99
+    min_effect_size: 0.1
+
+# Evaluation Orchestrator Configuration
+orchestrator:
+  storage_path: "./evaluation_results"
+
+  # Job management
+  max_concurrent_jobs: 3
+  default_evaluation_timeout: 3600  # seconds
+
+  # Quality gates and monitoring
+  quality_gate_enforcement: true
+  auto_retry_failed_jobs: true
+  max_retry_attempts: 2
+
+  # Alert settings
+  alert_cooldown_minutes: 15
+  enable_email_alerts: true
+  enable_slack_alerts: true
+
+  # Scheduling
+  scheduler_check_interval_seconds: 10
+  cleanup_completed_jobs_after_hours: 24
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8002
+  debug: false
+
+  # CORS settings
+  cors:
+    allow_origins: ["http://localhost:3000", "http://localhost:8080"]
+    allow_methods: ["GET", "POST", "PUT", "DELETE"]
+    allow_headers: [
+      "Accept",
+      "Accept-Language",
+      "Content-Language",
+      "Content-Type",
+      "Authorization",
+      "X-API-Key",
+      "X-Requested-With",
+      "X-Request-ID",
+      "Cache-Control"
+    ]
+
+  # Rate limiting
+  rate_limiting:
+    enable: true
+    requests_per_minute: 60
+    burst_limit: 10
+
+# Integration Configuration
+integration:
+  # dt-rag pipeline integration
+  rag_pipeline:
+    base_url: "http://localhost:8001"
+    timeout_seconds: 30
+
+  # Database integration
+  database:
+    enable_integration: true
+    timeout_seconds: 10
+
+  # External services
+  external_services:
+    openai:
+      timeout_seconds: 30
+      max_retries: 3
+
+    webhook_notifications:
+      timeout_seconds: 10
+      max_retries: 2
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # File logging
+  file_logging:
+    enable: true
+    log_file: "./logs/evaluation.log"
+    max_file_size_mb: 100
+    backup_count: 5
+
+  # Structured logging for analysis
+  structured_logging:
+    enable: true
+    include_metrics: true
+    include_performance_data: true
+
+# Performance Configuration
+performance:
+  # Memory management
+  memory:
+    max_dataset_size_mb: 1000
+    chunk_processing_size: 100
+    enable_caching: true
+    cache_ttl_seconds: 3600
+
+  # Parallel processing
+  parallel_processing:
+    enable: true
+    max_workers: 4
+    chunk_size: 50
+
+  # Monitoring
+  monitoring:
+    enable_performance_tracking: true
+    metrics_collection_interval_seconds: 60
+    enable_profiling: false
+
+# Security Configuration
+security:
+  # API security
+  api_keys:
+    enable: false
+    require_api_key: false
+
+  # Data privacy
+  data_privacy:
+    anonymize_pii: true
+    encrypt_storage: false
+
+  # Access control
+  access_control:
+    enable_rbac: false
+    default_permissions: ["read", "write"]
+
+# Development Configuration
+development:
+  # Mock services for testing
+  mock_services:
+    enable_mock_rag: false
+    enable_mock_database: false
+
+  # Debug features
+  debug:
+    enable_verbose_logging: false
+    save_intermediate_results: true
+    enable_profiling: false
+
+  # Testing
+  testing:
+    use_test_datasets: false
+    enable_test_mode: false

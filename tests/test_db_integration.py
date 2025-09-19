@@ -193,13 +193,13 @@ class TestDatabaseIntegration:
             with db_connection.cursor() as cursor:
                 # 1. 먼저 실제 존재하는 모든 인덱스 조회
                 cursor.execute("""
-                    SELECT indexname, indexdef 
-                    FROM pg_indexes 
+                    SELECT indexname, indexdef
+                    FROM pg_indexes
                     WHERE schemaname = 'public'
                     ORDER BY indexname;
                 """)
                 existing_indexes = {row[0]: row[1] for row in cursor.fetchall()}
-                
+
                 # 2. 필수 인덱스 목록 (환경 독립적)
                 required_indexes = [
                     'idx_chunks_span_gist',      # GiST for span ranges
@@ -207,27 +207,26 @@ class TestDatabaseIntegration:
                     'idx_doc_taxonomy_path',     # GIN for doc paths
                     'idx_embeddings_bm25'        # GIN for BM25 tokens
                 ]
-                
+
                 # 3. 필수 인덱스 존재 확인
                 for index_name in required_indexes:
                     assert index_name in existing_indexes, f"Required index {index_name} not found"
-                
+
                 # 4. Vector 확장 관련 인덱스는 조건부 검증
                 cursor.execute("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
                 vector_extension_exists = cursor.fetchone() is not None
-                
+
                 if vector_extension_exists:
                     # vector extension이 있으면 embeddings 테이블에 vector 관련 인덱스가 있어야 함
                     vector_index_exists = any(
-                        'embeddings' in idx_name and 'vec' in idx_name 
+                        'embeddings' in idx_name and 'vec' in idx_name
                         for idx_name in existing_indexes.keys()
                     )
                     assert vector_index_exists, "Vector index on embeddings should exist when vector extension is available"
-                
+
                 # 5. 인덱스 타입 검증 (타입별로)
                 gist_indexes = [idx for idx in existing_indexes.keys() if 'span_gist' in idx]
                 gin_indexes = [idx for idx in existing_indexes.keys() if any(x in idx for x in ['taxonomy', 'bm25'])]
-                
                 assert len(gist_indexes) >= 1, "At least one GiST index should exist for span ranges"
                 assert len(gin_indexes) >= 3, "At least 3 GIN indexes should exist for taxonomy and BM25"
 

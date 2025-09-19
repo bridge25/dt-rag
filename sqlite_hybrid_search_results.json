@@ -1,0 +1,532 @@
+{
+  "test_summary": {
+    "total_time": 40.973159074783325,
+    "setup_success": true,
+    "tests_completed": 5,
+    "overall_success_rate": 1.0,
+    "timestamp": "2025-09-17T23:09:19.282954"
+  },
+  "database_stats": {
+    "total_docs": 5,
+    "total_chunks": 5,
+    "embedded_chunks": 5,
+    "taxonomy_mappings": 5
+  },
+  "individual_results": {
+    "bm25_component": {
+      "success": true,
+      "test_cases": [
+        {
+          "query": "RAG 시스템 설명",
+          "result_count": 1,
+          "search_time": 0.0008544921875,
+          "has_results": true,
+          "top_score": 1.158923619908232,
+          "performance_acceptable": true,
+          "scores_descending": true,
+          "results_valid": true
+        },
+        {
+          "query": "machine learning algorithms",
+          "result_count": 1,
+          "search_time": 0.00020551681518554688,
+          "has_results": true,
+          "top_score": 3.7364476316389066,
+          "performance_acceptable": true,
+          "scores_descending": true,
+          "results_valid": true
+        },
+        {
+          "query": "벡터 검색 방법",
+          "result_count": 1,
+          "search_time": 0.00019216537475585938,
+          "has_results": true,
+          "top_score": 0.2237032898475393,
+          "performance_acceptable": true,
+          "scores_descending": true,
+          "results_valid": true
+        },
+        {
+          "query": "What is retrieval augmented generation?",
+          "result_count": 2,
+          "search_time": 0.00019073486328125,
+          "has_results": true,
+          "top_score": 3.476770859724696,
+          "performance_acceptable": true,
+          "scores_descending": true,
+          "results_valid": true
+        }
+      ],
+      "performance": {
+        "total_time": 0.0014579296112060547,
+        "avg_search_time": 0.00036448240280151367,
+        "searches_per_second": 2743.616680294358
+      }
+    },
+    "vector_component": {
+      "success": true,
+      "test_cases": [
+        {
+          "query": "RAG 시스템 설명",
+          "result_count": 5,
+          "search_time": 0.6769425868988037,
+          "has_results": true,
+          "top_score": 0.8738152647153192,
+          "performance_acceptable": true,
+          "scores_valid": true,
+          "scores_descending": true,
+          "results_valid": true
+        },
+        {
+          "query": "machine learning algorithms",
+          "result_count": 5,
+          "search_time": 1.9022538661956787,
+          "has_results": true,
+          "top_score": 0.9020762756258331,
+          "performance_acceptable": true,
+          "scores_valid": true,
+          "scores_descending": true,
+          "results_valid": true
+        },
+        {
+          "query": "벡터 검색 방법",
+          "result_count": 5,
+          "search_time": 0.8066668510437012,
+          "has_results": true,
+          "top_score": 0.8613207833663856,
+          "performance_acceptable": true,
+          "scores_valid": true,
+          "scores_descending": true,
+          "results_valid": true
+        },
+        {
+          "query": "What is retrieval augmented generation?",
+          "result_count": 5,
+          "search_time": 0.8855147361755371,
+          "has_results": true,
+          "top_score": 0.8315568176068572,
+          "performance_acceptable": true,
+          "scores_valid": true,
+          "scores_descending": true,
+          "results_valid": true
+        }
+      ],
+      "performance": {
+        "total_time": 4.271416664123535,
+        "avg_search_time": 1.0678541660308838,
+        "searches_per_second": 0.936457460026502
+      }
+    },
+    "hybrid_integration": {
+      "success": true,
+      "test_cases": [
+        {
+          "query": "RAG 시스템 설명",
+          "result_count": 5,
+          "search_time": 0.788217306137085,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "hybrid": 1,
+            "vector": 4
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": true
+        },
+        {
+          "query": "machine learning algorithms",
+          "result_count": 5,
+          "search_time": 0.8701403141021729,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "hybrid": 1,
+            "vector": 4
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": true
+        },
+        {
+          "query": "벡터 검색 방법",
+          "result_count": 5,
+          "search_time": 0.7869894504547119,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "hybrid": 1,
+            "vector": 4
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": true
+        },
+        {
+          "query": "What is retrieval augmented generation?",
+          "result_count": 5,
+          "search_time": 0.9541559219360352,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "hybrid": 2,
+            "vector": 3
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": true
+        },
+        {
+          "query": "인공지능 분류 기법",
+          "result_count": 5,
+          "search_time": 0.9711446762084961,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "vector": 5
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": false
+        },
+        {
+          "query": "neural network architecture",
+          "result_count": 5,
+          "search_time": 0.8949346542358398,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "hybrid": 1,
+            "vector": 4
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": true
+        },
+        {
+          "query": "데이터베이스 최적화",
+          "result_count": 5,
+          "search_time": 0.7567217350006104,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "vector": 5
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": false
+        },
+        {
+          "query": "embedding model comparison",
+          "result_count": 5,
+          "search_time": 0.7784261703491211,
+          "has_results": true,
+          "performance_acceptable": true,
+          "source_diversity": {
+            "hybrid": 1,
+            "vector": 4
+          },
+          "scores_descending": true,
+          "metadata_complete": true,
+          "hybrid_scoring_works": true
+        }
+      ],
+      "performance": {
+        "total_time": 6.8008811473846436,
+        "avg_search_time": 0.850091278553009,
+        "p95_search_time": 0.9711446762084961,
+        "searches_per_second": 1.1763181603425743,
+        "latency_target_met": true
+      }
+    },
+    "performance_metrics": {
+      "success": true,
+      "metrics": {
+        "database": {
+          "total_docs": 5,
+          "total_chunks": 5,
+          "embedded_chunks": 5,
+          "taxonomy_mappings": 5
+        },
+        "target_achievement": {
+          "bm25_target_met": true,
+          "vector_target_met": true,
+          "hybrid_avg_target_met": true,
+          "hybrid_p95_target_met": true
+        }
+      },
+      "benchmarks": {
+        "bm25": {
+          "avg_latency": 0.0002697110176086426,
+          "min_latency": 0.00018477439880371094,
+          "max_latency": 0.0004911422729492188,
+          "p95_latency": 0.0004911422729492188,
+          "throughput": 3707.672044198895
+        },
+        "vector": {
+          "avg_latency": 0.7236617207527161,
+          "min_latency": 0.6676065921783447,
+          "max_latency": 0.7576615810394287,
+          "p95_latency": 0.7576615810394287,
+          "throughput": 1.381861125609699
+        },
+        "hybrid": {
+          "avg_latency": 1.1577033400535583,
+          "min_latency": 0.781743049621582,
+          "max_latency": 2.011111259460449,
+          "p95_latency": 2.011111259460449,
+          "throughput": 0.8637791439331405
+        }
+      }
+    },
+    "encoding_compatibility": {
+      "success": true,
+      "test_cases": [
+        {
+          "query": "한글 검색 테스트",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 3,
+              "sample_tokens": [
+                "한글",
+                "검색",
+                "테스트"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "English search test",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 3,
+              "sample_tokens": [
+                "english",
+                "search",
+                "test"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "日本語検索テスト",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 1,
+              "sample_tokens": [
+                "日本語検索テスト"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "Русский поиск тест",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 3,
+              "sample_tokens": [
+                "русский",
+                "поиск",
+                "тест"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "Búsqueda en español",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 3,
+              "sample_tokens": [
+                "búsqueda",
+                "en",
+                "español"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "Recherche française",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 2,
+              "sample_tokens": [
+                "recherche",
+                "française"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "한글과 English 혼합 query",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 4,
+              "sample_tokens": [
+                "한글과",
+                "english",
+                "혼합"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "특수문자 @#$%^&*() 포함",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 2,
+              "sample_tokens": [
+                "특수문자",
+                "포함"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        },
+        {
+          "query": "이모지 😀🚀🔍 포함 검색",
+          "encoding": "utf-8",
+          "tests": {
+            "tokenization": {
+              "success": true,
+              "token_count": 3,
+              "sample_tokens": [
+                "이모지",
+                "포함",
+                "검색"
+              ]
+            },
+            "embedding": {
+              "success": true,
+              "embedding_length": 1536
+            },
+            "search": {
+              "success": true,
+              "result_count": 3
+            }
+          },
+          "overall_success": true
+        }
+      ],
+      "character_tests": {
+        "punctuation": {
+          "success": true,
+          "processed_tokens": 2
+        },
+        "math_symbols": {
+          "success": true,
+          "processed_tokens": 2
+        },
+        "currency": {
+          "success": true,
+          "processed_tokens": 2
+        },
+        "emoji": {
+          "success": true,
+          "processed_tokens": 2
+        },
+        "cjk": {
+          "success": true,
+          "processed_tokens": 5
+        }
+      }
+    }
+  },
+  "success_summary": {
+    "bm25_component": true,
+    "vector_component": true,
+    "hybrid_integration": true,
+    "performance_metrics": true,
+    "encoding_compatibility": true
+  },
+  "recommendations": [
+    "모든 테스트가 성공했습니다! 시스템이 올바르게 구현되었습니다."
+  ]
+}

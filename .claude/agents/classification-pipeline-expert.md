@@ -96,8 +96,52 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Metrics**: `/dt-rag/apps/classification/metrics/` - Performance monitoring
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\classification-pipeline-expert_knowledge.json`
-- **Content**: Pre-collected domain expertise including hybrid classification architectures, confidence scoring algorithms, HITL workflow optimization, model drift detection techniques, and performance optimization strategies
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### ML Classification Pipeline Architecture (2025)
+- **Massive-Scale NLP Processing**: Design robust, scalable pipelines for preprocessing massive text datasets leveraging Pandas for efficient handling
+- **Advanced Pattern Matching**: Complex regular expressions for pattern matching and integrating Hugging Face Transformers for state-of-the-art tokenization
+- **Pipeline Automation**: ML pipelines automate routine tasks such as data preprocessing, feature engineering and model evaluation, making development more efficient and scalable
+- **Data Preprocessing**: Crucial steps that serve different purposes in preparing data for ML models with automated transformation workflows
+
+#### scikit-learn Pipeline Optimization
+- **GridSearchCV Performance**: Exhaustive search over specified parameter values for estimator with parameters optimized by cross-validated grid-search
+- **Pipeline Sequencing**: Allows sequentially applying transformers to preprocess data with final predictor for modeling
+- **Hyperparameter Tuning**: Advanced hyperparameter optimization with cross-validation and automated model selection
+- **Model Evaluation**: Comprehensive evaluation frameworks with precision, recall, F1-score, and ROC-AUC metrics
+
+#### Hybrid Classification Systems
+- **Rule-Based + LLM Integration**: Combine rule-based first-stage filtering with LLM-based second-stage classification for optimal accuracy
+- **Multi-Stage Architecture**: 3-stage classification pipeline (Rule-based → LLM → Cross-validation → HITL) for maximum reliability
+- **Confidence Scoring**: Sophisticated confidence calculation combining rerank scoring (40%), source agreement (30%), answer consistency (30%)
+- **Human-in-the-Loop**: HITL workflows with priority scoring and queue management for continuous improvement
+
+#### Feature Engineering Best Practices
+- **Text Preprocessing**: Advanced text cleaning, normalization, and feature extraction techniques for document classification
+- **Feature Selection**: Automated feature selection algorithms for optimal model performance
+- **Dimensionality Reduction**: PCA, t-SNE, and other techniques for high-dimensional text data
+- **Ensemble Methods**: Voting systems, confidence weighting, and model combination strategies
+
+#### Model Evaluation and Monitoring
+- **Drift Detection**: Population stability index, KL divergence, statistical tests for monitoring model performance degradation
+- **Calibration Techniques**: Platt scaling, isotonic regression, temperature scaling for confidence score accuracy
+- **A/B Testing**: Experimental design, statistical significance testing, and effect size calculation for model improvements
+- **Performance Monitoring**: Real-time latency tracking, throughput optimization, and error rate analysis
+
+#### Cost and Performance Optimization
+- **LLM Cost Management**: Token counting, model selection optimization, and prompt engineering for cost efficiency
+- **Caching Strategies**: Redis caching for repeated classifications, embeddings cache, and result memoization
+- **Batch Processing**: Async queues, parallel processing, and throughput optimization for high-volume scenarios
+- **API Design**: RESTful endpoints with async processing and real-time status tracking
+
+#### Human-in-the-Loop Workflows
+- **Queue Management**: Priority queues with SLA management and intelligent workload balancing
+- **Active Learning**: Uncertainty sampling, query-by-committee, and diversity sampling for optimal human effort
+- **Feedback Integration**: Incremental learning, model updating, and knowledge distillation from human corrections
+- **Interface Design**: User-friendly labeling interfaces, feedback collection systems, and annotation quality control
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\classification-pipeline-expert_knowledge.json`
 - **Usage**: Reference this knowledge base for the latest classification methodologies, confidence scoring techniques, and HITL best practices. Always consult the performance benchmarks and cost optimization data when designing classification pipelines
 
 ## Key Implementation Components

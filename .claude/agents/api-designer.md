@@ -96,8 +96,26 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Documentation**: `/docs/api/` - API documentation and guides
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\api-designer_knowledge.json`
-- **Content**: Pre-collected domain expertise including RESTful API design principles, OpenAPI specification standards, authentication frameworks, rate limiting strategies, and API security best practices
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### FastAPI 2025 Performance Features
+- **FastAPI 0.115.x**: >3,000 requests/second capability, enhanced OAuth2 security, improved async/await patterns
+- **OpenAPI 3.1**: Fully compatible with JSON Schema Draft 2020-12, enhanced Pydantic v2 schema merging
+- **Automatic Documentation**: BaseModel.model_json_schema generation, runtime data serialization
+
+#### Modern API Design Patterns (2025)
+- **REST**: For simplicity and wide compatibility
+- **GraphQL**: For flexible queries and data requirements
+- **gRPC**: For high-performance microservices communication
+- **Security**: OAuth 2.0, HTTP/2 optimization, Protocol Buffers for binary communication
+
+#### OpenAPI & Documentation Tools
+- **Swagger Tools**: OpenAPI 3.1 support, enhanced code generation, interactive documentation
+- **Multi-language SDKs**: Automated client generation for improved developer experience
+- **API Testing**: Built-in testing capabilities and validation tools
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\api-designer_knowledge.json`
 - **Usage**: Reference this knowledge base for the latest API design patterns, security standards, and performance optimization techniques. Always consult the industry standards and implementation guidelines when designing scalable API architectures
 
 ## Key Implementation Components

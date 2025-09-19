@@ -21,9 +21,12 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# Note: This project uses raw SQL migrations instead of SQLAlchemy models
-# No SQLAlchemy Base model is available in common_schemas.models (Pydantic only)
-target_metadata = None
+try:
+    from apps.api.database import Base
+    target_metadata = Base.metadata
+except ImportError:
+    # Fallback if models can't be imported
+    target_metadata = None
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -33,7 +36,11 @@ target_metadata = None
 def get_database_url():
     """Get database URL from environment or config."""
     # Priority: environment variable > config file
-    return os.getenv('DATABASE_URL') or config.get_main_option("sqlalchemy.url")
+    url = os.getenv('DATABASE_URL') or config.get_main_option("sqlalchemy.url")
+    # For alembic migrations, use synchronous sqlite connection
+    if url and "sqlite+aiosqlite" in url:
+        url = url.replace("sqlite+aiosqlite", "sqlite")
+    return url
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

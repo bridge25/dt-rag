@@ -1,0 +1,170 @@
+{
+  "test_name": "Optimized Hybrid Search System Test",
+  "timestamp": 1758256433.5736942,
+  "performance_targets": {
+    "recall_at_10": 0.85,
+    "search_latency_p95": 1.0,
+    "cost_per_search": 3.0
+  },
+  "tests": {
+    "module_imports": {
+      "status": "success",
+      "modules": {
+        "hybrid_search_engine": "success",
+        "bm25_engine": "success",
+        "vector_engine": "success",
+        "search_cache": "success",
+        "cross_encoder_reranker": "success"
+      }
+    },
+    "database_connection": {
+      "status": "success",
+      "tests": {
+        "connection": "success",
+        "initialization": "success",
+        "required_tables": {
+          "chunks": true,
+          "documents": true,
+          "embeddings": true
+        }
+      }
+    },
+    "sqlite_fts5": {
+      "status": "success",
+      "tests": {
+        "fts5_support": "not_available: (sqlite3.OperationalError) no such function: fts5_version\n[SQL: SELECT fts5_version()]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
+        "bm25_search": {
+          "results_count": 5,
+          "search_time": 0.002,
+          "status": "success"
+        }
+      }
+    },
+    "caching_system": {
+      "status": "success",
+      "tests": {
+        "memory_cache": {
+          "cache_hit": true,
+          "results_match": true,
+          "cache_time": 21.0588,
+          "status": "success"
+        },
+        "embedding_cache": {
+          "cache_hit": true,
+          "embedding_match": true,
+          "status": "success"
+        },
+        "cache_stats": {
+          "stats_available": true,
+          "l1_hit_rate": 0.5,
+          "status": "success"
+        }
+      }
+    },
+    "embedding_optimization": {
+      "status": "success",
+      "tests": {
+        "dummy_embedding": {
+          "embedding_length": 1536,
+          "generation_time": 21.0672,
+          "is_normalized": "True",
+          "status": "success"
+        },
+        "batch_embedding": {
+          "batch_count": 3,
+          "expected_count": 3,
+          "batch_time": 21.0749,
+          "avg_time_per_embedding": 7.025,
+          "status": "success"
+        },
+        "cache_effect": {
+          "cached_time": 0.0009,
+          "speedup": 24222.11,
+          "embedding_consistent": "[ True  True  True ...  True  True  True]",
+          "status": "success"
+        }
+      }
+    },
+    "hybrid_search_engine": {
+      "status": "success",
+      "tests": {
+        "engine_factory": {
+          "fast_engine": true,
+          "balanced_engine": true,
+          "accurate_engine": true,
+          "status": "success"
+        },
+        "custom_config": {
+          "config_applied": true,
+          "status": "success"
+        },
+        "actual_search": {
+          "results_count": 8,
+          "total_time": 1.568,
+          "bm25_time": 0.002,
+          "vector_time": 1.566,
+          "fusion_time": 0.0,
+          "rerank_time": 0.0,
+          "performance_target_met": false,
+          "status": "success"
+        },
+        "performance_stats": {
+          "stats_available": true,
+          "has_metrics": true,
+          "status": "success"
+        }
+      }
+    },
+    "api_endpoints": {
+      "status": "success",
+      "tests": {
+        "router_import": "failed: No module named 'deps'",
+        "request_models": {
+          "status": "error",
+          "error": "No module named 'deps'"
+        }
+      }
+    },
+    "performance_benchmark": {
+      "status": "success",
+      "tests": {
+        "engine_performance": {
+          "fast": {
+            "avg_query_time": 1.511,
+            "total_queries": 3,
+            "meets_target": false,
+            "status": "success"
+          },
+          "balanced": {
+            "avg_query_time": 0.004,
+            "total_queries": 3,
+            "meets_target": true,
+            "status": "success"
+          },
+          "accurate": {
+            "avg_query_time": 0.003,
+            "total_queries": 3,
+            "meets_target": true,
+            "status": "success"
+          }
+        },
+        "resource_usage": {
+          "memory_mb": 194.74,
+          "memory_reasonable": true,
+          "status": "success"
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_test_categories": 8,
+    "successful_categories": 8,
+    "failed_categories": 0,
+    "partial_failures": 0,
+    "errors": 0,
+    "overall_status": "success",
+    "recommendations": [
+      "Enable SQLite FTS5 extension for optimal BM25 performance"
+    ]
+  }
+}

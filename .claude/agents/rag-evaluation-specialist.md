@@ -96,9 +96,49 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Scripts**: `/dt-rag/apps/evaluation/scripts/` - Automation and analysis scripts
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\rag-evaluation-specialist_knowledge.json`
-- **Content**: Pre-collected domain expertise including RAGAS v2.0 framework, golden dataset management practices, A/B testing methodologies, statistical analysis techniques, and canary release monitoring strategies
-- **Usage**: Reference this knowledge base for the latest evaluation frameworks, statistical testing methods, and quality assurance practices. Always consult the benchmarking data and proven evaluation patterns when designing assessment systems
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### RAG Evaluation Frameworks (Latest 2025)
+- **RAGAS v2.0** (Released April 28, 2025): Reference-free evaluation using LLMs with faithfulness, context precision, context recall, answer relevancy metrics. Installation: `pip install ragas`
+- **Arize Phoenix v4.x**: Open-source AI observability platform with RAG triad metrics (context relevance, groundedness, answer relevance). UI focused on troubleshooting RAG scenarios
+- **LangSmith 2025**: Commercial platform with Align Evals, Trace Mode in Studio, cross-framework support. Correctness, groundedness, relevance evaluators with human feedback integration
+- **TruLens v1.x**: Enterprise-grade domain-specific RAG optimization with detailed accuracy and precision metrics
+- **DeepEval v1.x**: 14+ evaluation metrics for RAG and fine-tuning with self-explaining metrics for debugging
+
+#### Best Practices & Industry Standards
+- **Dataset Sizing**: Minimum 20 questions for personal projects, 100 for enterprise, 500+ for production systems
+- **Component-Level Evaluation**: Separate retrieval metrics (precision, recall, MRR) from generation metrics (faithfulness, relevance)
+- **Production Monitoring**: Automated evaluation pipelines, business-critical metrics tracking (cost, latency, quality), alerts for performance degradation
+- **Framework Selection Strategy**: RAGAS for reference-free evaluation, Phoenix for debugging, TruLens for domain-specific optimization, LangSmith for cross-framework support
+
+#### Performance Benchmarks
+- **RAGAS v2.0 Speed**: 2-5 seconds per sample (50% improvement over v1.0)
+- **Multi-Framework Comparison**: RAGAS 8-12 min/100 samples, Phoenix 5-8 min, LangSmith 10-15 min, TruLens 12-18 min
+- **Production Monitoring Overhead**: <5ms for basic metrics, 10-50ms for comprehensive evaluation
+- **Enterprise Scale**: 1000+ golden dataset questions, 20-100 new samples weekly for continuous evaluation
+
+#### Common Issues & Solutions
+- **RAGAS Inconsistent Scores**: Set temperature=0, pin specific model versions (gpt-4-0125-preview), use deterministic evaluation with fixed seeds
+- **LLM-as-Judge Length Bias**: Use balanced datasets with varied answer lengths, custom evaluation prompts focusing on accuracy, length normalization post-processing
+- **Hierarchical Document Issues**: Implement hierarchical chunk evaluation, add document structure metadata, use sliding window overlap for better context
+
+#### Latest Trends 2025
+- **RAGAS 2.0 Multi-modal**: Image + text RAG evaluation, video content assessment, cross-modal retrieval metrics (requires OpenAI GPT-4V)
+- **LangSmith Align Evals**: A/B testing for RAG systems, gradual rollout based on evaluation scores, production traffic evaluation (Enterprise beta)
+- **Phoenix UI 2.0**: Team collaboration on evaluation results, annotation workflows, custom evaluation criteria (Released August 30, 2025)
+
+#### Scaling Strategies
+- **100 → 1K evals/day**: Async processing with celery, Redis queue, 5-10 parallel RAGAS workers, evaluation result caching
+- **1K → 10K evals/day**: Distributed evaluation cluster, evaluation sharding by document type, GPU acceleration for LLM-as-Judge
+- **10K → 100K evals/day**: Federated evaluation architecture, edge evaluation nodes, ML model serving (TensorRT/ONNX), cross-region replication
+
+#### Security Guidelines
+- **Data Privacy**: PII detection in evaluation datasets, data anonymization, GDPR-compliant data handling
+- **LLM Security**: Validate LLM evaluation outputs, prompt injection protection, multiple evaluation models for cross-validation
+- **Access Control**: Role-based access to monitoring dashboards, encrypt evaluation data, audit logging for evaluation system access
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\rag-evaluation-specialist_knowledge.json`
 
 ## Key Implementation Components
 
