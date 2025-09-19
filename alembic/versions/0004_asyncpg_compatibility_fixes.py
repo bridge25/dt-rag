@@ -124,15 +124,33 @@ def upgrade() -> None:
             print(f"Vector function creation failed: {e}")
 
         # 4. Add indexes for better query performance
-        op.execute('CREATE INDEX IF NOT EXISTS idx_chunks_doc_id_text ON chunks (doc_id, text)')
-        op.execute('CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_doc_path ON doc_taxonomy (doc_id, path)')
-        op.execute('CREATE INDEX IF NOT EXISTS idx_embeddings_chunk_model ON embeddings (chunk_id, model_name)')
+        try:
+            op.execute('CREATE INDEX IF NOT EXISTS idx_chunks_doc_id_text ON chunks (doc_id, text)')
+            print("Created idx_chunks_doc_id_text index")
+        except Exception as e:
+            print(f"Failed to create idx_chunks_doc_id_text: {e}")
+
+        try:
+            op.execute('CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_doc_path ON doc_taxonomy (doc_id, path)')
+            print("Created idx_doc_taxonomy_doc_path index")
+        except Exception as e:
+            print(f"Failed to create idx_doc_taxonomy_doc_path: {e}")
+
+        try:
+            op.execute('CREATE INDEX IF NOT EXISTS idx_embeddings_chunk_model ON embeddings (chunk_id, model_name)')
+            print("Created idx_embeddings_chunk_model index")
+        except Exception as e:
+            print(f"Failed to create idx_embeddings_chunk_model: {e}")
 
         # 5. Update statistics for better query planning
-        op.execute('ANALYZE taxonomy_nodes')
-        op.execute('ANALYZE chunks')
-        op.execute('ANALYZE embeddings')
-        op.execute('ANALYZE doc_taxonomy')
+        try:
+            op.execute('ANALYZE taxonomy_nodes')
+            op.execute('ANALYZE chunks')
+            op.execute('ANALYZE embeddings')
+            op.execute('ANALYZE doc_taxonomy')
+            print("Updated table statistics")
+        except Exception as e:
+            print(f"Failed to update statistics: {e}")
 
         print("PostgreSQL asyncpg compatibility fixes applied successfully")
 
