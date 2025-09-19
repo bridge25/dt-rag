@@ -84,6 +84,11 @@ class SecurityManager:
 
         logger.info("SecurityManager initialized with OWASP Top 10 compliance")
 
+    async def initialize(self):
+        """Initialize all security components - call this during application startup"""
+        await self.auth_service.initialize()
+        logger.info("SecurityManager fully initialized")
+
     async def authenticate_request(
         self,
         token: str,
