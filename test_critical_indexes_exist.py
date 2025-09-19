@@ -46,7 +46,7 @@ async def test_critical_indexes_exist():
         required_indexes = {
             'idx_chunks_span_gist',  # GiST for span range queries
             'idx_taxonomy_canonical',  # GIN for taxonomy path arrays
-            'idx_embeddings_vec_ivf',  # IVFFlat for vector similarity (CRITICAL)
+            'idx_embeddings_vec_hnsw',  # HNSW for vector similarity (CRITICAL - updated from ivf)
             'idx_doc_taxonomy_path',   # GIN for doc taxonomy paths
             'idx_embeddings_bm25',     # GIN for BM25 tokens
             'idx_audit_log_timestamp', # B-tree for audit log queries
@@ -104,8 +104,8 @@ async def test_critical_indexes_exist():
                         logger.error(f"  ✗ {index_name}")
 
                     # Special handling for the critical vector index
-                    if 'idx_embeddings_vec_ivf' in missing_indexes:
-                        logger.warning("⚠️ 중요: idx_embeddings_vec_ivf 인덱스가 누락됨")
+                    if 'idx_embeddings_vec_hnsw' in missing_indexes:
+                        logger.warning("⚠️ 중요: idx_embeddings_vec_hnsw 인덱스가 누락됨")
                         logger.warning("   이는 GitHub Actions 테스트 실패의 원인입니다")
 
                         # Check if there are any alternative vector indexes
@@ -145,30 +145,30 @@ async def test_manual_index_creation():
 
         async with engine.begin() as conn:
             # Test the index creation logic manually
-            logger.info("🔧 idx_embeddings_vec_ivf 인덱스 생성 테스트...")
+            logger.info("🔧 idx_embeddings_vec_hnsw 인덱스 생성 테스트...")
 
             # Drop index if exists
-            await conn.execute(text("DROP INDEX IF EXISTS idx_embeddings_vec_ivf"))
+            await conn.execute(text("DROP INDEX IF EXISTS idx_embeddings_vec_hnsw"))
             logger.info("✅ 기존 인덱스 삭제 완료")
 
-            # Run the same logic as in migration
+            # Run the same logic as in migration 0004
             await conn.execute(text("""
                 DO $$
                 BEGIN
-                    -- Only create ivfflat index if the extension is available
+                    -- Create HNSW index for better performance with asyncpg
                     IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
-                        -- Check if ivfflat access method is available (pgvector 0.5.0+)
-                        IF EXISTS (SELECT 1 FROM pg_am WHERE amname = 'ivfflat') THEN
-                            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_ivf ON embeddings USING ivfflat (vec vector_cosine_ops) WITH (lists = 100)';
-                            RAISE NOTICE 'Created IVFFlat index for vector similarity search';
+                        -- Check if hnsw access method is available
+                        IF EXISTS (SELECT 1 FROM pg_am WHERE amname = 'hnsw') THEN
+                            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw ON embeddings USING hnsw (vec vector_cosine_ops) WITH (m = 16, ef_construction = 64)';
+                            RAISE NOTICE 'Created HNSW index for vector similarity search';
                         ELSE
                             -- Fallback to regular vector index but with consistent naming for tests
-                            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_ivf ON embeddings USING btree (vec)';
-                            RAISE NOTICE 'Created regular index on embeddings with IVF name (IVFFlat not available)';
+                            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw ON embeddings USING btree (vec)';
+                            RAISE NOTICE 'Created regular index on embeddings with HNSW name (HNSW not available)';
                         END IF;
                     ELSE
                         -- If pgvector extension is not available, create basic index with expected name
-                        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_ivf ON embeddings (vec)';
+                        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw ON embeddings (vec)';
                         RAISE NOTICE 'Created basic index on embeddings (pgvector extension not available)';
                     END IF;
                 END $$;
@@ -179,15 +179,15 @@ async def test_manual_index_creation():
             # Verify index was created
             result = await conn.execute(text("""
                 SELECT indexname FROM pg_indexes
-                WHERE schemaname = 'public' AND indexname = 'idx_embeddings_vec_ivf'
+                WHERE schemaname = 'public' AND indexname = 'idx_embeddings_vec_hnsw'
             """))
             index_exists = result.fetchone()
 
             if index_exists:
-                logger.info("🎉 idx_embeddings_vec_ivf 인덱스가 성공적으로 생성됨!")
+                logger.info("🎉 idx_embeddings_vec_hnsw 인덱스가 성공적으로 생성됨!")
                 return True
             else:
-                logger.error("❌ idx_embeddings_vec_ivf 인덱스 생성 실패")
+                logger.error("❌ idx_embeddings_vec_hnsw 인덱스 생성 실패")
                 return False
 
     except Exception as e:

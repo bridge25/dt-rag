@@ -206,7 +206,7 @@ class TestDatabaseSchema:
         required_indexes = {
             'idx_chunks_span_gist',  # GiST for span range queries
             'idx_taxonomy_canonical',  # GIN for taxonomy path arrays
-            'idx_embeddings_vec_ivf',  # IVFFlat for vector similarity
+            'idx_embeddings_vec_hnsw',  # HNSW for vector similarity (updated from ivf)
             'idx_doc_taxonomy_path',   # GIN for doc taxonomy paths
             'idx_embeddings_bm25',     # GIN for BM25 tokens
             'idx_audit_log_timestamp', # B-tree for audit log queries
