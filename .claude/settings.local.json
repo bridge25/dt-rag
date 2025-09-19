@@ -64,9 +64,38 @@
       "Bash(gh api:*)",
       "WebSearch",
       "Bash(echo:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(git reset:*)",
+      "Bash(pytest:*)",
+      "Bash(where psql)",
+      "Bash(wsl:*)",
+      "Bash(test:*)",
+      "Bash(bash:*)",
+      "Bash(where:*)",
+      "Bash(/c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/test_python_hook.py)",
+      "Bash(/c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/simple_test.py)",
+      "Bash(/c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/analyze_kb_usage.py)",
+      "Bash(sqlite3:*)",
+      "Bash(alembic upgrade:*)",
+      "Bash(alembic revision:*)",
+      "Bash(export DATABASE_URL=\"sqlite+aiosqlite:///./dt_rag_test.db\")",
+      "Bash(dos2unix:*)"
     ],
     "deny": [],
     "ask": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/knowledge_injector.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

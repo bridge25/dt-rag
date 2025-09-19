@@ -15,6 +15,7 @@ import time
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 import numpy as np
 import json
 
@@ -40,6 +41,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger(__name__)
+
+class RAGASMetrics(Enum):
+    """Enumeration of RAGAS metrics"""
+    FAITHFULNESS = 'faithfulness'
+    ANSWER_RELEVANCY = 'answer_relevancy'
+    CONTEXT_PRECISION = 'context_precision'
+    CONTEXT_RECALL = 'context_recall'
 
 @dataclass
 class RAGResponse:

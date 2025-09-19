@@ -828,7 +828,7 @@ def process_document(text):
     async def _verify_database_storage(self, document_id: str) -> Dict[str, Any]:
         """데이터베이스 저장 검증"""
         try:
-            async with db_manager.get_session() as session:
+            async with await db_manager.get_session() as session:
                 # 문서 확인
                 doc = await session.get(Document, document_id)
                 if not doc:

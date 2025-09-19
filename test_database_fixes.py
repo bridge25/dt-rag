@@ -46,6 +46,9 @@ async def test_database_connection():
             engine
         )
 
+        # Make DATABASE_URL available globally for tests
+        global DATABASE_URL
+
         # Test database URL configuration
         logger.info(f"✅ 데이터베이스 URL 로드 완료: {DATABASE_URL}")
 
@@ -144,9 +147,10 @@ async def test_model_operations():
             test_chunk = DocumentChunk(
                 chunk_id=uuid.uuid4(),
                 doc_id=test_doc.doc_id,
-                chunk_text="테스트 청크 내용입니다. 한글이 정상적으로 저장되는지 확인합니다.",
-                start_byte=0,
-                end_byte=100,
+                text="테스트 청크 내용입니다. 한글이 정상적으로 저장되는지 확인합니다.",
+                span="0,100",  # SQLite 호환 형식
+                chunk_index=0,
+                chunk_metadata={"test": True},
                 created_at=datetime.utcnow()
             )
 
@@ -194,7 +198,7 @@ async def test_database_indexes():
     try:
         logger.info("🔍 데이터베이스 인덱스 테스트 시작...")
 
-        from database import engine
+        from database import engine, DATABASE_URL
         from sqlalchemy import text
 
         # Test basic database connection first
@@ -205,26 +209,45 @@ async def test_database_indexes():
                 if result.fetchone():
                     logger.info("✅ 데이터베이스 연결 확인")
 
-                # Check if we can access table information
-                result = await conn.execute(text("""
-                    SELECT table_name FROM information_schema.tables
-                    WHERE table_schema = 'public'
-                    LIMIT 5
-                """))
-                tables = result.fetchall()
-                logger.info(f"✅ 테이블 정보 조회 성공: {len(tables)}개 테이블")
-
-                # Check for indexes if PostgreSQL
-                try:
+                # Check if we can access table information (SQLite 호환)
+                if "sqlite" in DATABASE_URL:
                     result = await conn.execute(text("""
-                        SELECT indexname, tablename FROM pg_indexes
-                        WHERE schemaname = 'public'
+                        SELECT name FROM sqlite_master
+                        WHERE type='table'
+                        LIMIT 5
+                    """))
+                    tables = result.fetchall()
+                    logger.info(f"✅ SQLite 테이블 정보 조회 성공: {len(tables)}개 테이블")
+
+                    # SQLite 인덱스 정보 조회
+                    result = await conn.execute(text("""
+                        SELECT name FROM sqlite_master
+                        WHERE type='index'
                         LIMIT 10
                     """))
                     indexes = result.fetchall()
-                    logger.info(f"✅ 인덱스 정보 조회 성공: {len(indexes)}개 인덱스")
-                except Exception:
-                    logger.info("ℹ️ PostgreSQL 인덱스 조회 건너뜀 (다른 DB 사용 중)")
+                    logger.info(f"✅ SQLite 인덱스 정보 조회 성공: {len(indexes)}개 인덱스")
+                else:
+                    # PostgreSQL 쿼리
+                    result = await conn.execute(text("""
+                        SELECT table_name FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        LIMIT 5
+                    """))
+                    tables = result.fetchall()
+                    logger.info(f"✅ PostgreSQL 테이블 정보 조회 성공: {len(tables)}개 테이블")
+
+                    # PostgreSQL 인덱스 조회
+                    try:
+                        result = await conn.execute(text("""
+                            SELECT indexname, tablename FROM pg_indexes
+                            WHERE schemaname = 'public'
+                            LIMIT 10
+                        """))
+                        indexes = result.fetchall()
+                        logger.info(f"✅ PostgreSQL 인덱스 정보 조회 성공: {len(indexes)}개 인덱스")
+                    except Exception:
+                        logger.info("ℹ️ PostgreSQL 인덱스 조회 건너뜀")
 
         except Exception as conn_error:
             logger.warning(f"⚠️ 데이터베이스 연결 실패: {str(conn_error)}")

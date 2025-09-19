@@ -96,9 +96,64 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Logs**: `/logs/ingestion/` - Processing logs and metrics
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\document-ingestion-specialist_knowledge.json`
-- **Content**: Pre-collected domain expertise including document parsing strategies, PII detection frameworks, chunking algorithms, security compliance requirements, and ingestion pipeline optimization
-- **Usage**: Reference this knowledge base for the latest document processing techniques, security standards, and performance optimization strategies. Always consult the compliance requirements and processing efficiency benchmarks when designing ingestion workflows
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### Python Document Processing Performance (2025)
+- **pymupdf4llm** (0.12s): Excellent markdown output, great balance of speed and quality for PDF processing
+- **unstructured** (1.29s): Clean semantic chunks, perfect for RAG workflows and structured output
+- **Tool Selection Principle**: Choose the right tool for your use case, not the one with highest benchmark scores
+- **For RAG Systems**: unstructured gives better semantic chunks, pymupdf4llm hits sweet spot of speed and quality
+
+#### OCR and Text Extraction Tools
+- **EasyOCR**: Deep learning-powered model, simplifies text extraction from images, supports multiple languages
+- **Pytesseract**: Python wrapper for Tesseract-OCR Engine, good for standard text extraction
+- **AWS Textract**: Specialized features like table extraction and key-value pair extraction
+- **OCRmyPDF**: Uses Tesseract internally, adds OCR text layer to scanned PDFs
+
+#### LangChain Document Loaders (2025)
+- **Unstructured Loader**: Supports text files, PowerPoint, HTML, PDFs, images with multiple processing modes
+- **Processing Modes**: Single (entire document), elements (by element), paged (page-by-page)
+- **Hi-res Strategy**: Provides document layout analysis and OCR support
+- **BaseLoader Methods**: .load() for all content at once, .lazy_load() for large files (memory preservation)
+
+#### OCR Image Preprocessing Best Practices
+- **Image Preprocessing**: Significantly improves OCR results by removing visual distractions and enhancing clarity
+- **Grayscale Conversion**: Better contrast for text recognition
+- **Page Segmentation Modes (PSM)**: PSM 6 for single uniform text blocks, PSM 7 for single text lines
+- **Quality Enhancement**: Essential for reliable OCR output
+
+#### Document Processing Framework Selection
+- **Multi-format Support**: LangChain Unstructured supports PDF, TXT, HTML, PPT, images
+- **Processing Options**: API mode (cloud) vs local processing
+- **Installation**: `pip install langchain-unstructured unstructured-client`
+- **Features**: Rich metadata extraction, chunking strategies, post-processing capabilities
+
+#### Performance Optimization Strategies
+- **Memory Management**: Use lazy loading for large files to preserve memory
+- **Batch Processing**: Process multiple documents efficiently with proper queue management
+- **Error Handling**: Implement robust fallback strategies for different document formats
+- **Incremental Processing**: Stream large files to avoid memory exhaustion
+
+#### Document Quality Assurance
+- **Format Validation**: Verify document integrity before processing
+- **Encoding Detection**: Handle international content with proper encoding
+- **Content Cleaning**: Remove noise and normalize text for better processing
+- **Duplicate Detection**: Implement deduplication across different ingestion sources
+
+#### Security and Compliance
+- **PII Detection**: Implement comprehensive patterns for email, phone, SSN, Korean formats
+- **Regulatory Compliance**: GDPR Article 25, CCPA requirements, Korean PIPA
+- **Data Masking**: Tokenization, hashing, format-preserving encryption strategies
+- **Audit Logging**: Track PII detection events and processing decisions
+
+#### Chunking Strategies for RAG
+- **Token-based Chunking**: Use tiktoken for accurate token counting (500 tokens recommended)
+- **Semantic Boundaries**: Preserve sentence and paragraph boundaries
+- **Overlap Strategy**: 128 token overlap for context preservation
+- **Configurable Sizing**: Adjust chunk sizes based on document type and content
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\document-ingestion-specialist_knowledge.json`
 
 ## PRD Requirements Mapping
 - **Processing Reliability**: Robust error handling and recovery mechanisms

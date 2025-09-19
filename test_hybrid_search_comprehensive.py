@@ -113,57 +113,78 @@ class HybridSearchTester:
                 from sqlalchemy import text
 
                 for i, doc_data in enumerate(self.test_documents):
-                    # 문서 삽입
+                    # SQLite 호환 문서 삽입 (doc_id를 명시적으로 생성)
+                    new_doc_id = str(uuid.uuid4())
+
                     doc_insert = text("""
-                        INSERT INTO documents (title, content_type, file_size)
-                        VALUES (:title, 'text/plain', :file_size)
-                        ON CONFLICT DO NOTHING
-                        RETURNING doc_id
+                        INSERT OR IGNORE INTO documents (doc_id, title, content_type, file_size)
+                        VALUES (:doc_id, :title, 'text/plain', :file_size)
                     """)
-                    result = await session.execute(doc_insert, {
+                    await session.execute(doc_insert, {
+                        "doc_id": new_doc_id,
                         "title": doc_data["title"],
                         "file_size": len(doc_data["text"])
                     })
 
-                    try:
-                        doc_id = result.scalar()
-                        if not doc_id:
-                            # 이미 존재하는 경우 조회
-                            existing_doc = await session.execute(
-                                text("SELECT doc_id FROM documents WHERE title = :title"),
-                                {"title": doc_data["title"]}
-                            )
-                            doc_id = existing_doc.scalar()
+                    # 실제로 삽입된 doc_id 확인
+                    doc_check = await session.execute(
+                        text("SELECT doc_id FROM documents WHERE title = :title"),
+                        {"title": doc_data["title"]}
+                    )
+                    doc_id = doc_check.scalar()
 
+                    try:
                         if doc_id:
-                            # 청크 삽입
+                            # SQLite 호환 청크 삽입
+                            new_chunk_id = str(uuid.uuid4())
                             chunk_insert = text("""
-                                INSERT INTO chunks (doc_id, text, span, chunk_index)
-                                VALUES (:doc_id, :text, '[1,1000)'::int4range, :chunk_index)
-                                ON CONFLICT DO NOTHING
-                                RETURNING chunk_id
+                                INSERT OR IGNORE INTO chunks (chunk_id, doc_id, text, span, chunk_index)
+                                VALUES (:chunk_id, :doc_id, :text, :span, :chunk_index)
                             """)
-                            chunk_result = await session.execute(chunk_insert, {
+                            await session.execute(chunk_insert, {
+                                "chunk_id": new_chunk_id,
                                 "doc_id": doc_id,
                                 "text": doc_data["text"],
+                                "span": "1,1000",  # SQLite용 span 형식
                                 "chunk_index": i
                             })
 
-                            chunk_id = chunk_result.scalar()
+                            # 청크가 생성되었으면 임베딩 생성
+                            chunk_check = await session.execute(
+                                text("SELECT chunk_id FROM chunks WHERE doc_id = :doc_id AND chunk_index = :chunk_index"),
+                                {"doc_id": doc_id, "chunk_index": i}
+                            )
+                            chunk_id = chunk_check.scalar()
 
-                            # 임베딩 생성 및 삽입
                             if chunk_id:
+                                # 임베딩 생성 및 삽입
                                 embedding = await EmbeddingService.generate_embedding(doc_data["text"])
                                 if embedding:
+                                    new_embedding_id = str(uuid.uuid4())
                                     embedding_insert = text("""
-                                        INSERT INTO embeddings (chunk_id, vec, model_name)
-                                        VALUES (:chunk_id, :vec, 'text-embedding-ada-002')
-                                        ON CONFLICT DO NOTHING
+                                        INSERT OR IGNORE INTO embeddings (embedding_id, chunk_id, vec, model_name)
+                                        VALUES (:embedding_id, :chunk_id, :vec, 'text-embedding-ada-002')
                                     """)
                                     await session.execute(embedding_insert, {
+                                        "embedding_id": new_embedding_id,
                                         "chunk_id": chunk_id,
                                         "vec": embedding
                                     })
+
+                            # 분류 정보 삽입
+                            if doc_data.get("category"):
+                                new_mapping_id = str(uuid.uuid4())
+                                taxonomy_insert = text("""
+                                    INSERT OR IGNORE INTO doc_taxonomy (mapping_id, doc_id, path, confidence, source)
+                                    VALUES (:mapping_id, :doc_id, :path, :confidence, 'test')
+                                """)
+                                await session.execute(taxonomy_insert, {
+                                    "mapping_id": new_mapping_id,
+                                    "doc_id": doc_id,
+                                    "path": json.dumps(doc_data["category"]),  # SQLite용 JSON 문자열
+                                    "confidence": 1.0
+                                })
+
                     except Exception as e:
                         logger.warning(f"문서 {doc_data['title']} 처리 중 오류: {e}")
                         continue

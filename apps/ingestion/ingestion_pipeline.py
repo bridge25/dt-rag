@@ -402,7 +402,7 @@ class IngestionPipeline:
     ) -> None:
         """데이터베이스 저장"""
         try:
-            async with db_manager.get_session() as session:
+            async with await db_manager.get_session() as session:
                 # 1. 문서 레코드 생성
                 doc_record = Document(
                     doc_id=uuid.UUID(result.document_id),
@@ -510,7 +510,7 @@ class IngestionPipeline:
     async def get_processing_status(self, document_id: str) -> Optional[Dict[str, Any]]:
         """문서 처리 상태 조회"""
         try:
-            async with db_manager.get_session() as session:
+            async with await db_manager.get_session() as session:
                 # 실제 구현에서는 processing_jobs 테이블에서 조회
                 # 여기서는 기본 정보 반환
                 return {

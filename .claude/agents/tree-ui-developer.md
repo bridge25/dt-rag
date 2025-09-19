@@ -96,8 +96,64 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Tests**: `/dt-rag/apps/ui/src/__tests__/` - Component and integration tests
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\tree-ui-developer_knowledge.json`
-- **Content**: Pre-collected domain expertise including React 18 optimization patterns, virtual scrolling implementations, TypeScript advanced patterns, accessibility best practices, and tree UI component architectures
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### React 18 Modern Implementation (2025)
+- **Latest Features**: Comprehensive guide covering implementation patterns, optimization strategies, and best practices for React 18
+- **Concurrent Rendering**: Automatic batching, Suspense for data fetching, startTransition for non-urgent updates
+- **Performance Patterns**: React.memo optimization, useMemo and useCallback usage, lazy loading and code splitting
+- **Component Architecture**: Modern patterns for component composition and state management
+
+#### TypeScript 5 Advanced Patterns
+- **Type System Evolution**: Latest TypeScript 5 features with advanced type patterns and utility types
+- **Component Typing**: Props interfaces, ref forwarding, children patterns, and generic components
+- **Type Safety**: Comprehensive type safety implementation patterns for React applications
+- **Modern Development**: Best practices for TypeScript 5 in React development environments
+
+#### Virtual Scrolling Implementation
+- **React Window**: High-performance virtual scrolling implementation with fixed-size and variable-size list support
+- **TanStack Virtual**: Modern virtual scrolling library with advanced features and React 18 compatibility
+- **Performance Optimization**: Windowing techniques for large datasets (>10,000 items) with smooth scrolling
+- **Memory Management**: Efficient DOM management and item measurement strategies
+
+#### Modern Frontend Architecture
+- **State Management**: Zustand for client state, TanStack Query for server state management
+- **Performance Monitoring**: React DevTools, Lighthouse auditing, Core Web Vitals optimization
+- **Bundle Optimization**: Tree shaking, code splitting, lazy loading for optimal bundle sizes
+- **Testing Strategies**: React Testing Library, Jest, accessibility testing, and user event simulation
+
+#### Accessibility (WCAG 2.1 AAA) Implementation
+- **Semantic HTML**: Proper HTML structure and ARIA attributes for tree components
+- **Keyboard Navigation**: Comprehensive keyboard navigation patterns for hierarchical data
+- **Screen Reader Support**: Voice Over, NVDA, JAWS compatibility with proper announcements
+- **Focus Management**: Tab trapping, focus restoration, and logical tab order
+
+#### Tree UI Component Patterns
+- **Hierarchical Data Visualization**: Efficient rendering algorithms for tree structures
+- **Expand/Collapse Animations**: Smooth animations with React Spring or CSS transitions
+- **Node Selection**: Single and multi-selection patterns with keyboard support
+- **Drag and Drop**: Tree node reordering and reorganization with accessibility
+
+#### Responsive Design and Mobile Optimization
+- **Mobile-First Approach**: Touch-friendly tree interfaces with gesture support
+- **CSS Grid and Flexbox**: Modern layout techniques for responsive tree components
+- **Viewport Adaptation**: Tablet, mobile, and desktop optimized tree interfaces
+- **Touch Interactions**: Swipe gestures, pinch to zoom, and touch-optimized navigation
+
+#### Performance Optimization Strategies
+- **Rendering Performance**: p95 < 200ms target for tree rendering with virtual scrolling
+- **Frame Rate Maintenance**: 60 FPS during scrolling and animations through optimization
+- **Memory Efficiency**: <100MB memory usage for large tree structures
+- **Browser Compatibility**: 99% compatibility across modern browsers with polyfills
+
+#### Version Management UI Patterns
+- **Diff Visualization**: Tree diff viewing with highlighted changes between versions
+- **Version History**: Timeline interfaces with visual change indicators and rollback options
+- **Conflict Resolution**: User-friendly interfaces for resolving taxonomy conflicts
+- **Batch Operations**: Multi-selection and bulk operations for efficient workflow
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\tree-ui-developer_knowledge.json`
 - **Usage**: Reference this knowledge base for the latest React performance techniques, accessibility standards, and tree visualization patterns. Always consult the performance benchmarks and UX guidelines when designing complex tree interfaces
 
 ## Key Implementation Components

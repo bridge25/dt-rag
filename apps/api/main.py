@@ -39,6 +39,33 @@ from routers.orchestration_router import orchestration_router
 from routers.agent_factory_router import agent_factory_router
 from routers.monitoring_router import monitoring_router
 
+# Import evaluation router
+try:
+    from routers.evaluation import router as evaluation_router
+    EVALUATION_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Evaluation router not available: {e}")
+    EVALUATION_AVAILABLE = False
+
+# Import optimization routers
+try:
+    from routers.batch_search import router as batch_search_router
+    BATCH_SEARCH_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Batch search router not available: {e}")
+    BATCH_SEARCH_AVAILABLE = False
+
+# Import monitoring components
+try:
+    from routers.monitoring import router as monitoring_api_router
+    from monitoring.metrics import initialize_metrics_collector, get_metrics_collector
+    from monitoring.health_check import initialize_health_checker
+    from cache.redis_manager import initialize_redis_manager
+    MONITORING_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Monitoring components not available: {e}")
+    MONITORING_AVAILABLE = False
+
 # Import configuration and database
 from config import get_config
 from openapi_spec import generate_openapi_spec
@@ -63,6 +90,28 @@ async def lifespan(app: FastAPI):
     logger.info(f"Environment: {config.environment}")
     logger.info(f"Debug mode: {config.debug}")
 
+    # Initialize monitoring systems
+    if MONITORING_AVAILABLE:
+        logger.info("Initializing monitoring systems...")
+        try:
+            # Initialize metrics collector
+            initialize_metrics_collector(enable_prometheus=True)
+            logger.info("✅ Metrics collector initialized")
+
+            # Initialize health checker
+            initialize_health_checker()
+            logger.info("✅ Health checker initialized")
+
+            # Initialize Redis manager (optional)
+            if config.redis_enabled:
+                await initialize_redis_manager()
+                logger.info("✅ Redis manager initialized")
+            else:
+                logger.info("ℹ️ Redis disabled - using memory cache only")
+
+        except Exception as e:
+            logger.warning(f"⚠️ Monitoring initialization failed: {e}")
+
     # Initialize database
     logger.info("Initializing database connection...")
     db_connected = await test_database_connection()
@@ -78,10 +127,29 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("⚠️ PostgreSQL 연결 실패 - 폴백 모드로 동작")
 
+    # Initialize system metrics
+    if MONITORING_AVAILABLE:
+        try:
+            metrics_collector = get_metrics_collector()
+            metrics_collector.update_system_metrics()
+            logger.info("✅ System metrics initialized")
+        except Exception as e:
+            logger.warning(f"⚠️ System metrics initialization failed: {e}")
+
     yield
 
     # Shutdown
     logger.info("🔥 Shutting down Dynamic Taxonomy RAG API")
+
+    # Cleanup monitoring resources
+    if MONITORING_AVAILABLE:
+        try:
+            from cache.redis_manager import get_redis_manager
+            redis_manager = await get_redis_manager()
+            await redis_manager.close()
+            logger.info("✅ Redis connections closed")
+        except Exception as e:
+            logger.warning(f"⚠️ Redis cleanup failed: {e}")
 
 # Create FastAPI application
 app = FastAPI(
@@ -141,30 +209,52 @@ if config.security.trusted_hosts:
         allowed_hosts=config.security.trusted_hosts
     )
 
-# Request logging middleware
+# Request logging and monitoring middleware
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """Log all HTTP requests"""
+async def log_requests_and_track_metrics(request: Request, call_next):
+    """Log all HTTP requests and track performance metrics"""
     start_time = time.time()
 
     # Log request
     logger.info(f"Request: {request.method} {request.url}")
 
-    # Process request
-    response = await call_next(request)
+    try:
+        # Process request
+        response = await call_next(request)
 
-    # Log response
-    process_time = time.time() - start_time
-    logger.info(
-        f"Response: {response.status_code} - "
-        f"Time: {process_time:.4f}s - "
-        f"Size: {response.headers.get('content-length', 'unknown')}"
-    )
+        # Calculate response time
+        response_time_ms = (time.time() - start_time) * 1000
+        status_code = response.status_code
 
-    # Add timing header
-    response.headers["X-Process-Time"] = str(process_time)
+        # Log response
+        logger.info(f"Response: {status_code} ({response_time_ms:.2f}ms)")
 
-    return response
+        # Track metrics if monitoring is available
+        if MONITORING_AVAILABLE:
+            try:
+                from routers.monitoring import track_request_metrics
+                await track_request_metrics(request, response_time_ms, status_code)
+            except Exception as e:
+                logger.warning(f"Failed to track request metrics: {e}")
+
+        return response
+
+    except Exception as e:
+        # Calculate error response time
+        response_time_ms = (time.time() - start_time) * 1000
+
+        # Log error
+        logger.error(f"Request failed: {request.method} {request.url} - {str(e)} ({response_time_ms:.2f}ms)")
+
+        # Track error metrics if monitoring is available
+        if MONITORING_AVAILABLE:
+            try:
+                from routers.monitoring import track_request_metrics
+                await track_request_metrics(request, response_time_ms, 500)
+            except Exception as metric_e:
+                logger.warning(f"Failed to track error metrics: {metric_e}")
+
+        raise
 
 # Global exception handler
 @app.exception_handler(HTTPException)
@@ -302,11 +392,35 @@ app.include_router(
     tags=["Agent Factory"]
 )
 
+# Include monitoring router if available
+if MONITORING_AVAILABLE:
+    app.include_router(
+        monitoring_api_router,
+        prefix="/api/v1",
+        tags=["Monitoring"]
+    )
+
 app.include_router(
     monitoring_router,
     prefix="/api/v1",
     tags=["Monitoring"]
 )
+
+# Include evaluation router if available
+if EVALUATION_AVAILABLE:
+    app.include_router(
+        evaluation_router,
+        prefix="/api/v1",
+        tags=["Evaluation", "RAGAS", "Quality Assurance"]
+    )
+
+# Include optimization routers if available
+if BATCH_SEARCH_AVAILABLE:
+    app.include_router(
+        batch_search_router,
+        prefix="/api/v1",
+        tags=["Batch Processing", "Search Optimization"]
+    )
 
 # API versioning support
 @app.get("/api/versions", tags=["Versioning"])

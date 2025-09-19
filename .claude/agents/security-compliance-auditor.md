@@ -104,9 +104,64 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Tests**: `/tests/security/` - Security testing and validation
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\security-compliance-auditor_knowledge.json`
-- **Content**: Pre-collected domain expertise including OWASP Top 10 mitigation strategies, PII protection frameworks, compliance requirements (GDPR/CCPA/PIPA), security scanning methodologies, and incident response procedures
-- **Usage**: Reference this knowledge base for the latest security standards, compliance requirements, and vulnerability mitigation techniques. Always consult the regulatory guidelines and security best practices when implementing protection measures
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### NIST Cybersecurity Framework 2.0 (Current September 2025)
+- **Public Comment Period**: Through September 21, 2025 on CSF 2.0 Quick-Start Guide for Managing Emerging Cybersecurity Risks
+- **Six Core Functions**: New structure includes Identify, Protect, Detect, Respond, Recover, and new **Govern** function added in 2024
+- **Expanded Scope**: Beyond critical infrastructure to broader organizational cybersecurity
+- **Supply Chain Focus**: Enhanced supply chain risk management (C-SCRM) capabilities
+
+#### OWASP LLM Top 10 (2025 Updated Version)
+- **New AI-Specific Risks**: Excessive Agency, RAG vulnerabilities, System Prompt Leakage, Unbounded Consumption
+- **Enterprise Focus**: Challenges specific to AI agents and enterprise adoption scenarios
+- **RAG Security**: Specific vulnerabilities in Retrieval-Augmented Generation systems
+- **Updated September 2025**: Latest version addressing emerging AI/LLM security threats
+
+#### EU AI Act Implementation Status (September 2025)
+- **August 2, 2025**: GPAI (General Purpose AI) model rules became effective
+- **AI Office Operational**: European AI Office now fully operational
+- **Consultation Active**: Commission consultation on transparent AI systems launched September 4, 2025
+- **Full Implementation**: Complete implementation deadline August 2, 2026
+
+#### ISO 27001:2022 Transition (Critical Deadline)
+- **Transition Deadline**: Organizations must transition by October 31, 2025
+- **New Structure**: 93 controls organized in 4 themes (vs previous version)
+- **Amendment 1:2024**: New requirements addressing climate action changes
+- **Compliance Gap**: Organizations still on 2013 version must urgently transition
+
+#### Security Tools Ecosystem (September 2025 Status)
+- **Semgrep**: Community Edition integrated with Replit Agent as of September 2, 2025
+- **Bandit**: Continues as active Python AST security scanning tool
+- **Safety**: Maintains dependency vulnerability checking capabilities
+- **Tool Integration**: All major security tools remain maintained and widely adopted
+
+#### NIST AI Risk Management Framework Updates
+- **AI RMF 1.0**: Core framework with Generative AI Profile released July 26, 2024
+- **Four Functions**: Govern, Map, Measure, Manage for trustworthy AI development
+- **Voluntary Framework**: Guidelines for trustworthy AI system development
+- **Generative AI Focus**: Specific profile addressing generative AI risks and controls
+
+#### PII Protection and Privacy Compliance
+- **Multi-Jurisdiction Requirements**: GDPR (EU), CCPA (California), Korean PIPA compliance
+- **Automated Classification**: PII detection with >99% accuracy requirement
+- **Data Subject Rights**: Consent management, access, rectification, deletion workflows
+- **Cross-Border Transfers**: Adequacy decisions, standard contractual clauses, binding corporate rules
+
+#### Security Monitoring and Incident Response
+- **MTTD Target**: <1 hour mean time to detection for security events
+- **SIEM Integration**: Comprehensive security event monitoring and analysis
+- **Threat Intelligence**: Real-time threat detection and automated response capabilities
+- **Forensic Readiness**: Complete and immutable audit logs for compliance and investigation
+
+#### Zero Trust Architecture Implementation
+- **Never Trust, Always Verify**: Fundamental principle applied to all system components
+- **Least Privilege Access**: Principle of minimum necessary access rights
+- **Micro-Segmentation**: Network and application-level access controls
+- **Continuous Verification**: Real-time identity and device verification
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\security-compliance-auditor_knowledge.json`
 
 ## Key Implementation Components
 

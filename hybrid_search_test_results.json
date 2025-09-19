@@ -1,9 +1,9 @@
 {
   "test_summary": {
-    "total_time": 109.98383569717407,
-    "setup_success": false,
+    "total_time": 22.081430435180664,
+    "setup_success": true,
     "tests_completed": 6,
-    "timestamp": "2025-09-17T14:06:03.681329"
+    "timestamp": "2025-09-18T15:46:06.745595"
   },
   "individual_results": {
     "bm25_tests": {
@@ -78,9 +78,9 @@
         }
       ],
       "performance": {
-        "total_time": 0.002074718475341797,
-        "avg_time_per_case": 0.0006915728251139323,
-        "throughput": 1445.979315099977
+        "total_time": 0.0006573200225830078,
+        "avg_time_per_case": 0.00021910667419433594,
+        "throughput": 4563.986942328618
       },
       "encoding_test": {
         "test_texts": [
@@ -134,33 +134,33 @@
         {
           "text": "RAG 시스템은 검색과 생성을 결합합니다",
           "embedding_length": 1536,
-          "generation_time": 3.0707719326019287,
+          "generation_time": 1.054203748703003,
           "is_valid": true,
           "sample_values": [
-            -0.02198202,
-            -0.0016343064,
-            -0.007616517,
-            -0.022255257,
-            -0.009392566
+            -0.02193508,
+            -0.0016381311,
+            -0.00761445,
+            -0.022235561,
+            -0.009390017
           ]
         },
         {
           "text": "Machine learning enables pattern recognition",
           "embedding_length": 1536,
-          "generation_time": 2.131256580352783,
+          "generation_time": 0.778449296951294,
           "is_valid": true,
           "sample_values": [
-            -0.032378964,
-            0.004267301,
-            0.0079043545,
-            -0.007635186,
-            0.0020827712
+            -0.03240176,
+            0.004266844,
+            0.007883815,
+            -0.0077065774,
+            0.0021006004
           ]
         },
         {
           "text": "벡터 데이터베이스는 고차원 데이터를 저장합니다",
           "embedding_length": 1536,
-          "generation_time": 0.8684525489807129,
+          "generation_time": 0.9000210762023926,
           "is_valid": true,
           "sample_values": [
             -0.01465352,
@@ -173,14 +173,14 @@
         {
           "text": "Neural networks learn complex representations",
           "embedding_length": 1536,
-          "generation_time": 1.7257945537567139,
+          "generation_time": 1.0943260192871094,
           "is_valid": true,
           "sample_values": [
-            -0.03578831,
-            0.020454194,
-            0.020989714,
-            -0.011637731,
-            0.006004991
+            -0.035767008,
+            0.020430826,
+            0.020966416,
+            -0.0116915535,
+            0.005999269
           ]
         }
       ],
@@ -189,39 +189,39 @@
           "description": "RAG-벡터DB 유사성 (한글-한글)",
           "text1": "RAG 시스템은 검색과 생성을 결합합니다",
           "text2": "벡터 데이터베이스는 고차원 데이터를 저장합니다",
-          "cosine_similarity": 0.7813100645997012,
-          "euclidean_distance": 0.6613470409837263,
+          "cosine_similarity": 0.781452168561499,
+          "euclidean_distance": 0.6611321392797537,
           "similarity_valid": "True"
         },
         {
           "description": "ML-NN 유사성 (영어-영어)",
           "text1": "Machine learning enables pattern recognition",
           "text2": "Neural networks learn complex representations",
-          "cosine_similarity": 0.850847622087328,
-          "euclidean_distance": 0.5461728624202774,
+          "cosine_similarity": 0.8508782600627488,
+          "euclidean_distance": 0.5461167192576725,
           "similarity_valid": "True"
         },
         {
           "description": "RAG-ML 차이 (한글-영어)",
           "text1": "RAG 시스템은 검색과 생성을 결합합니다",
           "text2": "Machine learning enables pattern recognition",
-          "cosine_similarity": 0.7311998399797512,
-          "euclidean_distance": 0.7332123514902612,
+          "cosine_similarity": 0.7312855080789054,
+          "euclidean_distance": 0.7330955015465743,
           "similarity_valid": "True"
         },
         {
           "description": "벡터DB-NN 차이 (한글-영어)",
           "text1": "벡터 데이터베이스는 고차원 데이터를 저장합니다",
           "text2": "Neural networks learn complex representations",
-          "cosine_similarity": 0.7483751106331118,
-          "euclidean_distance": 0.7094010566324631,
+          "cosine_similarity": 0.7484444362316524,
+          "euclidean_distance": 0.709303273094454,
           "similarity_valid": "True"
         }
       ],
       "performance": {
-        "total_time": 7.804077863693237,
-        "avg_embedding_time": 1.9490689039230347,
-        "embeddings_per_second": 0.512552548791078
+        "total_time": 3.828932523727417,
+        "avg_embedding_time": 0.9567500352859497,
+        "embeddings_per_second": 1.0446775896969975
       },
       "encoding_test": {
         "test_results": [
@@ -294,9 +294,9 @@
         }
       ],
       "performance": {
-        "total_time": 0.0002789497375488281,
-        "reranking_latency": 6.973743438720703e-05,
-        "throughput": 14339.500854700855
+        "total_time": 0.0002129077911376953,
+        "reranking_latency": 5.322694778442383e-05,
+        "throughput": 18787.475923852184
       },
       "quality_metrics": {
         "success_rate": 0.75,
@@ -311,8 +311,8 @@
         {
           "description": "메트릭 수집 기본 테스트",
           "collected_metrics": {
-            "avg_latency": 0.14734627405802408,
-            "p95_latency": 0.18777847290039062,
+            "avg_latency": 0.14776279131571451,
+            "p95_latency": 0.18998050689697266,
             "total_searches": 15,
             "search_counts": {
               "bm25": 5,
@@ -320,7 +320,7 @@
               "hybrid": 5
             },
             "error_rate": 0.2,
-            "period_start": "2025-09-17T14:05:55.126703"
+            "period_start": "2025-09-18T15:45:59.606767"
           },
           "validation": {
             "has_avg_latency": true,
@@ -366,9 +366,9 @@
               "success": true,
               "embedding_length": 1536,
               "sample_values": [
-                -0.0059709675,
-                -0.018206017,
-                0.011711396
+                -0.006122473,
+                -0.018074304,
+                0.011685064
               ]
             },
             "database_compatibility": {
@@ -521,9 +521,9 @@
               "success": true,
               "embedding_length": 1536,
               "sample_values": [
-                -0.0027854359,
-                -0.010928504,
-                0.012181284
+                -0.0027846438,
+                -0.01089194,
+                0.012231769
               ]
             },
             "database_compatibility": {
@@ -564,8 +564,8 @@
     "integration_tests": {}
   },
   "final_metrics": {
-    "avg_latency": 0.14734627405802408,
-    "p95_latency": 0.18777847290039062,
+    "avg_latency": 0.14776279131571451,
+    "p95_latency": 0.18998050689697266,
     "total_searches": 15,
     "search_counts": {
       "bm25": 5,
@@ -573,7 +573,7 @@
       "hybrid": 5
     },
     "error_rate": 0.2,
-    "period_start": "2025-09-17T14:05:55.126703"
+    "period_start": "2025-09-18T15:45:59.606767"
   },
   "success_summary": {
     "overall_success_rate": 0.7142857142857143,

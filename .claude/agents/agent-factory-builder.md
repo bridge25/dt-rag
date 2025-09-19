@@ -96,8 +96,52 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **API**: `/dt-rag/apps/api/agent-factory/` - Agent factory REST endpoints
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\agent-factory-builder_knowledge.json`
-- **Content**: Pre-collected domain expertise including agent manifest design patterns, RBAC/ABAC implementation strategies, service catalog architectures, dynamic agent lifecycle management, and security policy frameworks
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### Dynamic Agent Generation Trends (2025)
+- **LLM-Generated Plans**: Plans can be generated dynamically by LLM or follow predefined sequence
+- **Flexible Architectures**: Trend toward more adaptive agent architectures that dynamically create and orchestrate agents based on task requirements
+- **Agentic Workflows**: Modular coordination blueprints transforming isolated AI calls into autonomous, adaptive, self-improving agents
+- **Context-Aware Systems**: Patterns unite model calls into intelligent, context-aware agentic systems
+
+#### Pydantic for LLM Validation (2025)
+- **Structured Output**: Data validation library enabling schemas that ensure LLM responses adhere to predefined structure
+- **Validation Benefits**: Model-generated output validated, raising errors if required fields missing or wrong type
+- **Hallucination Reduction**: LLM-based validators with natural language rules, citation verification for grounded responses
+- **Usage**: Ask models to cite text chunks and verify citations to minimize hallucinations
+
+#### Dynamic Planning Pattern
+- **Problem Solving**: Creates initial Plan dynamically generated based on user input
+- **Worker Assignment**: Subtasks assigned to Worker agents that execute potentially in parallel
+- **Orchestrator Role**: Orchestrator LLM collects results and reflects on goal achievement
+- **Multi-Agent Coordination**: Enables complex problem decomposition and parallel execution
+
+#### Agent Factory Design Patterns
+- **Agent Manifest System**: YAML-based specifications with validation and versioning
+- **Category-Based Filtering**: Taxonomy-aware access control for specialized agents
+- **Role-Based Access Control**: Fine-grained permissions with privilege management
+- **Service Catalog**: Searchable registry with capability-based discovery
+
+#### Security and Compliance Framework
+- **RBAC/ABAC Implementation**: Role-based and attribute-based access control systems
+- **JWT Token Management**: Secure token generation, validation, and refresh strategies
+- **Audit Logging**: Comprehensive tracking of access decisions and policy violations
+- **Zero Privilege Escalation**: Security compliance with 100% authorization coverage
+
+#### Performance Requirements
+- **Manifest Validation**: 100% schema compliance with comprehensive error reporting
+- **Generation Speed**: <1 second from request to active agent
+- **Discovery Performance**: <100ms response time for agent discovery queries
+- **System Reliability**: >99.5% uptime for agent factory services
+
+#### Implementation Technologies
+- **Configuration Management**: PyYAML, JSON Schema validation, environment variables
+- **Container Orchestration**: Docker-based deployment with resource allocation
+- **API Gateway Patterns**: Authentication, rate limiting, request transformation
+- **Service Discovery**: Registration, health checks, load balancing, failover
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\agent-factory-builder_knowledge.json`
 - **Usage**: Reference this knowledge base for the latest agent factory patterns, security best practices, and system architecture guidelines. Always consult the compliance requirements and performance benchmarks when designing agent management systems
 
 ## Key Implementation Components

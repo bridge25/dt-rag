@@ -3,13 +3,28 @@ API Configuration for DT-RAG v1.8.1
 
 Configuration management for the DT-RAG API including environment-specific settings,
 security configuration, rate limiting, and performance tuning.
+
+This module integrates with the new environment management and LLM configuration systems
+to provide comprehensive, secure, and fallback-enabled configuration management.
 """
 
 import os
 import secrets
+import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from pathlib import Path
+
+# Import new configuration management modules
+try:
+    from .env_manager import get_env_manager, Environment
+    from .llm_config import get_llm_config
+except ImportError:
+    # Fallback for direct execution
+    from env_manager import get_env_manager, Environment
+    from llm_config import get_llm_config
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class DatabaseConfig:
@@ -209,25 +224,33 @@ def get_api_config() -> APIConfig:
     """
     Load API configuration from environment variables and defaults
 
+    Integrates with the new environment management and LLM configuration systems
+    to provide comprehensive, validated configuration.
+
     Returns:
         APIConfig instance with environment-specific settings
     """
 
-    # Determine environment
-    environment = os.getenv("DT_RAG_ENV", "development").lower()
+    # Get environment manager and LLM config
+    env_manager = get_env_manager()
+    llm_config_manager = get_llm_config()
 
     # Base configuration
     config = APIConfig()
-    config.environment = environment
-    config.debug = environment != "production"
+    config.environment = env_manager.current_env.value
+    config.debug = env_manager.config.debug
+    config.testing = env_manager.config.testing
 
-    # Database configuration
-    if db_url := os.getenv("DATABASE_URL"):
-        config.database.url = db_url
+    # Database configuration from environment manager
+    db_config = env_manager.get_database_config()
+    config.database.url = db_config["url"]
+    config.database.pool_size = db_config["pool_size"]
+    config.database.max_overflow = db_config["max_overflow"]
+    config.database.echo = db_config["echo"]
 
-    config.database.pool_size = int(os.getenv("DB_POOL_SIZE", "20"))
-    config.database.max_overflow = int(os.getenv("DB_MAX_OVERFLOW", "30"))
-    config.database.echo = os.getenv("DB_ECHO", "false").lower() == "true"
+    # Additional database settings
+    config.database.pool_timeout = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+    config.database.pool_recycle = int(os.getenv("DB_POOL_RECYCLE", "3600"))
 
     # Redis configuration
     if redis_url := os.getenv("REDIS_URL"):
@@ -331,11 +354,25 @@ def get_api_config() -> APIConfig:
     config.performance.worker_processes = int(os.getenv("WORKER_PROCESSES", "1"))
     config.performance.worker_connections = int(os.getenv("WORKER_CONNECTIONS", "1000"))
 
-    # Environment-specific overrides
-    if environment == "production":
-        config.docs_url = None  # Disable docs in production
-        config.redoc_url = None
-        config.debug = False
+    # Environment-specific overrides using new environment manager
+    security_config = env_manager.get_security_config()
+    feature_flags = env_manager.get_feature_flags()
+
+    # Apply security configuration
+    config.docs_url = "/docs" if security_config["enable_docs"] else None
+    config.redoc_url = "/redoc" if security_config["enable_docs"] else None
+    config.debug = security_config["debug"]
+
+    # Apply feature flags
+    config.enable_swagger_ui = feature_flags["enable_swagger_ui"]
+    config.enable_redoc = feature_flags["enable_redoc"]
+    config.enable_metrics = feature_flags["enable_metrics"]
+    config.enable_rate_limiting = feature_flags["enable_rate_limiting"]
+    config.enable_request_logging = feature_flags["enable_request_logging"]
+    config.enable_error_tracking = feature_flags["enable_error_tracking"]
+
+    # Environment-specific settings
+    if env_manager.current_env == Environment.PRODUCTION:
         config.allowed_hosts = ["api.dt-rag.com", "dt-rag.com"]
 
         # Secure production CORS settings (only if not overridden by env vars)
@@ -347,9 +384,9 @@ def get_api_config() -> APIConfig:
         config.cors.max_age = 3600  # 1 hour cache for production
 
         config.monitoring.log_level = "WARNING"
-        config.performance.worker_processes = int(os.getenv("WORKER_PROCESSES", "4"))
+        config.performance.worker_processes = env_manager.config.worker_processes
 
-    elif environment == "staging":
+    elif env_manager.current_env == Environment.STAGING:
         config.allowed_hosts = ["staging-api.dt-rag.com"]
 
         # Staging CORS settings (only if not overridden by env vars)
@@ -358,8 +395,9 @@ def get_api_config() -> APIConfig:
 
         config.cors.max_age = 1800  # 30 minutes cache for staging
         config.monitoring.log_level = "INFO"
+        config.performance.worker_processes = env_manager.config.worker_processes
 
-    elif environment == "development":
+    elif env_manager.current_env == Environment.DEVELOPMENT:
         # Development allows more origins but still secure headers
         if not os.getenv("CORS_ORIGINS"):
             config.cors.allow_origins = [
@@ -371,12 +409,12 @@ def get_api_config() -> APIConfig:
                 "http://127.0.0.1:8080"
             ]
         config.cors.max_age = 300  # 5 minutes cache for development
+        config.performance.worker_processes = env_manager.config.worker_processes
 
-    elif environment == "testing":
-        config.testing = True
-        config.database.echo = False
+    elif env_manager.current_env == Environment.TESTING:
         config.monitoring.enabled = False
         config.rate_limit.default_rate = "1000/minute"  # Higher limits for testing
+        config.performance.worker_processes = 1
 
     return config
 
@@ -515,6 +553,7 @@ def get_security_info() -> Dict[str, Any]:
         It only provides metadata about the security configuration.
     """
     config = get_api_config()
+    env_manager = get_env_manager()
 
     return {
         "environment": config.environment,
@@ -527,8 +566,88 @@ def get_security_info() -> Dict[str, Any]:
         "secret_key_configured": bool(config.security.secret_key),
         "secret_key_length": len(config.security.secret_key) if config.security.secret_key else 0,
         "secret_key_is_secure": _validate_secret_strength(config.security.secret_key) if config.security.secret_key else False,
-        "security_recommendations": _get_security_recommendations(config)
+        "security_recommendations": _get_security_recommendations(config),
+        "environment_validation": env_manager.validate_environment()
     }
+
+def get_system_status() -> Dict[str, Any]:
+    """
+    Get comprehensive system status including environment, LLM services, and configuration
+
+    Returns:
+        Dict containing complete system status information
+    """
+    env_manager = get_env_manager()
+    llm_config_manager = get_llm_config()
+
+    return {
+        "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
+        "environment": env_manager.get_environment_summary(),
+        "llm_services": llm_config_manager.get_service_status(),
+        "configuration": {
+            "database_type": "sqlite" if "sqlite" in os.getenv("DATABASE_URL", "") else "postgresql",
+            "redis_enabled": bool(os.getenv("REDIS_URL")),
+            "monitoring_enabled": os.getenv("MONITORING_ENABLED", "true").lower() == "true",
+            "debug_mode": os.getenv("DEBUG", "false").lower() == "true"
+        },
+        "api_keys": {
+            "openai_configured": bool(os.getenv("OPENAI_API_KEY")),
+            "anthropic_configured": bool(os.getenv("ANTHROPIC_API_KEY")),
+            "azure_configured": bool(os.getenv("AZURE_OPENAI_API_KEY"))
+        },
+        "system_health": {
+            "configuration_valid": env_manager.validate_environment()["is_valid"],
+            "llm_service_available": llm_config_manager.get_service_status()["system_operational"],
+            "fallback_enabled": True
+        }
+    }
+
+def get_configuration_recommendations() -> List[str]:
+    """
+    Get configuration recommendations based on current environment and setup
+
+    Returns:
+        List of actionable configuration recommendations
+    """
+    env_manager = get_env_manager()
+    llm_config_manager = get_llm_config()
+
+    recommendations = []
+
+    # Environment validation recommendations
+    env_validation = env_manager.validate_environment()
+    recommendations.extend(env_validation.get("recommendations", []))
+
+    # LLM service recommendations
+    llm_status = llm_config_manager.get_service_status()
+
+    if llm_status["llm_service"]["is_dummy"]:
+        recommendations.append("Configure LLM API keys for production AI responses")
+
+    if llm_status["embedding_service"]["is_dummy"]:
+        recommendations.append("Configure embedding API keys for semantic search")
+
+    # Database recommendations
+    if "sqlite" in os.getenv("DATABASE_URL", ""):
+        if env_manager.current_env == Environment.PRODUCTION:
+            recommendations.append("Use PostgreSQL for production instead of SQLite")
+        else:
+            recommendations.append("Consider PostgreSQL for better performance and features")
+
+    # Redis recommendations
+    if not os.getenv("REDIS_URL"):
+        recommendations.append("Configure Redis for improved caching and rate limiting")
+
+    # Security recommendations
+    if env_manager.current_env == Environment.PRODUCTION:
+        if not os.getenv("SECRET_KEY"):
+            recommendations.append("Set a strong SECRET_KEY environment variable")
+
+        cors_origins = os.getenv("CORS_ORIGINS", "")
+        if "*" in cors_origins:
+            recommendations.append("Replace wildcard CORS origins with specific trusted domains")
+
+    return recommendations
 
 def _get_security_recommendations(config: APIConfig) -> List[str]:
     """
@@ -598,6 +717,8 @@ __all__ = [
     "get_openapi_tags",
     "validate_config",
     "get_security_info",
+    "get_system_status",
+    "get_configuration_recommendations",
     "_generate_secure_secret",
     "_validate_secret_strength"
 ]
