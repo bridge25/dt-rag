@@ -96,9 +96,66 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Config**: `/dt-rag/apps/search/config/` - Search configuration and tuning
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\hybrid-search-specialist_knowledge.json`
-- **Content**: Pre-collected domain expertise including BM25 parameter tuning strategies, vector similarity search optimization, hybrid score fusion algorithms, cross-encoder reranking models, and search performance benchmarks
-- **Usage**: Reference this knowledge base for latest information retrieval techniques, optimal scoring combinations, and proven implementation patterns. Always consult the performance metrics and cost-effectiveness data when recommending search configurations
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### Hybrid Search Architecture (2025 Best Practices)
+- **Pragmatic Recipe**: Two routes (BM25 + vector) + smart fusion + optional reranker for optimal RAG performance
+- **BM25 Role**: Initial filter leveraging keyword-based precision to reduce dataset to manageable subset
+- **Vector Search**: Contextual understanding with semantic similarity for comprehensive retrieval
+- **Fusion Strategy**: Bridges precision gap between BM25's exactness and vector search's contextual awareness
+
+#### Vector Database Selection Guide
+- **Dataset Size <10k vectors**: ChromaDB or FAISS for simplicity and quick development
+- **Dataset Size 200k-10M vectors**: FAISS (HNSW or IVF) for raw performance and research
+- **Production Real-time Applications**: Qdrant for complex filtering needs and high availability
+- **ChromaDB**: Lightweight, easy-to-use for smaller projects with metadata filtering
+- **FAISS**: Excels in extreme search speed and high-dimensional vectors
+- **Weaviate**: Native hybrid search with rankedFusion and relativeScoreFusion algorithms
+
+#### Fusion Methods & Reranking (Latest)
+- **RRF (Reciprocal Rank Fusion)**: Standard fusion method for multiple recall strategies
+- **Weighted Scoring**: Custom weight assignment for BM25 vs vector components
+- **Cross-Encoder Reranking**: BGE-reranker-v2-m3 and similar models for result refinement
+- **Binary Quantization**: Shrinks vector embeddings from 32-bit floats to 1-bit for performance
+
+#### Framework Implementations
+- **Weaviate v1.21+**: Native hybrid search with GraphQL/REST API, multi-tenancy and RBAC
+- **LangChain v1.0+**: EnsembleRetriever for hybrid search, enhanced streaming, async support, improved memory management
+- **ChromaDB v0.4+**: Vector database with metadata filtering and embedding functions integration
+- **LlamaIndex**: Advanced hybrid retrieval with query engines and response synthesis
+
+#### BM25 Parameter Optimization
+- **k1 Parameter**: Controls term frequency saturation (typical range: 1.2-2.0)
+- **b Parameter**: Controls document length normalization (typical range: 0.5-0.8)
+- **Fine-tuning Strategy**: Increasing k1 emphasizes term frequency, adjusting b accounts for document length variability
+- **PostgreSQL Implementation**: Full-text search with tsvector, GIN indexes for performance
+
+#### Performance Benchmarks & Optimization
+- **Latency Targets**: <1s p95 for end-to-end hybrid search with reranking
+- **Recall Targets**: ≥0.85 Recall@10 combining both BM25 and vector results
+- **Cost Optimization**: <₩3 per search including embedding generation and reranking inference
+- **Hybrid Improvement**: >20% improvement over single-method baselines (BM25-only or vector-only)
+
+#### Vector Indexing Strategies
+- **IVFFlat**: Good for datasets with high recall requirements
+- **HNSW (Hierarchical Navigable Small World)**: Optimal for real-time search with sub-100ms latency
+- **Index Configuration**: Balance between search speed and memory usage based on dataset characteristics
+- **Embedding Optimization**: Dimension reduction and quantization techniques for performance
+
+#### Search Quality Evaluation
+- **Traditional IR Metrics**: Precision@K, Recall@K, F1@K, Mean Average Precision (MAP)
+- **Ranking Metrics**: NDCG@K, Mean Reciprocal Rank (MRR), Expected Reciprocal Rank (ERR)
+- **Hybrid-Specific**: Component-wise evaluation (BM25 vs vector vs fused results)
+- **User Experience**: Click-through rates, session success rates, query abandonment
+
+#### Common Implementation Patterns
+- **Parallel Execution**: Async BM25 and vector search with results fusion
+- **Result Caching**: Redis-based caching for frequent queries and embedding vectors
+- **Graceful Degradation**: Fallback to single method if one component fails
+- **A/B Testing**: Statistical significance testing for fusion algorithm optimization
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\hybrid-search-specialist_knowledge.json`
 
 ## Key Implementation Components
 

@@ -4,12 +4,27 @@ set -euo pipefail
 : "${STAGING_API_BASE:?STAGING_API_BASE missing}"
 : "${API_KEY:?API_KEY missing}"
 
-# Curl wrapper with proper error handling
-H() { 
-    curl -fsS -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" "$@" || {
-        echo "❌ HTTP request failed: $*" >&2
-        exit 1
-    }
+# Curl wrapper with proper error handling and retries
+H() {
+    local max_retries=3
+    local retry_delay=2
+    local attempt=1
+
+    while [ $attempt -le $max_retries ]; do
+        if curl -fsS -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" "$@"; then
+            return 0
+        fi
+
+        if [ $attempt -lt $max_retries ]; then
+            echo "⚠️ Request failed (attempt $attempt/$max_retries), retrying in ${retry_delay}s..." >&2
+            sleep $retry_delay
+            retry_delay=$((retry_delay * 2))  # Exponential backoff
+        fi
+        attempt=$((attempt + 1))
+    done
+
+    echo "❌ HTTP request failed after $max_retries attempts: $*" >&2
+    exit 1
 }
 
 has_jq() { command -v jq >/dev/null 2>&1; }

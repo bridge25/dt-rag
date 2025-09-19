@@ -130,3 +130,34 @@ Add `-v` flag to curl commands for verbose output:
 curl -v -X GET "${STAGING_API_BASE}/healthz" \
   -H "X-API-Key: ${API_KEY}"
 ```
+
+## How to set env
+
+### Environment Variables Setup
+
+**Required Environment Variables:**
+- `STAGING_API_BASE`: The base URL for the staging API
+- `API_KEY`: Authentication key for API access
+
+**For Local Development:**
+```bash
+export STAGING_API_BASE=http://localhost:8000
+export API_KEY=your_local_api_key_here
+```
+
+**For CI/CD (GitHub Actions):**
+```bash
+export STAGING_API_BASE="${{ vars.STAGING_API_BASE }}"
+export API_KEY="${{ secrets.STAGING_API_KEY }}"
+```
+
+**For Docker Environment:**
+```bash
+docker run -e STAGING_API_BASE=http://localhost:8000 -e API_KEY=your_key your_image
+```
+
+**Verification:**
+```bash
+echo "API Base: $STAGING_API_BASE"
+echo "API Key: ${API_KEY:0:8}..." # Show only first 8 characters
+```

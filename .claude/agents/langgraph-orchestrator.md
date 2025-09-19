@@ -96,8 +96,76 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Monitoring**: `/dt-rag/apps/orchestration/monitoring/` - Pipeline observability
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\langgraph-orchestrator_knowledge.json`
-- **Content**: Pre-collected domain expertise including LangGraph state machine patterns, workflow orchestration techniques, MCP tool integration strategies, error recovery mechanisms, and performance optimization approaches
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### LangGraph Multi-Agent Orchestration (2025)
+- **Framework Evolution**: LangGraph 0.2.x with streaming support and real-time state updates (released July 2025)
+- **DAG-Based Architecture**: StateGraph with typed schemas (TypedDict, Pydantic) for centralized context management
+- **Async/Await Support**: Concurrent execution of graph nodes with non-blocking I/O operations
+- **Production Adoption**: 60% of AI developers working on autonomous agents use LangChain as primary orchestration layer
+
+#### StateGraph Implementation Patterns
+- **Typed State Schemas**: Use TypedDict or Pydantic models for state definition ensuring type safety and runtime validation
+- **Conditional Routing**: Implement sophisticated branching logic with error boundaries and retry mechanisms
+- **Checkpointing**: SQLite/Redis-backed state persistence with sub-second recovery capabilities
+- **Memory Optimization**: State size minimization and garbage collection for <500MB memory usage targets
+
+#### Async Concurrent Workflow Management (2025)
+- **Python Asyncio**: TaskGroups provide stronger safety guarantees for scheduling subtasks with semaphore-controlled concurrent operations
+- **Performance Patterns**: asyncio.gather() for parallel execution of independent agent tasks
+- **Resource Management**: Circuit breakers and timeout handling for external service dependencies
+- **Event Loop Optimization**: Durable machine-spanning execution patterns replacing standard threading
+
+#### Production Multi-Agent Orchestration
+- **Enterprise Scale**: 1000+ concurrent workflows with Kubernetes deployment + Redis checkpoints
+- **Performance Metrics**: 150ms p50 latency, 800ms p99 latency, 5000 workflow steps/minute throughput
+- **Fault Tolerance**: Circuit breakers for external APIs, dead letter queues preventing pipeline stalls
+- **Monitoring**: Prometheus metrics for node execution times, ELK stack with workflow visualization
+
+#### Error Recovery and Fault Tolerance
+- **Robust Error Recovery**: Try-catch blocks in nodes with fallback paths in conditional routing
+- **Exponential Backoff**: Retry logic with configurable maximum attempts and cooldown periods
+- **State Reducers**: Immutable state updates preventing race conditions in concurrent scenarios
+- **Workflow Validation**: Pre-execution checks and post-execution verification procedures
+
+#### Advanced Orchestration Patterns
+- **Map-Reduce Workflows**: Document processing with parallel node execution and result aggregation
+- **Human-in-the-Loop Integration**: Approval nodes with context preservation across escalation levels
+- **Multi-Modal Coordination**: Parallel branches for text+image+video content generation workflows
+- **Real-Time Streaming**: Server-sent events for live workflow updates with WebSocket integration
+
+#### Performance Optimization Strategies
+- **Graph Structure**: Minimize state size and optimize node dependencies to reduce communication overhead
+- **Checkpoint Frequency**: 10-15% overhead for SQLite persistence, 2-5% for in-memory state
+- **Async Node Execution**: 2-5x speedup for I/O-bound operations vs sequential execution
+- **State Communication**: TypedDict for lightweight schemas, Pydantic for validation, reference-based large data handling
+
+#### MCP Tool Integration Security
+- **State Validation**: Pydantic models for preventing injection of malicious data through state transitions
+- **Node Isolation**: Sandboxed execution environments with principle of least privilege for node functions
+- **Checkpoint Security**: Encrypted checkpoint data with integrity checks for state persistence
+- **Tool Whitelisting**: Authorization frameworks with capability discovery and secure communication protocols
+
+#### Scaling Architecture Patterns
+- **10-100 workflows/day**: Redis checkpoints, workflow queue with priority handling, basic monitoring
+- **100-1K workflows/day**: Distributed clusters, workflow sharding, auto-scaling, circuit breakers
+- **1K-10K+ workflows/day**: Federated architecture, edge nodes, result caching, cross-region replication
+- **Cost Optimization**: Linear scaling efficiency up to enterprise scales with $0.01 per workflow targets
+
+#### Production Troubleshooting Solutions
+- **Memory Leaks**: Checkpoint pruning, state references instead of large objects, gc.collect() in long-running nodes
+- **Routing Issues**: Pure routing functions, state snapshots for decisions, explicit type checking
+- **Circular Dependencies**: Explicit termination nodes, one-way edges with state-based flow control
+- **Performance Bottlenecks**: Redis for distributed storage, monitoring state size growth, resource pooling
+
+#### Latest Framework Trends (2025)
+- **LangGraph Studio**: Visual workflow debugging with team collaboration (beta Q3 2025, enterprise Q1 2026)
+- **Streaming Support**: Real-time state monitoring with server-sent events and WebSocket integration
+- **Multi-Agent Patterns**: Standardized agent discovery, load balancing, and conflict resolution frameworks
+- **Breaking Changes**: Checkpoint API updates requiring langchain-core 0.3+ for streaming features
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\langgraph-orchestrator_knowledge.json`
 - **Usage**: Reference this knowledge base for the latest orchestration patterns, state management techniques, and tool integration best practices. Always consult the performance benchmarks and reliability metrics when designing complex pipeline workflows
 
 ## Key Implementation Components

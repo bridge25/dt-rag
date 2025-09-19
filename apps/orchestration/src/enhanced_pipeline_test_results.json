@@ -1,0 +1,270 @@
+[
+  {
+    "scenario": "단순 검색 쿼리",
+    "query": "AI RAG 시스템이란?",
+    "execution_time": 24.981662273406982,
+    "response": {
+      "answer": "AI RAG 시스템, 즉 Retrieval-Augmented Generation 시스템은 인공지능 기술의 한 분야로, 대언어 모델의 성능을 향상시키는 기술입니다. 이 시스템은 기계가 인간의 지능을 모방하도록 돕는 인공지능(AI)의 일부로 볼 수 있습니다. 자세한 내용은 외부 API를 통해 제공되는 관련 정보를 참조하시면 좋을 것 같습니다.\n\n(이 답변은 3개의 관련 문서를 참고하여 작성되었습니다.)\n\n✓ 다각도 검증 완료\n\n📚 출처:\n1. Internal Knowledge - rag - internal://knowledge/rag\n2. Internal Knowledge - ai - internal://knowledge/ai\n3. External API Result - https://external-api.example.com/result\n\n🔍 검색 정보: 1.8.1 버전 기준",
+      "confidence": 0.8,
+      "intent": "general_query",
+      "sources_count": 3,
+      "retrieved_count": 3,
+      "debate_activated": true,
+      "step_timings": {
+        "step1_intent": 2.2411346435546875e-05,
+        "step2_retrieve": 16.646754503250122,
+        "step3_plan": 8.630752563476562e-05,
+        "step4_tools_debate": 3.273939371109009,
+        "step5_compose": 5.058061838150024,
+        "step6_cite": 4.9114227294921875e-05,
+        "step7_respond": 2.956390380859375e-05
+      },
+      "cost": 0.601,
+      "latency": 24.980629920959473
+    },
+    "analysis": {
+      "intent_correct": false,
+      "debate_correct": false,
+      "has_sources": true,
+      "quality_indicators": {
+        "confidence_adequate": true,
+        "answer_length_adequate": true,
+        "processing_time_acceptable": false,
+        "cost_reasonable": true
+      },
+      "step_performance": {
+        "step1_intent": {
+          "time_seconds": 2.2411346435546875e-05,
+          "acceptable": true
+        },
+        "step2_retrieve": {
+          "time_seconds": 16.646754503250122,
+          "acceptable": false
+        },
+        "step3_plan": {
+          "time_seconds": 8.630752563476562e-05,
+          "acceptable": true
+        },
+        "step4_tools_debate": {
+          "time_seconds": 3.273939371109009,
+          "acceptable": false
+        },
+        "step5_compose": {
+          "time_seconds": 5.058061838150024,
+          "acceptable": false
+        },
+        "step6_cite": {
+          "time_seconds": 4.9114227294921875e-05,
+          "acceptable": true
+        },
+        "step7_respond": {
+          "time_seconds": 2.956390380859375e-05,
+          "acceptable": true
+        }
+      },
+      "tools_analysis": {}
+    },
+    "success": true
+  },
+  {
+    "scenario": "복잡한 설명 요청",
+    "query": "AI와 머신러닝의 차이점을 비교하고 각각의 장단점을 설명해주세요",
+    "execution_time": 27.663854122161865,
+    "response": {
+      "answer": "인공지능(AI)은 기계가 인간의 지능을 모방하도록 하는 기술로, 문제 해결, 학습, 기억 등의 능력을 포함합니다. AI의 장점은 복잡한 문제를 빠르게 해결하고, 대량의 데이터를 처리하는 능력이 있습니다. 단점은 기술적인 한계와 윤리적인 문제가 있을 수 있습니다.\n\n반면, 머신러닝은 AI의 한 분야로, 기계가 데이터를 통해 학습하고 예측하는 능력을 갖추게 하는 기술입니다. 머신러닝의 장점은 데이터를 통해 지속적으로 학습하고 개선할 수 있다는 점입니다. 단점은 학습에 필요한 대량의 데이터와 정확한 데이터가 필요하다는 점입니다.\n\n(이 답변은 2개의 관련 문서를 참고하여 작성되었습니다.)\n\n✓ 다각도 검증 완료\n\n📚 출처:\n1. Internal Knowledge - ai - internal://knowledge/ai\n2. External API Result - https://external-api.example.com/result\n\n🔍 검색 정보: 1.8.1 버전 기준",
+      "confidence": 0.8,
+      "intent": "explain",
+      "sources_count": 2,
+      "retrieved_count": 2,
+      "debate_activated": true,
+      "step_timings": {
+        "step1_intent": 2.09808349609375e-05,
+        "step2_retrieve": 16.63171672821045,
+        "step3_plan": 0.00012135505676269531,
+        "step4_tools_debate": 0.27158665657043457,
+        "step5_compose": 10.757733821868896,
+        "step6_cite": 4.649162292480469e-05,
+        "step7_respond": 3.2901763916015625e-05
+      },
+      "cost": 0.633,
+      "latency": 27.66287636756897
+    },
+    "analysis": {
+      "intent_correct": true,
+      "debate_correct": true,
+      "has_sources": true,
+      "quality_indicators": {
+        "confidence_adequate": true,
+        "answer_length_adequate": true,
+        "processing_time_acceptable": false,
+        "cost_reasonable": true
+      },
+      "step_performance": {
+        "step1_intent": {
+          "time_seconds": 2.09808349609375e-05,
+          "acceptable": true
+        },
+        "step2_retrieve": {
+          "time_seconds": 16.63171672821045,
+          "acceptable": false
+        },
+        "step3_plan": {
+          "time_seconds": 0.00012135505676269531,
+          "acceptable": true
+        },
+        "step4_tools_debate": {
+          "time_seconds": 0.27158665657043457,
+          "acceptable": true
+        },
+        "step5_compose": {
+          "time_seconds": 10.757733821868896,
+          "acceptable": false
+        },
+        "step6_cite": {
+          "time_seconds": 4.649162292480469e-05,
+          "acceptable": true
+        },
+        "step7_respond": {
+          "time_seconds": 3.2901763916015625e-05,
+          "acceptable": true
+        }
+      },
+      "tools_analysis": {}
+    },
+    "success": true
+  },
+  {
+    "scenario": "낮은 신뢰도 시나리오",
+    "query": "asdf qwerty zxcv 이상한 단어들",
+    "execution_time": 22.294482946395874,
+    "response": {
+      "answer": "\"asdf qwerty zxcv\"는 키보드의 일부 키 배열을 나타내는 단어들입니다. \"asdf\"와 \"qwerty\"는 키보드의 왼쪽 중앙 부분에 위치한 문자들을, \"zxcv\"는 왼쪽 하단 부분에 위치한 문자들을 나타냅니다. 이들은 특별한 의미를 가진 단어가 아니라, 키보드를 배우거나 타이핑 연습을 할 때 자주 사용되는 단어들입니다.\n\n(이 답변은 1개의 관련 문서를 참고하여 작성되었습니다.)\n\n✓ 다각도 검증 완료\n\n📚 출처:\n1. External API Result - https://external-api.example.com/result\n\n🔍 검색 정보: 1.8.1 버전 기준",
+      "confidence": 0.7,
+      "intent": "general_query",
+      "sources_count": 1,
+      "retrieved_count": 1,
+      "debate_activated": true,
+      "step_timings": {
+        "step1_intent": 1.7881393432617188e-05,
+        "step2_retrieve": 16.410382509231567,
+        "step3_plan": 0.00011229515075683594,
+        "step4_tools_debate": 0.27284765243530273,
+        "step5_compose": 5.608170986175537,
+        "step6_cite": 6.866455078125e-05,
+        "step7_respond": 4.935264587402344e-05
+      },
+      "cost": 0.41100000000000003,
+      "latency": 22.29369592666626
+    },
+    "analysis": {
+      "intent_correct": true,
+      "debate_correct": true,
+      "has_sources": false,
+      "quality_indicators": {
+        "confidence_adequate": true,
+        "answer_length_adequate": true,
+        "processing_time_acceptable": false,
+        "cost_reasonable": true
+      },
+      "step_performance": {
+        "step1_intent": {
+          "time_seconds": 1.7881393432617188e-05,
+          "acceptable": true
+        },
+        "step2_retrieve": {
+          "time_seconds": 16.410382509231567,
+          "acceptable": false
+        },
+        "step3_plan": {
+          "time_seconds": 0.00011229515075683594,
+          "acceptable": true
+        },
+        "step4_tools_debate": {
+          "time_seconds": 0.27284765243530273,
+          "acceptable": true
+        },
+        "step5_compose": {
+          "time_seconds": 5.608170986175537,
+          "acceptable": false
+        },
+        "step6_cite": {
+          "time_seconds": 6.866455078125e-05,
+          "acceptable": true
+        },
+        "step7_respond": {
+          "time_seconds": 4.935264587402344e-05,
+          "acceptable": true
+        }
+      },
+      "tools_analysis": {}
+    },
+    "success": true
+  },
+  {
+    "scenario": "기술적 분석 요청",
+    "query": "RAG 시스템의 아키텍처와 구현 방법론을 분석하고 최적화 전략을 제시해주세요",
+    "execution_time": 17.798027753829956,
+    "response": {
+      "answer": "'RAG 시스템의 아키텍처와 구현 방법론을 분석하고 최적화 전략을 제시해주세요'에 대한 종합 분석:\n\n검색된 문서들을 종합하면:\n1. 직접 키워드: rag, 시스템의, 아키텍처와, 방법론을, 분석하고...\n2. 의미 그룹: 기술 관련...\n3. 도메인 컨텍스트: technology...\n\n\n✓ 다각도 검증 완료\n\n📚 출처:\n1. Context7 Level 1 - Direct - fallback://context7/level1\n2. Context7 Level 2 - Semantic - fallback://context7/level2\n3. Context7 Level 3 - Domain - fallback://context7/level3\n4. Sequential Step 1 - Analysis - fallback://sequential/step1\n5. Sequential Step 2 - Gathering - fallback://sequential/step2\n\n🔍 검색 정보: 1.8.1 버전 기준",
+      "confidence": 0.8,
+      "intent": "general_query",
+      "sources_count": 5,
+      "retrieved_count": 8,
+      "debate_activated": true,
+      "step_timings": {
+        "step1_intent": 2.765655517578125e-05,
+        "step2_retrieve": 16.503498315811157,
+        "step3_plan": 4.57763671875e-05,
+        "step4_tools_debate": 0.8243882656097412,
+        "step5_compose": 0.46828293800354004,
+        "step6_cite": 5.173683166503906e-05,
+        "step7_respond": 2.6941299438476562e-05
+      },
+      "cost": 0.899,
+      "latency": 17.79750370979309
+    },
+    "analysis": {
+      "intent_correct": false,
+      "debate_correct": true,
+      "has_sources": true,
+      "quality_indicators": {
+        "confidence_adequate": true,
+        "answer_length_adequate": true,
+        "processing_time_acceptable": false,
+        "cost_reasonable": true
+      },
+      "step_performance": {
+        "step1_intent": {
+          "time_seconds": 2.765655517578125e-05,
+          "acceptable": true
+        },
+        "step2_retrieve": {
+          "time_seconds": 16.503498315811157,
+          "acceptable": false
+        },
+        "step3_plan": {
+          "time_seconds": 4.57763671875e-05,
+          "acceptable": true
+        },
+        "step4_tools_debate": {
+          "time_seconds": 0.8243882656097412,
+          "acceptable": true
+        },
+        "step5_compose": {
+          "time_seconds": 0.46828293800354004,
+          "acceptable": true
+        },
+        "step6_cite": {
+          "time_seconds": 5.173683166503906e-05,
+          "acceptable": true
+        },
+        "step7_respond": {
+          "time_seconds": 2.6941299438476562e-05,
+          "acceptable": true
+        }
+      },
+      "tools_analysis": {}
+    },
+    "success": true
+  }
+]

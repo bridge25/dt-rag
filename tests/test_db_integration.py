@@ -227,7 +227,6 @@ class TestDatabaseIntegration:
                 # 5. 인덱스 타입 검증 (타입별로)
                 gist_indexes = [idx for idx in existing_indexes.keys() if 'span_gist' in idx]
                 gin_indexes = [idx for idx in existing_indexes.keys() if any(x in idx for x in ['taxonomy', 'bm25'])]
-
                 assert len(gist_indexes) >= 1, "At least one GiST index should exist for span ranges"
                 assert len(gin_indexes) >= 3, "At least 3 GIN indexes should exist for taxonomy and BM25"
 

@@ -96,8 +96,64 @@ You are working on the Dynamic Taxonomy RAG v1.8.1 project, which aims to:
 - **Scripts**: `/scripts/taxonomy/` - Migration and rollback tools
 
 ## Knowledge Base
-- **Primary Knowledge**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\taxonomy-architect_knowledge.json`
-- **Content**: Pre-collected domain expertise including DAG implementation patterns, semantic versioning strategies, migration system architectures, graph algorithm optimizations, and database schema design for hierarchical data
+
+### Essential Knowledge (Auto-Loaded from knowledge-base)
+
+#### Dynamic Taxonomy Generation (2025)
+- **NLP-Based Framework**: Novel system using Named Entity Recognition (NER) and Relation Extraction (RE) for identifying and predicting future skills
+- **Real-Time Updates**: Dynamic taxonomy framework leveraging NLP techniques to address evolving requirements
+- **Adaptive Structure**: Framework supports real-time taxonomy updates and evolution based on data changes
+- **Future Skills Identification**: Automated taxonomy generation for emerging categories and classifications
+
+#### Hierarchical Multi-Agent Systems Design
+- **Hybrid Coordination**: 2025 studies find hybridization of hierarchical and decentralized mechanisms crucial for scalability
+- **Scalability vs Adaptability**: Balanced approach combining hierarchical structure with decentralized flexibility
+- **Design Patterns**: Comprehensive taxonomy of coordination mechanisms for multi-level hierarchical systems
+- **Recent Trends**: Renewed interest in hybrid approaches that combine different coordination strategies
+
+#### NetworkX DAG Implementation (2025)
+- **Directed Acyclic Graphs**: Comprehensive algorithms for topological sorting, path finding, transitive operations
+- **Graph Analysis**: Extensive NetworkX support for DAG-specific operations and analysis tasks
+- **Gold Standard**: NetworkX remains the premier Python library for DAG implementations
+- **Data Science Integration**: Critical data structure for Apache Airflow and Apache Spark workflows
+
+#### Level-Wise Entropy Adjustment
+- **Hierarchical Classification**: Enhanced tree-based models using level-wise entropy adjustment for taxonomic structure
+- **Penalized Information Gain (PIG)**: Novel metric extending traditional criterion with level-wise entropy adjustments
+- **Taxonomic Structure Respect**: Ensures model respects hierarchical structure during training and inference
+- **Performance Optimization**: Improved classification accuracy through entropy calculation at multiple hierarchical levels
+
+#### Cybersecurity Taxonomy Generation
+- **Manual vs Dynamic**: Comprehensive survey of manual and dynamic approaches for cybersecurity taxonomy generation
+- **Hierarchical Structure**: Analysis of categories, subcategories, and relationships between cybersecurity threats
+- **Classification Approaches**: Each focusing on different characteristics and goals for taxonomy construction
+- **Threat Analysis**: Systematic categorization for improved cybersecurity threat understanding
+
+#### Graph Algorithms and DAG Operations
+- **Cycle Detection**: Advanced algorithms for ensuring acyclic property in directed graphs
+- **Topological Sorting**: Efficient algorithms for ordered traversal of DAG structures
+- **Path Analysis**: Shortest paths, reachability analysis, and ancestor queries
+- **Performance Optimization**: Efficient graph representation and traversal algorithms
+
+#### Version Control for Taxonomies
+- **Semantic Versioning**: MAJOR.MINOR.PATCH versioning adapted for taxonomy evolution
+- **Git-like Operations**: Branch, merge, rebase operations for collaborative taxonomy editing
+- **Conflict Resolution**: Automated and manual strategies for resolving taxonomy conflicts
+- **Change Attribution**: Author tracking, timestamp management, and change history
+
+#### Migration System Architecture
+- **Automated Migrations**: Forward and backward compatibility with zero-downtime deployment
+- **Rollback Strategies**: Point-in-time recovery, snapshot restoration within 15-minute TTR
+- **Data Consistency**: Bulk operations with progress tracking and comprehensive error handling
+- **Validation Framework**: Pre-migration checks and post-migration verification procedures
+
+#### Database Schema Patterns for Hierarchical Data
+- **Multiple Representations**: Adjacency list, nested sets, path enumeration, closure table patterns
+- **Temporal Data Support**: Valid time, transaction time, bi-temporal tables for version tracking
+- **Graph Storage Optimization**: Edge tables, node attributes, path materialization strategies
+- **Performance Indexing**: B-tree for paths, GIN for arrays, composite indexes for complex queries
+
+- **Primary Knowledge Source**: `C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\taxonomy-architect_knowledge.json`
 - **Usage**: Reference this knowledge base for the latest graph theory applications, versioning methodologies, and taxonomy management techniques. Always consult the performance benchmarks and integrity validation patterns when designing taxonomy systems
 
 ## Key Data Structures
