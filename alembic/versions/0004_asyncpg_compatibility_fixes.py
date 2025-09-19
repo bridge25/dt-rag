@@ -25,7 +25,20 @@ def upgrade() -> None:
 
     # Check if we're running on PostgreSQL
     bind = op.get_bind()
-    if 'postgresql' in str(bind.url):
+    # Safely get database URL - handle both Connection and Engine objects
+    try:
+        if hasattr(bind, 'engine'):
+            database_url = str(bind.engine.url)
+        elif hasattr(bind, 'url'):
+            database_url = str(bind.url)
+        else:
+            # For newer SQLAlchemy versions, get URL from dialect
+            database_url = str(bind.get_bind().url)
+    except AttributeError:
+        # Fallback: check dialect name directly
+        database_url = bind.dialect.name
+
+    if 'postgresql' in database_url:
         print("Applying PostgreSQL-specific fixes...")
 
         # 1. Ensure doc_metadata column exists in taxonomy_nodes
@@ -106,7 +119,20 @@ def downgrade() -> None:
     """Remove asyncpg compatibility fixes"""
 
     bind = op.get_bind()
-    if 'postgresql' in str(bind.url):
+    # Safely get database URL - handle both Connection and Engine objects
+    try:
+        if hasattr(bind, 'engine'):
+            database_url = str(bind.engine.url)
+        elif hasattr(bind, 'url'):
+            database_url = str(bind.url)
+        else:
+            # For newer SQLAlchemy versions, get URL from dialect
+            database_url = str(bind.get_bind().url)
+    except AttributeError:
+        # Fallback: check dialect name directly
+        database_url = bind.dialect.name
+
+    if 'postgresql' in database_url:
         # Remove PostgreSQL-specific changes
         op.execute('DROP FUNCTION IF EXISTS safe_cosine_distance(vector, vector)')
         op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_hnsw')
