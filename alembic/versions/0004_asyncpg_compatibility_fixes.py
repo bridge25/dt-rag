@@ -54,34 +54,74 @@ def upgrade() -> None:
 
         # 2. Add better vector indexes for asyncpg compatibility
         try:
-            # Drop old vector index if it exists
-            op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_cosine')
-            op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_ivf')
+            # Check if pgvector extension is available first
+            result = bind.execute(sa.text("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')"))
+            has_pgvector = result.fetchone()[0]
 
-            # Create HNSW index for better performance with asyncpg
-            op.execute('''
-                CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw
-                ON embeddings USING hnsw (vec vector_cosine_ops)
-                WITH (m = 16, ef_construction = 64)
-            ''')
-            print("Created HNSW vector index for better asyncpg compatibility")
+            if has_pgvector:
+                # Drop old vector indexes if they exist (with separate try-catch)
+                try:
+                    op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_cosine')
+                except Exception:
+                    pass  # Index might not exist
+
+                try:
+                    op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_ivf')
+                except Exception:
+                    pass  # Index might not exist
+
+                # Create HNSW index for better performance with asyncpg
+                try:
+                    # Check if hnsw access method is available
+                    result = bind.execute(sa.text("SELECT EXISTS (SELECT 1 FROM pg_am WHERE amname = 'hnsw')"))
+                    has_hnsw = result.fetchone()[0]
+
+                    if has_hnsw:
+                        op.execute('''
+                            CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw
+                            ON embeddings USING hnsw (vec vector_cosine_ops)
+                            WITH (m = 16, ef_construction = 64)
+                        ''')
+                        print("Created HNSW vector index for better asyncpg compatibility")
+                    else:
+                        # Fallback to btree index with HNSW name for consistency
+                        op.execute('''
+                            CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw
+                            ON embeddings USING btree (vec)
+                        ''')
+                        print("Created btree vector index with HNSW name (HNSW not available)")
+                except Exception as e:
+                    print(f"HNSW index creation failed: {e}")
+            else:
+                print("pgvector extension not available, skipping vector index creation")
 
         except Exception as e:
-            print(f"Vector index creation failed (expected if pgvector not installed): {e}")
+            print(f"Vector index migration failed: {e}")
 
-        # 3. Create function for safe vector operations
-        op.execute('''
-            CREATE OR REPLACE FUNCTION safe_cosine_distance(vec1 vector, vec2 vector)
-            RETURNS float8
-            LANGUAGE sql
-            IMMUTABLE STRICT
-            AS $$
-                SELECT CASE
-                    WHEN vec1 IS NULL OR vec2 IS NULL THEN 1.0
-                    ELSE 1.0 - (vec1 <#> vec2)
-                END;
-            $$;
-        ''')
+        # 3. Create function for safe vector operations (only if pgvector available)
+        try:
+            # Check if pgvector extension is available
+            result = bind.execute(sa.text("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector')"))
+            has_pgvector = result.fetchone()[0]
+
+            if has_pgvector:
+                op.execute('''
+                    CREATE OR REPLACE FUNCTION safe_cosine_distance(vec1 vector, vec2 vector)
+                    RETURNS float8
+                    LANGUAGE sql
+                    IMMUTABLE STRICT
+                    AS $$
+                        SELECT CASE
+                            WHEN vec1 IS NULL OR vec2 IS NULL THEN 1.0
+                            ELSE 1.0 - (vec1 <#> vec2)
+                        END;
+                    $$;
+                ''')
+                print("Created safe_cosine_distance function for vector operations")
+            else:
+                print("pgvector extension not available, skipping vector function creation")
+        except Exception as e:
+            print(f"Vector function creation failed: {e}")
 
         # 4. Add indexes for better query performance
         op.execute('CREATE INDEX IF NOT EXISTS idx_chunks_doc_id_text ON chunks (doc_id, text)')
@@ -134,11 +174,22 @@ def downgrade() -> None:
 
     if 'postgresql' in database_url:
         # Remove PostgreSQL-specific changes
-        op.execute('DROP FUNCTION IF EXISTS safe_cosine_distance(vector, vector)')
-        op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_hnsw')
-        op.execute('DROP INDEX IF EXISTS idx_chunks_doc_id_text')
-        op.execute('DROP INDEX IF EXISTS idx_doc_taxonomy_doc_path')
-        op.execute('DROP INDEX IF EXISTS idx_embeddings_chunk_model')
+        try:
+            op.execute('DROP FUNCTION IF EXISTS safe_cosine_distance(vector, vector)')
+        except Exception:
+            pass
+
+        try:
+            op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_hnsw')
+        except Exception:
+            pass
+
+        try:
+            op.execute('DROP INDEX IF EXISTS idx_chunks_doc_id_text')
+            op.execute('DROP INDEX IF EXISTS idx_doc_taxonomy_doc_path')
+            op.execute('DROP INDEX IF EXISTS idx_embeddings_chunk_model')
+        except Exception:
+            pass
 
         print("Removed PostgreSQL asyncpg compatibility fixes")
 
