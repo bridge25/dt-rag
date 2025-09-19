@@ -100,10 +100,17 @@ class AuthService:
         self._sessions: Dict[str, Session] = {}
         self._revoked_tokens: Set[str] = set()
 
-        # Initialize default users
-        asyncio.create_task(self._initialize_default_users())
+        # Initialize default users (will be called during startup)
+        self._initialized = False
 
         logger.info("AuthService initialized with secure defaults")
+
+    async def initialize(self):
+        """Initialize default users - call this during application startup"""
+        if not self._initialized:
+            await self._initialize_default_users()
+            self._initialized = True
+            logger.info("AuthService fully initialized with default users")
 
     async def register_user(
         self,
