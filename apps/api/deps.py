@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import time
 import logging
+import math
 from fastapi import Header, HTTPException, Request
 from uuid import uuid4
 from datetime import datetime, timezone
@@ -75,7 +76,7 @@ class APIKeyValidator:
         for count in frequencies.values():
             probability = count / length
             if probability > 0:
-                entropy -= probability * (probability.bit_length() - 1)
+                entropy -= probability * math.log2(probability)
 
         return entropy * length
 
