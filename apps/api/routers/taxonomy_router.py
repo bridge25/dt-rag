@@ -17,12 +17,12 @@ from fastapi import APIRouter, HTTPException, Query, Path, Depends, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, validator
 
-# Import common schemas
-import sys
-from pathlib import Path as PathLib
-sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
-
-from packages.common_schemas.common_schemas.models import TaxonomyNode
+# Import local taxonomy models (replacement for missing common_schemas)
+try:
+    from packages.common_schemas.common_schemas.models import TaxonomyNode
+except ImportError:
+    # Fallback to local models
+    from ..models.taxonomy_models import TaxonomyNode, TaxonomyVersion, TaxonomyStats, TaxonomyTreeResponse
 
 # Configure logging
 logger = logging.getLogger(__name__)

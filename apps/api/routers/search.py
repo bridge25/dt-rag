@@ -4,7 +4,7 @@ Document Search 엔드포인트
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from deps import verify_api_key, generate_request_id, get_taxonomy_version
@@ -70,6 +70,9 @@ class SearchResponse(BaseModel):
     total_candidates: Optional[int] = Field(None, description="전체 후보 수")
     sources_count: Optional[int] = Field(None, description="소스 문서 수")
     taxonomy_version: str = "1.8.1"
+
+class CacheWarmUpRequest(BaseModel):
+    common_queries: List[str] = Field(..., description="주요 쿼리 목록")
 
 @router.post("/search", response_model=SearchResponse)
 async def search_documents(
@@ -466,7 +469,7 @@ async def get_search_analytics(api_key: str = Depends(verify_api_key)):
 
 @router.post("/admin/cache/warm-up")
 async def warm_up_cache(
-    common_queries: List[str] = Field(..., description="주요 쿼리 목록"),
+    request: CacheWarmUpRequest,
     api_key: str = Depends(verify_api_key)
 ):
     """
@@ -474,7 +477,7 @@ async def warm_up_cache(
     """
     try:
         cache = await get_search_cache()
-        await cache.warm_up(common_queries)
+        await cache.warm_up(request.common_queries)
 
         # 검색 엔진 웜업
         if HYBRID_ENGINE_AVAILABLE:
@@ -483,7 +486,7 @@ async def warm_up_cache(
                 await search_engine.warm_up(session)
 
         return {
-            "message": f"Cache warmed up with {len(common_queries)} queries",
+            "message": f"Cache warmed up with {len(request.common_queries)} queries",
             "status": "success",
             "timestamp": time.time()
         }
@@ -497,7 +500,7 @@ async def warm_up_cache(
 
 @router.delete("/admin/cache/clear")
 async def clear_search_cache(
-    pattern: Optional[str] = Field(None, description="삭제할 패턴 (비어있으면 전체)"),
+    pattern: Optional[str] = Query(None, description="삭제할 패턴 (비어있으면 전체)"),
     api_key: str = Depends(verify_api_key)
 ):
     """

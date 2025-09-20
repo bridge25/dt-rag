@@ -17,14 +17,46 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status, Background
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-# Import common schemas
+# Import common schemas with fallback
 import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import (
-    ClassifyRequest, ClassifyResponse, TaxonomyNode
-)
+try:
+    from packages.common_schemas.common_schemas.models import (
+        ClassifyRequest, ClassifyResponse, TaxonomyNode
+    )
+except ImportError:
+    # Fallback to local models
+    try:
+        from apps.api.models.common_models import ClassificationRequest as ClassifyRequest
+        from apps.api.models.common_models import ClassificationResult as ClassifyResponse
+    except ImportError:
+        # Define minimal inline models if needed
+        from pydantic import BaseModel, Field
+        from typing import List, Optional
+
+        class ClassifyRequest(BaseModel):
+            """Request for document classification"""
+            text: str = Field(..., description="Text to classify")
+            chunk_id: Optional[str] = None
+            taxonomy_version: Optional[str] = None
+
+        class TaxonomyNode(BaseModel):
+            """Taxonomy node model"""
+            node_id: str
+            label: str
+            canonical_path: List[str]
+            version: str
+            confidence: float
+
+        class ClassifyResponse(BaseModel):
+            """Response for document classification"""
+            canonical: List[str]
+            candidates: List[TaxonomyNode]
+            hitl: bool = False
+            confidence: float
+            reasoning: Optional[List[str]] = None
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -60,7 +92,7 @@ class HITLTask(BaseModel):
     text: str
     suggested_classification: List[str]
     confidence: float
-    alternatives: List[TaxonomyNode]
+    alternatives: List["TaxonomyNode"]
     created_at: datetime
     priority: str = "normal"
 
@@ -380,7 +412,7 @@ async def get_classification_analytics(
 
 @classification_router.get("/confidence/{chunk_id}")
 async def get_classification_confidence(
-    chunk_id: str = Query(..., description="Document chunk ID"),
+    chunk_id: str,
     service: ClassificationService = Depends(get_classification_service)
 ):
     """

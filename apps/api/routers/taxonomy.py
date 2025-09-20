@@ -11,11 +11,11 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 # Import existing dependencies
-from ..deps import verify_api_key
-from ..database import TaxonomyDAO
+from deps import verify_api_key
+from database import TaxonomyDAO
 
 # Import new DAG system
-from ..taxonomy_dag import (
+from taxonomy_dag import (
     taxonomy_dag_manager,
     initialize_taxonomy_system,
     validate_taxonomy_dag,

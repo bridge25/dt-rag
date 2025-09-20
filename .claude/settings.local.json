@@ -79,7 +79,18 @@
       "Bash(alembic upgrade:*)",
       "Bash(alembic revision:*)",
       "Bash(export DATABASE_URL=\"sqlite+aiosqlite:///./dt_rag_test.db\")",
-      "Bash(dos2unix:*)"
+      "Bash(dos2unix:*)",
+      "Bash(TEST_DATABASE_URL=\"sqlite:///./test.db\" python3 -m pytest tests/test_schema.py::TestDatabaseSchema::test_required_indexes_exist -v)",
+      "Bash(./bin/gh.exe:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(alembic current:*)",
+      "Bash(export DATABASE_URL=\"sqlite:///./dt_rag_test.db\")",
+      "Bash(redis-cli:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(/c/Users/a/AppData/Local/Programs/Python/Python313/python.exe --version)",
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/simple_test.py)",
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/test_python_hook.py)"
     ],
     "deny": [],
     "ask": []
@@ -91,7 +102,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/knowledge_injector.py",
+            "command": "PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/knowledge_injector.py",
             "timeout": 10
           }
         ]
