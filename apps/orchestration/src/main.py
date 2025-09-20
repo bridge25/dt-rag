@@ -291,7 +291,11 @@ def create_category_filter(paths):
 from enum import Enum
 from uuid import uuid4
 from datetime import datetime
-import numpy as np
+try:
+    import numpy as np
+except ImportError:
+    # CI 환경에서 numpy가 없는 경우 None으로 설정
+    np = None
 from pathlib import Path
 import time
 import sqlite3
