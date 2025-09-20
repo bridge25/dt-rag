@@ -49,7 +49,12 @@ jobs:
           pip install fastapi uvicorn pydantic
           pip install httpx asyncio-compat
           pip install sqlalchemy sqlite3-utils
-          pip install numpy pathlib-type
+          pip install numpy pathlib-type pyyaml
+
+          # Install AI/ML dependencies for intent classification
+          pip install sentence-transformers scikit-learn
+          pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+          pip install transformers
 
           # Install requirements if exists
           if [ -f requirements.txt ]; then
