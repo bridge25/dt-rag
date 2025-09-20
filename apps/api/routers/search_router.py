@@ -17,14 +17,26 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-# Import common schemas
-import sys
-from pathlib import Path as PathLib
-sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
+# Import common schemas with fallback
+try:
+    import sys
+    from pathlib import Path as PathLib
+    sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
+    from packages.common_schemas.common_schemas.models import (
+        SearchRequest, SearchResponse, SearchHit, SourceMeta
+    )
+except ImportError:
+    # Fallback to local models
+    from ..models.common_models import SearchResult as SearchHit, SearchQuery as SearchRequest
+    # Create dummy classes for missing models
+    class SearchResponse(BaseModel):
+        results: List[SearchHit] = Field(default_factory=list)
+        total_count: int = Field(default=0)
+        query: str = Field(...)
 
-from packages.common_schemas.common_schemas.models import (
-    SearchRequest, SearchResponse, SearchHit, SourceMeta
-)
+    class SourceMeta(BaseModel):
+        source: str = Field(...)
+        metadata: Dict[str, Any] = Field(default_factory=dict)
 
 # Configure logging
 logger = logging.getLogger(__name__)

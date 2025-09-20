@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 
-from .database import (
+from database import (
     TaxonomyNode, TaxonomyEdge, TaxonomyMigration,
     db_manager, async_session
 )

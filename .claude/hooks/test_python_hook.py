@@ -13,7 +13,7 @@ def test_python_hook():
     print()
 
     # Test 1: RAG Evaluation Specialist with RAGAS keywords
-    print("🔧 Test 1: RAG Evaluation with RAGAS keywords")
+    print("[TEST] Test 1: RAG Evaluation with RAGAS keywords")
     test_input_1 = {
         "tool_name": "Task",
         "tool_input": {
@@ -37,7 +37,7 @@ def test_python_hook():
     print()
 
     # Test 2: Database Architect with PostgreSQL keywords
-    print("🔧 Test 2: Database optimization with PostgreSQL/pgvector")
+    print("[TEST] Test 2: Database optimization with PostgreSQL/pgvector")
     test_input_2 = {
         "tool_name": "Task",
         "tool_input": {
@@ -55,7 +55,7 @@ def test_python_hook():
     print()
 
     # Test 3: Hybrid Search with BM25 + vector keywords
-    print("🔧 Test 3: Hybrid search with BM25 and vector similarity")
+    print("[TEST] Test 3: Hybrid search with BM25 and vector similarity")
     test_input_3 = {
         "tool_name": "Task",
         "tool_input": {
@@ -73,7 +73,7 @@ def test_python_hook():
     print()
 
     # Test 4: Non-Task tool (should skip)
-    print("🔧 Test 4: Non-Task tool (should skip)")
+    print("[TEST] Test 4: Non-Task tool (should skip)")
     test_input_4 = {
         "tool_name": "Read",
         "tool_input": {
@@ -89,7 +89,7 @@ def test_python_hook():
     print()
 
     # Test 5: Task without subagent_type (should skip)
-    print("🔧 Test 5: Task without subagent_type (should skip)")
+    print("[TEST] Test 5: Task without subagent_type (should skip)")
     test_input_5 = {
         "tool_name": "Task",
         "tool_input": {
@@ -105,7 +105,7 @@ def test_python_hook():
     print()
 
     # Validation checks
-    print("🔍 Validation Results:")
+    print("[VALIDATION] Validation Results:")
 
     # Check if real knowledge was injected
     checks = [
@@ -117,7 +117,7 @@ def test_python_hook():
     ]
 
     for description, passed in checks:
-        status = "✅ PASS" if passed else "❌ FAIL"
+        status = "[PASS]" if passed else "[FAIL]"
         print(f"{status} {description}")
 
     # Summary
@@ -125,12 +125,12 @@ def test_python_hook():
     total_count = len(checks)
 
     print()
-    print(f"🎯 Summary: {passed_count}/{total_count} tests passed")
+    print(f"[SUMMARY] Summary: {passed_count}/{total_count} tests passed")
 
     if passed_count == total_count:
-        print("🎉 All tests passed! Python hook is working correctly.")
+        print("[SUCCESS] All tests passed! Python hook is working correctly.")
     else:
-        print("⚠️ Some tests failed. Check the knowledge base files and hook logic.")
+        print("[WARNING] Some tests failed. Check the knowledge base files and hook logic.")
 
     return passed_count == total_count
 

@@ -303,6 +303,11 @@ class KnowledgeInjector:
                 self.log("No subagent_type in Task input")
                 return {"continue": True}
 
+            # Skip gemini-assistant (doesn't need knowledge injection)
+            if subagent_type == 'gemini-assistant':
+                self.log(f"Skipping gemini-assistant - no knowledge injection needed")
+                return {"continue": True, "suppressOutput": True}
+
             # Get task prompt for context
             task_prompt = task_input.get('prompt', '')
 

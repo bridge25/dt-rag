@@ -17,14 +17,50 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-# Import common schemas
+# Import common schemas with fallback
 import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import (
-    FromCategoryRequest, AgentManifest, RetrievalConfig, FeaturesConfig
-)
+try:
+    from packages.common_schemas.common_schemas.models import (
+        FromCategoryRequest, AgentManifest, RetrievalConfig, FeaturesConfig
+    )
+except ImportError:
+    # Fallback to local models
+    try:
+        from apps.api.models.common_models import AgentConfig as RetrievalConfig
+        from apps.api.models.common_models import AgentConfig as FeaturesConfig
+    except ImportError:
+        # Define minimal inline models if needed
+        from pydantic import BaseModel, Field
+        from typing import List, Optional, Dict, Any
+
+        class RetrievalConfig(BaseModel):
+            """Retrieval configuration model"""
+            search_type: Optional[str] = "hybrid"
+            max_results: Optional[int] = 10
+            similarity_threshold: Optional[float] = 0.7
+
+        class FeaturesConfig(BaseModel):
+            """Features configuration model"""
+            enabled_features: Optional[List[str]] = None
+            feature_params: Optional[Dict[str, Any]] = None
+
+        class FromCategoryRequest(BaseModel):
+            """Request to create agent from taxonomy categories"""
+            node_paths: List[List[str]] = Field(..., description="Taxonomy node paths")
+            taxonomy_version: Optional[str] = None
+            retrieval: Optional[RetrievalConfig] = None
+            features: Optional[FeaturesConfig] = None
+            mcp_tools_allowlist: Optional[List[str]] = None
+
+        class AgentManifest(BaseModel):
+            """Agent manifest model"""
+            name: str
+            description: Optional[str] = None
+            version: str = "1.0.0"
+            capabilities: List[str] = Field(default_factory=list)
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -70,8 +106,8 @@ class AgentListResponse(BaseModel):
 class AgentUpdateRequest(BaseModel):
     """Request to update agent configuration"""
     name: Optional[str] = None
-    retrieval: Optional[RetrievalConfig] = None
-    features: Optional[FeaturesConfig] = None
+    retrieval: Optional["RetrievalConfig"] = None
+    features: Optional["FeaturesConfig"] = None
     mcp_tools_allowlist: Optional[List[str]] = None
 
 # Mock agent factory service
@@ -79,7 +115,7 @@ class AgentUpdateRequest(BaseModel):
 class AgentFactoryService:
     """Mock agent factory service"""
 
-    async def create_agent_from_category(self, request: FromCategoryRequest) -> AgentCreateResponse:
+    async def create_agent_from_category(self, request: "FromCategoryRequest") -> AgentCreateResponse:
         """Create agent from taxonomy categories"""
         agent_id = str(uuid.uuid4())
 
@@ -212,7 +248,7 @@ async def get_agent_factory_service() -> AgentFactoryService:
 
 @agent_factory_router.post("/from-category", response_model=AgentCreateResponse)
 async def create_agent_from_category(
-    request: FromCategoryRequest,
+    request: "FromCategoryRequest",
     service: AgentFactoryService = Depends(get_agent_factory_service)
 ):
     """

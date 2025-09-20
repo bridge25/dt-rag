@@ -1,0 +1,57 @@
+{
+  "agent_type": "gemini-assistant",
+  "description": "Google Gemini 2.5 Pro 협업 어시스턴트용 지식 베이스",
+  "last_updated": "2025-09-19",
+  "search_results": [
+    {
+      "query": "gemini api usage best practices",
+      "url": "https://ai.google.dev/docs/gemini_api_overview",
+      "title": "Gemini API 사용법 및 모범 사례",
+      "content": "Google Gemini API는 강력한 AI 모델로 코드 분석, 리뷰, 최적화에 탁월합니다. API 키 관리와 사용량 제한을 준수하여 안전하게 사용하세요.",
+      "relevance_score": 0.9,
+      "category": "api_usage",
+      "timestamp": "2025-09-19T23:00:00Z"
+    },
+    {
+      "query": "gemini code review techniques",
+      "url": "https://developers.google.com/ai/gemini",
+      "title": "Gemini를 활용한 효과적인 코드 리뷰",
+      "content": "Gemini는 코드 품질, 보안 취약점, 성능 최적화 기회를 식별하는 데 뛰어납니다. 구체적인 컨텍스트와 함께 요청하면 더 정확한 분석을 제공합니다.",
+      "relevance_score": 0.85,
+      "category": "code_review",
+      "timestamp": "2025-09-19T23:00:00Z"
+    },
+    {
+      "query": "gemini debugging assistance",
+      "url": "https://ai.google.dev/docs/function_calling",
+      "title": "Gemini를 활용한 디버깅 전략",
+      "content": "Gemini는 런타임 오류, 논리적 오류, 성능 문제를 분석하고 해결책을 제시합니다. 오류 메시지와 함께 코드 컨텍스트를 제공하면 효과적입니다.",
+      "relevance_score": 0.8,
+      "category": "debugging",
+      "timestamp": "2025-09-19T23:00:00Z"
+    },
+    {
+      "query": "gemini rate limits free tier",
+      "url": "https://ai.google.dev/pricing",
+      "title": "Gemini API 사용량 제한 및 최적화",
+      "content": "무료 계층에서는 분당 5회, 일일 25회 요청 제한이 있습니다. 효율적인 프롬프트 작성과 적절한 모델 선택으로 사용량을 최적화하세요.",
+      "relevance_score": 0.75,
+      "category": "rate_limits",
+      "timestamp": "2025-09-19T23:00:00Z"
+    },
+    {
+      "query": "gemini vs claude comparison",
+      "url": "https://blog.google.com/technology/ai/google-gemini-ai/",
+      "title": "Gemini와 Claude의 협업 활용법",
+      "content": "Gemini는 코드 분석과 시각적 이해에 강하고, Claude는 추론과 설명에 뛰어납니다. 두 AI를 협업시키면 시너지 효과를 얻을 수 있습니다.",
+      "relevance_score": 0.7,
+      "category": "comparison",
+      "timestamp": "2025-09-19T23:00:00Z"
+    }
+  ],
+  "metadata": {
+    "total_items": 5,
+    "domains": ["api_usage", "code_review", "debugging", "rate_limits", "comparison"],
+    "coverage": "기본적인 Gemini 사용법과 Claude와의 협업 패턴"
+  }
+}

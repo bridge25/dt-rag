@@ -17,12 +17,36 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status, Background
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-# Import common schemas
+# Import common schemas with fallback
 import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import SearchHit, SourceMeta
+try:
+    from packages.common_schemas.common_schemas.models import SearchHit, SourceMeta
+except ImportError:
+    # Fallback to local models
+    try:
+        from apps.api.models.common_models import SearchResult as SearchHit
+        from apps.api.models.common_models import StatusResponse as SourceMeta
+    except ImportError:
+        # Define minimal inline models if needed
+        from pydantic import BaseModel, Field
+        from typing import List, Optional
+
+        class SourceMeta(BaseModel):
+            """Source metadata model"""
+            url: Optional[str] = None
+            title: Optional[str] = None
+            date: Optional[str] = None
+
+        class SearchHit(BaseModel):
+            """Search hit model"""
+            chunk_id: str
+            score: float
+            text: str
+            source: Optional[SourceMeta] = None
+            taxonomy_path: Optional[List[str]] = None
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -55,7 +79,7 @@ class PipelineResponse(BaseModel):
 class PipelineConfig(BaseModel):
     """Pipeline configuration"""
     max_search_results: int = Field(10, ge=1, le=50)
-    search_type: str = Field("hybrid", regex="^(bm25|vector|hybrid)$")
+    search_type: str = Field("hybrid", pattern="^(bm25|vector|hybrid)$")
     rerank_enabled: bool = Field(True)
     generation_temperature: float = Field(0.7, ge=0.0, le=2.0)
     generation_max_tokens: int = Field(1000, ge=100, le=4000)

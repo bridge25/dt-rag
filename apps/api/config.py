@@ -263,28 +263,28 @@ def get_api_config() -> APIConfig:
     if secret_key:
         # Validate the provided secret key strength
         if not _validate_secret_strength(secret_key):
-            if environment == "production":
+            if config.environment == "production":
                 raise ValueError(
                     "Provided SECRET_KEY does not meet security requirements. "
                     "Must be at least 32 characters and not use common/weak values."
                 )
             else:
                 # Log warning in non-production environments but continue
-                print(f"WARNING: Weak SECRET_KEY detected in {environment} environment")
+                print(f"WARNING: Weak SECRET_KEY detected in {config.environment} environment")
 
         config.security.secret_key = secret_key
 
-    elif environment == "production":
+    elif config.environment == "production":
         # Production MUST use environment variable
         raise ValueError(
             "SECRET_KEY environment variable is REQUIRED in production. "
             "Generate a secure secret using: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
         )
 
-    elif environment in ["development", "testing"]:
+    elif config.environment in ["development", "testing"]:
         # Generate secure secret for development/testing if not provided
         config.security.secret_key = _generate_secure_secret()
-        print(f"INFO: Generated secure secret key for {environment} environment")
+        print(f"INFO: Generated secure secret key for {config.environment} environment")
 
     else:
         # Staging and other environments should use environment variable
@@ -300,7 +300,7 @@ def get_api_config() -> APIConfig:
         origins = [origin.strip() for origin in cors_origins.split(",")]
 
         # Security validation: no wildcards in production
-        if environment == "production":
+        if config.environment == "production":
             if "*" in origins:
                 raise ValueError(
                     "Wildcard CORS origins are not allowed in production. "
@@ -322,7 +322,7 @@ def get_api_config() -> APIConfig:
 
         # Security validation: no wildcards
         if "*" in headers:
-            if environment == "production":
+            if config.environment == "production":
                 raise ValueError(
                     "Wildcard CORS headers are not allowed in production. "
                     "Please specify exact headers in CORS_HEADERS environment variable."
@@ -338,7 +338,7 @@ def get_api_config() -> APIConfig:
 
         # Security warning: credentials with wildcard origins
         if config.cors.allow_credentials and "*" in config.cors.allow_origins:
-            if environment == "production":
+            if config.environment == "production":
                 raise ValueError(
                     "CORS credentials cannot be enabled with wildcard origins in production"
                 )
@@ -363,13 +363,13 @@ def get_api_config() -> APIConfig:
     config.redoc_url = "/redoc" if security_config["enable_docs"] else None
     config.debug = security_config["debug"]
 
-    # Apply feature flags
-    config.enable_swagger_ui = feature_flags["enable_swagger_ui"]
-    config.enable_redoc = feature_flags["enable_redoc"]
-    config.enable_metrics = feature_flags["enable_metrics"]
-    config.enable_rate_limiting = feature_flags["enable_rate_limiting"]
-    config.enable_request_logging = feature_flags["enable_request_logging"]
-    config.enable_error_tracking = feature_flags["enable_error_tracking"]
+    # Apply feature flags with defaults
+    config.enable_swagger_ui = feature_flags.get("enable_swagger_ui", True)
+    config.enable_redoc = feature_flags.get("enable_redoc", True)
+    config.enable_metrics = feature_flags.get("enable_metrics", True)
+    config.enable_rate_limiting = feature_flags.get("enable_rate_limiting", True)
+    config.enable_request_logging = feature_flags.get("enable_request_logging", True)
+    config.enable_error_tracking = feature_flags.get("enable_error_tracking", True)
 
     # Environment-specific settings
     if env_manager.current_env == Environment.PRODUCTION:
