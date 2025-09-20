@@ -114,3 +114,11 @@ def get_pipeline_adapter():
         _pipeline_adapter_instance = PipelineAdapter()
     return _pipeline_adapter_instance
 
+
+async def enhance_pipeline_with_agent(query: str,
+                                     pipeline_state: Dict[str, Any],
+                                     user_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Pipeline을 Agent로 강화하는 헬퍼 함수"""
+    adapter = get_pipeline_adapter()
+    return await adapter.enhance_pipeline_state(query, pipeline_state, user_context)
+

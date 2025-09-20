@@ -82,7 +82,7 @@ class EnhancedLangGraphPipeline:
                 if key in state:
                     state[key] = value
                     
-            logger.info(f"Agent 카테고리: {state.get(agent_category)}")
+            logger.info(f"Agent 카테고리: {state.get('agent_category')}")
             
         except Exception as e:
             logger.error(f"Agent Enhancement 실패: {e}")
@@ -101,7 +101,7 @@ class EnhancedLangGraphPipeline:
         
         # Mock 검색 결과
         mock_docs = [
-            {"content": f"검색 결과 {i+1}: {state[query]} 관련 내용", "score": 0.9-i*0.1}
+            {"content": f"검색 결과 {i+1}: {state['query']} 관련 내용", "score": 0.9-i*0.1}
             for i in range(5)
         ]
         
@@ -114,7 +114,7 @@ class EnhancedLangGraphPipeline:
         
         # 검색된 컨텍스트 준비
         retrieved_context = "\n".join([
-            f"- {doc[content]}" for doc in state["retrieved_docs"][:3]
+            f"- {doc['content']}" for doc in state["retrieved_docs"][:3]
         ])
         
         # Agent 설정에 따른 프롬프트 생성
@@ -124,10 +124,10 @@ class EnhancedLangGraphPipeline:
                 state["query"], retrieved_context, agent_config
             )
         else:
-            context_prompt = f"질문: {state[query]}\n\n참고자료:\n{retrieved_context}"
+            context_prompt = f"질문: {state['query']}\n\n참고자료:\n{retrieved_context}"
         
         # 최종 응답 생성
-        state["final_response"] = f"""[{state.get(agent_category, general)} Agent 답변]
+        state["final_response"] = f"""[{state.get('agent_category', 'general')} Agent 답변]
 
 {context_prompt}
 
