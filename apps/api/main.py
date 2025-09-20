@@ -462,7 +462,7 @@ async def get_cache_stats():
         from apps.search.embedding_service import get_embedding_service
 
         embedding_service = get_embedding_service()
-        stats = embedding_service.get_stats()
+        stats = await embedding_service.get_stats()
 
         return {
             "status": "success",
@@ -534,7 +534,7 @@ async def get_cache_health():
         from apps.search.embedding_service import get_embedding_service
 
         embedding_service = get_embedding_service()
-        stats = embedding_service.get_stats()
+        stats = await embedding_service.get_stats()
 
         # 건강 상태 판단
         health_status = "healthy"
