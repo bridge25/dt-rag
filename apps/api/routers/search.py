@@ -500,7 +500,7 @@ async def warm_up_cache(
 
 @router.delete("/admin/cache/clear")
 async def clear_search_cache(
-    pattern: Optional[str] = Field(None, description="삭제할 패턴 (비어있으면 전체)"),
+    pattern: Optional[str] = Query(None, description="삭제할 패턴 (비어있으면 전체)"),
     api_key: str = Depends(verify_api_key)
 ):
     """
