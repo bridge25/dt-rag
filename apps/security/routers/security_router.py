@@ -290,8 +290,12 @@ async def mask_pii(
             request.field_name
         )
 
-        # Then mask the text (returns only masked text, not tuple)
-        masked_text = await security_manager.pii_detector.mask_pii_data(request.text)
+        # Then mask the text using the findings we already collected to avoid
+        # performing an additional scan inside the masking helper.
+        masked_text = await security_manager.pii_detector.mask_pii_data(
+            request.text,
+            findings=findings,
+        )
 
         return {
             "original_text": request.text,

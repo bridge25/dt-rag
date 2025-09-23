@@ -131,6 +131,12 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         user_agent = request.headers.get("user-agent", "")
 
         try:
+            # Ensure security context state attribute is always available for downstream
+            # dependencies even before authentication occurs. This prevents
+            # AttributeError when dependencies expect the attribute and allows
+            # them to detect unauthenticated requests via a None value.
+            request.state.security_context = None
+
             # 1. Pre-request security checks
             await self._pre_request_checks(request, client_ip, request_id)
 
