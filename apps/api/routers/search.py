@@ -4,7 +4,7 @@ Document Search 엔드포인트
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from deps import verify_api_key, generate_request_id, get_taxonomy_version
