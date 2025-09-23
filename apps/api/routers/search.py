@@ -75,6 +75,7 @@ class SearchResponse(BaseModel):
     sources_count: Optional[int] = Field(None, description="소스 문서 수")
     taxonomy_version: str = "1.8.1"
 
+
 @router.post("/search", response_model=SearchResponse)
 async def search_documents(
     request: SearchRequest,
@@ -129,6 +130,7 @@ async def search_documents(
             detail=f"Search error: {str(e)}"
         )
 
+
 async def _execute_optimized_search(
     request: SearchRequest,
     query_id: str,
@@ -175,6 +177,7 @@ async def _execute_optimized_search(
         # 폴백: 기존 검색 방식
         return await _execute_search(request, query_id, start_time, "fallback")
 
+
 async def _execute_search(
     request: SearchRequest,
     query_id: str,
@@ -186,6 +189,7 @@ async def _execute_search(
         return await _hybrid_engine_search(request, query_id, start_time)
     else:
         return await _legacy_search(request, query_id, start_time)
+
 
 async def _record_optimized_metrics(
     search_type: str,
@@ -466,6 +470,7 @@ async def get_search_analytics(api_key: str = Depends(verify_api_key)):
 
 class CacheWarmUpRequest(BaseModel):
     common_queries: List[str] = Field(..., description="주요 쿼리 목록")
+
 
 @router.post("/admin/cache/warm-up")
 async def warm_up_cache(

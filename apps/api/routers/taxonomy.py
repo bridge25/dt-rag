@@ -51,6 +51,7 @@ class TaxonomyRollback(BaseModel):
     reason: str = Field(..., min_length=1, max_length=1000, description="Rollback reason")
     performed_by: str = Field(..., min_length=1, max_length=255, description="User performing rollback")
 
+
 def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
     """
     Taxonomy v1.8.1 트리 구조
@@ -64,7 +65,7 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
             "children": [
                 {
                     "label": "RAG",
-                    "version": "1.8.1", 
+                    "version": "1.8.1",
                     "node_id": "ai_rag_001",
                     "canonical_path": ["AI", "RAG"],
                     "children": [
@@ -77,7 +78,7 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
                         },
                         {
                             "label": "Static",
-                            "version": "1.8.1", 
+                            "version": "1.8.1",
                             "node_id": "ai_rag_static_001",
                             "canonical_path": ["AI", "RAG", "Static"],
                             "children": []
@@ -87,7 +88,7 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
                 {
                     "label": "ML",
                     "version": "1.8.1",
-                    "node_id": "ai_ml_001", 
+                    "node_id": "ai_ml_001",
                     "canonical_path": ["AI", "ML"],
                     "children": [
                         {
@@ -100,7 +101,7 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
                         {
                             "label": "Clustering",
                             "version": "1.8.1",
-                            "node_id": "ai_ml_clustering_001", 
+                            "node_id": "ai_ml_clustering_001",
                             "canonical_path": ["AI", "ML", "Clustering"],
                             "children": []
                         }
@@ -123,7 +124,7 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
                             "label": "Flat",
                             "version": "1.8.1",
                             "node_id": "ai_taxonomy_flat_001",
-                            "canonical_path": ["AI", "Taxonomy", "Flat"], 
+                            "canonical_path": ["AI", "Taxonomy", "Flat"],
                             "children": []
                         }
                     ]
@@ -139,8 +140,9 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
         }
     ]
 
+
 @router.get("/taxonomy/{version}/tree")
-async def get_taxonomy_tree(
+async def get_taxonomy_tree_endpoint(
     version: str,
     api_key: str = Depends(verify_api_key)
 ):
@@ -156,18 +158,17 @@ async def get_taxonomy_tree(
                 status_code=404,
                 detail=f"Taxonomy version '{version}' not found. Available: 1.8.1, latest"
             )
-        
+
         # 실제 데이터베이스에서 분류체계 조회
         actual_version = "1.8.1" if version == "latest" else version
         tree = await TaxonomyDAO.get_tree(actual_version)
-        
+
         # Bridge Pack smoke.sh 호환성 확인
         # smoke.sh에서 .[0].label과 {label,version:"1.8.1"} 접근
         if len(tree) > 0:
             tree[0]["version"] = "1.8.1"  # smoke.sh 호환성 보장
-        
+
         return tree
-        
     except HTTPException:
         raise
     except Exception as e:
@@ -175,6 +176,7 @@ async def get_taxonomy_tree(
             status_code=500,
             detail=f"Taxonomy tree error: {str(e)}"
         )
+
 
 @router.get("/taxonomy/versions")
 def get_taxonomy_versions(api_key: str = Depends(verify_api_key)):
@@ -194,7 +196,9 @@ def get_taxonomy_versions(api_key: str = Depends(verify_api_key)):
         "latest": "1.8.1"
     }
 
+
 # Enhanced DAG Management Endpoints
+
 
 @router.post("/taxonomy/initialize")
 async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)):
@@ -214,6 +218,7 @@ async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/taxonomy/validate")
 async def validate_taxonomy_structure(
@@ -237,6 +242,7 @@ async def validate_taxonomy_structure(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/taxonomy/dag/tree")
 async def get_taxonomy_dag_tree(
     version: Optional[int] = Query(None, description="Version to retrieve (default: current)"),
@@ -257,6 +263,7 @@ async def get_taxonomy_dag_tree(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/taxonomy/nodes")
 async def create_taxonomy_node(
@@ -282,6 +289,7 @@ async def create_taxonomy_node(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.patch("/taxonomy/nodes/{node_id}/move")
 async def move_taxonomy_node_endpoint(
     node_id: int = Path(..., description="Node ID to move"),
@@ -306,6 +314,7 @@ async def move_taxonomy_node_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/taxonomy/nodes/{node_id}/ancestry")
 async def get_node_ancestry_endpoint(
     node_id: int = Path(..., description="Node ID"),
@@ -326,6 +335,7 @@ async def get_node_ancestry_endpoint(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/taxonomy/rollback")
 async def rollback_taxonomy_version(
@@ -350,6 +360,7 @@ async def rollback_taxonomy_version(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/taxonomy/history")
 async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)):
     """Get complete taxonomy version history with migration details"""
@@ -365,6 +376,7 @@ async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/taxonomy/status")
 async def get_taxonomy_system_status(api_key: str = Depends(verify_api_key)):

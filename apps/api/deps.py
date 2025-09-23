@@ -157,6 +157,7 @@ class APIKeyValidator:
 
         return len(errors) == 0, errors
 
+
 def _check_rate_limit(client_ip: str, api_key: str) -> bool:
     """Check rate limiting for API key validation attempts"""
     current_time = time.time()
@@ -189,9 +190,11 @@ def _check_rate_limit(client_ip: str, api_key: str) -> bool:
     _api_key_attempts[client_ip].append(current_time)
     return True
 
+
 def _hash_api_key(api_key: str) -> str:
     """Hash API key for secure storage and logging"""
     return hashlib.sha256(api_key.encode()).hexdigest()[:16]
+
 
 def _log_security_event(event_type: str, api_key: str, client_ip: str, details: str):
     """Log security events for monitoring and compliance"""
@@ -204,6 +207,7 @@ def _log_security_event(event_type: str, api_key: str, client_ip: str, details: 
         f"timestamp={datetime.now(timezone.utc).isoformat()} | "
         f"details={details}"
     )
+
 
 async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(None)):
     """
@@ -300,8 +304,10 @@ async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(Non
             # For example, check if the key has the required scope for this endpoint
             required_scope = _get_required_scope(endpoint, method)
             if not _check_permission(api_key_info, required_scope):
-                _log_security_event("INSUFFICIENT_PERMISSIONS", x_api_key, client_ip,
-                                  f"Required scope: {required_scope}, API key scope: {api_key_info.scope}")
+                _log_security_event(
+                    "INSUFFICIENT_PERMISSIONS", x_api_key, client_ip,
+                    f"Required scope: {required_scope}, API key scope: {api_key_info.scope}"
+                )
                 raise HTTPException(
                     status_code=403,
                     detail=f"Insufficient permissions. Required scope: {required_scope}"
@@ -321,6 +327,7 @@ async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(Non
             status_code=500,
             detail="Internal server error during API key validation"
         )
+
 
 def _get_required_scope(endpoint: str, method: str) -> str:
     """Determine required scope based on endpoint and method"""
@@ -348,6 +355,7 @@ def _get_required_scope(endpoint: str, method: str) -> str:
 
     return scope_map.get((method, endpoint), method_defaults.get(method, "read"))
 
+
 def _check_permission(api_key_info, required_scope: str) -> bool:
     """Check if API key has required permissions"""
     # Define scope hierarchy: admin > write > read
@@ -358,13 +366,16 @@ def _check_permission(api_key_info, required_scope: str) -> bool:
 
     return key_level >= required_level
 
+
 def generate_request_id() -> str:
     """요청 ID 생성 (Bridge Pack 스펙 준수)"""
     return str(uuid4())
 
+
 def get_current_timestamp() -> str:
     """ISO 8601 타임스탬프 생성"""
     return datetime.now(timezone.utc).isoformat()
+
 
 def get_taxonomy_version() -> str:
     """현재 taxonomy 버전 (Bridge Pack 스펙)"""
