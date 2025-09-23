@@ -464,9 +464,12 @@ async def get_search_analytics(api_key: str = Depends(verify_api_key)):
         )
 
 
+class CacheWarmUpRequest(BaseModel):
+    common_queries: List[str] = Field(..., description="주요 쿼리 목록")
+
 @router.post("/admin/cache/warm-up")
 async def warm_up_cache(
-    common_queries: List[str] = Field(..., description="주요 쿼리 목록"),
+    request: CacheWarmUpRequest,
     api_key: str = Depends(verify_api_key)
 ):
     """
@@ -474,7 +477,7 @@ async def warm_up_cache(
     """
     try:
         cache = await get_search_cache()
-        await cache.warm_up(common_queries)
+        await cache.warm_up(request.common_queries)
 
         # 검색 엔진 웜업
         if HYBRID_ENGINE_AVAILABLE:
@@ -483,7 +486,7 @@ async def warm_up_cache(
                 await search_engine.warm_up(session)
 
         return {
-            "message": f"Cache warmed up with {len(common_queries)} queries",
+            "message": f"Cache warmed up with {len(request.common_queries)} queries",
             "status": "success",
             "timestamp": time.time()
         }
