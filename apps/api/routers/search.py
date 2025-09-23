@@ -10,15 +10,16 @@ from typing import List, Optional, Dict, Any
 from deps import verify_api_key, generate_request_id, get_taxonomy_version
 from database import SearchDAO, search_metrics, get_search_performance_metrics, db_manager
 import time
-import asyncio
 import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # 최적화 모듈들 import
 try:
     from ..optimization.async_executor import get_async_optimizer
     from ..optimization.memory_optimizer import get_memory_monitor
     from ..optimization.concurrency_control import get_concurrency_controller
-    from ..optimization.batch_processor import get_batch_search_processor
     OPTIMIZATION_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Optimization modules not available: {e}")
@@ -28,9 +29,8 @@ except ImportError as e:
 try:
     from ..search.hybrid_search_engine import (
         HybridSearchEngine, SearchEngineFactory, get_search_engine,
-        SearchConfig, SearchResult, SearchResponse as HybridSearchResponse
+        SearchConfig
     )
-    from ..cache.search_cache import get_search_cache, cache_search_results
     HYBRID_ENGINE_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Hybrid search engine not available: {e}")
@@ -38,7 +38,7 @@ except ImportError as e:
 
 # 모니터링 import
 try:
-    from ..monitoring.metrics import get_metrics_collector, track_performance
+    from ..monitoring.metrics import get_metrics_collector
     from ..routers.monitoring import track_search_metrics, track_cache_metrics
     MONITORING_AVAILABLE = True
 except ImportError as e:
@@ -48,6 +48,8 @@ except ImportError as e:
 router = APIRouter()
 
 # Common Schemas 호환 모델
+
+
 class SearchRequest(BaseModel):
     q: str = Field(..., min_length=1, description="검색 쿼리")
     filters: Optional[Dict[str, Any]] = Field(None, description="검색 필터")
@@ -56,12 +58,14 @@ class SearchRequest(BaseModel):
     rerank_candidates: int = Field(50, ge=1, le=1000, description="재랭킹 후보 수")
     final_topk: int = Field(5, ge=1, le=50, description="최종 결과 수")
 
+
 class SearchHit(BaseModel):
     chunk_id: str
     score: float = Field(ge=0.0, description="검색 점수")
     text: Optional[str] = Field(None, description="텍스트 내용")
     taxonomy_path: Optional[List[str]] = Field(None, description="분류 경로")
     source: Optional[Dict[str, Any]] = Field(None, description="소스 메타데이터")
+
 
 class SearchResponse(BaseModel):
     hits: List[SearchHit]
@@ -203,10 +207,6 @@ async def _record_optimized_metrics(
             # 메모리 최적화 메트릭
             memory_monitor = await get_memory_monitor()
             memory_summary = memory_monitor.get_memory_summary()
-
-            # 동시성 제어 메트릭
-            concurrency_controller = get_concurrency_controller()
-            concurrency_stats = concurrency_controller.get_comprehensive_stats()
 
             # 통합 메트릭 로깅
             logger.info(
@@ -954,4 +954,4 @@ def _recommend_engine(results: Dict[str, Any]) -> str:
     if fastest[1].get("total_time", 0) < 0.1:  # 100ms 미만
         return f"Recommended: {fastest[0]} (fastest: {fastest[1]['total_time']:.3f}s)"
     else:
-        return f"Recommended: balanced_engine (best balance of speed and accuracy)"
+        return "Recommended: balanced_engine (best balance of speed and accuracy)"

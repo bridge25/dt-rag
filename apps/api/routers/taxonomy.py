@@ -5,7 +5,6 @@ Bridge Pack ACCESS_CARD.md 스펙 100% 준수 + DAG versioning and rollback
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
-from fastapi.responses import JSONResponse
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pydantic import BaseModel, Field
@@ -19,21 +18,19 @@ from ..taxonomy_dag import (
     taxonomy_dag_manager,
     initialize_taxonomy_system,
     validate_taxonomy_dag,
-    create_taxonomy_version,
     rollback_taxonomy,
     get_taxonomy_tree,
     add_taxonomy_node,
     move_taxonomy_node,
     get_taxonomy_history,
     get_node_ancestry,
-    VersionType,
-    MigrationType,
-    MigrationOperation
 )
 
 router = APIRouter()
 
 # Pydantic models for enhanced API
+
+
 class TaxonomyNodeCreate(BaseModel):
     """Request model for creating a taxonomy node"""
     node_name: str = Field(..., min_length=1, max_length=255, description="Node name")
@@ -41,10 +38,12 @@ class TaxonomyNodeCreate(BaseModel):
     description: str = Field("", max_length=1000, description="Node description")
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
 
+
 class TaxonomyNodeMove(BaseModel):
     """Request model for moving a taxonomy node"""
     new_parent_id: Optional[int] = Field(None, description="New parent node ID (null for root)")
     reason: str = Field("", max_length=500, description="Reason for moving")
+
 
 class TaxonomyRollback(BaseModel):
     """Request model for taxonomy rollback"""

@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe test_integration_simple.py)"
+      "Bash(PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe test_integration_simple.py)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh pr view:*)",
+      "Bash(flake8:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

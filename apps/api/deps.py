@@ -6,12 +6,10 @@ A팀 API 공통 의존성
 """
 
 import re
-import base64
-import secrets
 import hashlib
-import hmac
 import time
 import logging
+import math
 from fastapi import Header, HTTPException, Request
 from uuid import uuid4
 from datetime import datetime, timezone
@@ -25,6 +23,7 @@ security_logger = logging.getLogger("security")
 # Rate limiting storage (in production, use Redis)
 _api_key_attempts: Dict[str, list] = defaultdict(list)
 _blocked_keys: Set[str] = set()
+
 
 class APIKeyValidator:
     """Production-ready API key validation with comprehensive security checks"""
@@ -148,7 +147,10 @@ class APIKeyValidator:
         # Entropy check
         entropy = cls.calculate_entropy(key)
         if entropy < cls.MIN_ENTROPY_BITS:
-            errors.append(f"API key entropy too low ({entropy:.1f} bits). Minimum required: {cls.MIN_ENTROPY_BITS} bits")
+            errors.append(
+                f"API key entropy too low ({entropy:.1f} bits). "
+                f"Minimum required: {cls.MIN_ENTROPY_BITS} bits"
+            )
 
         # Weak pattern check
         if not cls.check_weak_patterns(key):
