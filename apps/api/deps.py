@@ -9,7 +9,6 @@ import re
 import hashlib
 import time
 import logging
-import math
 from fastapi import Header, HTTPException, Request
 from uuid import uuid4
 from datetime import datetime, timezone
