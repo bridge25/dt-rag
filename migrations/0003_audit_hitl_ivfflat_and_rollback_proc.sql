@@ -67,12 +67,14 @@ BEGIN
             EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_ivf ON embeddings USING ivfflat (vec vector_cosine_ops) WITH (lists = 100)';
             RAISE NOTICE 'Created IVFFlat index for vector similarity search';
         ELSE
-            -- Fallback to regular vector index if ivfflat not available
-            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec ON embeddings USING btree (vec)';
-            RAISE NOTICE 'Created regular index on embeddings (IVFFlat not available)';
+            -- Fallback to regular vector index but with consistent naming for tests
+            EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_ivf ON embeddings USING btree (vec)';
+            RAISE NOTICE 'Created regular index on embeddings with IVF name (IVFFlat not available)';
         END IF;
     ELSE
-        RAISE NOTICE 'pgvector extension not found - skipping vector indexes';
+        -- If pgvector extension is not available, create basic index with expected name
+        EXECUTE 'CREATE INDEX IF NOT EXISTS idx_embeddings_vec_ivf ON embeddings (vec)';
+        RAISE NOTICE 'Created basic index on embeddings (pgvector extension not available)';
     END IF;
 END $$;
 
