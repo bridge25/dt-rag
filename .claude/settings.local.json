@@ -9,7 +9,24 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(./bin/gh.exe pr view:*)"
+      "Bash(./bin/gh.exe pr view:*)",
+      "Bash(git log:*)",
+      "Bash(./bin/gh.exe pr list --state all --limit 10)",
+      "Bash(unzip:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(tree:*)",
+      "Bash(git remote:*)",
+      "Bash(git fetch:*)",
+      "Bash(git config:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git merge:*)",
+      "Bash(./bin/gh.exe run list --repo bridge25/Unmanned --limit 2)",
+      "Bash(./bin/gh.exe pr merge 16 --merge --delete-branch)",
+      "Bash(git for-each-ref:*)",
+      "Read(//c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/.github/workflows/**)",
+      "Bash(python3 -m pytest --version)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)"
     ],
     "deny": [],
     "ask": []
@@ -21,7 +38,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/knowledge_injector.py",
+            "command": "cmd /c \"set PYTHONIOENCODING=utf-8 && C:\\Users\\a\\AppData\\Local\\Programs\\Python\\Python313\\python.exe .claude/hooks/knowledge_injector.py\"",
             "timeout": 10
           }
         ]
