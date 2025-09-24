@@ -9,7 +9,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(./bin/gh.exe pr view:*)"
+      "Bash(./bin/gh.exe pr view:*)",
+      "Bash(./bin/gh.exe run list --repo bridge25/Unmanned --limit 2)",
+      "Bash(./bin/gh.exe pr merge 16 --merge --delete-branch)"
     ],
     "deny": [],
     "ask": []
