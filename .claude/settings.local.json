@@ -12,7 +12,14 @@
       "Bash(./bin/gh.exe pr view:*)",
       "Bash(git log:*)",
       "Bash(./bin/gh.exe pr list --state all --limit 10)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(tree:*)",
+      "Bash(git remote:*)",
+      "Bash(git fetch:*)",
+      "Bash(git config:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
@@ -24,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe .claude/hooks/knowledge_injector.py",
+            "command": "cmd /c \"set PYTHONIOENCODING=utf-8 && C:\\Users\\a\\AppData\\Local\\Programs\\Python\\Python313\\python.exe .claude/hooks/knowledge_injector.py\"",
             "timeout": 10
           }
         ]
