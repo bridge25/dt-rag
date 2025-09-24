@@ -19,7 +19,9 @@
       "Bash(git fetch:*)",
       "Bash(git config:*)",
       "Bash(git rev-parse:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(./bin/gh.exe run list --repo bridge25/Unmanned --limit 2)",
+      "Bash(./bin/gh.exe pr merge 16 --merge --delete-branch)"
     ],
     "deny": [],
     "ask": []
