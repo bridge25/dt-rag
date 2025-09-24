@@ -21,7 +21,12 @@
       "Bash(git rev-parse:*)",
       "Bash(git merge:*)",
       "Bash(./bin/gh.exe run list --repo bridge25/Unmanned --limit 2)",
-      "Bash(./bin/gh.exe pr merge 16 --merge --delete-branch)"
+      "Bash(./bin/gh.exe pr merge 16 --merge --delete-branch)",
+      "Bash(git for-each-ref:*)",
+      "Read(//c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/.github/workflows/**)",
+      "Bash(python3 -m pytest --version)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)"
     ],
     "deny": [],
     "ask": []
