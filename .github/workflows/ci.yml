@@ -35,6 +35,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        cd dt-rag
         # Install base dependencies
         pip install pytest ruff mypy
         pip install psycopg[binary] psycopg2-binary pgvector
@@ -50,10 +51,12 @@ jobs:
     - name: Set up Python paths
       run: |
         # Add project directories to Python path
+        cd dt-rag
         echo "PYTHONPATH=$PWD:$PWD/apps:$PWD/packages:$PYTHONPATH" >> $GITHUB_ENV
 
     - name: Lint with ruff (if config exists)
       run: |
+        cd dt-rag
         if [ -f ruff.toml ]; then
           ruff check --config ruff.toml apps packages || echo "Ruff linting completed with issues"
         else
@@ -62,6 +65,7 @@ jobs:
 
     - name: Type check with mypy (if possible)
       run: |
+        cd dt-rag
         # Run mypy only on directories that exist and have Python files
         if [ -d apps ] && find apps -name "*.py" -type f | head -1 >/dev/null 2>&1; then
           mypy apps --ignore-missing-imports || echo "MyPy type checking completed with issues"
@@ -76,6 +80,7 @@ jobs:
 
     - name: Run tests
       run: |
+        cd dt-rag
         # Run tests if test files exist
         if find . -name "test_*.py" -o -name "*_test.py" -o -path "*/tests/*" -name "*.py" | head -1 >/dev/null 2>&1; then
           pytest -v --tb=short || echo "Tests completed with failures"
