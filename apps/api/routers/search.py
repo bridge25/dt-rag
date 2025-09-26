@@ -7,8 +7,8 @@ Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
-from deps import verify_api_key, generate_request_id, get_taxonomy_version
-from database import SearchDAO, search_metrics, get_search_performance_metrics, db_manager
+from ..deps import verify_api_key, generate_request_id, get_taxonomy_version
+from ..database import SearchDAO, search_metrics, get_search_performance_metrics, db_manager
 import time
 import logging
 
@@ -422,7 +422,7 @@ async def create_embeddings(
     청크들에 대한 임베딩 생성 (관리자용)
     """
     try:
-        from database import db_manager
+        from ..database import db_manager
         async with db_manager.async_session() as session:
             result = await SearchDAO.create_embeddings_for_chunks(
                 session=session,
@@ -534,7 +534,7 @@ async def optimize_search_indices(api_key: str = Depends(verify_api_key)):
     검색 인덱스 최적화 (관리자용)
     """
     try:
-        from database import db_manager
+        from ..database import db_manager
         async with db_manager.async_session() as session:
             result = await SearchDAO.optimize_search_indices(session)
             return result
@@ -596,7 +596,7 @@ async def search_bm25_only(
     start_time = time.time()
 
     try:
-        from database import db_manager
+        from ..database import db_manager
         async with db_manager.async_session() as session:
             bm25_results = await SearchDAO._perform_bm25_search(
                 session=session,
@@ -640,7 +640,7 @@ async def search_vector_only(
     start_time = time.time()
 
     try:
-        from database import EmbeddingService, db_manager
+        from ..database import EmbeddingService, db_manager
 
         # 쿼리 임베딩 생성
         query_embedding = await EmbeddingService.generate_embedding(request.q)

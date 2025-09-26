@@ -22,10 +22,12 @@ import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import (
-    SearchRequest, SearchResponse, SearchHit, SourceMeta
-)
+# from packages.common_schemas.common_schemas.models import (
+#     SearchRequest, SearchResponse, SearchHit, SourceMeta
+# )
 
+# Import from local common models
+from ..models.common_models import SearchRequest, SearchResponse, SearchHit, SourceMeta
 # Configure logging
 logger = logging.getLogger(__name__)
 

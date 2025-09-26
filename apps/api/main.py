@@ -29,19 +29,19 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
 
 # Import existing routers
-from routers import health, classify, search, taxonomy, ingestion
+from .routers import search, taxonomy
 
 # Import new comprehensive routers
-from routers.taxonomy_router import taxonomy_router
-from routers.search_router import search_router
-from routers.classification_router import classification_router
-from routers.orchestration_router import orchestration_router
-from routers.agent_factory_router import agent_factory_router
-from routers.monitoring_router import monitoring_router
+from .routers.taxonomy_router import taxonomy_router
+from .routers.search_router import search_router
+from .routers.classification_router import classification_router
+from .routers.orchestration_router import orchestration_router
+from .routers.agent_factory_router import agent_factory_router
+# from .routers.monitoring_router import monitoring_router
 
 # Import evaluation router
 try:
-    from routers.evaluation import router as evaluation_router
+    from .routers.evaluation import router as evaluation_router
     EVALUATION_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Evaluation router not available: {e}")
@@ -49,7 +49,7 @@ except ImportError as e:
 
 # Import optimization routers
 try:
-    from routers.batch_search import router as batch_search_router
+    from .routers.batch_search import router as batch_search_router
     BATCH_SEARCH_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Batch search router not available: {e}")
@@ -57,7 +57,7 @@ except ImportError as e:
 
 # Import monitoring components
 try:
-    from routers.monitoring import router as monitoring_api_router
+    from .routers.monitoring import router as monitoring_api_router
     from monitoring.metrics import initialize_metrics_collector, get_metrics_collector
     from monitoring.health_check import initialize_health_checker
     from cache.redis_manager import initialize_redis_manager
@@ -67,9 +67,9 @@ except ImportError as e:
     MONITORING_AVAILABLE = False
 
 # Import configuration and database
-from config import get_config
-from openapi_spec import generate_openapi_spec
-from database import init_database, test_database_connection
+from .config import get_config
+from .openapi_spec import generate_openapi_spec
+from .database import init_database, test_database_connection
 
 # Configure logging
 logging.basicConfig(
@@ -232,7 +232,7 @@ async def log_requests_and_track_metrics(request: Request, call_next):
         # Track metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics
+                from .routers.monitoring import track_request_metrics
                 await track_request_metrics(request, response_time_ms, status_code)
             except Exception as e:
                 logger.warning(f"Failed to track request metrics: {e}")
@@ -249,7 +249,7 @@ async def log_requests_and_track_metrics(request: Request, call_next):
         # Track error metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics
+                from .routers.monitoring import track_request_metrics
                 await track_request_metrics(request, response_time_ms, 500)
             except Exception as metric_e:
                 logger.warning(f"Failed to track error metrics: {metric_e}")
