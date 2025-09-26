@@ -22,9 +22,7 @@ import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import (
-    ClassifyRequest, ClassifyResponse, TaxonomyNode
-)
+from ..models.common_models import ClassifyRequest, ClassifyResponse, TaxonomyNode
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -380,7 +378,7 @@ async def get_classification_analytics(
 
 @classification_router.get("/confidence/{chunk_id}")
 async def get_classification_confidence(
-    chunk_id: str = Query(..., description="Document chunk ID"),
+    chunk_id: str,
     service: ClassificationService = Depends(get_classification_service)
 ):
     """

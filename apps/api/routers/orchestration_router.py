@@ -22,7 +22,7 @@ import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import SearchHit, SourceMeta
+from ..models.common_models import SearchHit, SourceMeta
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ class PipelineResponse(BaseModel):
 class PipelineConfig(BaseModel):
     """Pipeline configuration"""
     max_search_results: int = Field(10, ge=1, le=50)
-    search_type: str = Field("hybrid", regex="^(bm25|vector|hybrid)$")
+    search_type: str = Field("hybrid", pattern="^(bm25|vector|hybrid)$")
     rerank_enabled: bool = Field(True)
     generation_temperature: float = Field(0.7, ge=0.0, le=2.0)
     generation_max_tokens: int = Field(1000, ge=100, le=4000)

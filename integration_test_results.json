@@ -1,0 +1,91 @@
+{
+  "overall_status": "FAIL",
+  "success_rate": 58.333333333333336,
+  "total_time": 18.55904197692871,
+  "test_results": {
+    "embedding_service": {
+      "status": "PASS",
+      "results": {
+        "single_embedding": {
+          "dimension": 768,
+          "type": "list"
+        },
+        "batch_embeddings": {
+          "count": 3,
+          "dimensions": [
+            768,
+            768,
+            768
+          ]
+        },
+        "similarity": 0.18490267688748907,
+        "caching": true
+      },
+      "message": "임베딩 서비스 정상 동작 (768차원)"
+    },
+    "hybrid_search_engine": {
+      "status": "PARTIAL",
+      "results": {
+        "query": "machine learning algorithms for text processing",
+        "results_count": 0,
+        "search_time": 3.2144787311553955,
+        "has_scores": true,
+        "score_range": [
+          0,
+          0
+        ]
+      },
+      "message": "하이브리드 검색 동작 확인 (0개 결과)"
+    },
+    "ragas_evaluation": {
+      "status": "FAIL",
+      "error": "'EvaluationResult' object has no attribute 'overall_score'",
+      "message": "RAGAS 평가 오류"
+    },
+    "database_integration": {
+      "status": "PASS",
+      "results": {
+        "connection_status": true,
+        "fallback_mode": false,
+        "query_test": true
+      },
+      "message": "데이터베이스 연결됨"
+    },
+    "api_server_integration": {
+      "status": "PASS",
+      "results": {
+        "root_endpoint": {
+          "status_code": 200,
+          "has_content": true
+        },
+        "health_check": {
+          "status_code": 200,
+          "response_data": {
+            "status": "healthy",
+            "timestamp": 1758885738.1424015,
+            "version": "1.8.1",
+            "components": {
+              "api_server": "✅ running",
+              "database": "✅ connected",
+              "cache": "💾 memory_cache",
+              "search_engine": "🔍 hybrid_ready"
+            },
+            "uptime_seconds": 1758885738.142403,
+            "mode": "production"
+          }
+        },
+        "search_api": {
+          "status_code": 200,
+          "has_results": true
+        }
+      },
+      "message": "API 서버 통합 테스트 완료"
+    },
+    "end_to_end_workflow": {
+      "status": "FAIL",
+      "error": "'EvaluationResult' object has no attribute 'overall_score'",
+      "message": "E2E 워크플로우 오류"
+    }
+  },
+  "timestamp": 1758885741.5995483
+}

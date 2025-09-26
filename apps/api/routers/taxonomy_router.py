@@ -22,7 +22,7 @@ import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import TaxonomyNode
+# from packages.common_schemas.common_schemas.models import TaxonomyNode
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class TaxonomyService:
             )
         ]
 
-    async def get_tree(self, version: str, expand_level: int = -1) -> List[TaxonomyNode]:
+    async def get_tree(self, version: str, expand_level: int = -1) -> List[Dict[str, Any]]:
         """Get taxonomy tree for a specific version"""
         # Mock implementation
         if version not in ["1.8.1", "1.8.0"]:
@@ -235,7 +235,7 @@ async def list_taxonomy_versions(
             detail="Failed to retrieve taxonomy versions"
         )
 
-@taxonomy_router.get("/{version}/tree", response_model=List[TaxonomyNode])
+@taxonomy_router.get("/{version}/tree", response_model=List[Dict[str, Any]])
 async def get_taxonomy_tree(
     version: str = Path(..., description="Taxonomy version"),
     expand_level: int = Query(-1, ge=-1, description="Tree expansion level (-1 for full tree)"),
@@ -392,7 +392,7 @@ async def compare_taxonomy_versions(
             detail="Failed to compare taxonomy versions"
         )
 
-@taxonomy_router.get("/{version}/search", response_model=List[TaxonomyNode])
+@taxonomy_router.get("/{version}/search", response_model=List[Dict[str, Any]])
 async def search_taxonomy_nodes(
     version: str = Path(..., description="Taxonomy version"),
     q: str = Query(..., min_length=1, description="Search query"),

@@ -22,9 +22,7 @@ import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from packages.common_schemas.common_schemas.models import (
-    FromCategoryRequest, AgentManifest, RetrievalConfig, FeaturesConfig
-)
+from ..models.common_models import FromCategoryRequest, AgentManifest, RetrievalConfig, FeaturesConfig
 
 # Configure logging
 logger = logging.getLogger(__name__)
