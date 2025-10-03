@@ -61,7 +61,7 @@ class PipelineResponse(BaseModel):
 class PipelineConfig(BaseModel):
     """Pipeline configuration"""
     max_search_results: int = Field(10, ge=1, le=50)
-    search_type: str = Field("hybrid", regex="^(bm25|vector|hybrid)$")
+    search_type: str = Field("hybrid", pattern="^(bm25|vector|hybrid)$")
     rerank_enabled: bool = Field(True)
     generation_temperature: float = Field(0.7, ge=0.0, le=2.0)
     generation_max_tokens: int = Field(1000, ge=100, le=4000)

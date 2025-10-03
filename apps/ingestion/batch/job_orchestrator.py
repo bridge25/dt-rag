@@ -103,6 +103,17 @@ class JobOrchestrator:
                 except Exception as e:
                     logger.error(f"Worker {worker_id} failed job {job_id}: {e}")
 
+                    if await self._should_retry(job_id, e):
+                        retry_success = await self.job_queue.retry_job(
+                            job_id=job_id,
+                            command_id=command_id,
+                            job_data=job_data,
+                            priority=priority
+                        )
+                        if retry_success:
+                            logger.info(f"Job {job_id} scheduled for retry")
+                            continue
+
                     await self.job_queue.set_job_status(
                         job_id=job_id,
                         command_id=command_id,
@@ -261,3 +272,29 @@ class JobOrchestrator:
 
     async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         return await self.job_queue.get_job_status(job_id)
+
+    async def _should_retry(self, job_id: str, error: Exception) -> bool:
+        status = await self.job_queue.get_job_status(job_id)
+        if not status:
+            return False
+
+        retry_count = status.get("retry_count", 0)
+        max_retries = status.get("max_retries", 3)
+
+        if retry_count >= max_retries:
+            logger.info(f"Job {job_id} reached max retries ({max_retries})")
+            return False
+
+        non_retryable_errors = [
+            "ParserError",
+            "ValidationError",
+            "AuthenticationError"
+        ]
+
+        error_type = type(error).__name__
+        if any(err in error_type for err in non_retryable_errors):
+            logger.info(f"Job {job_id} has non-retryable error: {error_type}")
+            return False
+
+        logger.info(f"Job {job_id} eligible for retry ({retry_count}/{max_retries})")
+        return True

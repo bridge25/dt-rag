@@ -17,7 +17,8 @@ from datetime import datetime
 
 # Test database and environment setup
 os.environ["TESTING"] = "true"
-os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+# Use PostgreSQL with pgvector for vector similarity search
+os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/dt_rag_test"
 
 
 @pytest.fixture(scope="session")
@@ -141,15 +142,51 @@ def mock_async_session():
     return AsyncContextManager(mock_session)
 
 
+@pytest.fixture(scope="session", autouse=True)
+async def setup_test_database():
+    """Initialize test database with schema and golden dataset."""
+    from tests.fixtures.test_db_schema import init_test_db, cleanup_test_db
+    from apps.core.db_session import engine
+
+    # Setup
+    await init_test_db()
+    yield
+
+    # Teardown - ensure all connections are closed before cleanup
+    # Wait for any pending operations to complete
+    await asyncio.sleep(0.2)
+
+    # Dispose engine connection pool first to close all active connections
+    await engine.dispose()
+
+    # Wait for connections to fully close
+    await asyncio.sleep(0.3)
+
+    # Now cleanup database
+    await cleanup_test_db()
+
+
 @pytest.fixture(autouse=True)
 async def cleanup_test_files():
     """Automatically cleanup test files after each test."""
     yield
-    # Cleanup logic can be added here
+
+    # Wait for DB connections to close
+    await asyncio.sleep(0.1)
+
+    # Retry cleanup with 3 attempts
     test_files = ["test.db", "test.log", "test_cache.json"]
     for file in test_files:
-        if os.path.exists(file):
-            os.remove(file)
+        for attempt in range(3):
+            try:
+                if os.path.exists(file):
+                    os.remove(file)
+                break
+            except PermissionError:
+                if attempt < 2:
+                    await asyncio.sleep(0.05)
+                else:
+                    pass  # Skip if still locked
 
 
 # Pytest configuration

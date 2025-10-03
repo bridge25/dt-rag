@@ -32,24 +32,24 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 # Import existing routers (직접 확인된 경로)
-from routers.health import router as health_router
-from routers.classify import router as classify_router
-from routers.search import router as search_legacy_router
-from routers.taxonomy import router as taxonomy_legacy_router
-from routers.ingestion import router as ingestion_router
+from apps.api.routers.health import router as health_router
+from apps.api.routers.classify import router as classify_router
+from apps.api.routers.search import router as search_legacy_router
+from apps.api.routers.taxonomy import router as taxonomy_legacy_router
+from apps.api.routers.ingestion import router as ingestion_router
 
 # Import new comprehensive routers
-from routers.taxonomy_router import taxonomy_router
-from routers.search_router import search_router
-from routers.classification_router import classification_router
-from routers.orchestration_router import orchestration_router
-from routers.agent_factory_router import agent_factory_router
-from routers.monitoring_router import monitoring_router
-from routers.embedding_router import router as embedding_router
+from apps.api.routers.taxonomy_router import taxonomy_router
+from apps.api.routers.search_router import search_router
+from apps.api.routers.classification_router import classification_router
+from apps.api.routers.orchestration_router import orchestration_router
+from apps.api.routers.agent_factory_router import agent_factory_router
+from apps.api.routers.monitoring_router import router as monitoring_router
+from apps.api.routers.embedding_router import router as embedding_router
 
 # Import evaluation router
 try:
-    from routers.evaluation import evaluation_router
+    from apps.api.routers.evaluation import evaluation_router
     EVALUATION_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Evaluation router not available: {e}")
@@ -57,7 +57,7 @@ except ImportError as e:
 
 # Import optimization routers
 try:
-    from routers.batch_search import router as batch_search_router
+    from apps.api.routers.batch_search import router as batch_search_router
     BATCH_SEARCH_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Batch search router not available: {e}")
@@ -65,10 +65,10 @@ except ImportError as e:
 
 # Import monitoring components
 try:
-    from routers.monitoring import router as monitoring_api_router
-    from monitoring.metrics import initialize_metrics_collector, get_metrics_collector
-    from monitoring.health_check import initialize_health_checker
-    from cache.redis_manager import initialize_redis_manager
+    from apps.api.routers.monitoring import router as monitoring_api_router
+    from apps.api.monitoring.metrics import initialize_metrics_collector, get_metrics_collector
+    from apps.api.monitoring.health_check import initialize_health_checker
+    from apps.api.cache.redis_manager import initialize_redis_manager
     MONITORING_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Monitoring components not available: {e}")
@@ -76,19 +76,26 @@ except ImportError as e:
 
 # Import Sentry monitoring (optional)
 try:
-    from monitoring.sentry_reporter import init_sentry
+    from apps.api.monitoring.sentry_reporter import init_sentry
     SENTRY_AVAILABLE = True
 except ImportError:
     SENTRY_AVAILABLE = False
     logging.debug("Sentry monitoring not available")
 
 # Import configuration and database
-from config import get_config
-from openapi_spec import generate_openapi_spec
-from database import init_database, test_database_connection
+from apps.api.config import get_config
+from apps.api.database import init_database, test_database_connection
+
+# Import OpenAPI spec generation (optional)
+try:
+    from apps.api.openapi_spec import generate_openapi_spec
+    OPENAPI_SPEC_AVAILABLE = True
+except ImportError:
+    OPENAPI_SPEC_AVAILABLE = False
+    logging.debug("OpenAPI spec generation not available")
 
 # Import rate limiting
-from middleware.rate_limiter import limiter, RateLimitMiddleware
+from apps.api.middleware.rate_limiter import limiter, RateLimitMiddleware
 
 # Configure logging
 logging.basicConfig(

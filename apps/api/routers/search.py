@@ -7,8 +7,8 @@ Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
-from deps import verify_api_key, generate_request_id, get_taxonomy_version
-from database import SearchDAO, search_metrics, get_search_performance_metrics, db_manager
+from apps.api.deps import verify_api_key, generate_request_id, get_taxonomy_version
+from apps.api.database import SearchDAO, search_metrics, get_search_performance_metrics, db_manager
 import time
 import logging
 
