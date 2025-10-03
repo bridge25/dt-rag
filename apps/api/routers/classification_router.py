@@ -17,6 +17,13 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status, Background
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+# Import API key authentication
+try:
+    from ..deps import verify_api_key
+except ImportError:
+    def verify_api_key():
+        return None
+
 # Import common schemas
 import sys
 from pathlib import Path as PathLib

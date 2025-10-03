@@ -166,7 +166,8 @@ class EmbeddingService:
         response = await self._openai_client.embeddings.create(
             model=self.model_name,
             input=text,
-            encoding_format="float"
+            encoding_format="float",
+            dimensions=1536
         )
         embedding = response.data[0].embedding
         return embedding
