@@ -17,6 +17,7 @@ Features:
 """
 
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from typing import Dict, Any
@@ -27,9 +28,15 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
-# Import existing routers
-from routers import health, classify, search, taxonomy, ingestion
+# Import existing routers (직접 확인된 경로)
+from routers.health import router as health_router
+from routers.classify import router as classify_router
+from routers.search import router as search_legacy_router
+from routers.taxonomy import router as taxonomy_legacy_router
+from routers.ingestion import router as ingestion_router
 
 # Import new comprehensive routers
 from routers.taxonomy_router import taxonomy_router
@@ -38,10 +45,11 @@ from routers.classification_router import classification_router
 from routers.orchestration_router import orchestration_router
 from routers.agent_factory_router import agent_factory_router
 from routers.monitoring_router import monitoring_router
+from routers.embedding_router import router as embedding_router
 
 # Import evaluation router
 try:
-    from routers.evaluation import router as evaluation_router
+    from routers.evaluation import evaluation_router
     EVALUATION_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Evaluation router not available: {e}")
@@ -66,10 +74,21 @@ except ImportError as e:
     logging.warning(f"Monitoring components not available: {e}")
     MONITORING_AVAILABLE = False
 
+# Import Sentry monitoring (optional)
+try:
+    from monitoring.sentry_reporter import init_sentry
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+    logging.debug("Sentry monitoring not available")
+
 # Import configuration and database
 from config import get_config
 from openapi_spec import generate_openapi_spec
 from database import init_database, test_database_connection
+
+# Import rate limiting
+from middleware.rate_limiter import limiter, RateLimitMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -89,6 +108,24 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting Dynamic Taxonomy RAG API v1.8.1")
     logger.info(f"Environment: {config.environment}")
     logger.info(f"Debug mode: {config.debug}")
+
+    # Initialize Sentry monitoring (optional)
+    if SENTRY_AVAILABLE:
+        sentry_dsn = config.get("sentry_dsn") or os.getenv("SENTRY_DSN")
+        if sentry_dsn:
+            sentry_initialized = init_sentry(
+                dsn=sentry_dsn,
+                environment=config.environment,
+                release="1.8.1",
+                traces_sample_rate=0.1,  # 10% of transactions
+                profiles_sample_rate=0.1  # 10% profiling
+            )
+            if sentry_initialized:
+                logger.info("✅ Sentry monitoring initialized")
+            else:
+                logger.warning("⚠️ Sentry initialization failed")
+        else:
+            logger.info("ℹ️ Sentry DSN not configured - monitoring disabled")
 
     # Initialize monitoring systems
     if MONITORING_AVAILABLE:
@@ -191,6 +228,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add rate limiter state to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -208,6 +249,9 @@ if config.security.trusted_hosts:
         TrustedHostMiddleware,
         allowed_hosts=config.security.trusted_hosts
     )
+
+# Rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
 # Request logging and monitoring middleware
 @app.middleware("http")
@@ -355,11 +399,11 @@ async def redoc_html():
     )
 
 # Include existing routers (Bridge Pack compatibility)
-app.include_router(health.router, tags=["Health"])
-app.include_router(classify.router, tags=["Classification"])
-app.include_router(search.router, tags=["Search"])
-app.include_router(taxonomy.router, tags=["Taxonomy"])
-app.include_router(ingestion.router, tags=["Document Ingestion"])
+app.include_router(health_router, tags=["Health"])
+app.include_router(classify_router, tags=["Classification"])
+app.include_router(search_legacy_router, tags=["Search"])
+app.include_router(taxonomy_legacy_router, tags=["Taxonomy"])
+app.include_router(ingestion_router, tags=["Document Ingestion"])
 
 # Include new comprehensive API routers
 app.include_router(
@@ -404,6 +448,13 @@ app.include_router(
     monitoring_router,
     prefix="/api/v1",
     tags=["Monitoring"]
+)
+
+# Include embedding router
+app.include_router(
+    embedding_router,
+    prefix="/api/v1",
+    tags=["Vector Embeddings"]
 )
 
 # Include evaluation router if available
@@ -505,6 +556,7 @@ async def root():
             "orchestration": "LangGraph 7-step RAG pipeline",
             "agent_factory": "Dynamic agent creation",
             "monitoring": "Real-time observability",
+            "embeddings": "Sentence Transformers 768-dim vectors",
             "simulation": "Removed - 100% real data"
         },
         "api_endpoints": {
@@ -529,7 +581,10 @@ async def root():
             "POST /api/v1/classify",
             "POST /api/v1/pipeline/execute",
             "POST /api/v1/agents/from-category",
-            "GET /api/v1/monitoring/health"
+            "GET /api/v1/monitoring/health",
+            "GET /api/v1/embeddings/health",
+            "POST /api/v1/embeddings/generate",
+            "POST /api/v1/embeddings/documents/update"
         ],
         "environment": config.environment,
         "timestamp": time.time()

@@ -1,0 +1,1009 @@
+[
+  {
+    "question": "What information is provided about: Machine learning is a subset of artificial intelli?",
+    "ground_truth_answer": "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed.",
+    "retrieved_contexts": [
+      "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed."
+    ],
+    "source_doc_ids": [
+      "d0a7301e-0d00-4076-9f95-a51b124e9db0"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It uses algorithms and statistical models to analy?",
+    "ground_truth_answer": "It uses algorithms and statistical models to analyze and draw inferences from patterns in data..",
+    "retrieved_contexts": [
+      "It uses algorithms and statistical models to analyze and draw inferences from patterns in data.."
+    ],
+    "source_doc_ids": [
+      "d0a7301e-0d00-4076-9f95-a51b124e9db0"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Vector similarity search is a fundamental techniqu?",
+    "ground_truth_answer": "Vector similarity search is a fundamental technique in information retrieval and machine learning.",
+    "retrieved_contexts": [
+      "Vector similarity search is a fundamental technique in information retrieval and machine learning."
+    ],
+    "source_doc_ids": [
+      "0f1baf2b-7eb0-4267-b712-cb3d0b2fb0c1"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It involves converting documents and queries into ?",
+    "ground_truth_answer": "It involves converting documents and queries into high-dimensional vectors and finding the most similar vectors using distance metrics like cosine similarity..",
+    "retrieved_contexts": [
+      "It involves converting documents and queries into high-dimensional vectors and finding the most similar vectors using distance metrics like cosine similarity.."
+    ],
+    "source_doc_ids": [
+      "0f1baf2b-7eb0-4267-b712-cb3d0b2fb0c1"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: BM25 is a probabilistic ranking function used in i?",
+    "ground_truth_answer": "BM25 is a probabilistic ranking function used in information retrieval.",
+    "retrieved_contexts": [
+      "BM25 is a probabilistic ranking function used in information retrieval."
+    ],
+    "source_doc_ids": [
+      "f8347579-45a8-4638-8dcc-3fc64ea480b6"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It estimates the relevance of documents to a given?",
+    "ground_truth_answer": "It estimates the relevance of documents to a given search query based on term frequency, document frequency, and document length normalization..",
+    "retrieved_contexts": [
+      "It estimates the relevance of documents to a given search query based on term frequency, document frequency, and document length normalization.."
+    ],
+    "source_doc_ids": [
+      "f8347579-45a8-4638-8dcc-3fc64ea480b6"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Hybrid search systems combine multiple retrieval m?",
+    "ground_truth_answer": "Hybrid search systems combine multiple retrieval methods to improve search accuracy.",
+    "retrieved_contexts": [
+      "Hybrid search systems combine multiple retrieval methods to improve search accuracy."
+    ],
+    "source_doc_ids": [
+      "ecdf9db2-2972-4f5b-ae04-6172714551ae"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: Common approaches include combining BM25 keyword s?",
+    "ground_truth_answer": "Common approaches include combining BM25 keyword search with vector similarity search, and using cross-encoder reranking for final result optimization..",
+    "retrieved_contexts": [
+      "Common approaches include combining BM25 keyword search with vector similarity search, and using cross-encoder reranking for final result optimization.."
+    ],
+    "source_doc_ids": [
+      "ecdf9db2-2972-4f5b-ae04-6172714551ae"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Natural Language Processing (NLP) is a branch of a?",
+    "ground_truth_answer": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+    "retrieved_contexts": [
+      "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language."
+    ],
+    "source_doc_ids": [
+      "8e59e277-3db3-42fd-ae72-74800af24050"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It includes tasks like text classification, sentim?",
+    "ground_truth_answer": "It includes tasks like text classification, sentiment analysis, and language translation..",
+    "retrieved_contexts": [
+      "It includes tasks like text classification, sentiment analysis, and language translation.."
+    ],
+    "source_doc_ids": [
+      "8e59e277-3db3-42fd-ae72-74800af24050"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Deep learning is a subset of machine learning that?",
+    "ground_truth_answer": "Deep learning is a subset of machine learning that uses artificial neural networks with multiple layers to model and understand complex patterns in data.",
+    "retrieved_contexts": [
+      "Deep learning is a subset of machine learning that uses artificial neural networks with multiple layers to model and understand complex patterns in data."
+    ],
+    "source_doc_ids": [
+      "8d4279d3-695c-4343-a2cc-b79080c47e37"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It has revolutionized fields like computer vision ?",
+    "ground_truth_answer": "It has revolutionized fields like computer vision and natural language processing..",
+    "retrieved_contexts": [
+      "It has revolutionized fields like computer vision and natural language processing.."
+    ],
+    "source_doc_ids": [
+      "8d4279d3-695c-4343-a2cc-b79080c47e37"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Information retrieval systems are designed to find?",
+    "ground_truth_answer": "Information retrieval systems are designed to find relevant information from large collections of data.",
+    "retrieved_contexts": [
+      "Information retrieval systems are designed to find relevant information from large collections of data."
+    ],
+    "source_doc_ids": [
+      "5d599302-0b12-4b4a-b087-529eaa3f0674"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: They use various techniques including indexing, ra?",
+    "ground_truth_answer": "They use various techniques including indexing, ranking algorithms, and query processing to provide accurate search results..",
+    "retrieved_contexts": [
+      "They use various techniques including indexing, ranking algorithms, and query processing to provide accurate search results.."
+    ],
+    "source_doc_ids": [
+      "5d599302-0b12-4b4a-b087-529eaa3f0674"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Embedding models convert text, images, or other da?",
+    "ground_truth_answer": "Embedding models convert text, images, or other data into dense vector representations that capture semantic meaning.",
+    "retrieved_contexts": [
+      "Embedding models convert text, images, or other data into dense vector representations that capture semantic meaning."
+    ],
+    "source_doc_ids": [
+      "f0437f70-b371-45ff-af24-fbfaf14fcc38"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: These embeddings are crucial for tasks like simila?",
+    "ground_truth_answer": "These embeddings are crucial for tasks like similarity search, clustering, and recommendation systems..",
+    "retrieved_contexts": [
+      "These embeddings are crucial for tasks like similarity search, clustering, and recommendation systems.."
+    ],
+    "source_doc_ids": [
+      "f0437f70-b371-45ff-af24-fbfaf14fcc38"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Cross-encoder reranking is a technique used to imp?",
+    "ground_truth_answer": "Cross-encoder reranking is a technique used to improve search result quality by re-scoring candidate documents using a more sophisticated model.",
+    "retrieved_contexts": [
+      "Cross-encoder reranking is a technique used to improve search result quality by re-scoring candidate documents using a more sophisticated model."
+    ],
+    "source_doc_ids": [
+      "b332ae59-2bc9-4275-b3ce-a099ca8892f3"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It provides better accuracy than bi-encoder approa?",
+    "ground_truth_answer": "It provides better accuracy than bi-encoder approaches but at higher computational cost..",
+    "retrieved_contexts": [
+      "It provides better accuracy than bi-encoder approaches but at higher computational cost.."
+    ],
+    "source_doc_ids": [
+      "b332ae59-2bc9-4275-b3ce-a099ca8892f3"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Document classification is the task of automatical?",
+    "ground_truth_answer": "Document classification is the task of automatically assigning categories or labels to documents based on their content.",
+    "retrieved_contexts": [
+      "Document classification is the task of automatically assigning categories or labels to documents based on their content."
+    ],
+    "source_doc_ids": [
+      "911387de-5034-44e9-98c1-d98304c2ba22"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It uses machine learning algorithms and natural la?",
+    "ground_truth_answer": "It uses machine learning algorithms and natural language processing techniques to analyze text features..",
+    "retrieved_contexts": [
+      "It uses machine learning algorithms and natural language processing techniques to analyze text features.."
+    ],
+    "source_doc_ids": [
+      "911387de-5034-44e9-98c1-d98304c2ba22"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What is Dynamic Taxonomy RAG and how does it work?",
+    "ground_truth_answer": "Dynamic Taxonomy RAG (DT-RAG) is an advanced retrieval-augmented generation system that uses hierarchical taxonomy for document organization and classification. It combines hybrid search (BM25 + vector similarity) with cross-encoder reranking to provide accurate, context-aware responses.",
+    "retrieved_contexts": [
+      "DT-RAG v1.8.1 implements dynamic taxonomy for intelligent document classification",
+      "The system uses pgvector for 1536-dimensional embedding storage with HNSW indexing",
+      "Hybrid search combines BM25 lexical matching with semantic vector search"
+    ],
+    "source_doc_ids": [
+      "doc_dtrag_overview"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": [
+      "Technology",
+      "AI",
+      "RAG Systems"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "system_overview"
+    }
+  },
+  {
+    "question": "How does the hybrid search engine combine BM25 and vector search?",
+    "ground_truth_answer": "The hybrid search engine uses weighted score fusion with configurable weights (default: BM25_WEIGHT=0.5, VECTOR_WEIGHT=0.5). It performs parallel BM25 lexical search and vector similarity search, then combines scores using reciprocal rank fusion (RRF) or linear combination. Cross-encoder reranking further refines the final results.",
+    "retrieved_contexts": [
+      "BM25 parameters: K1=1.5, B=0.75 for term frequency normalization",
+      "Vector search uses cosine similarity on 1536-dim OpenAI embeddings",
+      "Cross-encoder reranking with sentence-transformers improves precision"
+    ],
+    "source_doc_ids": [
+      "doc_hybrid_search"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Search",
+      "Hybrid Search"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "hybrid_search"
+    }
+  },
+  {
+    "question": "What are the RAGAS metrics used for evaluation?",
+    "ground_truth_answer": "RAGAS evaluation uses four core metrics: Context Precision (relevance of retrieved contexts), Context Recall (coverage of necessary information), Faithfulness (factual consistency with contexts), and Answer Relevancy (how well the answer addresses the query). Each metric ranges from 0.0 to 1.0, with quality thresholds for monitoring.",
+    "retrieved_contexts": [
+      "Context Precision minimum threshold: 0.75",
+      "Context Recall minimum threshold: 0.70",
+      "Faithfulness minimum threshold: 0.85",
+      "Answer Relevancy minimum threshold: 0.80"
+    ],
+    "source_doc_ids": [
+      "doc_ragas_metrics"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": [
+      "Technology",
+      "Evaluation",
+      "RAGAS"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "ragas_metrics"
+    }
+  },
+  {
+    "question": "Explain the document ingestion pipeline process",
+    "ground_truth_answer": "The ingestion pipeline consists of: 1) File parsing (PDF, DOCX, TXT), 2) Intelligent chunking with overlap, 3) PII detection and masking, 4) Embedding generation using OpenAI text-embedding-3-large (1536 dims), 5) Database storage (documents, chunks, embeddings tables). The process is transaction-safe with rollback on failures.",
+    "retrieved_contexts": [
+      "JobOrchestrator manages document processing with up to 100 concurrent workers",
+      "IntelligentChunker uses chunk_size=500, overlap_size=128",
+      "PIIDetector identifies and masks sensitive information",
+      "Embeddings stored in PostgreSQL with HNSW index (m=16, ef_construction=64)"
+    ],
+    "source_doc_ids": [
+      "doc_ingestion_pipeline"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Data Processing",
+      "Ingestion"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "ingestion"
+    }
+  },
+  {
+    "question": "What authentication mechanisms are implemented?",
+    "ground_truth_answer": "The API uses API Key authentication with PBKDF2-HMAC-SHA256 hashing (100,000 iterations). All routers (classification, taxonomy, orchestration, agent_factory, evaluation, search) require verify_api_key dependency injection. Keys are stored securely with rate limiting and expiration support.",
+    "retrieved_contexts": [
+      "29 endpoints across 5 routers secured with API key authentication",
+      "PBKDF2 provides resistance against rainbow table and brute-force attacks",
+      "Rate limiting prevents API abuse and DoS attacks"
+    ],
+    "source_doc_ids": [
+      "doc_security"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Security",
+      "Authentication"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "authentication"
+    }
+  },
+  {
+    "question": "How does the classification system work with HITL?",
+    "ground_truth_answer": "The classification system uses AI-powered classification with confidence scoring. When confidence falls below 0.70, Human-in-the-Loop (HITL) workflow is triggered. Reviewers can approve, modify, or reject AI classifications, providing feedback that improves the system. HITL tasks are prioritized by confidence levels and include alternative classification suggestions.",
+    "retrieved_contexts": [
+      "Classification confidence threshold for HITL: 0.70",
+      "HITLReviewRequest includes chunk_id, approved_path, confidence_override",
+      "Classification analytics track HITL rate and accuracy metrics"
+    ],
+    "source_doc_ids": [
+      "doc_classification"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "ML",
+      "Classification"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "hitl_classification"
+    }
+  },
+  {
+    "question": "What database schema is used for storing documents and embeddings?",
+    "ground_truth_answer": "The schema includes: documents table (doc_id, source_url, title, metadata), chunks table (chunk_id, doc_id, text, span, chunk_index, token_count, has_pii, pii_types), and embeddings table (embedding_id, chunk_id, vec vector(1536), model_name, bm25_tokens). The embeddings table uses HNSW index for efficient similarity search.",
+    "retrieved_contexts": [
+      "Migration 0006 adds PII tracking: token_count, has_pii, pii_types columns",
+      "Migration 0005 changes vec from vector(768) to vector(1536)",
+      "HNSW index parameters: m=16, ef_construction=64"
+    ],
+    "source_doc_ids": [
+      "doc_schema"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Database",
+      "Schema"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "database_schema"
+    }
+  },
+  {
+    "question": "What is the cost of using Gemini 2.5 Flash for RAGAS evaluation?",
+    "ground_truth_answer": "Gemini 2.5 Flash costs $0.075 per 1 million input tokens and $0.30 per 1 million output tokens. This represents an 85% cost reduction compared to gemini-pro. For evaluation workloads with typical input sizes of 2000 tokens, this translates to approximately $0.00015 per evaluation.",
+    "retrieved_contexts": [
+      "Gemini 2.5 Flash pricing: Input $0.075/1M tokens, Output $0.30/1M tokens",
+      "Model ID: gemini-2.5-flash-latest",
+      "Context window: 128K tokens"
+    ],
+    "source_doc_ids": [
+      "doc_costs"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": [
+      "Technology",
+      "Costs",
+      "LLM Pricing"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "costs"
+    }
+  },
+  {
+    "question": "How does the LangGraph orchestration pipeline work?",
+    "ground_truth_answer": "The LangGraph orchestration implements a 7-step RAG pipeline: 1) Query Analysis, 2) Taxonomy Classification, 3) Context Retrieval, 4) Context Reranking, 5) Response Generation, 6) Quality Validation, 7) Cost Tracking. Each step has state management and error recovery. The pipeline supports both synchronous and asynchronous execution with background task processing for large batches.",
+    "retrieved_contexts": [
+      "PipelineRequest includes query, taxonomy_version, agent_id, search_config",
+      "Background processing for batches > 50 items",
+      "Pipeline analytics track latency, cost, and quality metrics"
+    ],
+    "source_doc_ids": [
+      "doc_orchestration"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Orchestration",
+      "LangGraph"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "orchestration"
+    }
+  },
+  {
+    "question": "What agent factory capabilities are available?",
+    "ground_truth_answer": "The agent factory supports dynamic agent creation from taxonomy categories with customizable retrieval and generation configurations. Features include: agent lifecycle management (create, activate, deactivate, delete), performance metrics tracking, category-based filtering, and role-based access control. Each agent is optimized for specific taxonomy categories.",
+    "retrieved_contexts": [
+      "FromCategoryRequest includes taxonomy_path, retrieval_config, features_config",
+      "AgentMetrics track query_count, avg_latency, success_rate",
+      "Agent activation/deactivation for production deployment control"
+    ],
+    "source_doc_ids": [
+      "doc_agent_factory"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Agents",
+      "Factory Pattern"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "agent_factory"
+    }
+  },
+  {
+    "question": "How is PII detected and handled during ingestion?",
+    "ground_truth_answer": "The PIIDetector identifies sensitive information including resident registration numbers, phone numbers, emails, credit cards, and bank accounts. Detected PII is masked before storage, and chunks are tagged with has_pii=True and pii_types array. This allows filtering PII-containing chunks from search results or applying special handling policies.",
+    "retrieved_contexts": [
+      "PII types detected: resident_registration_number, phone_number, email, credit_card, bank_account",
+      "Chunks table columns: has_pii (boolean), pii_types (text[])",
+      "Index idx_chunks_has_pii for efficient PII filtering"
+    ],
+    "source_doc_ids": [
+      "doc_pii"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Security",
+      "PII Detection"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "pii_detection"
+    }
+  },
+  {
+    "question": "What monitoring and observability features are included?",
+    "ground_truth_answer": "Monitoring features include: MetricsCollector for performance tracking, HealthChecker for system health, Sentry integration for error reporting, Langfuse for LLM cost tracking, and MonitoringDashboard for real-time visualization. All features support Prometheus export and custom alert thresholds.",
+    "retrieved_contexts": [
+      "Sentry captures search failures, score normalization errors, reranker errors",
+      "Langfuse tracks token usage and costs for Gemini and OpenAI models",
+      "Health checks monitor model services, taxonomy service, HITL service"
+    ],
+    "source_doc_ids": [
+      "doc_monitoring"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Observability",
+      "Monitoring"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "monitoring"
+    }
+  },
+  {
+    "question": "Describe the taxonomy version management system",
+    "ground_truth_answer": "Taxonomy versioning supports: version creation with semantic versioning (e.g., 1.8.1), version comparison showing additions/deletions/modifications, tree navigation with expansion levels, search across taxonomy nodes, and validation checks for DAG consistency. Each version tracks creation metadata and change summaries.",
+    "retrieved_contexts": [
+      "TaxonomyVersion includes version, created_at, created_by, change_summary",
+      "Version comparison returns additions, deletions, modifications",
+      "Validation checks for cycles, orphaned nodes, duplicate labels"
+    ],
+    "source_doc_ids": [
+      "doc_taxonomy"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Taxonomy",
+      "Version Management"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "taxonomy_versioning"
+    }
+  },
+  {
+    "question": "What are the quality thresholds for monitoring?",
+    "ground_truth_answer": "Quality thresholds include: faithfulness_min=0.85, context_precision_min=0.75, context_recall_min=0.70, answer_relevancy_min=0.80, and response_time_max=5.0 seconds. These thresholds trigger quality alerts and recommendations when violated, enabling proactive system quality management.",
+    "retrieved_contexts": [
+      "QualityThresholds model defines minimum acceptable scores",
+      "Alerts include severity levels: low, medium, high, critical",
+      "Recommendations auto-generated based on specific threshold violations"
+    ],
+    "source_doc_ids": [
+      "doc_quality"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": [
+      "Technology",
+      "Quality",
+      "Thresholds"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "quality_thresholds"
+    }
+  },
+  {
+    "question": "How does batch evaluation work?",
+    "ground_truth_answer": "Batch evaluation accepts up to 50 EvaluationRequest items, processes them concurrently, and returns aggregate metrics including average scores across all four RAGAS metrics. The BatchEvaluationResponse includes batch_id, individual results, summary statistics, and processing time. Large batches (>50 items) return 202 Accepted with background processing.",
+    "retrieved_contexts": [
+      "Maximum batch size: 50 evaluations",
+      "Summary includes avg_precision, avg_recall, avg_faithfulness, avg_relevancy",
+      "Background processing for efficient resource utilization"
+    ],
+    "source_doc_ids": [
+      "doc_batch_eval"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Evaluation",
+      "Batch Processing"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "batch_evaluation"
+    }
+  },
+  {
+    "question": "What embedding model is used and why?",
+    "ground_truth_answer": "OpenAI text-embedding-3-large is used with 1536 dimensions and shortening enabled. This model provides high-quality semantic embeddings at $0.13 per 1 million tokens. The dimensions parameter is explicitly set to 1536 to prevent the API from returning the default 3072-dimensional vectors, ensuring compatibility with the database schema.",
+    "retrieved_contexts": [
+      "Model: text-embedding-3-large, dimensions: 1536",
+      "Cost: $0.13 per 1M tokens",
+      "apps/api/embedding_service.py:171 sets dimensions=1536"
+    ],
+    "source_doc_ids": [
+      "doc_embeddings"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Embeddings",
+      "Models"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "embedding_model"
+    }
+  },
+  {
+    "question": "What is the purpose of bm25_tokens in the embeddings table?",
+    "ground_truth_answer": "The bm25_tokens column stores tokenized text for BM25 lexical search. This enables efficient hybrid search by precomputing tokens during ingestion, avoiding runtime tokenization overhead. The tokens are used in conjunction with vector embeddings to implement the hybrid BM25+vector search strategy.",
+    "retrieved_contexts": [
+      "Embeddings table: vec vector(1536), bm25_tokens text[]",
+      "BM25 uses inverse document frequency (IDF) weighting",
+      "Hybrid search combines lexical and semantic matching"
+    ],
+    "source_doc_ids": [
+      "doc_bm25"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Search",
+      "BM25"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "bm25_tokens"
+    }
+  },
+  {
+    "question": "How are API endpoints versioned?",
+    "ground_truth_answer": "API versioning uses URL prefix-based strategy with /api/v1 for all comprehensive routers. The system maintains backward compatibility with legacy routers at root level. Version information is available via GET /api/versions endpoint, and OpenAPI spec is served at /api/v1/openapi.json.",
+    "retrieved_contexts": [
+      "Current version: v1 (prefix: /api/v1)",
+      "Legacy routers at root level for backward compatibility",
+      "OpenAPI 3.0.3 specification with interactive Swagger UI"
+    ],
+    "source_doc_ids": [
+      "doc_versioning"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": [
+      "Technology",
+      "API",
+      "Versioning"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "api_versioning"
+    }
+  },
+  {
+    "question": "What security measures are implemented beyond authentication?",
+    "ground_truth_answer": "Security measures include: CORS middleware with configurable origins, TrustedHost middleware for host header validation, rate limiting to prevent abuse, SQL injection prevention via parameterized queries, PII masking during ingestion, secure API key storage with PBKDF2 hashing, and comprehensive audit logging of all API requests.",
+    "retrieved_contexts": [
+      "CORSMiddleware configured in main.py",
+      "Rate limiting with slowapi library",
+      "API keys hashed with 100,000 PBKDF2 iterations"
+    ],
+    "source_doc_ids": [
+      "doc_security_measures"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Security",
+      "Defense in Depth"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "security_measures"
+    }
+  },
+  {
+    "question": "How does the system handle concurrent document ingestion?",
+    "ground_truth_answer": "JobOrchestrator manages concurrent ingestion with up to 100 worker tasks using asyncio. Each worker processes documents independently with full transaction isolation. The job queue tracks status, priority, and retry attempts. Failures trigger rollback without affecting other concurrent jobs, ensuring system resilience under high load.",
+    "retrieved_contexts": [
+      "JobOrchestrator max_workers: 100",
+      "AsyncSession provides transaction isolation per job",
+      "JobQueue implements priority-based task scheduling"
+    ],
+    "source_doc_ids": [
+      "doc_concurrency"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Concurrency",
+      "Job Processing"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "concurrency"
+    }
+  },
+  {
+    "question": "What happens when RAGAS evaluation detects quality issues?",
+    "ground_truth_answer": "When quality metrics fall below thresholds, the system generates quality_flags (e.g., low_faithfulness, low_precision) and corresponding recommendations. The evaluation result includes detailed analysis with specific improvement suggestions. Monitoring dashboard can trigger alerts for critical quality degradation, enabling proactive intervention.",
+    "retrieved_contexts": [
+      "Quality flags: low_faithfulness, low_precision, low_recall, low_relevancy",
+      "Recommendations auto-generated per quality issue",
+      "QualityAlert includes severity and suggested_actions"
+    ],
+    "source_doc_ids": [
+      "doc_quality_issues"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Quality",
+      "Issue Handling"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "quality_issues"
+    }
+  },
+  {
+    "question": "Explain the cross-encoder reranking process",
+    "ground_truth_answer": "Cross-encoder reranking uses sentence-transformers to re-score initial search results. Unlike bi-encoders (which encode query and document separately), cross-encoders process query-document pairs jointly, capturing fine-grained semantic interactions. This improves ranking precision at the cost of higher latency, making it suitable for reranking top-k results after initial retrieval.",
+    "retrieved_contexts": [
+      "Cross-encoder processes query-document pairs jointly",
+      "Higher computational cost than bi-encoder similarity",
+      "Applied after hybrid search combines BM25 and vector results"
+    ],
+    "source_doc_ids": [
+      "doc_reranking"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Reranking",
+      "Cross-Encoder"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "cross_encoder"
+    }
+  },
+  {
+    "question": "What is the difference between simple, reasoning, and multi-context queries?",
+    "ground_truth_answer": "Simple queries are factual, single-hop questions answerable from a single context chunk. Reasoning queries require inference or logical deduction across information. Multi-context queries need information from multiple documents to provide complete answers. Golden dataset generation targets 50% simple, 25% reasoning, 25% multi-context distribution for comprehensive evaluation coverage.",
+    "retrieved_contexts": [
+      "Query distribution: simple=0.5, reasoning=0.25, multi_context=0.25",
+      "Simple example: 'What is X?'",
+      "Reasoning example: 'Why does X happen?'",
+      "Multi-context example: 'Compare X and Y'"
+    ],
+    "source_doc_ids": [
+      "doc_query_types"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Evaluation",
+      "Query Types"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "query_types"
+    }
+  },
+  {
+    "question": "How does the system ensure data consistency across documents, chunks, and embeddings?",
+    "ground_truth_answer": "Data consistency is ensured through: 1) Foreign key relationships (chunks.doc_id → documents.doc_id, embeddings.chunk_id → chunks.chunk_id), 2) Transaction-based ingestion with commit/rollback, 3) Atomic three-table insertion (documents → chunks → embeddings), 4) Database constraints preventing orphaned records, 5) Cascade delete policies for maintaining referential integrity.",
+    "retrieved_contexts": [
+      "job_orchestrator.py uses async with session for transaction control",
+      "session.rollback() on failure prevents partial insertions",
+      "Foreign key constraints enforce referential integrity"
+    ],
+    "source_doc_ids": [
+      "doc_consistency"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Database",
+      "Consistency"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "data_consistency"
+    }
+  },
+  {
+    "question": "What migration strategy is used for database schema updates?",
+    "ground_truth_answer": "Alembic migrations provide version-controlled schema changes with upgrade/downgrade scripts. Each migration is numbered sequentially (0004, 0005, 0006, 0007) and includes PostgreSQL-specific features like HNSW index creation, vector type alterations, and PII column additions. Migration 0006 uses DO blocks for conditional constraint creation to ensure idempotency.",
+    "retrieved_contexts": [
+      "Alembic version tracking in alembic_version table",
+      "Migration 0006: ADD COLUMN IF NOT EXISTS for idempotency",
+      "Migration 0005: ALTER COLUMN vec TYPE vector(1536)",
+      "Migration 0007: Additional production-ready features"
+    ],
+    "source_doc_ids": [
+      "doc_migrations"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Database",
+      "Migrations"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "migrations"
+    }
+  },
+  {
+    "question": "What information is included in detailed RAGAS analysis?",
+    "ground_truth_answer": "Detailed analysis includes: query_analysis (complexity, word count, question words), context_analysis (per-chunk relevance, numerical data presence), response_analysis (sentence count, avg length, specific info detection), and overall_assessment (quality rating, strengths, weaknesses). This comprehensive breakdown enables precise debugging of evaluation failures.",
+    "retrieved_contexts": [
+      "Query complexity: simple (<5 words), medium (5-12), complex (>12)",
+      "Context relevance: estimated from word count and overlap",
+      "Quality rating: excellent (>=0.9), good (>=0.8), fair (>=0.7), poor (<0.7)"
+    ],
+    "source_doc_ids": [
+      "doc_detailed_analysis"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "Evaluation",
+      "Detailed Analysis"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "detailed_analysis"
+    }
+  },
+  {
+    "question": "How are API errors handled and reported?",
+    "ground_truth_answer": "API errors use FastAPI HTTPException with appropriate status codes (400 for bad requests, 404 for not found, 500 for internal errors). Sentry captures unexpected exceptions with context breadcrumbs. All errors are logged with structured logging including request ID, timestamp, and stack traces. Custom middleware adds correlation IDs for distributed tracing.",
+    "retrieved_contexts": [
+      "HTTPException provides status_code and detail message",
+      "Sentry integration captures exceptions with breadcrumbs",
+      "Structured logging with correlation IDs for request tracing"
+    ],
+    "source_doc_ids": [
+      "doc_error_handling"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Error Handling",
+      "API Errors"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "error_handling"
+    }
+  },
+  {
+    "question": "What best practices are followed for API design?",
+    "ground_truth_answer": "API design follows: RESTful principles with resource-based URLs, semantic HTTP methods (GET, POST, PUT, DELETE), consistent response formats with metadata headers, comprehensive OpenAPI 3.0.3 documentation, pagination for list endpoints, filtering/sorting support, API versioning, rate limiting, authentication on all endpoints, and CORS configuration for cross-origin access.",
+    "retrieved_contexts": [
+      "OpenAPI spec at /api/v1/openapi.json",
+      "Pagination: page (1-based), limit (max 100)",
+      "Response headers: X-Evaluation-ID, X-Overall-Score, X-Has-Quality-Issues"
+    ],
+    "source_doc_ids": [
+      "doc_api_best_practices"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "API",
+      "Best Practices"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "api_best_practices"
+    }
+  },
+  {
+    "question": "How does the system support A/B testing experiments?",
+    "ground_truth_answer": "ExperimentRun model supports A/B testing with control_config and treatment_config. Statistical parameters include significance_threshold (default: 0.05), minimum_sample_size (default: 100), and power_threshold (default: 0.8). Results include metric comparisons with p-values, effect sizes, confidence intervals, and rollout/rollback recommendations based on statistical significance.",
+    "retrieved_contexts": [
+      "ExperimentRun tracks status: planning, running, completed, stopped",
+      "Statistical tests determine recommendation: rollout, rollback, continue_testing",
+      "Metric comparisons include control_mean, treatment_mean, p_value, effect_size"
+    ],
+    "source_doc_ids": [
+      "doc_ab_testing"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Experimentation",
+      "A/B Testing"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "ab_testing"
+    }
+  },
+  {
+    "question": "What are the key differences between legacy and comprehensive routers?",
+    "ground_truth_answer": "Legacy routers (health, classify, search, taxonomy, ingestion) maintain backward compatibility at root level. Comprehensive routers (taxonomy_router, search_router, classification_router, orchestration_router, agent_factory_router, evaluation_router) are versioned under /api/v1 with enhanced features: API key authentication, comprehensive error handling, detailed response models, batch operations, and monitoring integration.",
+    "retrieved_contexts": [
+      "Legacy routers for backward compatibility",
+      "Comprehensive routers with /api/v1 prefix",
+      "29 endpoints secured in comprehensive routers",
+      "Enhanced features: batch ops, monitoring, detailed responses"
+    ],
+    "source_doc_ids": [
+      "doc_router_comparison"
+    ],
+    "query_type": "multi_context",
+    "taxonomy_path": [
+      "Technology",
+      "API",
+      "Router Architecture"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "router_comparison"
+    }
+  },
+  {
+    "question": "How is token counting performed for cost estimation?",
+    "ground_truth_answer": "Token counting uses tiktoken library for OpenAI models and approximation (LENGTH(text)/4) for initial estimates. The chunks.token_count column stores accurate counts during ingestion. This enables precise cost calculation for embeddings (text-embedding-3-large: $0.13/1M tokens) and generation (Gemini 2.5 Flash: $0.075/1M input tokens).",
+    "retrieved_contexts": [
+      "Migration 0006: UPDATE chunks SET token_count = GREATEST(LENGTH(text) / 4, 1)",
+      "Constraint chk_token_count_positive ensures positive counts",
+      "Langfuse tracks actual token usage for billing"
+    ],
+    "source_doc_ids": [
+      "doc_token_counting"
+    ],
+    "query_type": "reasoning",
+    "taxonomy_path": [
+      "Technology",
+      "Costs",
+      "Token Counting"
+    ],
+    "metadata": {
+      "generated_method": "manual",
+      "topic": "token_counting"
+    }
+  }
+]
