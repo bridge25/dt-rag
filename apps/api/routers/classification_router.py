@@ -198,7 +198,8 @@ async def get_classification_service() -> ClassificationService:
 @classification_router.post("/", response_model=ClassifyResponse)
 async def classify_document_chunk(
     request: ClassifyRequest,
-    service: ClassificationService = Depends(get_classification_service)
+    service: ClassificationService = Depends(get_classification_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Classify a document chunk into taxonomy categories
@@ -251,7 +252,8 @@ async def classify_document_chunk(
 async def classify_batch(
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
-    service: ClassificationService = Depends(get_classification_service)
+    service: ClassificationService = Depends(get_classification_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Classify multiple document chunks in batch
@@ -302,7 +304,8 @@ async def classify_batch(
 async def get_hitl_tasks(
     limit: int = Query(50, ge=1, le=100, description="Maximum tasks to return"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
-    service: ClassificationService = Depends(get_classification_service)
+    service: ClassificationService = Depends(get_classification_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get pending human-in-the-loop classification tasks
@@ -331,7 +334,8 @@ async def get_hitl_tasks(
 @classification_router.post("/hitl/review")
 async def submit_hitl_review(
     review: HITLReviewRequest,
-    service: ClassificationService = Depends(get_classification_service)
+    service: ClassificationService = Depends(get_classification_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Submit human review for classification task
@@ -363,7 +367,8 @@ async def submit_hitl_review(
 
 @classification_router.get("/analytics", response_model=ClassificationAnalytics)
 async def get_classification_analytics(
-    service: ClassificationService = Depends(get_classification_service)
+    service: ClassificationService = Depends(get_classification_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get classification analytics and performance metrics
@@ -387,8 +392,9 @@ async def get_classification_analytics(
 
 @classification_router.get("/confidence/{chunk_id}")
 async def get_classification_confidence(
-    chunk_id: str = Query(..., description="Document chunk ID"),
-    service: ClassificationService = Depends(get_classification_service)
+    chunk_id: str,
+    service: ClassificationService = Depends(get_classification_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get detailed confidence analysis for a classification
@@ -429,7 +435,9 @@ async def get_classification_confidence(
         )
 
 @classification_router.get("/status")
-async def get_classification_status():
+async def get_classification_status(
+    api_key: str = Depends(verify_api_key)
+):
     """
     Get classification system status and health
 

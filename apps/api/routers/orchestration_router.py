@@ -17,6 +17,12 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status, Background
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+try:
+    from ..deps import verify_api_key
+except ImportError:
+    def verify_api_key():
+        return None
+
 # Import common schemas
 import sys
 from pathlib import Path as PathLib
@@ -200,7 +206,8 @@ async def get_pipeline_service() -> PipelineService:
 @orchestration_router.post("/execute", response_model=PipelineResponse)
 async def execute_pipeline(
     request: PipelineRequest,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Execute the complete 7-step RAG pipeline
@@ -253,7 +260,8 @@ async def execute_pipeline(
 async def execute_pipeline_async(
     request: PipelineRequest,
     background_tasks: BackgroundTasks,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Start asynchronous pipeline execution
@@ -284,7 +292,8 @@ async def execute_pipeline_async(
 @orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)
 async def get_pipeline_job(
     job_id: str,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get pipeline job status and results
@@ -316,7 +325,8 @@ async def get_pipeline_job(
 
 @orchestration_router.get("/config", response_model=PipelineConfig)
 async def get_pipeline_config(
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get current pipeline configuration
@@ -340,7 +350,8 @@ async def get_pipeline_config(
 @orchestration_router.put("/config", response_model=PipelineConfig)
 async def update_pipeline_config(
     config: PipelineConfig,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Update pipeline configuration
@@ -372,7 +383,8 @@ async def update_pipeline_config(
 
 @orchestration_router.get("/analytics", response_model=PipelineAnalytics)
 async def get_pipeline_analytics(
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get pipeline analytics and performance metrics
@@ -394,7 +406,9 @@ async def get_pipeline_analytics(
         )
 
 @orchestration_router.get("/status")
-async def get_pipeline_status():
+async def get_pipeline_status(
+    api_key: str = Depends(verify_api_key)
+):
     """
     Get pipeline system status and health
 

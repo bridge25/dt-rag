@@ -6,12 +6,16 @@ import os
 import asyncio
 from typing import List, Dict, Any, Optional, Tuple
 import asyncpg
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON, text
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, INT4RANGE
 from sqlalchemy.types import TypeDecorator, TEXT
+try:
+    from pgvector.sqlalchemy import Vector
+    PGVECTOR_AVAILABLE = True
+except ImportError:
+    PGVECTOR_AVAILABLE = False
 import json
 from datetime import datetime
 import uuid
@@ -23,6 +27,9 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import tiktoken
+
+# Import shared DB session (순환 참조 방지)
+from ..core.db_session import engine, async_session, Base, DATABASE_URL
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -41,9 +48,7 @@ BM25_B = 0.75  # Document length normalization
 BM25_WEIGHT = 0.5
 VECTOR_WEIGHT = 0.5
 
-# SQLite 호환 타입 정의
 class JSONType(TypeDecorator):
-    """SQLite 호환 JSON 타입"""
     impl = TEXT
     cache_ok = True
 
@@ -58,7 +63,6 @@ class JSONType(TypeDecorator):
         return value
 
 class ArrayType(TypeDecorator):
-    """SQLite 호환 Array 타입"""
     impl = TEXT
     cache_ok = True
 
@@ -73,7 +77,6 @@ class ArrayType(TypeDecorator):
         return value
 
 class UUIDType(TypeDecorator):
-    """SQLite 호환 UUID 타입"""
     impl = String(36)
     cache_ok = True
 
@@ -87,44 +90,28 @@ class UUIDType(TypeDecorator):
             return uuid.UUID(value)
         return value
 
-# 데이터베이스 타입 선택 함수
 def get_json_type():
-    """현재 데이터베이스에 맞는 JSON 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return JSONType()
     return JSON
 
 def get_array_type(item_type=String):
-    """현재 데이터베이스에 맞는 Array 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return ArrayType()
     return ARRAY(item_type)
 
+def get_vector_type(dimensions=1536):
+    """Get appropriate vector type based on database"""
+    if "postgresql" in DATABASE_URL and PGVECTOR_AVAILABLE:
+        return Vector(dimensions)
+    # SQLite fallback - use JSON array
+    return get_array_type(Float)
+
 def get_uuid_type():
-    """현재 데이터베이스에 맞는 UUID 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return UUIDType()
     return UUID(as_uuid=True)
 
-# SQLAlchemy Base
-Base = declarative_base()
-
-# 데이터베이스 URL 설정
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./dt_rag_test.db")
-
-# SQLite와 PostgreSQL 호환성을 위한 엔진 설정
-if "sqlite" in DATABASE_URL:
-    engine = create_async_engine(
-        DATABASE_URL,
-        echo=False,
-        connect_args={"check_same_thread": False}
-    )
-else:
-    engine = create_async_engine(DATABASE_URL, echo=False)
-
-async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-# 테이블 모델 정의 - SQLite 호환 버전
 class TaxonomyNode(Base):
     __tablename__ = "taxonomy_nodes"
 
@@ -183,13 +170,16 @@ class DocumentChunk(Base):
     embedding: Mapped[Optional[List[float]]] = mapped_column(get_array_type(Float), nullable=True)
     chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    has_pii: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    pii_types: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String), default=list)
 
 class Embedding(Base):
     __tablename__ = "embeddings"
 
     embedding_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
     chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
-    vec: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)  # Vector 저장
+    vec: Mapped[List[float]] = mapped_column(get_vector_type(1536), nullable=False)
     model_name: Mapped[str] = mapped_column(String(100), nullable=False, default='text-embedding-ada-002')
     bm25_tokens: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -745,19 +735,18 @@ class SearchDAO:
                     LIMIT :topk
                 """)
             else:
-                # PostgreSQL full-text search
+                # PostgreSQL full-text search (init.sql 스키마에 맞춤)
                 bm25_query = text(f"""
-                    SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
+                    SELECT d.id, d.content, d.title, 'db_document' as source_url,
+                           ARRAY[]::text[] as path,
                            ts_rank_cd(
-                               to_tsvector('english', c.text),
+                               to_tsvector('english', d.content || ' ' || d.title),
                                websearch_to_tsquery('english', :query),
                                32 -- normalization flag
                            ) as bm25_score
-                    FROM chunks c
-                    JOIN documents d ON c.doc_id = d.doc_id
-                    LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
-                    WHERE to_tsvector('english', c.text) @@ websearch_to_tsquery('english', :query)
-                    {filter_clause}
+                    FROM documents d
+                    WHERE to_tsvector('english', d.content || ' ' || d.title) @@ websearch_to_tsquery('english', :query)
+                    {filter_clause.replace('dt.', 'd.').replace('c.', 'd.') if filter_clause else ''}
                     ORDER BY bm25_score DESC
                     LIMIT :topk
                 """)
@@ -771,11 +760,11 @@ class SearchDAO:
             results = []
             for row in rows:
                 result_dict = {
-                    "chunk_id": str(row[0]),
-                    "text": row[1],
-                    "title": row[2],
-                    "source_url": row[3],
-                    "taxonomy_path": row[4] or [],
+                    "chunk_id": str(row[0]),  # document id
+                    "text": row[1],           # content
+                    "title": row[2],          # title
+                    "source_url": row[3],     # source_url (현재는 'db_document')
+                    "taxonomy_path": row[4] if row[4] else [],  # path (현재는 빈 배열)
                     "score": float(row[5]) if row[5] else 0.0,
                     "metadata": {
                         "bm25_score": float(row[5]) if row[5] else 0.0,
@@ -823,24 +812,25 @@ class SearchDAO:
                     "topk": topk
                 })
             else:
-                # PostgreSQL pgvector 검색 (asyncpg 호환성 개선)
+                # PostgreSQL pgvector 검색 (init.sql 스키마에 맞춤)
                 try:
-                    # pgvector extension 사용
+                    # init.sql의 documents 테이블 사용 (embedding 벡터가 documents 테이블에 있음)
                     vector_query = text(f"""
-                        SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
-                               1.0 - (e.vec <-> :query_vector) as vector_score
-                        FROM chunks c
-                        JOIN documents d ON c.doc_id = d.doc_id
-                        LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
-                        JOIN embeddings e ON c.chunk_id = e.chunk_id
-                        WHERE e.vec IS NOT NULL
-                        {filter_clause}
-                        ORDER BY e.vec <-> :query_vector
+                        SELECT d.id, d.content, d.title, 'db_document' as source_url,
+                               ARRAY[]::text[] as path,
+                               1.0 - (d.embedding <-> :query_vector::vector) as vector_score
+                        FROM documents d
+                        WHERE d.embedding IS NOT NULL
+                        {filter_clause.replace('dt.', 'd.').replace('c.', 'd.') if filter_clause else ''}
+                        ORDER BY d.embedding <-> :query_vector::vector
                         LIMIT :topk
                     """)
 
+                    # pgvector 벡터를 문자열로 변환
+                    vector_str = '[' + ','.join(map(str, query_embedding)) + ']'
+
                     result = await session.execute(vector_query, {
-                        "query_vector": str(query_embedding),  # Convert to string for asyncpg
+                        "query_vector": vector_str,
                         "topk": topk
                     })
                 except Exception as vector_error:
@@ -868,11 +858,11 @@ class SearchDAO:
             results = []
             for row in rows:
                 result_dict = {
-                    "chunk_id": str(row[0]),
-                    "text": row[1],
-                    "title": row[2],
-                    "source_url": row[3],
-                    "taxonomy_path": row[4] or [],
+                    "chunk_id": str(row[0]),  # document id
+                    "text": row[1],           # content
+                    "title": row[2],          # title
+                    "source_url": row[3],     # source_url (현재는 'db_document')
+                    "taxonomy_path": row[4] if row[4] else [],  # path (현재는 빈 배열)
                     "score": float(row[5]) if row[5] else 0.0,
                     "metadata": {
                         "bm25_score": 0.0,
