@@ -1,15 +1,33 @@
 """
-Sentence Transformers 기반 실제 벡터 임베딩 서비스
-PostgreSQL pgvector와 통합된 768차원 벡터 생성 시스템
+OpenAI text-embedding-3-large 기반 실제 벡터 임베딩 서비스
+PostgreSQL pgvector와 통합된 1536차원 벡터 생성 시스템
 """
 
 import os
 import asyncio
 import logging
 import hashlib
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import numpy as np
+
+# Langfuse integration for LLM cost tracking
+try:
+    from .monitoring.langfuse_client import observe
+    LANGFUSE_AVAILABLE = True
+except ImportError:
+    # Fallback: no-op decorator
+    def observe(name: str = "", as_type: str = "span", **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    LANGFUSE_AVAILABLE = False
+
+try:
+    from openai import AsyncOpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -21,85 +39,99 @@ logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
-    """Sentence Transformers 기반 실제 임베딩 서비스"""
+    """OpenAI 기반 실제 임베딩 서비스 (1536차원)"""
 
-    # 지원하는 모델 목록 (768차원 보장)
     SUPPORTED_MODELS = {
-        "all-MiniLM-L6-v2": {
-            "name": "sentence-transformers/all-MiniLM-L6-v2",
-            "dimensions": 384,  # 실제 차원
-            "description": "Fast and efficient multilingual model"
+        "text-embedding-3-large": {
+            "name": "text-embedding-3-large",
+            "dimensions": 1536,
+            "description": "OpenAI's most capable embedding model",
+            "cost_per_1k_tokens": 0.00013
+        },
+        "text-embedding-3-small": {
+            "name": "text-embedding-3-small",
+            "dimensions": 1536,
+            "description": "OpenAI's efficient embedding model",
+            "cost_per_1k_tokens": 0.00002
+        },
+        "text-embedding-ada-002": {
+            "name": "text-embedding-ada-002",
+            "dimensions": 1536,
+            "description": "OpenAI's legacy embedding model",
+            "cost_per_1k_tokens": 0.0001
         },
         "all-mpnet-base-v2": {
             "name": "sentence-transformers/all-mpnet-base-v2",
             "dimensions": 768,
-            "description": "High quality all-round model"
-        },
-        "paraphrase-multilingual-MiniLM-L12-v2": {
-            "name": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-            "dimensions": 384,
-            "description": "Multilingual paraphrase model"
+            "description": "Fallback: Sentence Transformers model",
+            "cost_per_1k_tokens": 0.0
         }
     }
 
-    TARGET_DIMENSIONS = 768  # PostgreSQL 벡터 차원
+    TARGET_DIMENSIONS = 1536
 
-    def __init__(self, model_name: str = "all-mpnet-base-v2"):
+    def __init__(self, model_name: str = "text-embedding-3-large"):
         self.model_name = model_name
         self.model_config = self.SUPPORTED_MODELS.get(model_name)
-        self._model = None
+        self._openai_client = None
+        self._sentence_transformer = None
         self._model_loaded = False
-        self.embedding_cache = {}  # 메모리 캐시
+        self.embedding_cache = {}
 
         if not self.model_config:
             logger.warning(f"지원되지 않는 모델: {model_name}, 기본 모델로 변경")
+            self.model_name = "text-embedding-3-large"
+            self.model_config = self.SUPPORTED_MODELS[self.model_name]
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key and OPENAI_AVAILABLE:
+            self._openai_client = AsyncOpenAI(api_key=api_key)
+            logger.info(f"OpenAI 클라이언트 초기화: {self.model_name} ({self.model_config['dimensions']}차원)")
+        else:
+            logger.warning("OPENAI_API_KEY 없음, Sentence Transformers 폴백 사용")
             self.model_name = "all-mpnet-base-v2"
             self.model_config = self.SUPPORTED_MODELS[self.model_name]
 
-        logger.info(f"임베딩 서비스 초기화: {self.model_name} ({self.model_config['dimensions']}차원)")
-
-    def _load_model(self) -> Optional[SentenceTransformer]:
-        """Sentence Transformer 모델 로드"""
-        if self._model is not None:
-            return self._model
+    def _load_sentence_transformer(self) -> Optional[SentenceTransformer]:
+        """Sentence Transformer 폴백 모델 로드"""
+        if self._sentence_transformer is not None:
+            return self._sentence_transformer
 
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             logger.error("sentence-transformers 패키지가 설치되지 않음")
             return None
 
         try:
-            logger.info(f"모델 로딩 중: {self.model_config['name']}")
-            self._model = SentenceTransformer(self.model_config["name"])
+            logger.info(f"폴백 모델 로딩 중: {self.model_config['name']}")
+            self._sentence_transformer = SentenceTransformer(self.model_config["name"])
             self._model_loaded = True
-            logger.info(f"모델 로딩 완료: {self.model_name}")
-            return self._model
+            logger.info(f"폴백 모델 로딩 완료: {self.model_name}")
+            return self._sentence_transformer
 
         except Exception as e:
-            logger.error(f"모델 로딩 실패: {e}")
+            logger.error(f"폴백 모델 로딩 실패: {e}")
             self._model_loaded = False
             return None
 
     def _pad_or_truncate_vector(self, vector: np.ndarray) -> List[float]:
-        """벡터를 768차원으로 맞추기 (패딩 또는 트런케이트)"""
+        """벡터를 1536차원으로 맞추기"""
         current_dim = len(vector)
 
         if current_dim == self.TARGET_DIMENSIONS:
             return vector.tolist()
         elif current_dim < self.TARGET_DIMENSIONS:
-            # 패딩 (제로 패딩)
             padded = np.zeros(self.TARGET_DIMENSIONS)
             padded[:current_dim] = vector
             return padded.tolist()
         else:
-            # 트런케이트
             return vector[:self.TARGET_DIMENSIONS].tolist()
 
+    @observe(name="generate_embedding", as_type="embedding")
     async def generate_embedding(self, text: str, use_cache: bool = True) -> List[float]:
-        """텍스트를 768차원 벡터로 변환"""
+        """텍스트를 1536차원 벡터로 변환 (Langfuse cost tracking enabled)"""
         if not text or not text.strip():
             return self._generate_zero_vector()
 
-        # 캐시 확인
         if use_cache:
             cache_key = self._get_cache_key(text)
             if cache_key in self.embedding_cache:
@@ -107,34 +139,18 @@ class EmbeddingService:
                 return self.embedding_cache[cache_key]
 
         try:
-            # 모델 로드
-            model = self._load_model()
-            if model is None:
-                logger.warning("모델 사용 불가, 더미 벡터 생성")
-                return await self._generate_dummy_embedding(text)
-
-            # 텍스트 전처리
             processed_text = self._preprocess_text(text)
 
-            # 임베딩 생성 (비동기 처리)
-            loop = asyncio.get_event_loop()
-            embedding = await loop.run_in_executor(
-                None,
-                lambda: model.encode([processed_text], convert_to_numpy=True)[0]
-            )
+            if self._openai_client:
+                embedding = await self._generate_openai_embedding(processed_text)
+            else:
+                embedding = await self._generate_sentence_transformer_embedding(processed_text)
 
-            # 768차원으로 조정
-            final_embedding = self._pad_or_truncate_vector(embedding)
+            final_embedding = self._normalize_vector(embedding)
 
-            # 정규화 (L2 norm)
-            final_embedding = self._normalize_vector(final_embedding)
-
-            # 캐시에 저장
             if use_cache:
                 self.embedding_cache[cache_key] = final_embedding
-                # 캐시 크기 제한
                 if len(self.embedding_cache) > 1000:
-                    # 오래된 항목 제거 (FIFO)
                     oldest_key = next(iter(self.embedding_cache))
                     del self.embedding_cache[oldest_key]
 
@@ -145,13 +161,39 @@ class EmbeddingService:
             logger.error(f"임베딩 생성 실패: {e}")
             return await self._generate_dummy_embedding(text)
 
+    async def _generate_openai_embedding(self, text: str) -> List[float]:
+        """OpenAI API로 임베딩 생성"""
+        response = await self._openai_client.embeddings.create(
+            model=self.model_name,
+            input=text,
+            encoding_format="float"
+        )
+        embedding = response.data[0].embedding
+        return embedding
+
+    async def _generate_sentence_transformer_embedding(self, text: str) -> List[float]:
+        """Sentence Transformers 폴백"""
+        model = self._load_sentence_transformer()
+        if model is None:
+            logger.warning("폴백 모델 사용 불가, 더미 벡터 생성")
+            return await self._generate_dummy_embedding(text)
+
+        loop = asyncio.get_event_loop()
+        embedding = await loop.run_in_executor(
+            None,
+            lambda: model.encode([text], convert_to_numpy=True)[0]
+        )
+
+        return self._pad_or_truncate_vector(embedding)
+
+    @observe(name="batch_generate_embeddings", as_type="embedding")
     async def batch_generate_embeddings(
         self,
         texts: List[str],
-        batch_size: int = 32,
+        batch_size: int = 100,
         show_progress: bool = True
     ) -> List[List[float]]:
-        """배치로 임베딩 생성 (메모리 효율적)"""
+        """배치로 임베딩 생성 (Langfuse cost tracking enabled)"""
         if not texts:
             return []
 
@@ -166,42 +208,37 @@ class EmbeddingService:
                 logger.info(f"배치 처리 중: {batch_num}/{total_batches}")
 
             try:
-                # 모델 로드
-                model = self._load_model()
-                if model is None:
-                    # 더미 벡터로 폴백
-                    batch_embeddings = []
-                    for text in batch_texts:
-                        dummy_emb = await self._generate_dummy_embedding(text)
-                        batch_embeddings.append(dummy_emb)
-                    embeddings.extend(batch_embeddings)
-                    continue
-
-                # 텍스트 전처리
                 processed_texts = [self._preprocess_text(text) for text in batch_texts]
 
-                # 배치 임베딩 생성
-                loop = asyncio.get_event_loop()
-                batch_embeddings = await loop.run_in_executor(
-                    None,
-                    lambda: model.encode(processed_texts, convert_to_numpy=True)
-                )
+                if self._openai_client:
+                    response = await self._openai_client.embeddings.create(
+                        model=self.model_name,
+                        input=processed_texts,
+                        encoding_format="float"
+                    )
+                    batch_embeddings = [item.embedding for item in response.data]
+                else:
+                    model = self._load_sentence_transformer()
+                    if model is None:
+                        batch_embeddings = []
+                        for text in batch_texts:
+                            dummy_emb = await self._generate_dummy_embedding(text)
+                            batch_embeddings.append(dummy_emb)
+                    else:
+                        loop = asyncio.get_event_loop()
+                        raw_embeddings = await loop.run_in_executor(
+                            None,
+                            lambda: model.encode(processed_texts, convert_to_numpy=True)
+                        )
+                        batch_embeddings = [self._pad_or_truncate_vector(emb) for emb in raw_embeddings]
 
-                # 768차원으로 조정 및 정규화
-                processed_embeddings = []
-                for embedding in batch_embeddings:
-                    adjusted = self._pad_or_truncate_vector(embedding)
-                    normalized = self._normalize_vector(adjusted)
-                    processed_embeddings.append(normalized)
+                normalized_embeddings = [self._normalize_vector(emb) for emb in batch_embeddings]
+                embeddings.extend(normalized_embeddings)
 
-                embeddings.extend(processed_embeddings)
-
-                # 메모리 해제를 위한 짧은 대기
                 await asyncio.sleep(0.01)
 
             except Exception as e:
                 logger.error(f"배치 {batch_num} 처리 실패: {e}")
-                # 실패한 배치는 더미 벡터로 대체
                 for text in batch_texts:
                     dummy_emb = await self._generate_dummy_embedding(text)
                     embeddings.append(dummy_emb)
@@ -215,12 +252,10 @@ class EmbeddingService:
             vec1 = np.array(embedding1)
             vec2 = np.array(embedding2)
 
-            # 벡터 크기 확인
             if len(vec1) != len(vec2):
                 logger.warning(f"벡터 크기 불일치: {len(vec1)} vs {len(vec2)}")
                 return 0.0
 
-            # 코사인 유사도 계산
             norm1 = np.linalg.norm(vec1)
             norm2 = np.linalg.norm(vec2)
 
@@ -228,7 +263,7 @@ class EmbeddingService:
                 return 0.0
 
             similarity = np.dot(vec1, vec2) / (norm1 * norm2)
-            return float(np.clip(similarity, -1.0, 1.0))  # -1과 1 사이로 클리핑
+            return float(np.clip(similarity, -1.0, 1.0))
 
         except Exception as e:
             logger.error(f"유사도 계산 실패: {e}")
@@ -239,11 +274,8 @@ class EmbeddingService:
         if not text:
             return ""
 
-        # 기본 정리
         processed = text.strip()
-
-        # 너무 긴 텍스트는 자르기 (모델 제한 고려)
-        max_length = 512  # 대부분의 transformer 모델 제한
+        max_length = 8000
         if len(processed) > max_length:
             processed = processed[:max_length]
             logger.debug(f"텍스트 잘림: {max_length}자로 제한")
@@ -270,17 +302,14 @@ class EmbeddingService:
         return [0.0] * self.TARGET_DIMENSIONS
 
     async def _generate_dummy_embedding(self, text: str) -> List[float]:
-        """더미 임베딩 생성 (일관된 결과)"""
+        """더미 임베딩 생성"""
         logger.debug(f"더미 임베딩 생성: {text[:30]}...")
 
-        # 텍스트 기반 시드 생성
         seed = int(hashlib.md5(text.encode('utf-8')).hexdigest()[:8], 16)
         np.random.seed(seed)
 
-        # 정규분포에서 벡터 생성
         vector = np.random.normal(0, 0.1, self.TARGET_DIMENSIONS)
 
-        # 정규화
         norm = np.linalg.norm(vector)
         if norm > 0:
             vector = vector / norm
@@ -295,34 +324,36 @@ class EmbeddingService:
             "target_dimensions": self.TARGET_DIMENSIONS,
             "model_loaded": self._model_loaded,
             "cache_size": len(self.embedding_cache),
+            "openai_available": OPENAI_AVAILABLE and self._openai_client is not None,
             "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE
         }
 
     def health_check(self) -> Dict[str, Any]:
         """서비스 상태 확인"""
         try:
-            model = self._load_model()
-
-            if model is not None:
-                # 간단한 테스트 임베딩
-                test_text = "health check test"
-                test_embedding = model.encode([test_text])[0]
-
+            if self._openai_client:
                 return {
                     "status": "healthy",
                     "model_name": self.model_name,
                     "model_loaded": True,
-                    "test_embedding_shape": test_embedding.shape,
                     "target_dimensions": self.TARGET_DIMENSIONS,
-                    "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE,
+                    "openai_available": True,
+                    "cache_size": len(self.embedding_cache)
+                }
+            elif self._sentence_transformer:
+                return {
+                    "status": "degraded",
+                    "model_name": self.model_name,
+                    "model_loaded": True,
+                    "target_dimensions": self.TARGET_DIMENSIONS,
+                    "fallback_mode": True,
                     "cache_size": len(self.embedding_cache)
                 }
             else:
                 return {
-                    "status": "degraded",
+                    "status": "unhealthy",
                     "model_loaded": False,
                     "fallback_mode": True,
-                    "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE,
                     "error": "모델 로딩 실패"
                 }
 
@@ -342,7 +373,6 @@ class EmbeddingService:
         return cache_size
 
 
-# 문서 임베딩 업데이트 서비스
 class DocumentEmbeddingService:
     """문서 임베딩 업데이트 및 관리 서비스"""
 
@@ -352,16 +382,14 @@ class DocumentEmbeddingService:
     async def update_document_embeddings(
         self,
         document_ids: Optional[List[str]] = None,
-        batch_size: int = 10
+        batch_size: int = 100
     ) -> Dict[str, Any]:
         """문서들의 임베딩 업데이트"""
-        from .database import db_manager, DocumentChunk, Embedding, text
+        from .database import db_manager, text
 
         try:
             async with db_manager.async_session() as session:
-                # 임베딩이 없는 청크들 조회
                 if document_ids:
-                    # 특정 문서들의 청크
                     doc_ids_str = "', '".join(document_ids)
                     query = text(f"""
                         SELECT c.chunk_id, c.text, c.doc_id
@@ -371,7 +399,6 @@ class DocumentEmbeddingService:
                         ORDER BY c.chunk_id
                     """)
                 else:
-                    # 모든 임베딩 없는 청크
                     query = text("""
                         SELECT c.chunk_id, c.text, c.doc_id
                         FROM chunks c
@@ -393,25 +420,21 @@ class DocumentEmbeddingService:
 
                 logger.info(f"임베딩 업데이트 대상: {len(chunks)}개 청크")
 
-                # 배치별로 임베딩 생성 및 저장
                 updated_count = 0
                 total_chunks = len(chunks)
 
                 for i in range(0, len(chunks), batch_size):
                     batch_chunks = chunks[i:i + batch_size]
-                    batch_texts = [chunk[1] for chunk in batch_chunks]  # text 컬럼
+                    batch_texts = [chunk[1] for chunk in batch_chunks]
 
-                    # 배치 임베딩 생성
                     embeddings = await self.embedding_service.batch_generate_embeddings(
                         batch_texts, batch_size=batch_size
                     )
 
-                    # 데이터베이스에 저장
-                    for j, (chunk_id, text, doc_id) in enumerate(batch_chunks):
+                    for j, (chunk_id, text_content, doc_id) in enumerate(batch_chunks):
                         if j < len(embeddings):
                             embedding = embeddings[j]
 
-                            # 임베딩 테이블에 삽입
                             insert_query = text("""
                                 INSERT INTO embeddings (chunk_id, vec, model_name)
                                 VALUES (:chunk_id, :vec, :model_name)
@@ -429,7 +452,6 @@ class DocumentEmbeddingService:
 
                             updated_count += 1
 
-                    # 배치 커밋
                     await session.commit()
 
                     logger.info(
@@ -458,7 +480,6 @@ class DocumentEmbeddingService:
 
         try:
             async with db_manager.async_session() as session:
-                # 통계 쿼리들
                 stats_queries = {
                     "total_chunks": "SELECT COUNT(*) FROM chunks",
                     "embedded_chunks": "SELECT COUNT(*) FROM embeddings",
@@ -474,7 +495,6 @@ class DocumentEmbeddingService:
                     result = await session.execute(text(query))
                     stats[stat_name] = result.scalar() or 0
 
-                # 모델별 임베딩 분포
                 model_query = text("""
                     SELECT model_name, COUNT(*) as count
                     FROM embeddings
@@ -487,7 +507,6 @@ class DocumentEmbeddingService:
                     row[0]: row[1] for row in model_result.fetchall()
                 }
 
-                # 커버리지 계산
                 coverage_pct = 0.0
                 if stats["total_chunks"] > 0:
                     coverage_pct = (stats["embedded_chunks"] / stats["total_chunks"]) * 100
@@ -511,16 +530,15 @@ class DocumentEmbeddingService:
             }
 
 
-# 전역 인스턴스들
 embedding_service = EmbeddingService()
 document_embedding_service = DocumentEmbeddingService(embedding_service)
 
-# 편의 함수들
+
 async def generate_embedding(text: str, use_cache: bool = True) -> List[float]:
     """전역 임베딩 생성 함수"""
     return await embedding_service.generate_embedding(text, use_cache=use_cache)
 
-async def generate_embeddings(texts: List[str], batch_size: int = 32) -> List[List[float]]:
+async def generate_embeddings(texts: List[str], batch_size: int = 100) -> List[List[float]]:
     """전역 배치 임베딩 생성 함수"""
     return await embedding_service.batch_generate_embeddings(texts, batch_size=batch_size)
 
@@ -530,7 +548,7 @@ def calculate_similarity(emb1: List[float], emb2: List[float]) -> float:
 
 async def update_document_embeddings(
     document_ids: Optional[List[str]] = None,
-    batch_size: int = 10
+    batch_size: int = 100
 ) -> Dict[str, Any]:
     """문서 임베딩 업데이트 함수"""
     return await document_embedding_service.update_document_embeddings(document_ids, batch_size)
