@@ -635,8 +635,10 @@ async def search_documents_keyword_only(
                 taxonomy_version="1.8.1"
             )
         else:
-            # Fallback to mock search
-            return await service._mock_search(request, request_id)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Keyword search service unavailable - hybrid search engine not initialized"
+            )
 
     except HTTPException:
         raise
@@ -710,8 +712,10 @@ async def search_documents_vector_only(
                 taxonomy_version="1.8.1"
             )
         else:
-            # Fallback to mock search
-            return await service._mock_search(request, request_id)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Vector search service unavailable - hybrid search engine not initialized"
+            )
 
     except HTTPException:
         raise
