@@ -25,6 +25,7 @@ class DocumentUploadCommandV1(BaseModel):
     name: Literal["DocumentUpload"] = "DocumentUpload"
     version: Literal["v1"] = "v1"
     correlationId: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    idempotencyKey: Optional[str] = Field(None, max_length=255)
 
     command_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     file_name: str = Field(..., min_length=1, max_length=255)

@@ -266,6 +266,7 @@ class JobOrchestrator:
             command_id=command.command_id,
             job_data=job_data,
             priority=command.priority,
+            idempotency_key=command.idempotencyKey,
         )
 
         if not success:

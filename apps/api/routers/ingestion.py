@@ -48,6 +48,8 @@ async def upload_document(
         if not correlation_id:
             correlation_id = str(uuid.uuid4())
 
+        idempotency_key = http_request.headers.get("X-Idempotency-Key") if http_request else None
+
         file_extension = file.filename.split(".")[-1].lower()
 
         try:
@@ -76,6 +78,7 @@ async def upload_document(
 
         command = DocumentUploadCommandV1(
             correlationId=correlation_id,
+            idempotencyKey=idempotency_key,
             file_name=file.filename,
             file_content=file_content,
             file_format=file_format,
@@ -86,9 +89,25 @@ async def upload_document(
             priority=priority,
         )
 
-        job_id = await orchestrator.submit_job(command)
+        try:
+            job_id = await orchestrator.submit_job(command)
+        except ValueError as e:
+            if "Duplicate request with idempotency key" in str(e):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=str(e),
+                )
+            raise
 
         estimated_completion_minutes = max(1, len(file_content) // (1024 * 1024))
+
+        response_headers = {
+            "X-Job-ID": job_id,
+            "X-Correlation-ID": correlation_id
+        }
+
+        if idempotency_key:
+            response_headers["X-Idempotency-Key"] = idempotency_key
 
         return JSONResponse(
             status_code=status.HTTP_202_ACCEPTED,
@@ -99,10 +118,7 @@ async def upload_document(
                 "estimated_completion_minutes": estimated_completion_minutes,
                 "message": "Document accepted for processing",
             },
-            headers={
-                "X-Job-ID": job_id,
-                "X-Correlation-ID": correlation_id
-            },
+            headers=response_headers,
         )
 
     except HTTPException:

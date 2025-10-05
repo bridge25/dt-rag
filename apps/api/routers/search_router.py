@@ -25,6 +25,9 @@ from ..security.api_key_storage import APIKeyInfo
 # Import rate limiting
 from ..middleware.rate_limiter import limiter, RATE_LIMIT_READ, RATE_LIMIT_WRITE
 
+# Import metrics tracking
+from ..monitoring.metrics import get_metrics_collector
+
 # Import common schemas
 import sys
 import os
@@ -294,17 +297,28 @@ async def search_documents(
     - Configurable result count and reranking
     - Real-time latency tracking
     """
+    metrics_collector = get_metrics_collector()
+    start_time = time.time()
+
     try:
         correlation_id = http_request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
 
         # Validate search request
         if not request.q.strip():
+            metrics_collector.increment_counter(
+                "search_requests_error",
+                {"error_type": "empty_query"}
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Search query cannot be empty"
             )
 
         if request.max_results > 100:
+            metrics_collector.increment_counter(
+                "search_requests_error",
+                {"error_type": "invalid_max_results"}
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Maximum results limit is 100"
@@ -313,12 +327,31 @@ async def search_documents(
         # Perform search with correlation tracking
         result = await service.search(request, correlation_id=correlation_id)
 
+        # Record latency metrics
+        latency_ms = (time.time() - start_time) * 1000
+        metrics_collector.record_latency(
+            "search_operation",
+            latency_ms,
+            {
+                "search_type": "hybrid",
+                "correlation_id": correlation_id
+            }
+        )
+        metrics_collector.increment_counter(
+            "search_requests_success",
+            {"search_type": "hybrid"}
+        )
+
+        # Get p95 latency
+        latency_stats = metrics_collector.latency_tracker.get_percentiles()
+
         # Add response headers for monitoring
         headers = {
             "X-Correlation-ID": correlation_id,
             "X-Search-Latency": str(result.latency),
             "X-Request-ID": result.request_id,
-            "X-Total-Candidates": str(result.total_candidates or 0)
+            "X-Total-Candidates": str(result.total_candidates or 0),
+            "X-P95-Latency": str(latency_stats["p95"])
         }
 
         return JSONResponse(

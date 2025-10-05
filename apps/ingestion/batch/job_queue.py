@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class JobQueue:
     QUEUE_KEY_PREFIX = "ingestion:queue"
     JOB_STATUS_PREFIX = "ingestion:job"
+    IDEMPOTENCY_KEY_PREFIX = "ingestion:idempotency"
     PRIORITY_QUEUES = ["high", "medium", "low"]
 
     def __init__(self, redis_manager: Optional[RedisManager] = None):
@@ -29,16 +30,49 @@ class JobQueue:
     def _get_job_status_key(self, job_id: str) -> str:
         return f"{self.JOB_STATUS_PREFIX}:{job_id}"
 
+    def _get_idempotency_key(self, idempotency_key: str) -> str:
+        return f"{self.IDEMPOTENCY_KEY_PREFIX}:{idempotency_key}"
+
+    async def check_idempotency_key(self, idempotency_key: str) -> Optional[str]:
+        await self.initialize()
+
+        try:
+            key = self._get_idempotency_key(idempotency_key)
+            existing_job_id = await self.redis_manager.get(key)
+            return existing_job_id
+        except Exception as e:
+            logger.error(f"Failed to check idempotency key {idempotency_key}: {e}")
+            return None
+
+    async def store_idempotency_key(self, idempotency_key: str, job_id: str, ttl: int = 3600) -> bool:
+        await self.initialize()
+
+        try:
+            key = self._get_idempotency_key(idempotency_key)
+            await self.redis_manager.set(key, job_id, ttl=ttl)
+            logger.info(f"Stored idempotency key {idempotency_key} for job {job_id} with TTL {ttl}s")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to store idempotency key {idempotency_key}: {e}")
+            return False
+
     async def enqueue_job(
         self,
         job_id: str,
         command_id: str,
         job_data: Dict[str, Any],
         priority: int = 5,
+        idempotency_key: Optional[str] = None,
     ) -> bool:
         await self.initialize()
 
         try:
+            if idempotency_key:
+                existing_job_id = await self.check_idempotency_key(idempotency_key)
+                if existing_job_id:
+                    logger.warning(f"Duplicate idempotency key {idempotency_key} detected (existing job: {existing_job_id})")
+                    raise ValueError(f"Duplicate request with idempotency key: {idempotency_key}")
+
             priority_level = "high" if priority <= 3 else ("medium" if priority <= 7 else "low")
 
             queue_key = self._get_queue_key(priority_level)
@@ -61,9 +95,14 @@ class JobQueue:
                 current_stage="Queued",
             )
 
+            if idempotency_key:
+                await self.store_idempotency_key(idempotency_key, job_id)
+
             logger.info(f"Job {job_id} enqueued with priority {priority_level}")
             return True
 
+        except ValueError:
+            raise
         except Exception as e:
             logger.error(f"Failed to enqueue job {job_id}: {e}")
             return False
