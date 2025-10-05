@@ -204,10 +204,17 @@ class JobOrchestrator:
                     session.add(doc_taxonomy)
                     logger.info(f"Assigned taxonomy path {taxonomy_path} to document {doc_id}")
 
-                for idx, chunk_signal in enumerate(chunk_signals):
-                    chunk_id = uuid.uuid4()
+                all_chunk_texts = [chunk_signal.text for chunk_signal in chunk_signals]
 
-                    embedding_vector = await self.embedding_service.generate_embedding(chunk_signal.text)
+                logger.info(f"Generating embeddings for {len(all_chunk_texts)} chunks in batch")
+                embedding_vectors = await self.embedding_service.batch_generate_embeddings(
+                    all_chunk_texts,
+                    batch_size=50,
+                    show_progress=True
+                )
+
+                for idx, (chunk_signal, embedding_vector) in enumerate(zip(chunk_signals, embedding_vectors)):
+                    chunk_id = uuid.uuid4()
 
                     chunk = DocumentChunk(
                         chunk_id=chunk_id,
