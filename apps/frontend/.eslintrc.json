@@ -2,6 +2,8 @@
   "extends": "next/core-web-vitals",
   "rules": {
     "quotes": ["error", "double"],
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "linebreak-style": "off",
+    "semi": "off"
   }
 }
