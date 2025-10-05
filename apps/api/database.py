@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional, Tuple
 import asyncpg
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON, text
+from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, INT4RANGE
 from sqlalchemy.types import TypeDecorator, TEXT
 try:
@@ -161,7 +161,7 @@ class DocumentChunk(Base):
     __tablename__ = "chunks"
 
     chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
+    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('documents.doc_id', ondelete='CASCADE'), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     # SQLite에서는 INT4RANGE 대신 TEXT로 span 저장 (예: "0,100")
     span: Mapped[str] = mapped_column(String(50), nullable=False, default="0,0")
@@ -178,7 +178,7 @@ class Embedding(Base):
     __tablename__ = "embeddings"
 
     embedding_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
+    chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('chunks.chunk_id', ondelete='CASCADE'), unique=True, nullable=False)
     vec: Mapped[List[float]] = mapped_column(get_vector_type(1536), nullable=False)
     model_name: Mapped[str] = mapped_column(String(100), nullable=False, default='text-embedding-ada-002')
     bm25_tokens: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
@@ -188,7 +188,7 @@ class DocTaxonomy(Base):
     __tablename__ = "doc_taxonomy"
 
     mapping_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
+    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('documents.doc_id', ondelete='CASCADE'), nullable=False)
     path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     source: Mapped[str] = mapped_column(String(50), nullable=False, default='manual')

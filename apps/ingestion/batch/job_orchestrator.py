@@ -15,7 +15,7 @@ from apps.ingestion.chunking import IntelligentChunker, ChunkingError
 from apps.ingestion.pii import PIIDetector
 from apps.api.embedding_service import EmbeddingService
 from apps.core.db_session import async_session
-from apps.api.database import Document, DocumentChunk, Embedding
+from apps.api.database import Document, DocumentChunk, Embedding, DocTaxonomy
 from .job_queue import JobQueue
 
 logger = logging.getLogger(__name__)
@@ -190,6 +190,19 @@ class JobOrchestrator:
                     processed_at=datetime.utcnow()
                 )
                 session.add(document)
+
+                taxonomy_path = job_data.get("taxonomy_path")
+                if taxonomy_path:
+                    doc_taxonomy = DocTaxonomy(
+                        mapping_id=uuid.uuid4(),
+                        doc_id=doc_id,
+                        path=taxonomy_path,
+                        confidence=1.0,
+                        source='ingestion',
+                        assigned_at=datetime.utcnow()
+                    )
+                    session.add(doc_taxonomy)
+                    logger.info(f"Assigned taxonomy path {taxonomy_path} to document {doc_id}")
 
                 for idx, chunk_signal in enumerate(chunk_signals):
                     chunk_id = uuid.uuid4()

@@ -9,8 +9,9 @@ import numpy as np
 from datetime import datetime
 
 from packages.common_schemas.common_schemas.models import (
-    ClassifyRequest, ClassifyResponse, TaxonomyNode
+    ClassifyRequest, ClassifyResponse, ClassificationResult
 )
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +49,12 @@ class SemanticClassifier:
             top_k: Number of candidate classifications to return
 
         Returns:
-            ClassifyResponse with canonical path, candidates, and HITL flag
+            ClassifyResponse with classifications following common_schemas format
         """
+        import time
+        start_time = time.time()
+        request_id = correlation_id or str(uuid.uuid4())
+
         threshold = confidence_threshold if confidence_threshold is not None else self.confidence_threshold
 
         text_embedding = await self.embedding_service.generate_embedding(text)
@@ -58,41 +63,41 @@ class SemanticClassifier:
 
         if not taxonomy_nodes:
             logger.warning("No taxonomy nodes available for classification")
-            return self._fallback_response(text)
+            return self._fallback_response(text, request_id, start_time)
 
         similarities = await self._compute_similarities(text_embedding, taxonomy_nodes)
 
         top_candidates = self._get_top_candidates(similarities, taxonomy_nodes, top_k)
 
         if not top_candidates:
-            return self._fallback_response(text)
+            return self._fallback_response(text, request_id, start_time)
 
         best_match = top_candidates[0]
         best_confidence = best_match["confidence"]
 
-        hitl_needed = best_confidence < threshold
+        classifications = []
+        for cand in top_candidates:
+            alternatives = []
+            if cand != best_match:
+                alternatives.append({
+                    "taxonomy_path": cand["path"],
+                    "confidence": cand["confidence"]
+                })
 
-        canonical_path = best_match["path"]
-
-        candidates = [
-            TaxonomyNode(
-                node_id=cand["node_id"],
-                label=cand["label"],
-                canonical_path=cand["path"],
-                version="1.8.1",
-                confidence=cand["confidence"]
+            classification_result = ClassificationResult(
+                taxonomy_path=cand["path"],
+                confidence=cand["confidence"],
+                alternatives=alternatives if alternatives else None
             )
-            for cand in top_candidates
-        ]
+            classifications.append(classification_result)
 
-        reasoning = self._generate_reasoning(text, best_match, text_embedding, best_confidence)
+        processing_time = time.time() - start_time
 
         return ClassifyResponse(
-            canonical=canonical_path,
-            candidates=candidates,
-            hitl=hitl_needed,
-            confidence=best_confidence,
-            reasoning=reasoning
+            classifications=classifications,
+            request_id=request_id,
+            processing_time=processing_time,
+            taxonomy_version="1.8.1"
         )
 
     async def _compute_similarities(
@@ -178,27 +183,24 @@ class SemanticClassifier:
 
         return reasoning
 
-    def _fallback_response(self, text: str) -> ClassifyResponse:
+    def _fallback_response(self, text: str, request_id: str, start_time: float) -> ClassifyResponse:
         """Fallback response when classification fails"""
+        import time
         logger.warning("Classification fallback triggered")
 
-        return ClassifyResponse(
-            canonical=["Uncategorized"],
-            candidates=[
-                TaxonomyNode(
-                    node_id="uncategorized",
-                    label="Uncategorized",
-                    canonical_path=["Uncategorized"],
-                    version="1.8.1",
-                    confidence=0.5
-                )
-            ],
-            hitl=True,
+        processing_time = time.time() - start_time
+
+        fallback_result = ClassificationResult(
+            taxonomy_path=["Uncategorized"],
             confidence=0.5,
-            reasoning=[
-                "Classification failed - no taxonomy nodes available",
-                "Manual categorization required"
-            ]
+            alternatives=None
+        )
+
+        return ClassifyResponse(
+            classifications=[fallback_result],
+            request_id=request_id,
+            processing_time=processing_time,
+            taxonomy_version="1.8.1"
         )
 
 
