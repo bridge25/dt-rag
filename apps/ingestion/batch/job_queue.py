@@ -270,14 +270,17 @@ class JobQueue:
 
             await asyncio.sleep(delay_seconds)
 
+            idempotency_key = job_data.get("idempotency_key")
+
             await self.enqueue_job(
                 job_id=job_id,
                 command_id=command_id,
                 job_data=job_data,
-                priority=priority
+                priority=priority,
+                idempotency_key=idempotency_key
             )
 
-            logger.info(f"Retrying job {job_id} (attempt {retry_count}/{max_retries}) after {delay_seconds}s")
+            logger.info(f"Retrying job {job_id} (attempt {retry_count}/{max_retries}) after {delay_seconds}s with idempotency_key={idempotency_key}")
             return True
 
         except Exception as e:

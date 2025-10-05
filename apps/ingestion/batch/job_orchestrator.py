@@ -264,6 +264,7 @@ class JobOrchestrator:
 
         job_data = {
             "correlation_id": command.correlationId,
+            "idempotency_key": command.idempotencyKey,
             "file_name": command.file_name,
             "file_content_hex": command.file_content.hex(),
             "file_format": command.file_format.value,
