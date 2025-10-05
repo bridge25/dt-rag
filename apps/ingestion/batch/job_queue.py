@@ -103,6 +103,10 @@ class JobQueue:
         started_at: Optional[str] = None,
         completed_at: Optional[str] = None,
         estimated_completion_at: Optional[str] = None,
+        retry_count: int = 0,
+        max_retries: int = 3,
+        last_attempt_at: Optional[str] = None,
+        next_retry_at: Optional[str] = None,
     ) -> bool:
         await self.initialize()
 
@@ -122,10 +126,10 @@ class JobQueue:
                 "completed_at": completed_at,
                 "estimated_completion_at": estimated_completion_at,
                 "updated_at": datetime.utcnow().isoformat(),
-                "retry_count": kwargs.get("retry_count", 0),
-                "max_retries": kwargs.get("max_retries", 3),
-                "last_attempt_at": kwargs.get("last_attempt_at"),
-                "next_retry_at": kwargs.get("next_retry_at"),
+                "retry_count": retry_count,
+                "max_retries": max_retries,
+                "last_attempt_at": last_attempt_at,
+                "next_retry_at": next_retry_at,
             }
 
             ttl = 86400

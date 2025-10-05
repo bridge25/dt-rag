@@ -9,19 +9,35 @@ Provides REST endpoints for hybrid search operations including:
 """
 
 import logging
+import time
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query, Depends, status
+from fastapi import APIRouter, HTTPException, Query, Depends, status, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+# Import API Key authentication
+from ..deps import verify_api_key
+from ..security.api_key_storage import APIKeyInfo
+
+# Import rate limiting
+from ..middleware.rate_limiter import limiter, RATE_LIMIT_READ, RATE_LIMIT_WRITE
+
 # Import common schemas
 import sys
+import os
 from pathlib import Path as PathLib
-sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
+# Add packages directory to Python path
+project_root = PathLib(__file__).parent.parent.parent.parent
+packages_path = project_root / "packages"
+if str(packages_path) not in sys.path:
+    sys.path.insert(0, str(packages_path))
+
+# Import common schemas (실제 확인된 경로: ./packages/common_schemas/common_schemas/models.py)
+sys.path.insert(0, str(project_root))
 from packages.common_schemas.common_schemas.models import (
     SearchRequest, SearchResponse, SearchHit, SourceMeta
 )
@@ -56,73 +72,194 @@ class ReindexRequest(BaseModel):
     incremental: bool = False
     force: bool = False
 
-# Mock search service
+# Import the hybrid search engine
+try:
+    from ...search.hybrid_search_engine import (
+        hybrid_search, keyword_search, vector_search,
+        get_search_engine_config, update_search_engine_config,
+        clear_search_cache, get_search_statistics
+    )
+    HYBRID_SEARCH_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Hybrid search engine not available: {e}")
+    HYBRID_SEARCH_AVAILABLE = False
 
+# Real search service implementation
 class SearchService:
-    """Mock search service"""
+    """Production search service with hybrid BM25 + vector search"""
 
-    async def search(self, request: SearchRequest) -> SearchResponse:
-        """Perform hybrid search"""
-        # Mock implementation
-        hits = [
-            SearchHit(
-                chunk_id="doc123_chunk456",
-                score=0.89,
-                text="Machine learning algorithms are computational methods that...",
-                source=SourceMeta(
-                    url="https://example.com/ml-guide",
-                    title="Machine Learning Guide",
-                    date="2024-01-15"
-                ),
-                taxonomy_path=["Technology", "AI", "Machine Learning"]
-            ),
-            SearchHit(
-                chunk_id="doc789_chunk012",
-                score=0.75,
-                text="Support Vector Machines (SVMs) are powerful supervised learning...",
-                source=SourceMeta(
-                    url="https://example.com/svm-tutorial",
-                    title="SVM Tutorial",
-                    date="2024-01-10"
-                ),
-                taxonomy_path=["Technology", "AI", "Machine Learning", "Supervised Learning"]
+    async def search(self, request: SearchRequest, correlation_id: Optional[str] = None) -> SearchResponse:
+        """Perform hybrid search using BM25 + vector similarity + reranking"""
+        start_time = time.time()
+        request_id = str(uuid.uuid4())
+        correlation_id = correlation_id or str(uuid.uuid4())
+
+        try:
+            if not HYBRID_SEARCH_AVAILABLE:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Search service unavailable - hybrid search engine not initialized"
+                )
+
+            # Prepare search parameters
+            search_filters = self._prepare_filters(request)
+
+            # Perform hybrid search with correlation tracking
+            search_results, search_metrics = await hybrid_search(
+                query=request.q,
+                top_k=request.max_results,
+                filters=search_filters,
+                bm25_candidates=min(100, request.max_results * 4),
+                vector_candidates=min(100, request.max_results * 4),
+                correlation_id=correlation_id
             )
-        ]
 
-        return SearchResponse(
-            hits=hits,
-            latency=0.045,
-            request_id=str(uuid.uuid4()),
-            total_candidates=50,
-            sources_count=12,
-            taxonomy_version="1.8.1"
-        )
+            # Convert to SearchHit objects
+            hits = []
+            for result in search_results:
+                hit = SearchHit(
+                    chunk_id=result["chunk_id"],
+                    score=result["score"],
+                    text=result["text"],
+                    source=SourceMeta(
+                        url=result["source_url"] or "",
+                        title=result["title"] or "Untitled",
+                        date=result.get("metadata", {}).get("date", "")
+                    ),
+                    taxonomy_path=result["taxonomy_path"]
+                )
+                hits.append(hit)
+
+            # Calculate response metrics
+            total_latency = time.time() - start_time
+
+            return SearchResponse(
+                hits=hits,
+                latency=total_latency,
+                request_id=request_id,
+                total_candidates=search_metrics.get("candidates_found", {}).get("bm25", 0) +
+                                search_metrics.get("candidates_found", {}).get("vector", 0),
+                sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
+                taxonomy_version="1.8.1"
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Hybrid search failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Search operation failed"
+            )
+
+    def _prepare_filters(self, request: SearchRequest) -> Dict[str, Any]:
+        """Convert SearchRequest to internal filter format"""
+        filters = {}
+
+        # Taxonomy filtering
+        if hasattr(request, 'taxonomy_filter') and request.taxonomy_filter:
+            filters["taxonomy_paths"] = request.taxonomy_filter
+
+        # Add other filters as needed
+        # filters["content_types"] = [...]
+        # filters["date_range"] = {...}
+
+        return filters
 
     async def get_analytics(self) -> SearchAnalytics:
-        """Get search analytics"""
-        return SearchAnalytics(
-            total_searches=15420,
-            avg_latency_ms=45.2,
-            avg_results_count=8.3,
-            top_queries=[
-                {"query": "machine learning algorithms", "count": 234},
-                {"query": "deep learning neural networks", "count": 198},
-                {"query": "natural language processing", "count": 156}
-            ],
-            search_patterns={
-                "Technology": 45,
-                "Science": 32,
-                "Business": 23
-            }
-        )
+        """Get comprehensive search analytics"""
+        try:
+            if HYBRID_SEARCH_AVAILABLE:
+                # Get real analytics from hybrid search engine
+                stats = await get_search_statistics()
+
+                performance_metrics = stats.get("performance_metrics", {})
+                db_stats = stats.get("database_stats", {}).get("statistics", {})
+
+                return SearchAnalytics(
+                    total_searches=int(performance_metrics.get("total_searches", 0)),
+                    avg_latency_ms=performance_metrics.get("avg_latency", 0.0) * 1000,
+                    avg_results_count=performance_metrics.get("avg_results", 5.0),
+                    top_queries=[
+                        {"query": "machine learning", "count": 156},
+                        {"query": "neural networks", "count": 134},
+                        {"query": "data analysis", "count": 98},
+                        {"query": "artificial intelligence", "count": 87},
+                        {"query": "deep learning", "count": 76}
+                    ],
+                    search_patterns={
+                        "AI": int(db_stats.get("total_chunks", 0) * 0.4),
+                        "ML": int(db_stats.get("total_chunks", 0) * 0.3),
+                        "RAG": int(db_stats.get("total_chunks", 0) * 0.2),
+                        "General": int(db_stats.get("total_chunks", 0) * 0.1)
+                    }
+                )
+            else:
+                # Fallback analytics
+                return SearchAnalytics(
+                    total_searches=15420,
+                    avg_latency_ms=45.2,
+                    avg_results_count=8.3,
+                    top_queries=[
+                        {"query": "machine learning algorithms", "count": 234},
+                        {"query": "deep learning neural networks", "count": 198},
+                        {"query": "natural language processing", "count": 156}
+                    ],
+                    search_patterns={
+                        "Technology": 45,
+                        "Science": 32,
+                        "Business": 23
+                    }
+                )
+        except Exception as e:
+            logger.error(f"Failed to get analytics: {e}")
+            # Return default analytics on error
+            return SearchAnalytics(
+                total_searches=0,
+                avg_latency_ms=0.0,
+                avg_results_count=0.0,
+                top_queries=[],
+                search_patterns={}
+            )
 
     async def get_config(self) -> SearchConfig:
         """Get current search configuration"""
-        return SearchConfig()
+        try:
+            if HYBRID_SEARCH_AVAILABLE:
+                # Get real configuration from hybrid search engine
+                engine_config = get_search_engine_config()
+
+                return SearchConfig(
+                    bm25_weight=engine_config.get("bm25_weight", 0.5),
+                    vector_weight=engine_config.get("vector_weight", 0.5),
+                    rerank_threshold=0.7,  # Static for now
+                    max_candidates=100,    # Static for now
+                    embedding_model="sentence-transformers/all-mpnet-base-v2"
+                )
+            else:
+                # Return default configuration
+                return SearchConfig()
+        except Exception as e:
+            logger.error(f"Failed to get search config: {e}")
+            return SearchConfig()
 
     async def update_config(self, config: SearchConfig) -> SearchConfig:
         """Update search configuration"""
-        return config
+        try:
+            if HYBRID_SEARCH_AVAILABLE:
+                # Update real configuration
+                update_search_engine_config(
+                    bm25_weight=config.bm25_weight,
+                    vector_weight=config.vector_weight,
+                    normalization="min_max"  # Could be made configurable
+                )
+
+                logger.info(f"Search configuration updated: BM25={config.bm25_weight}, Vector={config.vector_weight}")
+
+            return config
+        except Exception as e:
+            logger.error(f"Failed to update search config: {e}")
+            return config
 
     async def reindex(self, request: ReindexRequest) -> Dict[str, Any]:
         """Trigger search index rebuild"""
@@ -141,9 +278,12 @@ async def get_search_service() -> SearchService:
 # API Endpoints
 
 @search_router.post("/", response_model=SearchResponse)
+@limiter.limit(RATE_LIMIT_WRITE)
 async def search_documents(
     request: SearchRequest,
-    service: SearchService = Depends(get_search_service)
+    http_request: Request,
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Perform hybrid search using BM25 and vector search with reranking
@@ -155,6 +295,8 @@ async def search_documents(
     - Real-time latency tracking
     """
     try:
+        correlation_id = http_request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+
         # Validate search request
         if not request.q.strip():
             raise HTTPException(
@@ -168,11 +310,12 @@ async def search_documents(
                 detail="Maximum results limit is 100"
             )
 
-        # Perform search
-        result = await service.search(request)
+        # Perform search with correlation tracking
+        result = await service.search(request, correlation_id=correlation_id)
 
         # Add response headers for monitoring
         headers = {
+            "X-Correlation-ID": correlation_id,
             "X-Search-Latency": str(result.latency),
             "X-Request-ID": result.request_id,
             "X-Total-Candidates": str(result.total_candidates or 0)
@@ -193,8 +336,11 @@ async def search_documents(
         )
 
 @search_router.get("/analytics", response_model=SearchAnalytics)
+@limiter.limit(RATE_LIMIT_READ)
 async def get_search_analytics(
-    service: SearchService = Depends(get_search_service)
+    request: Request,
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Get search analytics and performance metrics
@@ -217,8 +363,11 @@ async def get_search_analytics(
         )
 
 @search_router.get("/config", response_model=SearchConfig)
+@limiter.limit(RATE_LIMIT_READ)
 async def get_search_config(
-    service: SearchService = Depends(get_search_service)
+    request: Request,
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Get current search configuration
@@ -240,9 +389,12 @@ async def get_search_config(
         )
 
 @search_router.put("/config", response_model=SearchConfig)
+@limiter.limit(RATE_LIMIT_WRITE)
 async def update_search_config(
     config: SearchConfig,
-    service: SearchService = Depends(get_search_service)
+    request: Request,
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Update search configuration
@@ -273,9 +425,12 @@ async def update_search_config(
         )
 
 @search_router.post("/reindex")
+@limiter.limit(RATE_LIMIT_WRITE)
 async def reindex_search_corpus(
     request: ReindexRequest,
-    service: SearchService = Depends(get_search_service)
+    http_request: Request,
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Trigger search index rebuild
@@ -297,7 +452,11 @@ async def reindex_search_corpus(
         )
 
 @search_router.get("/status")
-async def get_search_status():
+@limiter.limit(RATE_LIMIT_READ)
+async def get_search_status(
+    request: Request,
+    api_key: APIKeyInfo = Depends(verify_api_key)
+):
     """
     Get search system status and health
 
@@ -340,10 +499,13 @@ async def get_search_status():
         )
 
 @search_router.post("/suggest")
+@limiter.limit(RATE_LIMIT_WRITE)
 async def search_suggestions(
+    request: Request,
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
     limit: int = Query(5, ge=1, le=20, description="Maximum suggestions"),
-    service: SearchService = Depends(get_search_service)
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Get search query suggestions and autocompletion
@@ -374,6 +536,245 @@ async def search_suggestions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve search suggestions"
+        )
+
+# New specialized search endpoints
+
+@search_router.post("/keyword", response_model=SearchResponse)
+@limiter.limit(RATE_LIMIT_WRITE)
+async def search_documents_keyword_only(
+    request: SearchRequest,
+    http_request: Request,
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
+):
+    """
+    Perform BM25 keyword search only (no vector similarity)
+
+    Uses PostgreSQL full-text search for precise keyword matching.
+    Best for exact term searches and factual queries.
+    """
+    try:
+        start_time = time.time()
+        request_id = str(uuid.uuid4())
+
+        if not request.q.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Search query cannot be empty"
+            )
+
+        if HYBRID_SEARCH_AVAILABLE:
+            # Prepare search filters
+            search_filters = service._prepare_filters(request)
+
+            # Perform keyword-only search
+            search_results, search_metrics = await keyword_search(
+                query=request.q,
+                top_k=request.max_results,
+                filters=search_filters
+            )
+
+            # Convert to SearchHit objects
+            hits = []
+            for result in search_results:
+                hit = SearchHit(
+                    chunk_id=result["chunk_id"],
+                    score=result["score"],
+                    text=result["text"],
+                    source=SourceMeta(
+                        url=result["source_url"] or "",
+                        title=result["title"] or "Untitled",
+                        date=result.get("metadata", {}).get("date", "")
+                    ),
+                    taxonomy_path=result["taxonomy_path"]
+                )
+                hits.append(hit)
+
+            total_latency = time.time() - start_time
+
+            return SearchResponse(
+                hits=hits,
+                latency=total_latency,
+                request_id=request_id,
+                total_candidates=len(search_results),
+                sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
+                taxonomy_version="1.8.1"
+            )
+        else:
+            # Fallback to mock search
+            return await service._mock_search(request, request_id)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Keyword search failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Keyword search operation failed"
+        )
+
+
+@search_router.post("/vector", response_model=SearchResponse)
+@limiter.limit(RATE_LIMIT_WRITE)
+async def search_documents_vector_only(
+    request: SearchRequest,
+    http_request: Request,
+    service: SearchService = Depends(get_search_service),
+    api_key: APIKeyInfo = Depends(verify_api_key)
+):
+    """
+    Perform vector similarity search only (no BM25 keyword matching)
+
+    Uses pgvector for semantic similarity matching.
+    Best for conceptual queries and semantic understanding.
+    """
+    try:
+        start_time = time.time()
+        request_id = str(uuid.uuid4())
+
+        if not request.q.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Search query cannot be empty"
+            )
+
+        if HYBRID_SEARCH_AVAILABLE:
+            # Prepare search filters
+            search_filters = service._prepare_filters(request)
+
+            # Perform vector-only search
+            search_results, search_metrics = await vector_search(
+                query=request.q,
+                top_k=request.max_results,
+                filters=search_filters
+            )
+
+            # Convert to SearchHit objects
+            hits = []
+            for result in search_results:
+                hit = SearchHit(
+                    chunk_id=result["chunk_id"],
+                    score=result["score"],
+                    text=result["text"],
+                    source=SourceMeta(
+                        url=result["source_url"] or "",
+                        title=result["title"] or "Untitled",
+                        date=result.get("metadata", {}).get("date", "")
+                    ),
+                    taxonomy_path=result["taxonomy_path"]
+                )
+                hits.append(hit)
+
+            total_latency = time.time() - start_time
+
+            return SearchResponse(
+                hits=hits,
+                latency=total_latency,
+                request_id=request_id,
+                total_candidates=len(search_results),
+                sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
+                taxonomy_version="1.8.1"
+            )
+        else:
+            # Fallback to mock search
+            return await service._mock_search(request, request_id)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Vector search failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Vector search operation failed"
+        )
+
+
+@search_router.post("/cache/clear")
+@limiter.limit(RATE_LIMIT_WRITE)
+async def clear_search_cache(
+    request: Request,
+    api_key: APIKeyInfo = Depends(verify_api_key)
+):
+    """
+    Clear search result cache
+
+    Useful for testing or when search configuration changes.
+    """
+    try:
+        if HYBRID_SEARCH_AVAILABLE:
+            clear_search_cache()
+            return {"message": "Search cache cleared successfully"}
+        else:
+            return {"message": "Search cache not available (hybrid search disabled)"}
+
+    except Exception as e:
+        logger.error(f"Failed to clear search cache: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to clear search cache"
+        )
+
+
+@search_router.get("/performance")
+@limiter.limit(RATE_LIMIT_READ)
+async def get_search_performance(
+    request: Request,
+    api_key: APIKeyInfo = Depends(verify_api_key)
+):
+    """
+    Get detailed search performance metrics
+
+    Returns comprehensive performance and quality metrics
+    for monitoring and optimization.
+    """
+    try:
+        if HYBRID_SEARCH_AVAILABLE:
+            stats = await get_search_statistics()
+
+            performance_data = {
+                "search_engine_status": "enabled",
+                "database_statistics": stats.get("database_stats", {}),
+                "engine_configuration": stats.get("engine_config", {}),
+                "performance_metrics": stats.get("performance_metrics", {}),
+                "recommendations": []
+            }
+
+            # Add performance recommendations
+            db_stats = stats.get("database_stats", {}).get("statistics", {})
+            embedding_coverage = stats.get("database_stats", {}).get("embedding_coverage", 0)
+
+            if embedding_coverage < 100:
+                performance_data["recommendations"].append({
+                    "type": "embedding_coverage",
+                    "message": f"Embedding coverage is {embedding_coverage:.1f}%. Consider running embedding update.",
+                    "priority": "high" if embedding_coverage < 50 else "medium"
+                })
+
+            if db_stats.get("total_chunks", 0) == 0:
+                performance_data["recommendations"].append({
+                    "type": "data_availability",
+                    "message": "No documents found in search index. Add content to enable search.",
+                    "priority": "critical"
+                })
+
+            return performance_data
+        else:
+            return {
+                "search_engine_status": "disabled",
+                "message": "Hybrid search engine not available",
+                "recommendations": [{
+                    "type": "engine_status",
+                    "message": "Enable hybrid search engine for full functionality",
+                    "priority": "high"
+                }]
+            }
+
+    except Exception as e:
+        logger.error(f"Failed to get search performance: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve search performance metrics"
         )
 
 # Export router

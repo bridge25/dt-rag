@@ -13,9 +13,10 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query, Depends, status, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Query, Depends, status, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+import uuid
 
 # Import API key authentication
 try:
@@ -79,69 +80,71 @@ class ClassificationAnalytics(BaseModel):
     accuracy_metrics: Dict[str, float]
     category_distribution: Dict[str, int]
 
-# Mock classification service
+# Real classification service
+
+from apps.classification import SemanticClassifier, TaxonomyDAO
+from apps.api.embedding_service import EmbeddingService
+from apps.api.database import db_manager
+
 
 class ClassificationService:
-    """Mock classification service"""
+    """Real semantic similarity-based classification service"""
 
-    async def classify_single(self, request: ClassifyRequest) -> ClassifyResponse:
-        """Classify a single document chunk"""
-        # Mock classification logic
-        confidence = 0.85 if "machine learning" in request.text.lower() else 0.72
-        canonical_path = ["Technology", "AI", "Machine Learning"]
+    def __init__(self):
+        """Initialize classification service with real dependencies"""
+        self.embedding_service = None
+        self.taxonomy_dao = None
+        self.semantic_classifier = None
 
-        # Determine if HITL is needed
-        hitl_needed = confidence < 0.70
-
-        candidates = [
-            TaxonomyNode(
-                node_id="tech-ai-ml",
-                label="Machine Learning",
-                canonical_path=canonical_path,
-                version="1.8.1",
-                confidence=confidence
-            ),
-            TaxonomyNode(
-                node_id="tech-ai-nlp",
-                label="Natural Language Processing",
-                canonical_path=["Technology", "AI", "NLP"],
-                version="1.8.1",
-                confidence=0.65
+    async def initialize(self, db_session):
+        """Initialize service with database session"""
+        if self.semantic_classifier is None:
+            self.embedding_service = EmbeddingService()
+            self.taxonomy_dao = TaxonomyDAO(db_session)
+            self.semantic_classifier = SemanticClassifier(
+                embedding_service=self.embedding_service,
+                taxonomy_dao=self.taxonomy_dao,
+                confidence_threshold=0.7
             )
-        ]
 
-        return ClassifyResponse(
-            canonical=canonical_path,
-            candidates=candidates,
-            hitl=hitl_needed,
-            confidence=confidence,
-            reasoning=[
-                "Text contains machine learning terminology",
-                "Technical context suggests AI/ML classification"
-            ]
+    async def classify_single(self, request: ClassifyRequest, db_session, correlation_id: Optional[str] = None) -> ClassifyResponse:
+        """Classify a single document chunk using semantic similarity"""
+        await self.initialize(db_session)
+
+        result = await self.semantic_classifier.classify(
+            text=request.text,
+            confidence_threshold=request.confidence_threshold,
+            top_k=5,
+            correlation_id=correlation_id
         )
 
-    async def classify_batch(self, request: BatchClassifyRequest) -> BatchClassifyResponse:
+        return result
+
+    async def classify_batch(self, request: BatchClassifyRequest, db_session) -> BatchClassifyResponse:
         """Classify multiple document chunks"""
+        import time
+        start_time = time.time()
         batch_id = str(uuid.uuid4())
         results = []
 
         for item in request.items:
-            result = await self.classify_single(item)
+            result = await self.classify_single(item, db_session)
             results.append(result)
 
         summary = {
             "total_items": len(request.items),
             "hitl_required": sum(1 for r in results if r.hitl),
-            "avg_confidence": sum(r.confidence for r in results) / len(results),
+            "avg_confidence": sum(r.confidence for r in results) / len(results) if results else 0.0,
             "categories": list(set(tuple(r.canonical) for r in results))
         }
+
+        processing_time = (time.time() - start_time) * 1000
 
         return BatchClassifyResponse(
             batch_id=batch_id,
             results=results,
             summary=summary,
-            processing_time_ms=125.5
+            processing_time_ms=processing_time
         )
 
     async def get_hitl_tasks(self, limit: int = 50) -> List[HITLTask]:
@@ -193,12 +196,19 @@ async def get_classification_service() -> ClassificationService:
     """Get classification service instance"""
     return ClassificationService()
 
+async def get_db_session():
+    """Get database session dependency"""
+    async with db_manager.async_session() as session:
+        yield session
+
 # API Endpoints
 
 @classification_router.post("/", response_model=ClassifyResponse)
 async def classify_document_chunk(
     request: ClassifyRequest,
+    http_request: Request,
     service: ClassificationService = Depends(get_classification_service),
+    db_session = Depends(get_db_session),
     api_key: str = Depends(verify_api_key)
 ):
     """
@@ -211,6 +221,8 @@ async def classify_document_chunk(
     - Reasoning explanation for transparency
     """
     try:
+        correlation_id = http_request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+
         # Validate request
         if not request.text.strip():
             raise HTTPException(
@@ -224,11 +236,12 @@ async def classify_document_chunk(
                 detail="Text content exceeds maximum length of 10000 characters"
             )
 
-        # Perform classification
-        result = await service.classify_single(request)
+        # Perform classification with correlation tracking
+        result = await service.classify_single(request, db_session, correlation_id=correlation_id)
 
         # Add response headers
         headers = {
+            "X-Correlation-ID": correlation_id,
             "X-Classification-Confidence": str(result.confidence),
             "X-HITL-Required": str(result.hitl).lower(),
             "X-Candidates-Count": str(len(result.candidates))
@@ -253,6 +266,7 @@ async def classify_batch(
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
     service: ClassificationService = Depends(get_classification_service),
+    db_session = Depends(get_db_session),
     api_key: str = Depends(verify_api_key)
 ):
     """
@@ -288,7 +302,7 @@ async def classify_batch(
             )
 
         # Process smaller batches immediately
-        result = await service.classify_batch(request)
+        result = await service.classify_batch(request, db_session)
         return result
 
     except HTTPException:

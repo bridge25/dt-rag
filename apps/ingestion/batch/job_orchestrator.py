@@ -104,6 +104,7 @@ class JobOrchestrator:
                     logger.error(f"Worker {worker_id} failed job {job_id}: {e}")
 
                     if await self._should_retry(job_id, e):
+                        priority = job_data.get("priority", 5)
                         retry_success = await self.job_queue.retry_job(
                             job_id=job_id,
                             command_id=command_id,
@@ -230,7 +231,10 @@ class JobOrchestrator:
                 logger.error(f"Database storage failed for {file_name}: {e}")
                 raise
 
+        correlation_id = job_data.get("correlation_id", command_id)
+
         event = DocumentProcessedEventV1(
+            correlationId=correlation_id,
             command_id=command_id,
             status=ProcessingStatusV1.COMPLETED,
             document_id=str(doc_id),
@@ -246,6 +250,7 @@ class JobOrchestrator:
         job_id = str(uuid.uuid4())
 
         job_data = {
+            "correlation_id": command.correlationId,
             "file_name": command.file_name,
             "file_content_hex": command.file_content.hex(),
             "file_format": command.file_format.value,
