@@ -6,6 +6,7 @@ export const apiClient = axios.create({
   timeout: env.NEXT_PUBLIC_API_TIMEOUT,
   headers: {
     "Content-Type": "application/json",
+    ...(env.NEXT_PUBLIC_API_KEY && { "X-API-Key": env.NEXT_PUBLIC_API_KEY }),
   },
 })
 

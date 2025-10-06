@@ -8,7 +8,7 @@ import { Network } from "lucide-react";
 export default function TaxonomyPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["taxonomy"],
-    queryFn: () => getTaxonomyTree(),
+    queryFn: () => getTaxonomyTree("1.8.1"),
   })
 
   return (
@@ -50,9 +50,9 @@ export default function TaxonomyPage() {
                   <Network className="h-5 w-5" />
                   <CardTitle>{node.name}</CardTitle>
                 </div>
-                {node.description && (
-                  <CardDescription>{node.description}</CardDescription>
-                )}
+                <CardDescription>
+                  Level {node.level} - Path: {node.path.join(" > ")}
+                </CardDescription>
               </CardHeader>
               {node.children && node.children.length > 0 && (
                 <CardContent>
@@ -60,9 +60,9 @@ export default function TaxonomyPage() {
                     {node.children.map((child) => (
                       <div key={child.id} className="text-sm">
                         <p className="font-medium">{child.name}</p>
-                        {child.description && (
-                          <p className="text-muted-foreground">{child.description}</p>
-                        )}
+                        <p className="text-muted-foreground">
+                          Level {child.level}
+                        </p>
                       </div>
                     ))}
                   </div>

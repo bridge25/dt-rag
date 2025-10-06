@@ -25,13 +25,11 @@ export default function DocumentsPage() {
 
   const mutation = useMutation({
     mutationFn: async (uploadFile: UploadFile) => {
-      const result = await uploadDocument(
-        {
-          file_name: uploadFile.file.name,
-          content_type: uploadFile.file.type,
-        },
-        uploadFile.file
-      )
+      const formData = new FormData()
+      formData.append("file", uploadFile.file)
+      formData.append("file_name", uploadFile.file.name)
+      formData.append("content_type", uploadFile.file.type)
+      const result = await uploadDocument(formData)
       return result
     },
     onSuccess: (data, uploadFile) => {

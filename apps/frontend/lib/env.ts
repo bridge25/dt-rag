@@ -3,11 +3,13 @@ import { z } from "zod"
 const envSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().optional().default("http://localhost:8000"),
   NEXT_PUBLIC_API_TIMEOUT: z.string().optional().default("30000").pipe(z.string().regex(/^\d+$/).transform(Number)),
+  NEXT_PUBLIC_API_KEY: z.string().min(32).optional(),
 })
 
 const parsedEnv = envSchema.safeParse({
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
+  NEXT_PUBLIC_API_KEY: process.env.NEXT_PUBLIC_API_KEY,
 })
 
 if (!parsedEnv.success) {

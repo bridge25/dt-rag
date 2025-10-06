@@ -21,9 +21,10 @@ export default function SearchPage() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     mutation.mutate({
-      query,
-      top_k: topK,
-      use_hybrid: useHybrid,
+      q: query,
+      max_results: topK,
+      include_highlights: true,
+      search_mode: useHybrid ? "hybrid" : "bm25",
     })
   }
 
@@ -100,9 +101,9 @@ export default function SearchPage() {
       {mutation.isSuccess && mutation.data && (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">
-            Results ({mutation.data.total})
+            Results ({mutation.data.hits.length})
           </h2>
-          {mutation.data.results.length === 0 ? (
+          {mutation.data.hits.length === 0 ? (
             <Card>
               <CardContent className="pt-6">
                 <p className="text-center text-muted-foreground">
@@ -112,7 +113,7 @@ export default function SearchPage() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {mutation.data.results.map((result) => (
+              {mutation.data.hits.map((result) => (
                 <Card key={result.chunk_id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -125,8 +126,8 @@ export default function SearchPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <p className="text-sm">{result.content}</p>
-                    {Object.keys(result.metadata).length > 0 && (
+                    <p className="text-sm">{result.text}</p>
+                    {result.metadata && Object.keys(result.metadata).length > 0 && (
                       <div className="rounded-md bg-muted p-2">
                         <p className="text-xs font-medium mb-1">Metadata:</p>
                         <pre className="text-xs overflow-x-auto">

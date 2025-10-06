@@ -6,124 +6,123 @@ import {
   ClassifyRequestSchema,
   ClassifyResponseSchema,
   TaxonomyNodeSchema,
-  TaxonomyVersionSchema,
-  DocumentUploadRequestSchema,
   DocumentUploadResponseSchema,
   HealthCheckResponseSchema,
-  PipelineExecuteRequestSchema,
-  PipelineExecuteResponseSchema,
-  AgentCreateRequestSchema,
-  AgentResponseSchema,
   EmbeddingGenerateRequestSchema,
   EmbeddingGenerateResponseSchema,
   EvaluationRequestSchema,
-  EvaluationResponseSchema,
+  EvaluationResultSchema,
   BatchSearchRequestSchema,
   BatchSearchResponseSchema,
+  FromCategoryRequestSchema,
+  AgentCreateResponseSchema,
+  AgentListResponseSchema,
+  AgentStatusSchema,
+  AgentUpdateRequestSchema,
+  AgentMetricsSchema,
   type SearchRequest,
   type SearchResponse,
   type ClassifyRequest,
   type ClassifyResponse,
   type TaxonomyNode,
-  type TaxonomyVersion,
-  type DocumentUploadRequest,
   type DocumentUploadResponse,
   type HealthCheckResponse,
-  type PipelineExecuteRequest,
-  type PipelineExecuteResponse,
-  type AgentCreateRequest,
-  type AgentResponse,
   type EmbeddingGenerateRequest,
   type EmbeddingGenerateResponse,
   type EvaluationRequest,
-  type EvaluationResponse,
+  type EvaluationResult,
   type BatchSearchRequest,
   type BatchSearchResponse,
+  type FromCategoryRequest,
+  type AgentCreateResponse,
+  type AgentListResponse,
+  type AgentStatus,
+  type AgentUpdateRequest,
+  type AgentMetrics,
 } from "./types"
 
-export async function search(params: SearchRequest): Promise<SearchResponse> {
-  const validated = SearchRequestSchema.parse(params)
+export async function search(request: SearchRequest): Promise<SearchResponse> {
+  const validated = SearchRequestSchema.parse(request)
   const response = await apiClient.post("/search/", validated)
   return SearchResponseSchema.parse(response.data)
 }
 
-export async function classify(params: ClassifyRequest): Promise<ClassifyResponse> {
-  const validated = ClassifyRequestSchema.parse(params)
+export async function classify(request: ClassifyRequest): Promise<ClassifyResponse> {
+  const validated = ClassifyRequestSchema.parse(request)
   const response = await apiClient.post("/classify/", validated)
   return ClassifyResponseSchema.parse(response.data)
 }
 
-export async function getTaxonomyTree(version: string = "latest"): Promise<TaxonomyNode[]> {
+export async function getTaxonomyTree(version: string): Promise<TaxonomyNode[]> {
   const response = await apiClient.get(`/taxonomy/${version}/tree`)
   return z.array(TaxonomyNodeSchema).parse(response.data)
 }
 
-export async function uploadDocument(params: DocumentUploadRequest, file: File): Promise<DocumentUploadResponse> {
-  const validated = DocumentUploadRequestSchema.parse(params)
-  const formData = new FormData()
-  formData.append("file", file)
-  formData.append("metadata", JSON.stringify(validated))
-
+export async function uploadDocument(formData: FormData): Promise<DocumentUploadResponse> {
   const response = await apiClient.post("/ingestion/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    headers: { "Content-Type": "multipart/form-data" },
   })
   return DocumentUploadResponseSchema.parse(response.data)
 }
 
 export async function getHealth(): Promise<HealthCheckResponse> {
+  const response = await apiClient.get("/health")
+  return HealthCheckResponseSchema.parse(response.data)
+}
+
+export async function getSystemHealth(): Promise<HealthCheckResponse> {
   const response = await apiClient.get("/monitoring/health")
   return HealthCheckResponseSchema.parse(response.data)
 }
 
-export async function executePipeline(params: PipelineExecuteRequest): Promise<PipelineExecuteResponse> {
-  const validated = PipelineExecuteRequestSchema.parse(params)
-  const response = await apiClient.post("/api/v1/pipeline/execute", validated)
-  return PipelineExecuteResponseSchema.parse(response.data)
-}
-
-export async function createAgentFromCategory(params: AgentCreateRequest): Promise<AgentResponse> {
-  const validated = AgentCreateRequestSchema.parse(params)
-  const response = await apiClient.post("/api/v1/agents/from-category", validated)
-  return AgentResponseSchema.parse(response.data)
-}
-
-export async function activateAgent(agentId: string): Promise<AgentResponse> {
-  const response = await apiClient.post(`/api/v1/agents/${agentId}/activate`)
-  return AgentResponseSchema.parse(response.data)
-}
-
-export async function deactivateAgent(agentId: string): Promise<AgentResponse> {
-  const response = await apiClient.post(`/api/v1/agents/${agentId}/deactivate`)
-  return AgentResponseSchema.parse(response.data)
-}
-
-export async function deleteAgent(agentId: string): Promise<void> {
-  await apiClient.delete(`/api/v1/agents/${agentId}`)
-}
-
-export async function generateEmbedding(params: EmbeddingGenerateRequest): Promise<EmbeddingGenerateResponse> {
-  const validated = EmbeddingGenerateRequestSchema.parse(params)
-  const response = await apiClient.post("/api/v1/embeddings/generate", validated)
+export async function generateEmbedding(request: EmbeddingGenerateRequest): Promise<EmbeddingGenerateResponse> {
+  const validated = EmbeddingGenerateRequestSchema.parse(request)
+  const response = await apiClient.post("/embeddings/generate", validated)
   return EmbeddingGenerateResponseSchema.parse(response.data)
 }
 
-export async function evaluateResponse(params: EvaluationRequest): Promise<EvaluationResponse> {
-  const validated = EvaluationRequestSchema.parse(params)
-  const response = await apiClient.post("/api/v1/evaluation/evaluate", validated)
-  return EvaluationResponseSchema.parse(response.data)
+export async function evaluateRagResponse(request: EvaluationRequest): Promise<EvaluationResult> {
+  const validated = EvaluationRequestSchema.parse(request)
+  const response = await apiClient.post("/evaluation/evaluate", validated)
+  return EvaluationResultSchema.parse(response.data)
 }
 
-export async function batchSearch(params: BatchSearchRequest): Promise<BatchSearchResponse> {
-  const validated = BatchSearchRequestSchema.parse(params)
-  const response = await apiClient.post("/api/v1/batch/search", validated)
+export async function batchSearch(request: BatchSearchRequest): Promise<BatchSearchResponse> {
+  const validated = BatchSearchRequestSchema.parse(request)
+  const response = await apiClient.post("/batch-search/", validated)
   return BatchSearchResponseSchema.parse(response.data)
 }
 
-export async function getTaxonomyVersions(): Promise<TaxonomyVersion[]> {
-  const response = await apiClient.get("/api/v1/taxonomy/versions")
-  return z.array(TaxonomyVersionSchema).parse(response.data)
+export async function createAgentFromCategory(request: FromCategoryRequest): Promise<AgentCreateResponse> {
+  const validated = FromCategoryRequestSchema.parse(request)
+  const response = await apiClient.post("/agents/from-category", validated)
+  return AgentCreateResponseSchema.parse(response.data)
+}
+
+export async function listAgents(params?: { status?: string; limit?: number }): Promise<AgentListResponse> {
+  const response = await apiClient.get("/agents/", { params })
+  return AgentListResponseSchema.parse(response.data)
+}
+
+export async function getAgent(agentId: string): Promise<AgentStatus> {
+  const response = await apiClient.get(`/agents/${agentId}`)
+  return AgentStatusSchema.parse(response.data)
+}
+
+export async function updateAgent(agentId: string, update: AgentUpdateRequest): Promise<AgentStatus> {
+  const validated = AgentUpdateRequestSchema.parse(update)
+  const response = await apiClient.put(`/agents/${agentId}`, validated)
+  return AgentStatusSchema.parse(response.data)
+}
+
+export async function deleteAgent(agentId: string): Promise<{ message: string }> {
+  const response = await apiClient.delete(`/agents/${agentId}`)
+  return z.object({ message: z.string() }).parse(response.data)
+}
+
+export async function getAgentMetrics(agentId: string): Promise<AgentMetrics> {
+  const response = await apiClient.get(`/agents/${agentId}/metrics`)
+  return AgentMetricsSchema.parse(response.data)
 }
 
 export * from "./types"
