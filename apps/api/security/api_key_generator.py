@@ -9,8 +9,7 @@ import secrets
 import base64
 import string
 import hashlib
-import time
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
@@ -99,13 +98,14 @@ class SecureAPIKeyGenerator:
             frequencies[char] = frequencies.get(char, 0) + 1
 
         # Calculate Shannon entropy
+        import math
         entropy = 0.0
         length = len(key)
 
         for count in frequencies.values():
             probability = count / length
             if probability > 0:
-                entropy -= probability * (probability.bit_length() - 1)
+                entropy -= probability * math.log2(probability)
 
         return entropy * length
 

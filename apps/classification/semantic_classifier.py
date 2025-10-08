@@ -3,13 +3,14 @@ Real Classification Service using Semantic Similarity
 Replaces mock classification with actual ML-based taxonomy classification
 """
 
+# @CODE:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md | TEST: tests/e2e/test_complete_workflow.py
+
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 import numpy as np
-from datetime import datetime
 
 from packages.common_schemas.common_schemas.models import (
-    ClassifyRequest, ClassifyResponse, ClassificationResult
+    ClassifyResponse, ClassificationResult
 )
 import uuid
 
@@ -55,8 +56,6 @@ class SemanticClassifier:
         start_time = time.time()
         request_id = correlation_id or str(uuid.uuid4())
 
-        threshold = confidence_threshold if confidence_threshold is not None else self.confidence_threshold
-
         text_embedding = await self.embedding_service.generate_embedding(text)
 
         taxonomy_nodes = await self.taxonomy_dao.get_all_leaf_nodes()
@@ -73,7 +72,6 @@ class SemanticClassifier:
             return self._fallback_response(text, request_id, start_time)
 
         best_match = top_candidates[0]
-        best_confidence = best_match["confidence"]
 
         classifications = []
         for cand in top_candidates:
@@ -213,31 +211,30 @@ class TaxonomyDAO:
 
     async def get_all_leaf_nodes(self) -> List[Dict[str, Any]]:
         """Get all leaf taxonomy nodes with embeddings"""
-        from sqlalchemy import select, text
-        from apps.api.database import Taxonomy
+        from sqlalchemy import select
+        from apps.api.database import TaxonomyNode
 
-        query = select(Taxonomy).where(Taxonomy.is_active == True)
+        query = select(TaxonomyNode).where(TaxonomyNode.version == "1.0.0")
         result = await self.db_session.execute(query)
         nodes = result.scalars().all()
 
         leaf_nodes = []
         for node in nodes:
-            if not node.children_ids or len(node.children_ids) == 0:
-                leaf_nodes.append({
-                    "id": node.id,
-                    "name": node.name,
-                    "path": node.path if node.path else [node.name],
-                    "embedding": node.embedding if hasattr(node, 'embedding') else None
-                })
+            leaf_nodes.append({
+                "id": str(node.node_id),
+                "name": node.label,
+                "path": node.canonical_path if node.canonical_path else [node.label],
+                "embedding": None
+            })
 
         return leaf_nodes
 
     async def get_node_by_id(self, node_id: str) -> Optional[Dict[str, Any]]:
         """Get taxonomy node by ID"""
         from sqlalchemy import select
-        from apps.api.database import Taxonomy
+        from apps.api.database import TaxonomyNode
 
-        query = select(Taxonomy).where(Taxonomy.id == node_id)
+        query = select(TaxonomyNode).where(TaxonomyNode.node_id == node_id)
         result = await self.db_session.execute(query)
         node = result.scalar_one_or_none()
 
@@ -245,10 +242,10 @@ class TaxonomyDAO:
             return None
 
         return {
-            "id": node.id,
-            "name": node.name,
-            "path": node.path if node.path else [node.name],
-            "embedding": node.embedding if hasattr(node, 'embedding') else None,
-            "parent_id": node.parent_id,
-            "children_ids": node.children_ids
+            "id": str(node.node_id),
+            "name": node.label,
+            "path": node.canonical_path if node.canonical_path else [node.label],
+            "embedding": None,
+            "parent_id": None,
+            "children_ids": []
         }

@@ -2,13 +2,13 @@
 OpenAI text-embedding-3-large 기반 실제 벡터 임베딩 서비스
 PostgreSQL pgvector와 통합된 1536차원 벡터 생성 시스템
 """
+# @CODE:EMBED-001 | SPEC: .moai/specs/SPEC-EMBED-001/spec.md | TEST: tests/test_embedding_service.py
 
 import os
 import asyncio
 import logging
 import hashlib
 from typing import List, Optional, Dict, Any
-from datetime import datetime
 import numpy as np
 
 # Langfuse integration for LLM cost tracking
@@ -461,7 +461,7 @@ class DocumentEmbeddingService:
 
                 return {
                     "success": True,
-                    "message": f"임베딩 업데이트 완료",
+                    "message": "임베딩 업데이트 완료",
                     "updated_count": updated_count,
                     "total_chunks": total_chunks,
                     "model_name": self.embedding_service.model_name

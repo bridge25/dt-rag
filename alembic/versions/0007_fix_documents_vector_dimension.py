@@ -43,6 +43,12 @@ def upgrade() -> None:
             BEGIN
                 IF EXISTS (
                     SELECT 1 FROM pg_extension WHERE extname = 'vector'
+                ) AND EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_name = 'documents'
+                ) AND EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'documents' AND column_name = 'embedding'
                 ) THEN
                     -- Step 1: Drop existing IVFFlat index on documents
                     DROP INDEX IF EXISTS documents_embedding_idx;
@@ -67,7 +73,7 @@ def upgrade() -> None:
                     -- Step 5: Update table comment
                     COMMENT ON COLUMN documents.embedding IS '1536-dimensional vector embedding from OpenAI text-embedding-3-large';
                 ELSE
-                    RAISE NOTICE 'pgvector extension not installed, skipping vector migration';
+                    RAISE NOTICE 'Skipping vector migration: extension, table, or column not found';
                 END IF;
             END
             $$;

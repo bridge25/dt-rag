@@ -2,8 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getHealth } from "@/lib/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { ModernCard } from "@/components/ui/modern-card";
+import { IconBadge } from "@/components/ui/icon-badge";
+import { Activity, Database, Server, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 export default function MonitoringPage() {
   const { data, isLoading, isError } = useQuery({
@@ -13,92 +14,98 @@ export default function MonitoringPage() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Monitoring</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-4xl font-bold tracking-tight">Monitoring</h1>
+        <p className="mt-2 text-lg text-muted-foreground">
           System health and performance metrics
         </p>
       </div>
 
       {isLoading && (
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">Loading health status...</p>
-          </CardContent>
-        </Card>
+        <ModernCard variant="beige">
+          <div className="py-12">
+            <p className="text-center text-gray-600">Loading health status...</p>
+          </div>
+        </ModernCard>
       )}
 
       {isError && (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">System Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Unable to fetch system health
-            </p>
-          </CardContent>
-        </Card>
+        <ModernCard variant="purple">
+          <div className="flex items-center gap-3">
+            <IconBadge icon={XCircle} color="orange" />
+            <div>
+              <h3 className="text-xl font-semibold">System Error</h3>
+              <p className="mt-1 text-sm text-white/70">
+                Unable to fetch system health
+              </p>
+            </div>
+          </div>
+        </ModernCard>
       )}
 
       {data && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">System Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            <ModernCard variant="purple">
+              <div className="flex items-center justify-between">
+                <IconBadge icon={Activity} color="orange" size="lg" />
                 {data.status === "healthy" ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-6 w-6 text-white/80" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-destructive" />
+                  <XCircle className="h-6 w-6 text-red-400" />
                 )}
-                <span className="text-lg font-semibold capitalize">{data.status}</span>
               </div>
-            </CardContent>
-          </Card>
+              <h4 className="mt-4 text-lg font-semibold">System Status</h4>
+              <p className="mt-1 text-3xl font-bold capitalize">
+                {data.status}
+              </p>
+              <p className="mt-2 text-sm text-white/70">Real-time monitoring</p>
+            </ModernCard>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Database</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
+            <ModernCard variant="green">
+              <div className="flex items-center justify-between">
+                <IconBadge icon={Database} color="blue" size="lg" />
                 {data.database === "healthy" ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-6 w-6 text-white/80" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-destructive" />
+                  <XCircle className="h-6 w-6 text-red-400" />
                 )}
-                <span className="capitalize">{data.database}</span>
               </div>
-            </CardContent>
-          </Card>
+              <h4 className="mt-4 text-lg font-semibold">Database</h4>
+              <p className="mt-1 text-3xl font-bold capitalize">
+                {data.database}
+              </p>
+              <p className="mt-2 text-sm text-white/70">PostgreSQL + pgvector</p>
+            </ModernCard>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Redis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
+            <ModernCard variant="dark">
+              <div className="flex items-center justify-between">
+                <IconBadge icon={Server} color="teal" size="lg" />
                 {data.redis === "healthy" ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <CheckCircle2 className="h-6 w-6 text-white/80" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-destructive" />
+                  <XCircle className="h-6 w-6 text-red-400" />
                 )}
-                <span className="capitalize">{data.redis}</span>
               </div>
-            </CardContent>
-          </Card>
+              <h4 className="mt-4 text-lg font-semibold">Redis</h4>
+              <p className="mt-1 text-3xl font-bold capitalize">
+                {data.redis}
+              </p>
+              <p className="mt-2 text-sm text-white/70">Redis cache layer</p>
+            </ModernCard>
+          </div>
 
-          <Card className="md:col-span-2 lg:col-span-3">
-            <CardHeader>
-              <CardTitle className="text-base">Last Updated</CardTitle>
-              <CardDescription>{data.timestamp}</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
+          <ModernCard variant="teal">
+            <div className="flex items-center gap-3">
+              <IconBadge icon={Clock} color="purple" />
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900">Last Updated</h4>
+                <p className="mt-1 text-xl font-medium text-gray-700">{data.timestamp}</p>
+              </div>
+            </div>
+          </ModernCard>
+        </>
       )}
     </div>
   );

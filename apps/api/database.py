@@ -4,12 +4,11 @@
 """
 import os
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
-import asyncpg
+from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, ARRAY, INT4RANGE
+from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.types import TypeDecorator, TEXT
 try:
     from pgvector.sqlalchemy import Vector
@@ -21,12 +20,8 @@ from datetime import datetime
 import uuid
 import logging
 import httpx
-import json
 import re
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import tiktoken
 
 # Import shared DB session (순환 참조 방지)
 from ..core.db_session import engine, async_session, Base, DATABASE_URL
@@ -115,40 +110,39 @@ def get_uuid_type():
 class TaxonomyNode(Base):
     __tablename__ = "taxonomy_nodes"
 
-    node_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    canonical_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
-    node_name: Mapped[str] = mapped_column(String, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text)
-    doc_metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(get_json_type(), default=dict)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    node_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
+    label: Mapped[Optional[str]] = mapped_column(Text)
+    canonical_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    version: Mapped[Optional[str]] = mapped_column(Text)
+    confidence: Mapped[Optional[float]] = mapped_column(Float)
 
 class TaxonomyEdge(Base):
     __tablename__ = "taxonomy_edges"
 
-    edge_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    parent_node_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    child_node_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    parent: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'), primary_key=True)
+    child: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'), primary_key=True)
+    version: Mapped[str] = mapped_column(Text, primary_key=True)
 
 class TaxonomyMigration(Base):
     __tablename__ = "taxonomy_migrations"
 
-    migration_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    from_version: Mapped[Optional[int]] = mapped_column(Integer)
-    to_version: Mapped[int] = mapped_column(Integer, nullable=False)
-    migration_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    changes: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), nullable=False)
-    applied_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    applied_by: Mapped[Optional[str]] = mapped_column(Text)
+    migration_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    from_version: Mapped[Optional[str]] = mapped_column(Text)
+    to_version: Mapped[Optional[str]] = mapped_column(Text)
+    from_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    to_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    rationale: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('now()'))
 
 class Document(Base):
     __tablename__ = "documents"
 
     doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
+    version_tag: Mapped[Optional[str]] = mapped_column(Text)
+    license_tag: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
     title: Mapped[Optional[str]] = mapped_column(Text)
     content_type: Mapped[str] = mapped_column(String(100), default='text/plain')
     file_size: Mapped[Optional[int]] = mapped_column(Integer)
@@ -187,26 +181,26 @@ class Embedding(Base):
 class DocTaxonomy(Base):
     __tablename__ = "doc_taxonomy"
 
-    mapping_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('documents.doc_id', ondelete='CASCADE'), nullable=False)
-    path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
-    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    source: Mapped[str] = mapped_column(String(50), nullable=False, default='manual')
-    assigned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    assigned_by: Mapped[Optional[str]] = mapped_column(Text)
+    mapping_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    doc_id: Mapped[Optional[uuid.UUID]] = mapped_column(get_uuid_type(), ForeignKey('documents.doc_id'))
+    node_id: Mapped[Optional[uuid.UUID]] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'))
+    version: Mapped[Optional[str]] = mapped_column(Text)
+    path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    confidence: Mapped[Optional[float]] = mapped_column(Float)
+    hitl_required: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('false'))
 
 class CaseBank(Base):
     __tablename__ = "case_bank"
 
-    case_id: Mapped[str] = mapped_column(String, primary_key=True)
+    case_id: Mapped[str] = mapped_column(Text, primary_key=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     response_text: Mapped[str] = mapped_column(Text, nullable=False)
     category_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
     query_vector: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)
-    quality_score: Mapped[float] = mapped_column(Float, default=0.0)
-    usage_count: Mapped[int] = mapped_column(Integer, default=0)
-    success_rate: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    quality_score: Mapped[Optional[float]] = mapped_column(Float)
+    usage_count: Mapped[Optional[int]] = mapped_column(Integer)
+    success_rate: Mapped[Optional[float]] = mapped_column(Float)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('now()'))
     last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
 # 데이터베이스 연결 클래스
@@ -247,7 +241,7 @@ class DatabaseManager:
         """데이터베이스 연결 테스트"""
         try:
             async with self.async_session() as session:
-                result = await session.execute(text("SELECT 1"))
+                await session.execute(text("SELECT 1"))
                 return True
         except Exception as e:
             logger.error(f"데이터베이스 연결 실패: {e}")
@@ -263,11 +257,11 @@ class TaxonomyDAO:
     @staticmethod
     async def get_tree(version: str) -> List[Dict[str, Any]]:
         """분류체계 트리 조회 - 실제 데이터베이스에서"""
-        async with db_manager.async_session() as session:
+        async with async_session() as session:
             try:
                 # 실제 쿼리로 교체 - SQLAlchemy 2.0 방식
                 query = text("""
-                    SELECT node_id, node_name, canonical_path, version
+                    SELECT node_id, label, canonical_path, version
                     FROM taxonomy_nodes
                     WHERE version = :version
                     ORDER BY canonical_path
@@ -285,14 +279,14 @@ class TaxonomyDAO:
                 tree = []
                 for row in rows:
                     node = {
-                        "label": row[1],  # node_name
+                        "label": row[1],  # label column
                         "version": row[3],
-                        "node_id": row[0],
+                        "node_id": str(row[0]),
                         "canonical_path": row[2],
                         "children": []
                     }
                     tree.append(node)
-                
+
                 return tree
                 
             except Exception as e:
@@ -301,7 +295,7 @@ class TaxonomyDAO:
                 return await TaxonomyDAO._get_fallback_tree(version)
     
     @staticmethod
-    async def _insert_default_taxonomy(session, version: int):
+    async def _insert_default_taxonomy(session, version: str):
         """기본 분류체계 데이터 삽입"""
         default_nodes = [
             ("AI", ["AI"], version),
@@ -311,22 +305,22 @@ class TaxonomyDAO:
             ("General", ["AI", "General"], version),
         ]
 
-        for node_name, path, ver in default_nodes:
+        for label, path, ver in default_nodes:
             insert_query = text("""
-                INSERT INTO taxonomy_nodes (node_name, canonical_path, version)
-                VALUES (:node_name, :canonical_path, :version)
+                INSERT INTO taxonomy_nodes (label, canonical_path, version)
+                VALUES (:label, :canonical_path, :version)
                 ON CONFLICT DO NOTHING
             """)
             await session.execute(insert_query, {
-                "node_name": node_name,
+                "label": label,
                 "canonical_path": path,
                 "version": ver
             })
 
-        # commit은 호출하는 쪽에서 처리
+        await session.commit()
     
     @staticmethod
-    async def _get_fallback_tree(version: int) -> List[Dict[str, Any]]:
+    async def _get_fallback_tree(version: str) -> List[Dict[str, Any]]:
         """폴백 트리 (DB 연결 실패 시)"""
         return [
             {
@@ -427,8 +421,8 @@ class EmbeddingService:
             batch_texts = texts[i:i + batch_size]
             batch_embeddings = []
 
-            for text in batch_texts:
-                embedding = await EmbeddingService.generate_embedding(text)
+            for text_content in batch_texts:
+                embedding = await EmbeddingService.generate_embedding(text_content)
                 batch_embeddings.append(embedding)
 
             embeddings.extend(batch_embeddings)
@@ -967,7 +961,8 @@ class SearchDAO:
 
         doc_ids = []
         for title, url in sample_docs:
-            doc_insert = text("""
+            from sqlalchemy import text as sql_text
+            doc_insert = sql_text("""
                 INSERT INTO documents (title, source_url, content_type)
                 VALUES (:title, :source_url, 'text/plain')
                 RETURNING doc_id
@@ -982,7 +977,7 @@ class SearchDAO:
             (doc_ids[1], "머신러닝 분류 알고리즘에는 SVM, Random Forest 등이 있습니다.", "[1,100)", 0)
         ]
 
-        for doc_id, text, span, chunk_index in sample_chunks:
+        for doc_id, text_content, span, chunk_index in sample_chunks:
             chunk_insert = text("""
                 INSERT INTO chunks (doc_id, text, span, chunk_index)
                 VALUES (:doc_id, :text, :span, :chunk_index)
@@ -990,7 +985,7 @@ class SearchDAO:
             """)
             await session.execute(chunk_insert, {
                 "doc_id": doc_id,
-                "text": text,
+                "text": text_content,
                 "span": span,
                 "chunk_index": chunk_index
             })
@@ -1353,3 +1348,17 @@ class SearchMetrics:
 
 # 전역 메트릭 수집기
 search_metrics = SearchMetrics()
+
+
+# FastAPI Dependency for database sessions
+async def get_async_session():
+    """
+    FastAPI dependency for providing async database sessions
+
+    Usage:
+        @app.get("/endpoint")
+        async def endpoint(db: AsyncSession = Depends(get_async_session)):
+            ...
+    """
+    async with async_session() as session:
+        yield session

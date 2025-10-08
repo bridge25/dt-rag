@@ -5,6 +5,8 @@ These tests simulate realistic user interactions with the DT-RAG system,
 covering typical use cases and user journeys.
 """
 
+# @TEST:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md
+
 import pytest
 import os
 import asyncio

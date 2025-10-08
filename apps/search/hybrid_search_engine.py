@@ -13,25 +13,40 @@ Performance targets:
 - Cost ≤ ₩3/search
 """
 
+# @CODE:SEARCH-001 | SPEC: .moai/specs/SPEC-SEARCH-001/spec.md | TEST: tests/test_hybrid_search.py
+
 import time
 import logging
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 import numpy as np
 from dataclasses import dataclass, field
 import json
 import hashlib
-from pathlib import Path
 
 # PostgreSQL and pgvector imports
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text, func
+from sqlalchemy import text
 
 # Direct imports (순환 참조 해결: core.db_session 분리)
-from ..core.db_session import engine, async_session
-from ..api.database import SearchDAO, search_metrics, db_manager
 from ..api.embedding_service import embedding_service
+
+# Lazy import to avoid circular dependency
+def _get_db_manager():
+    from ..api.database import db_manager
+    return db_manager
+
+def _get_search_metrics():
+    from ..api.database import search_metrics
+    return search_metrics
+
+def _get_search_dao():
+    from ..api.database import SearchDAO
+    return SearchDAO
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Sentry monitoring integration
 try:
@@ -45,10 +60,6 @@ try:
 except ImportError:
     SENTRY_AVAILABLE = False
     logger.debug("Sentry monitoring not available")
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -536,14 +547,13 @@ class HybridSearchEngine:
                 )
 
             # Check cache first
-            cache_hit = False
             if self.cache:
                 cached_results = self.cache.get(query, filters, top_k)
                 if cached_results:
                     metrics.total_time = time.time() - start_time
                     metrics.cache_hit = True
                     metrics.final_results = len(cached_results)
-                    search_metrics.record_search("hybrid", metrics.total_time)
+                    _get_search_metrics().record_search("hybrid", metrics.total_time)
 
                     # Breadcrumb for cache hit
                     if SENTRY_AVAILABLE:
@@ -609,7 +619,7 @@ class HybridSearchEngine:
                 self.cache.put(query, filters, top_k, final_results)
             
             # Record metrics
-            search_metrics.record_search("hybrid", metrics.total_time)
+            _get_search_metrics().record_search("hybrid", metrics.total_time)
             
             logger.info(f"Hybrid search completed: {len(final_results)} results in {metrics.total_time:.3f}s")
             
@@ -618,7 +628,7 @@ class HybridSearchEngine:
         except Exception as e:
             logger.error(f"Hybrid search failed: {e}")
             metrics.total_time = time.time() - start_time
-            search_metrics.record_search("hybrid", metrics.total_time, error=True)
+            _get_search_metrics().record_search("hybrid", metrics.total_time, error=True)
 
             # Report to Sentry with comprehensive context
             if SENTRY_AVAILABLE:
@@ -650,20 +660,21 @@ class HybridSearchEngine:
                                   filters: Dict[str, Any]) -> List[SearchResult]:
         """Perform BM25 keyword search using PostgreSQL FTS"""
         start_time = time.time()
-        
+
         try:
-            async with db_manager.async_session() as session:
+            db_mgr = _get_db_manager()
+            async with db_mgr.async_session() as session:
                 # Build filter clause
                 filter_clause, filter_params = self._build_filter_clause(filters)
 
                 # Check if PostgreSQL or SQLite
-                if "postgresql" in str(db_manager.engine.url):
+                if "postgresql" in str(db_mgr.engine.url):
                     # PostgreSQL full-text search with BM25-like ranking
                     bm25_query = text(f"""
                         SELECT
                             c.chunk_id,
                             c.text,
-                            d.title,
+                            d.source_url as title,
                             d.source_url,
                             dt.path as taxonomy_path,
                             ts_rank_cd(
@@ -685,7 +696,7 @@ class HybridSearchEngine:
                         SELECT
                             c.chunk_id,
                             c.text,
-                            d.title,
+                            d.source_url as title,
                             d.source_url,
                             dt.path as taxonomy_path,
                             bm25(chunks_fts) as bm25_score
@@ -736,14 +747,15 @@ class HybridSearchEngine:
                                    filters: Dict[str, Any]) -> List[SearchResult]:
         """Perform vector similarity search using pgvector"""
         start_time = time.time()
-        
+
         try:
-            async with db_manager.async_session() as session:
+            db_mgr = _get_db_manager()
+            async with db_mgr.async_session() as session:
                 # Build filter clause
                 filter_clause, filter_params = self._build_filter_clause(filters)
 
                 # Check if PostgreSQL with pgvector or SQLite
-                if "postgresql" in str(db_manager.engine.url):
+                if "postgresql" in str(db_mgr.engine.url):
                     # Convert embedding to PostgreSQL vector format
                     vector_str = "[" + ",".join(map(str, query_embedding)) + "]"
 
@@ -753,17 +765,17 @@ class HybridSearchEngine:
                         SELECT
                             c.chunk_id,
                             c.text,
-                            d.title,
+                            d.source_url as title,
                             d.source_url,
                             dt.path as taxonomy_path,
-                            1 - (e.embedding <=> '{vector_str}'::vector) as cosine_similarity
+                            1 - (e.vec <=> '{vector_str}'::vector) as cosine_similarity
                         FROM chunks c
                         JOIN documents d ON c.doc_id = d.doc_id
                         LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
                         JOIN embeddings e ON c.chunk_id = e.chunk_id
-                        WHERE e.embedding IS NOT NULL
+                        WHERE e.vec IS NOT NULL
                         {filter_clause}
-                        ORDER BY e.embedding <=> '{vector_str}'::vector
+                        ORDER BY e.vec <=> '{vector_str}'::vector
                         LIMIT :top_k
                     """)
                     query_params = {"top_k": top_k, **filter_params}
@@ -773,7 +785,7 @@ class HybridSearchEngine:
                         SELECT
                             c.chunk_id,
                             c.text,
-                            d.title,
+                            d.source_url as title,
                             d.source_url,
                             dt.path as taxonomy_path,
                             0.5 as cosine_similarity
@@ -980,15 +992,15 @@ class HybridSearchEngine:
             metrics.total_time = time.time() - start_time
             metrics.bm25_time = metrics.total_time
             metrics.final_results = len(results)
-            
-            search_metrics.record_search("bm25", metrics.total_time)
+
+            _get_search_metrics().record_search("bm25", metrics.total_time)
             
             return results, metrics
         
         except Exception as e:
             logger.error(f"Keyword search failed: {e}")
             metrics.total_time = time.time() - start_time
-            search_metrics.record_search("bm25", metrics.total_time, error=True)
+            _get_search_metrics().record_search("bm25", metrics.total_time, error=True)
             return [], metrics
     
     async def vector_only_search(self,
@@ -1014,15 +1026,15 @@ class HybridSearchEngine:
             metrics.total_time = time.time() - start_time
             metrics.vector_time = metrics.total_time - metrics.embedding_time
             metrics.final_results = len(results)
-            
-            search_metrics.record_search("vector", metrics.total_time)
+
+            _get_search_metrics().record_search("vector", metrics.total_time)
             
             return results, metrics
         
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
             metrics.total_time = time.time() - start_time
-            search_metrics.record_search("vector", metrics.total_time, error=True)
+            _get_search_metrics().record_search("vector", metrics.total_time, error=True)
             return [], metrics
     
     def get_config(self) -> Dict[str, Any]:
@@ -1171,14 +1183,16 @@ async def get_search_statistics() -> Dict[str, Any]:
     """Get comprehensive search statistics"""
     try:
         # Get database statistics
-        async with db_manager.async_session() as session:
+        db_mgr = _get_db_manager()
+        SearchDAO = _get_search_dao()
+        async with db_mgr.async_session() as session:
             db_stats = await SearchDAO.get_search_analytics(session)
-        
+
         # Get engine statistics
         engine_stats = search_engine.get_config()
-        
+
         # Get global metrics
-        global_metrics = search_metrics.get_metrics()
+        global_metrics = _get_search_metrics().get_metrics()
         
         return {
             "database_stats": db_stats,

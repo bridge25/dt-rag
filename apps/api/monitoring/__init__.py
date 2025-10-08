@@ -7,6 +7,13 @@ from .metrics import MetricsCollector, get_metrics_collector
 from .health_check import HealthChecker, get_health_checker
 from .dashboard import MonitoringDashboard
 
+# Sentry monitoring (optional)
+try:
+    from . import sentry_reporter  # noqa: F401
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+
 __all__ = [
     "MetricsCollector",
     "get_metrics_collector",

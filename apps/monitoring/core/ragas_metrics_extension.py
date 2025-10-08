@@ -7,10 +7,9 @@ for comprehensive RAG system quality monitoring.
 
 import logging
 from typing import Dict, Any, Optional
-from datetime import datetime
 
 try:
-    from prometheus_client import Counter, Gauge, Histogram, Summary
+    from prometheus_client import Counter, Gauge, Histogram
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False

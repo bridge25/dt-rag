@@ -1,0 +1,148 @@
+바이브코딩 7-Stage 루프 기반 구현 전략
+
+  IG(정보이득) 임계 확보 방안
+
+  원칙: 모호어 제거 → 스키마/계약 먼저 → 구현
+
+  ---
+  Phase 1: Taxonomy (P0-1)
+
+  Scope
+  - 목표: PRD Annex C.4 taxonomy DB 스키마 구현
+  - 비범위: 프론트엔드, 분류 파이프라인
+  - 제약: PostgreSQL only, alembic migration
+
+  IG 확보 항목
+  1. PRD 282-341줄 DDL 정확히 읽음 ✓
+  2. 기존 database.py Base 확인 ✓
+  3. 기존 마이그레이션 패턴 확인 ✓
+  4. FK 무결성 제약 명시 필요
+
+  Context Load
+  - Main: alembic/versions/, apps/core/db_session.py, apps/api/database.py
+  - Reference: PRD Annex C.4 (인터페이스만)
+
+  Plan (≤5파일)
+  1. alembic/versions/0008_taxonomy_schema.py - 5개 테이블 생성
+  2. apps/api/models/taxonomy.py - SQLAlchemy 모델
+  3. DoD: alembic upgrade head 성공, psql \d 검증
+
+  ---
+  Phase 2: Taxonomy Service (P0-2)
+
+  Scope
+  - 목표: TaxonomyService 실제 구현 (Mock 제거)
+  - API: PRD 183-188줄 엔드포인트
+  - 비범위: diff/rollback은 Phase 3
+
+  IG 확보 항목
+  1. apps/api/database.py 읽어서 DAO 패턴 파악
+  2. taxonomy_router.py Mock 제거할 부분 특정
+  3. 버전 포맷 정규식: ^\d+\.\d+\.\d+$ (line 43)
+
+  Plan (≤5파일)
+  1. apps/api/services/taxonomy_service.py - CRUD 로직
+  2. apps/api/routers/taxonomy_router.py - Mock 제거, Service 연결
+  3. DoD: GET /taxonomy/versions 실제 DB 조회 성공
+
+  ---
+  Phase 3: 혼합 분류 파이프라인 (P0-3)
+
+  Scope
+  - 목표: 룰→LLM→교차검증→HITL 큐
+  - 입력: chunk_id, text
+  - 출력: canonical, candidates[], confidence, hitl_required
+
+  IG 확보 항목
+  1. PRD 131-132줄 분류 로직 읽음
+  2. classification/semantic_classifier.py 읽어서 기존 구조 파악 필요
+  3. LLM 프롬프트 명세 (PRD 277줄 "근거≥2·DAG 후보")
+  4. Conf 산식 가중치 (PRD 270줄 - 미결정, 임시로 rerank_score * 0.8)
+
+  Context Load
+  - Main: apps/classification/
+  - Reference: PRD 131-132, 277
+
+  Plan (≤5파일)
+  1. apps/classification/hybrid_classifier.py - 3단계 파이프라인
+  2. apps/classification/hitl_queue.py - 큐 관리
+  3. apps/api/routers/classification_router.py - Mock 제거
+  4. DoD: POST /classify 호출 → doc_taxonomy INSERT, Conf<0.70 → hitl=true
+
+  ---
+  Phase 4: TreeViewer UI (P0-4)
+
+  Scope
+  - 목표: 버전 드롭다운, 트리 렌더링, 노드 메타
+  - 비범위: diff/rollback UI는 Phase 5
+
+  IG 확보 항목
+  1. PRD 199-203줄 TreeViewer 요구사항
+  2. apps/frontend-admin/src/components/ 구조 확인 필요
+  3. API: GET /taxonomy/{version}/tree 응답 스키마
+  4. 성능: 1만 노드 가상 스크롤 (react-window 사용)
+
+  Plan (≤5파일)
+  1. apps/frontend-admin/src/components/TreeViewer.tsx
+  2. apps/frontend-admin/src/services/taxonomyApi.ts - API 클라이언트
+  3. apps/frontend-admin/app/admin/taxonomy/page.tsx - 통합
+  4. DoD: 버전 선택 → 트리 렌더링, 노드 클릭 → 메타 표시
+
+ ---
+  Phase 5: 7-Step LangGraph 통합 (P0-5)
+
+  Scope
+  - 목표: orchestration을 main API에 통합
+  - 7단계: intent→retrieve→plan→tools→compose→cite→respond
+  - 비범위: MCP 화이트리스트는 Phase 6
+
+  IG 확보 항목
+  1. apps/orchestration/src/main.py 전체 읽기 필요
+  2. PRD 139줄 7-Step 명세
+  3. 현재 별도 앱 구조 파악 → 단일 라우터로 병합 방법
+  4. LangGraph 의존성 확인 (pyproject.toml)
+
+  Context Load
+  - Main: apps/api/routers/orchestration_router.py
+  - Reference: apps/orchestration/src/main.py (로직만 참조)
+
+  Plan (≤5파일)
+  1. apps/api/services/langgraph_service.py - 7단계 워크플로우
+  2. apps/api/routers/orchestration_router.py - Mock 제거, 통합
+  3. DoD: POST /chat/run → 7단계 실행 → sources[] 포함 응답
+
+  ---
+  실행 순서 & 강제 장치
+
+  7-Stage 체크리스트 (각 Phase마다)
+  [ ] Scope 문서 작성 (목표/비범위/제약/DoD)
+  [ ] Context Load (Main vs Reference 분리)
+  [ ] IG 부족 항목 Abstain → 정보 수집
+  [ ] Plan (≤5파일, 린트/타입/테스트)
+  [ ] Explain (10줄 알고리즘 승인 대기)
+  [ ] Implement (코드 직접 읽고 작성)
+  [ ] Verify (테스트 실행 → 리포트)
+
+  Commit 규칙
+  - 각 Phase = 1 commit
+  - 파일 수 ≤ 5개
+  - 메시지: feat(taxonomy): Add DB schema migration (Phase 1)
+
+  위험 신호 → 즉시 Abstain
+  - "적절히", "아마도", "일반적으로" 발견 시
+  - 파일 경로 불명확 시
+  - 스키마/타입 정의 없이 구현 시작 시
+
+  ---
+  요약
+
+  핵심 전략
+  1. IG 먼저: 각 Phase 시작 전 스키마/계약/예시 100% 확보
+  2. 작은 커밋: Phase당 ≤5파일, 독립 검증
+  3. Mock 제거 우선: 기존 Mock Service → 실제 DB 연결
+  4. 프론트는 API 후: 백엔드 엔드포인트 완성 → UI 연결
+  5. Abstain 권장: 정보 부족 시 즉시 중단, 코드 읽기 우선
+
+  입력≥출력×20 유지
+  - Explain 단계에서 "10줄 알고리즘만 먼저"로 출력 억제
+  - 전체 코드 작성 전 승인 대기

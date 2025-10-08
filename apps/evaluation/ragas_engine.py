@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 RAGAS evaluation engine implementation
 
@@ -11,12 +13,10 @@ Uses LLM-based evaluation with Gemini API for accurate assessment.
 """
 
 import asyncio
-import json
 import logging
 import re
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Tuple
-import numpy as np
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
 import google.generativeai as genai
@@ -274,7 +274,7 @@ class RAGASEvaluator:
         try:
             result = await self._generate_text(prompt)
             return "RELEVANT" in result.upper()
-        except:
+        except Exception:
             return False
 
     async def _llm_based_context_recall(self, query: str, contexts: List[str], ground_truth: str) -> float:
@@ -303,11 +303,10 @@ class RAGASEvaluator:
 
         try:
             result = await self._generate_text(prompt)
-            # Parse JSON response
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _llm_based_context_recall_from_response(self, query: str, response: str, contexts: List[str]) -> float:
@@ -339,7 +338,7 @@ class RAGASEvaluator:
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _llm_based_faithfulness(self, response: str, contexts: List[str]) -> float:
@@ -371,7 +370,7 @@ class RAGASEvaluator:
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("faithfulness_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _llm_based_answer_relevancy(self, query: str, response: str) -> float:
@@ -401,7 +400,7 @@ class RAGASEvaluator:
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("relevancy_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _generate_text(self, prompt: str) -> str:

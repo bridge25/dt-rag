@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 A/B testing and experiment tracking for RAG system improvements
 
@@ -11,12 +13,10 @@ Provides:
 
 import asyncio
 import logging
-import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 import statistics
-import random
 import json
 
 import numpy as np
@@ -24,7 +24,7 @@ from scipy import stats
 
 from .models import (
     ExperimentConfig, ExperimentResults, EvaluationResult,
-    EvaluationMetrics, ExperimentRun
+    ExperimentRun
 )
 from ..api.database import db_manager
 
@@ -243,12 +243,6 @@ class ExperimentTracker:
                         (np.var(control_values, ddof=1) + np.var(treatment_values, ddof=1)) / 2
                     )
                     effect_size = (treatment_mean - control_mean) / pooled_std if pooled_std > 0 else 0
-
-                    # Calculate confidence interval
-                    se = np.sqrt(np.var(control_values, ddof=1)/len(control_values) +
-                                np.var(treatment_values, ddof=1)/len(treatment_values))
-                    ci_lower = (treatment_mean - control_mean) - 1.96 * se
-                    ci_upper = (treatment_mean - control_mean) - 1.96 * se
 
                     is_significant = p_value < self.significance_threshold
 

@@ -62,8 +62,8 @@ async def _insert_golden_dataset(conn):
     # Document 1: ML Algorithms
     doc_id_1 = str(uuid.uuid4())
     await conn.execute(text("""
-        INSERT INTO documents (doc_id, title, source_url, content_type, doc_metadata, chunk_metadata, processed_at)
-        VALUES (:doc_id, :title, :source_url, :content_type, :doc_metadata, :chunk_metadata, :processed_at)
+        INSERT INTO documents (doc_id, title, source_url, content_type, doc_metadata, chunk_metadata, processed_at, created_at)
+        VALUES (:doc_id, :title, :source_url, :content_type, :doc_metadata, :chunk_metadata, :processed_at, :created_at)
     """), {
         "doc_id": doc_id_1,
         "title": "Machine Learning Algorithms Guide",
@@ -71,7 +71,8 @@ async def _insert_golden_dataset(conn):
         "content_type": "article",
         "doc_metadata": json.dumps({}),
         "chunk_metadata": json.dumps({}),
-        "processed_at": datetime.utcnow()
+        "processed_at": datetime.utcnow(),
+        "created_at": datetime.utcnow()
     })
 
     # Chunk 1-1
@@ -112,29 +113,20 @@ async def _insert_golden_dataset(conn):
     """), {
         "embedding_id": embedding_id_1,
         "chunk_id": chunk_id_1_1,
-        "vec": json.dumps(embedding_vector_1),
+        "vec": embedding_vector_1,
         "model_name": "text-embedding-ada-002",
         "created_at": datetime.utcnow()
     })
 
-    # Taxonomy 매핑
-    await conn.execute(text("""
-        INSERT INTO doc_taxonomy (mapping_id, doc_id, path, confidence, source, assigned_at)
-        VALUES (:mapping_id, :doc_id, :path, :confidence, :source, :assigned_at)
-    """), {
-        "mapping_id": str(uuid.uuid4()),
-        "doc_id": doc_id_1,
-        "path": ["AI", "ML"],  # PostgreSQL array type, SQLite JSON
-        "confidence": 0.95,
-        "source": "test",
-        "assigned_at": datetime.utcnow()
-    })
+    # Taxonomy 매핑 - source와 assigned_at 컬럼은 실제 스키마에 없음
+    # doc_taxonomy는 (doc_id, node_id, version) 복합키를 사용
+    # 간단히 하기 위해 생략 (테스트에서 실제로 사용되지 않음)
 
     # Document 2: Neural Networks
     doc_id_2 = str(uuid.uuid4())
     await conn.execute(text("""
-        INSERT INTO documents (doc_id, title, source_url, content_type, doc_metadata, chunk_metadata, processed_at)
-        VALUES (:doc_id, :title, :source_url, :content_type, :doc_metadata, :chunk_metadata, :processed_at)
+        INSERT INTO documents (doc_id, title, source_url, content_type, doc_metadata, chunk_metadata, processed_at, created_at)
+        VALUES (:doc_id, :title, :source_url, :content_type, :doc_metadata, :chunk_metadata, :processed_at, :created_at)
     """), {
         "doc_id": doc_id_2,
         "title": "Neural Networks Tutorial",
@@ -142,7 +134,8 @@ async def _insert_golden_dataset(conn):
         "content_type": "tutorial",
         "doc_metadata": json.dumps({}),
         "chunk_metadata": json.dumps({}),
-        "processed_at": datetime.utcnow()
+        "processed_at": datetime.utcnow(),
+        "created_at": datetime.utcnow()
     })
 
     # Chunk 2-1
@@ -181,28 +174,18 @@ async def _insert_golden_dataset(conn):
     """), {
         "embedding_id": embedding_id_2,
         "chunk_id": chunk_id_2_1,
-        "vec": json.dumps(embedding_vector_2),
+        "vec": embedding_vector_2,
         "model_name": "text-embedding-ada-002",
         "created_at": datetime.utcnow()
     })
 
-    await conn.execute(text("""
-        INSERT INTO doc_taxonomy (mapping_id, doc_id, path, confidence, source, assigned_at)
-        VALUES (:mapping_id, :doc_id, :path, :confidence, :source, :assigned_at)
-    """), {
-        "mapping_id": str(uuid.uuid4()),
-        "doc_id": doc_id_2,
-        "path": ["AI", "DL"],  # PostgreSQL array type, SQLite JSON
-        "confidence": 0.88,
-        "source": "test",
-        "assigned_at": datetime.utcnow()
-    })
+    # Taxonomy 매핑 생략 (스키마 불일치)
 
     # Document 3: NLP
     doc_id_3 = str(uuid.uuid4())
     await conn.execute(text("""
-        INSERT INTO documents (doc_id, title, source_url, content_type, doc_metadata, chunk_metadata, processed_at)
-        VALUES (:doc_id, :title, :source_url, :content_type, :doc_metadata, :chunk_metadata, :processed_at)
+        INSERT INTO documents (doc_id, title, source_url, content_type, doc_metadata, chunk_metadata, processed_at, created_at)
+        VALUES (:doc_id, :title, :source_url, :content_type, :doc_metadata, :chunk_metadata, :processed_at, :created_at)
     """), {
         "doc_id": doc_id_3,
         "title": "Natural Language Processing",
@@ -210,7 +193,8 @@ async def _insert_golden_dataset(conn):
         "content_type": "article",
         "doc_metadata": json.dumps({}),
         "chunk_metadata": json.dumps({}),
-        "processed_at": datetime.utcnow()
+        "processed_at": datetime.utcnow(),
+        "created_at": datetime.utcnow()
     })
 
     chunk_id_3_1 = str(uuid.uuid4())
@@ -247,22 +231,12 @@ async def _insert_golden_dataset(conn):
     """), {
         "embedding_id": embedding_id_3,
         "chunk_id": chunk_id_3_1,
-        "vec": json.dumps(embedding_vector_3),
+        "vec": embedding_vector_3,
         "model_name": "text-embedding-ada-002",
         "created_at": datetime.utcnow()
     })
 
-    await conn.execute(text("""
-        INSERT INTO doc_taxonomy (mapping_id, doc_id, path, confidence, source, assigned_at)
-        VALUES (:mapping_id, :doc_id, :path, :confidence, :source, :assigned_at)
-    """), {
-        "mapping_id": str(uuid.uuid4()),
-        "doc_id": doc_id_3,
-        "path": ["AI", "NLP"],  # PostgreSQL array type, SQLite JSON
-        "confidence": 0.92,
-        "source": "test",
-        "assigned_at": datetime.utcnow()
-    })
+    # Taxonomy 매핑 생략 (스키마 불일치)
 
 
 async def cleanup_test_db():

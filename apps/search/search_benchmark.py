@@ -14,12 +14,14 @@ Performance targets:
 - Cost ≤ ₩3/search
 """
 
+# @CODE:SEARCH-001 | SPEC: .moai/specs/SPEC-SEARCH-001/spec.md | TEST: tests/test_hybrid_search.py
+
 import asyncio
 import time
 import statistics
 import json
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
 import argparse
@@ -452,7 +454,7 @@ class SearchBenchmark:
         if targets_met:
             print(f"  ✅ Methods meeting all targets: {', '.join(targets_met)}")
         else:
-            print(f"  ❌ No methods meet all performance and cost targets")
+            print("  ❌ No methods meet all performance and cost targets")
 
         print("\n" + "="*60)
 

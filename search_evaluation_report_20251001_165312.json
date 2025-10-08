@@ -1,0 +1,619 @@
+{
+  "evaluation_id": "eval_20251001_165312",
+  "timestamp": "2025-10-01T16:53:12.751532",
+  "duration_seconds": 4.582613,
+  "query_tests": [
+    {
+      "query": "AI",
+      "query_type": "short_exact_term",
+      "latency": 4.056122064590454,
+      "num_results": 5,
+      "relevance_score": 0.44000000000000006,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 4.055990695953369,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 4.011850833892822,
+        "fusion_time": 6.29425048828125e-05,
+        "rerank_time": 0.00031185150146484375,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 1,
+            "exact_terms": false,
+            "semantic_complexity": 0.0,
+            "has_operators": false,
+            "avg_term_length": 2.0
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "ML",
+      "query_type": "short_acronym",
+      "latency": 0.032340288162231445,
+      "num_results": 5,
+      "relevance_score": 0.44000000000000006,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.03223228454589844,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.029469728469848633,
+        "fusion_time": 3.314018249511719e-05,
+        "rerank_time": 0.00022912025451660156,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 1,
+            "exact_terms": false,
+            "semantic_complexity": 0.0,
+            "has_operators": false,
+            "avg_term_length": 2.0
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "machine learning algorithms",
+      "query_type": "medium_technical",
+      "latency": 0.03558850288391113,
+      "num_results": 5,
+      "relevance_score": 0.5200000000000001,
+      "diversity_score": 0.92,
+      "metrics": {
+        "total_time": 0.035515785217285156,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.03304791450500488,
+        "fusion_time": 4.00543212890625e-05,
+        "rerank_time": 0.00020694732666015625,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 3,
+            "exact_terms": false,
+            "semantic_complexity": 1.0,
+            "has_operators": true,
+            "avg_term_length": 8.333333333333334
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "neural network architecture",
+      "query_type": "medium_technical",
+      "latency": 0.029516220092773438,
+      "num_results": 5,
+      "relevance_score": 0.44000000000000006,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.029396533966064453,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.026800870895385742,
+        "fusion_time": 3.838539123535156e-05,
+        "rerank_time": 0.00025391578674316406,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 3,
+            "exact_terms": false,
+            "semantic_complexity": 0.6666666666666666,
+            "has_operators": true,
+            "avg_term_length": 8.333333333333334
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "natural language processing",
+      "query_type": "medium_domain",
+      "latency": 0.0331571102142334,
+      "num_results": 5,
+      "relevance_score": 0.4800000000000001,
+      "diversity_score": 0.92,
+      "metrics": {
+        "total_time": 0.03304791450500488,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.030369281768798828,
+        "fusion_time": 4.363059997558594e-05,
+        "rerank_time": 0.0002715587615966797,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "108e0449-5c3d-4d3a-94b9-72f0713581ce",
+        "text": "Information retrieval systems are designed to find relevant information from large collections of data.",
+        "title": "Information Retrieval Systems",
+        "source_url": "https://example.com/ir-systems",
+        "taxonomy_path": "['Search', 'IR']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 3,
+            "exact_terms": false,
+            "semantic_complexity": 1.0,
+            "has_operators": false,
+            "avg_term_length": 8.333333333333334
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "deep learning neural networks for natural language processing",
+      "query_type": "long_technical",
+      "latency": 0.05489206314086914,
+      "num_results": 5,
+      "relevance_score": 0.56,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.05478787422180176,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.035181522369384766,
+        "fusion_time": 4.0531158447265625e-05,
+        "rerank_time": 0.00025963783264160156,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 8,
+            "exact_terms": false,
+            "semantic_complexity": 0.625,
+            "has_operators": true,
+            "avg_term_length": 6.75
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "what are the best practices for machine learning model deployment",
+      "query_type": "long_question",
+      "latency": 0.03725290298461914,
+      "num_results": 5,
+      "relevance_score": 0.524,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.03714752197265625,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.03483462333679199,
+        "fusion_time": 4.267692565917969e-05,
+        "rerank_time": 0.000293731689453125,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 10,
+            "exact_terms": false,
+            "semantic_complexity": 0.4,
+            "has_operators": true,
+            "avg_term_length": 5.6
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "transformer architecture attention mechanism",
+      "query_type": "specific_technical",
+      "latency": 0.03602790832519531,
+      "num_results": 5,
+      "relevance_score": 0.44000000000000006,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.03595328330993652,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.03317832946777344,
+        "fusion_time": 3.0517578125e-05,
+        "rerank_time": 0.00019884109497070312,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 4,
+            "exact_terms": false,
+            "semantic_complexity": 1.0,
+            "has_operators": true,
+            "avg_term_length": 10.25
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "supervised vs unsupervised learning",
+      "query_type": "comparative",
+      "latency": 0.03408193588256836,
+      "num_results": 5,
+      "relevance_score": 0.5000000000000001,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.03398847579956055,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.03157544136047363,
+        "fusion_time": 3.1948089599609375e-05,
+        "rerank_time": 0.00021910667419433594,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 4,
+            "exact_terms": false,
+            "semantic_complexity": 0.75,
+            "has_operators": false,
+            "avg_term_length": 8.0
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "how does gradient descent work",
+      "query_type": "conceptual",
+      "latency": 0.03302764892578125,
+      "num_results": 5,
+      "relevance_score": 0.44000000000000006,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.03294658660888672,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.030323266983032227,
+        "fusion_time": 3.24249267578125e-05,
+        "rerank_time": 0.00022363662719726562,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 5,
+            "exact_terms": false,
+            "semantic_complexity": 0.4,
+            "has_operators": true,
+            "avg_term_length": 5.2
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "query": "explain convolutional neural networks",
+      "query_type": "explanatory",
+      "latency": 0.0450739860534668,
+      "num_results": 5,
+      "relevance_score": 0.44000000000000006,
+      "diversity_score": 1.0,
+      "metrics": {
+        "total_time": 0.04496908187866211,
+        "bm25_time": 0.0,
+        "vector_time": 0.0,
+        "embedding_time": 0.03510570526123047,
+        "fusion_time": 4.076957702636719e-05,
+        "rerank_time": 0.000278472900390625,
+        "cache_hit": false
+      },
+      "top_result": {
+        "chunk_id": "02e2aeaa-3429-4838-8047-29fe5d93e748",
+        "text": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+        "title": "Natural Language Processing Fundamentals",
+        "source_url": "https://example.com/nlp",
+        "taxonomy_path": "['AI', 'NLP']",
+        "score": 1.1,
+        "metadata": {
+          "search_type": "vector",
+          "raw_cosine_similarity": 0.5,
+          "fusion_method": "adaptive",
+          "query_characteristics": {
+            "length": 4,
+            "exact_terms": false,
+            "semantic_complexity": 0.75,
+            "has_operators": true,
+            "avg_term_length": 8.5
+          },
+          "bm25_score": 0.0,
+          "vector_score": 0.5,
+          "hybrid_score": 1.0,
+          "rerank_score": 1.1
+        }
+      },
+      "success": true,
+      "error": null
+    }
+  ],
+  "performance_tests": [
+    {
+      "test_type": "single_query_latency",
+      "iterations": 10,
+      "avg_latency": 1.430511474609375e-05,
+      "p95_latency": 1.9311904907226562e-05,
+      "p99_latency": 1.9311904907226562e-05,
+      "all_latencies": [
+        1.9311904907226562e-05,
+        1.5974044799804688e-05,
+        1.4543533325195312e-05,
+        1.3589859008789062e-05,
+        1.3589859008789062e-05,
+        1.4066696166992188e-05,
+        1.3113021850585938e-05,
+        1.239776611328125e-05,
+        1.2874603271484375e-05,
+        1.3589859008789062e-05
+      ]
+    },
+    {
+      "test_type": "concurrent_throughput",
+      "num_queries": 5,
+      "total_time": 0.04726266860961914,
+      "successful_queries": 5,
+      "throughput": 105.7917410736806
+    },
+    {
+      "test_type": "cache_performance",
+      "cache_miss_time": 0.029683351516723633,
+      "cache_hit_time": 4.3392181396484375e-05,
+      "cache_hit_detected": true,
+      "improvement_percent": 99.85381643520935
+    }
+  ],
+  "edge_case_tests": [
+    {
+      "case_type": "empty_query",
+      "query": "",
+      "query_length": 0,
+      "num_results": 0,
+      "latency": 6.67572021484375e-06,
+      "success": true,
+      "error": null
+    },
+    {
+      "case_type": "whitespace_only",
+      "query": "   ",
+      "query_length": 3,
+      "num_results": 0,
+      "latency": 5.245208740234375e-06,
+      "success": true,
+      "error": null
+    },
+    {
+      "case_type": "special_characters",
+      "query": "AI & ML",
+      "query_length": 7,
+      "num_results": 5,
+      "latency": 0.00556182861328125,
+      "success": true,
+      "error": null
+    },
+    {
+      "case_type": "very_long_query",
+      "query": "artificial intelligenceartificial intelligenceartificial intelligenceartificial intelligenceartifici",
+      "query_length": 1150,
+      "num_results": 5,
+      "latency": 0.005589723587036133,
+      "success": true,
+      "error": null
+    },
+    {
+      "case_type": "nonexistent_terms",
+      "query": "xyzabc123nonexistent",
+      "query_length": 20,
+      "num_results": 5,
+      "latency": 0.005419254302978516,
+      "success": true,
+      "error": null
+    },
+    {
+      "case_type": "single_character",
+      "query": "a",
+      "query_length": 1,
+      "num_results": 5,
+      "latency": 0.013969659805297852,
+      "success": true,
+      "error": null
+    },
+    {
+      "case_type": "only_numbers",
+      "query": "123 456 789",
+      "query_length": 11,
+      "num_results": 5,
+      "latency": 0.0055887699127197266,
+      "success": true,
+      "error": null
+    },
+    {
+      "case_type": "only_special_chars",
+      "query": "?!@#$%",
+      "query_length": 6,
+      "num_results": 5,
+      "latency": 0.005640506744384766,
+      "success": true,
+      "error": null
+    }
+  ],
+  "error_handling_tests": [
+    {
+      "test": "invalid_top_k_0",
+      "handled": true,
+      "num_results": 0,
+      "error": null
+    },
+    {
+      "test": "invalid_top_k_-1",
+      "handled": true,
+      "num_results": 19,
+      "error": null
+    },
+    {
+      "test": "invalid_top_k_-10",
+      "handled": true,
+      "num_results": 10,
+      "error": null
+    },
+    {
+      "test": "timeout_handling",
+      "handled": true,
+      "elapsed_time": 0.005808591842651367,
+      "error": null
+    }
+  ],
+  "production_readiness_score": 86,
+  "recommendations": [
+    "Improve search relevance (current avg: 0.47, target: > 0.7). Consider adjusting BM25/vector weights or improving reranking."
+  ]
+}

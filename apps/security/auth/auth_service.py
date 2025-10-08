@@ -5,7 +5,6 @@ OWASP A07:2021 – Identification and Authentication Failures compliance
 """
 
 import jwt
-import hashlib
 import secrets
 import bcrypt
 from datetime import datetime, timedelta
@@ -15,10 +14,6 @@ from enum import Enum
 import uuid
 import asyncio
 import logging
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import base64
-import os
 
 logger = logging.getLogger(__name__)
 

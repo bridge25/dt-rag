@@ -1,15 +1,14 @@
 """Monitoring router with Langfuse LLM cost tracking"""
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict, Any, List, Optional
+from fastapi import APIRouter
 import time
 import psutil
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # Import API key authentication
 try:
     from ..deps import verify_api_key
-    from ..security.api_key_storage import APIKeyInfo
+    from ..security import api_key_storage  # noqa: F401
     AUTH_AVAILABLE = True
 except ImportError:
     AUTH_AVAILABLE = False

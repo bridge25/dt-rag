@@ -4,9 +4,10 @@ import { useState, type DragEvent, type ChangeEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { uploadDocument } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ModernCard } from "@/components/ui/modern-card";
+import { IconBadge } from "@/components/ui/icon-badge";
 import { Progress } from "@/components/ui/progress";
-import { Upload, FileText, CheckCircle2, XCircle } from "lucide-react";
+import { Upload, FileText, File, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
 type UploadFile = {
   file: File
@@ -18,6 +19,23 @@ type UploadFile = {
   }
   error?: string
 }
+
+const getFileTypeColor = (fileName: string): "red" | "blue" | "green" | "purple" => {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "pdf":
+      return "red";
+    case "docx":
+    case "doc":
+      return "blue";
+    case "txt":
+      return "green";
+    case "md":
+      return "purple";
+    default:
+      return "blue";
+  }
+};
 
 export default function DocumentsPage() {
   const [files, setFiles] = useState<UploadFile[]>([])
@@ -104,116 +122,151 @@ export default function DocumentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Documents</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-4xl font-bold tracking-tight">Documents</h1>
+        <p className="mt-2 text-lg text-muted-foreground">
           Upload and manage your documents
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Documents</CardTitle>
-          <CardDescription>
+      <ModernCard variant="beige">
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold text-gray-900">Upload Documents</h3>
+          <p className="mt-1 text-sm text-gray-600">
             Drag and drop files or click to select
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragging
-                ? "border-primary bg-primary/5"
-                : "border-muted-foreground/25 hover:border-primary/50"
-            }`}
+          </p>
+        </div>
+
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 ${
+            isDragging
+              ? "border-orangePrimary bg-orangePrimary/10 scale-[1.02]"
+              : "border-gray-300 hover:border-orangePrimary/50 hover:bg-gray-50"
+          }`}
+        >
+          <input
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+            id="file-upload"
+            accept=".txt,.pdf,.docx,.md"
+          />
+          <label
+            htmlFor="file-upload"
+            className="flex flex-col items-center gap-4 cursor-pointer"
           >
-            <input
-              type="file"
-              multiple
-              onChange={handleFileSelect}
-              className="hidden"
-              id="file-upload"
-              accept=".txt,.pdf,.docx,.md"
-            />
-            <label
-              htmlFor="file-upload"
-              className="flex flex-col items-center gap-2 cursor-pointer"
-            >
-              <Upload className="h-10 w-10 text-muted-foreground" />
-              <div className="text-sm text-muted-foreground">
-                <span className="font-semibold text-primary">
-                  Click to upload
-                </span>{" "}
-                or drag and drop
-              </div>
-              <div className="text-xs text-muted-foreground">
-                TXT, PDF, DOCX, MD (max 10MB each)
-              </div>
-            </label>
-          </div>
-        </CardContent>
-      </Card>
+            <IconBadge icon={Upload} color="orange" size="lg" />
+            <div className="text-base text-gray-700">
+              <span className="font-bold text-orangePrimary">
+                Click to upload
+              </span>{" "}
+              or drag and drop
+            </div>
+            <div className="text-sm text-gray-500">
+              TXT, PDF, DOCX, MD (max 10MB each)
+            </div>
+          </label>
+        </div>
+      </ModernCard>
 
       {files.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Upload Queue ({files.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <ModernCard variant="teal">
+          <div className="mb-6">
+            <h3 className="text-2xl font-bold text-gray-900">
+              Upload Queue ({files.length})
+            </h3>
+            <p className="mt-1 text-sm text-gray-600">
+              Track your document uploads in real-time
+            </p>
+          </div>
+
+          <div className="space-y-4">
             {files.map((uploadFile, index) => (
               <div
                 key={`${uploadFile.file.name}-${index}`}
-                className="flex items-start gap-3 p-3 rounded-lg border"
+                className="group rounded-xl bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.01]"
               >
-                <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium truncate">
-                      {uploadFile.file.name}
-                    </p>
-                    {uploadFile.status === "success" && (
-                      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                <div className="flex items-start gap-4">
+                  <IconBadge
+                    icon={FileText}
+                    color={getFileTypeColor(uploadFile.file.name)}
+                    size="md"
+                  />
+
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-base font-semibold text-gray-900 truncate">
+                        {uploadFile.file.name}
+                      </p>
+                      {uploadFile.status === "success" && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-xs font-medium text-green-600">Success</span>
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        </div>
+                      )}
+                      {uploadFile.status === "error" && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-xs font-medium text-red-600">Failed</span>
+                          <XCircle className="h-5 w-5 text-red-500" />
+                        </div>
+                      )}
+                      {uploadFile.status === "uploading" && (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-xs font-medium text-blue-600">Uploading</span>
+                          <AlertCircle className="h-5 w-5 text-blue-500 animate-pulse" />
+                        </div>
+                      )}
+                    </div>
+
+                    {uploadFile.status === "uploading" && (
+                      <div className="space-y-1">
+                        <Progress value={uploadFile.progress} className="h-2" />
+                        <p className="text-xs text-gray-500">
+                          Processing document...
+                        </p>
+                      </div>
                     )}
+
+                    {uploadFile.status === "success" && uploadFile.result && (
+                      <div className="rounded-lg bg-green-50 p-3">
+                        <p className="text-xs font-medium text-green-800">
+                          Document ID: {uploadFile.result.document_id}
+                        </p>
+                        {uploadFile.result.chunks_created && (
+                          <p className="mt-1 text-xs text-green-700">
+                            {uploadFile.result.chunks_created} chunks created
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {uploadFile.status === "error" && (
-                      <XCircle className="h-5 w-5 text-destructive flex-shrink-0" />
+                      <div className="rounded-lg bg-red-50 p-3">
+                        <p className="text-xs font-medium text-red-800">
+                          {uploadFile.error}
+                        </p>
+                      </div>
                     )}
                   </div>
 
-                  {uploadFile.status === "uploading" && (
-                    <Progress value={uploadFile.progress} className="h-2" />
-                  )}
-
-                  {uploadFile.status === "success" && uploadFile.result && (
-                    <div className="text-xs text-muted-foreground">
-                      Document ID: {uploadFile.result.document_id}
-                      {uploadFile.result.chunks_created && (
-                        <> • {uploadFile.result.chunks_created} chunks created</>
-                      )}
-                    </div>
-                  )}
-
-                  {uploadFile.status === "error" && (
-                    <p className="text-xs text-destructive">
-                      {uploadFile.error}
-                    </p>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeFile(uploadFile.file)}
+                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    Remove
+                  </Button>
                 </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFile(uploadFile.file)}
-                  className="flex-shrink-0"
-                >
-                  Remove
-                </Button>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </ModernCard>
       )}
     </div>
   );

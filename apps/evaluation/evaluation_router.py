@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 RAGAS Evaluation API Router for DT-RAG v1.8.1
 
@@ -12,15 +14,13 @@ Provides comprehensive REST endpoints for RAG evaluation:
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Depends, Query, status
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from .models import (
-    EvaluationRequest, EvaluationResult, EvaluationMetrics,
-    QualityThresholds, QualityAlert, DatasetEntry,
+    EvaluationRequest, EvaluationResult, QualityThresholds, QualityAlert, DatasetEntry,
     ExperimentConfig, ExperimentResults
 )
 from .ragas_engine import RAGASEvaluator
@@ -611,7 +611,7 @@ async def get_evaluation_analytics(
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
         async with db_manager.async_session() as session:
-            from sqlalchemy import text, func
+            from sqlalchemy import text
 
             # Query evaluation statistics
             query = text("""

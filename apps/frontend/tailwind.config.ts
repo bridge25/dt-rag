@@ -16,7 +16,15 @@ const config: Config = {
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			xl: '1rem',
+  			'2xl': '1.5rem',
+  			'3xl': '2rem'
+  		},
+  		boxShadow: {
+  			soft: '0 8px 32px rgba(0, 0, 0, 0.12)',
+  			card: '0 4px 24px rgba(0, 0, 0, 0.08)',
+  			'soft-lg': '0 12px 48px rgba(0, 0, 0, 0.15)'
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -58,7 +66,15 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+  			darkNavy: 'hsl(var(--dark-navy))',
+  			darkCard: 'hsl(var(--dark-card))',
+  			tealAccent: 'hsl(var(--teal-accent))',
+  			beigeAccent: 'hsl(var(--beige-accent))',
+  			orangePrimary: 'hsl(var(--orange-primary))',
+  			graySidebar: 'hsl(var(--gray-sidebar))',
+  			greenFolder: 'hsl(var(--green-folder))',
+  			purpleFolder: 'hsl(var(--purple-folder))'
   		}
   	}
   },

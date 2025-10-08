@@ -9,10 +9,10 @@ Provides REST endpoints for RAG system evaluation including:
 """
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Query, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -26,8 +26,7 @@ from apps.evaluation.models import (
     EvaluationRequest,
     EvaluationResult,
     EvaluationMetrics,
-    QualityThresholds,
-    DatasetEntry
+    QualityThresholds
 )
 from apps.evaluation.ragas_engine import RAGASEvaluator
 

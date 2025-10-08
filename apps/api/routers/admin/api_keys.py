@@ -6,7 +6,7 @@ This router provides secure API key CRUD operations with proper authentication,
 authorization, and audit logging.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, Query, Body
 from fastapi.security import HTTPBearer
@@ -16,9 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...deps import verify_api_key
 from ...security.api_key_storage import (
     APIKeyManager, APIKeyCreateRequest, APIKeyInfo
-)
-from ...security.api_key_generator import (
-    SecureAPIKeyGenerator, generate_production_key, generate_development_key
 )
 from ...database import get_async_session
 
@@ -283,25 +280,42 @@ async def update_api_key(
 
     Requires admin-level API key for access. Only specified fields will be updated.
     """
-    client_ip = http_request.client.host if http_request.client else "unknown"
-
     try:
         key_manager = APIKeyManager(db)
 
-        # Get current key info
-        key_info = await key_manager.get_api_key_info(key_id)
-        if not key_info:
+        client_ip = http_request.client.host if http_request.client else "unknown"
+
+        updated_key = await key_manager.update_api_key(
+            key_id=key_id,
+            updated_by=current_key.key_id,
+            client_ip=client_ip,
+            name=request.name,
+            description=request.description,
+            allowed_ips=request.allowed_ips,
+            rate_limit=request.rate_limit,
+            is_active=request.is_active
+        )
+
+        if not updated_key:
             raise HTTPException(
                 status_code=404,
                 detail=f"API key not found: {key_id}"
             )
 
-        # TODO: Implement update functionality in APIKeyManager
-        # This would involve updating the database record and logging the changes
-
-        raise HTTPException(
-            status_code=501,
-            detail="API key updates not yet implemented"
+        return APIKeyResponse(
+            key_id=updated_key.key_id,
+            name=updated_key.name,
+            description=updated_key.description,
+            scope=updated_key.scope,
+            permissions=updated_key.permissions,
+            allowed_ips=updated_key.allowed_ips,
+            rate_limit=updated_key.rate_limit,
+            is_active=updated_key.is_active,
+            expires_at=updated_key.expires_at,
+            created_at=updated_key.created_at,
+            last_used_at=updated_key.last_used_at,
+            total_requests=updated_key.total_requests,
+            failed_requests=updated_key.failed_requests
         )
 
     except HTTPException:
@@ -366,13 +380,17 @@ async def get_api_key_usage(
     Requires admin-level API key for access.
     """
     try:
-        # TODO: Implement usage statistics calculation
-        # This would query the APIKeyUsage table for analytics
+        key_manager = APIKeyManager(db)
 
-        raise HTTPException(
-            status_code=501,
-            detail="Usage statistics not yet implemented"
-        )
+        stats = await key_manager.get_api_key_usage_stats(key_id=key_id, days=days)
+
+        if not stats:
+            raise HTTPException(
+                status_code=404,
+                detail=f"API key not found: {key_id}"
+            )
+
+        return APIKeyUsageStats(**stats)
 
     except HTTPException:
         raise

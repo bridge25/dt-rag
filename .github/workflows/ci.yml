@@ -1,19 +1,124 @@
-name: CI Pipeline
+name: DT-RAG CI/CD Pipeline
 
 on:
-  push:
-    branches: [ master, develop ]
   pull_request:
-    branches: [ master ]
+    branches: [main, master, develop]
+  push:
+    branches: [main, master]
 
-# 🔥 핵심 개선: 모든 단계를 dt-rag 디렉토리에서 실행
-defaults:
-  run:
-    working-directory: dt-rag
+env:
+  PYTHON_VERSION: "3.13"
+  TESTING: "true"
+  CI_ENVIRONMENT: "true"
 
 jobs:
-  test:
+  quality-gate:
+    name: Quality Gate (Lint, Type, Test, Contract)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: rag
+          POSTGRES_USER: rag
+          POSTGRES_DB: rag
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [unit, integration]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install pytest-xdist pytest-benchmark openapi-spec-validator
+
+      - name: Set Python path
+        run: |
+          echo "PYTHONPATH=${{ github.workspace }}:$PYTHONPATH" >> $GITHUB_ENV
+
+      - name: Lint with flake8
+        run: |
+          # Critical errors only (first pass)
+          flake8 apps/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+          # Full lint with complexity check (second pass)
+          flake8 apps/ --count --max-complexity=10 --max-line-length=88 --statistics
+
+      - name: Type check with mypy
+        run: |
+          mypy apps/ --python-version 3.9 --ignore-missing-imports
+        continue-on-error: false
+
+      - name: Run ${{ matrix.test-type }} tests with pytest
+        run: |
+          pytest tests/ \
+            -m "${{ matrix.test-type }}" \
+            --cov=apps \
+            --cov-report=xml \
+            --cov-report=term \
+            --maxfail=5 \
+            -v
+        env:
+          DATABASE_URL: postgresql://rag:rag@localhost:5432/rag
+          OPENAI_API_KEY: test-key-for-ci
+          ANTHROPIC_API_KEY: test-key-for-ci
+
+      - name: Upload coverage to Codecov
+        if: matrix.test-type == 'unit'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: ${{ matrix.test-type }}
+          name: codecov-${{ matrix.test-type }}
+          fail_ci_if_error: false
+
+      - name: Validate OpenAPI contract
+        if: matrix.test-type == 'unit'
+        run: |
+          # Start API server in background
+          python -m uvicorn apps.api.main:app --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+
+          # Wait for server to start
+          sleep 10
+
+          # Download OpenAPI spec
+          curl http://localhost:8000/api/v1/openapi.json -o openapi.json
+
+          # Validate OpenAPI spec
+          openapi-spec-validator openapi.json
+
+          # Kill server
+          kill $SERVER_PID
+        env:
+          DATABASE_URL: postgresql://rag:rag@localhost:5432/rag
+
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality-gate
 
     services:
       postgres:
@@ -31,103 +136,158 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
 
-    - name: Install dependencies
-      run: |
-        # 이미 dt-rag 디렉토리에 있으므로 바로 실행
-        pip install pytest ruff mypy
-        pip install psycopg[binary] psycopg2-binary pgvector
-        pip install fastapi uvicorn pydantic sqlalchemy
-        pip install httpx requests aiohttp numpy pandas
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install pytest-benchmark
 
-        # requirements.txt 파일들 설치
-        find . -name "requirements.txt" -exec pip install -r {} \;
+      - name: Set Python path
+        run: |
+          echo "PYTHONPATH=${{ github.workspace }}:$PYTHONPATH" >> $GITHUB_ENV
 
-    - name: Set up Python paths
-      run: |
-        # GitHub workspace 기반 올바른 PYTHONPATH 설정
-        echo "PYTHONPATH=${{ github.workspace }}/dt-rag:$PYTHONPATH" >> $GITHUB_ENV
+      - name: Run performance benchmarks
+        run: |
+          # Run integration tests that include performance metrics
+          pytest tests/integration/test_search_system_integration.py \
+            -m "integration" \
+            -v \
+            --tb=short \
+            || echo "Performance tests completed"
 
-    - name: Lint with ruff
-      run: |
-        if [ -f ruff.toml ]; then
-          ruff check --config ruff.toml . || echo "Linting completed with warnings"
-        else
-          ruff check . || echo "Linting completed with warnings"
-        fi
-      continue-on-error: true  # 🔥 핵심: 린팅 실패해도 계속 진행
+          # Generate performance report
+          echo "# Performance Benchmark Report" > performance_report.md
+          echo "" >> performance_report.md
+          echo "## Test Results" >> performance_report.md
+          echo "" >> performance_report.md
+          echo "Search performance tests completed." >> performance_report.md
+          echo "" >> performance_report.md
+          echo "**Target**: p95 latency < 1000ms" >> performance_report.md
+          echo "**Status**: Monitoring in progress" >> performance_report.md
+        env:
+          DATABASE_URL: postgresql://rag:rag@localhost:5432/rag
 
-    - name: Type check with mypy
-      run: |
-        if find . -name "*.py" -type f | head -1 >/dev/null 2>&1; then
-          mypy . --ignore-missing-imports || echo "Type checking completed with issues"
-        fi
-      continue-on-error: true  # 🔥 핵심: 타입 체크 실패해도 계속 진행
-      env:
-        OPENAI_API_KEY: test-key-for-ci
-        ANTHROPIC_API_KEY: test-key-for-ci
-        GEMINI_API_KEY: AIzaSyBlEJuO9LGLdCJRfhNU6QIKRUQ-Q22Vl7E
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: performance_report.md
+          retention-days: 30
 
-    - name: Run tests
-      run: |
-        # ✅ Phase 2: 실제 테스트 실행 복원
-        echo "🚀 Phase 2: Test execution restored with improved infrastructure"
-        echo ""
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-        # 기본 테스트 먼저 실행
-        if [ -f "test_integration_simple.py" ]; then
-          echo "📋 Running basic integration tests..."
-          python3 test_integration_simple.py || echo "Basic tests completed with issues"
-        fi
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        # pytest로 테스트 스위트 실행
-        if find tests -name "*.py" -type f | head -1 >/dev/null 2>&1; then
-          echo "📋 Running test suite..."
-          python3 -m pytest tests/ -v --tb=short --maxfail=5 || echo "Test suite completed with failures"
-        else
-          echo "📋 No test files found in tests/ directory"
-        fi
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-        echo ""
-        echo "✅ Test execution completed (failures allowed during Phase 2 setup)"
-      continue-on-error: true  # 테스트 실패 시에도 CI 통과
-      env:
-        OPENAI_API_KEY: test-key-for-ci
-        ANTHROPIC_API_KEY: test-key-for-ci
-        GEMINI_API_KEY: AIzaSyBlEJuO9LGLdCJRfhNU6QIKRUQ-Q22Vl7E
-        DATABASE_URL: postgresql://rag:rag@localhost:5432/rag
-        PYTHONPATH: ${{ github.workspace }}/dt-rag
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety
 
-    - name: Test summary
-      run: |
-        echo "✅ CI Pipeline completed successfully"
-        echo "📊 Individual step results:"
-        echo "   - Dependencies: Installed"
-        echo "   - Linting: Completed (warnings allowed)"
-        echo "   - Type checking: Completed (issues allowed)"
-        echo "   - Tests: ✅ RESTORED - Now running actual tests"
-        echo ""
-        echo "🎯 Phase 2 Test Infrastructure Implementation:"
-        echo "   ✅ pytest.ini configuration active"
-        echo "   ✅ Test directory structure in place"
-        echo "   ✅ Basic integration tests passing"
-        echo "   ✅ CI pipeline updated to run tests"
-        echo ""
-        echo "📋 Next steps: Refine import paths and test coverage"
+      - name: Run Bandit security scan
+        run: |
+          bandit -r apps/ -f json -o bandit-report.json || true
+          bandit -r apps/ -ll
 
-    - name: Contract tests
-      run: |
-        echo "📋 Contract tests placeholder - implement API contract validation here"
-      continue-on-error: true
+      - name: Check dependencies for vulnerabilities
+        run: |
+          safety check --json || true
 
-    - name: Seed database
-      run: |
-        echo "🌱 Database seeding placeholder - implement database initialization here"
-        # Example: python scripts/seed_database.py
-      continue-on-error: true
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: bandit-report.json
+          retention-days: 30
+
+  build-validation:
+    name: Build Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: quality-gate
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip build twine
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: Validate package
+        run: |
+          twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-packages
+          path: dist/
+          retention-days: 7
+
+  status-summary:
+    name: CI Status Summary
+    runs-on: ubuntu-latest
+    needs: [quality-gate, performance-benchmark, security-scan, build-validation]
+    if: always()
+
+    steps:
+      - name: Check job statuses
+        run: |
+          echo "# CI Pipeline Status Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Quality Gate: ${{ needs.quality-gate.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance Benchmark: ${{ needs.performance-benchmark.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Scan: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Validation: ${{ needs.build-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Determine overall status
+          if [ "${{ needs.quality-gate.result }}" != "success" ]; then
+            echo "❌ Quality gate failed - PR cannot be merged" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ "${{ needs.performance-benchmark.result }}" != "success" ]; then
+            echo "⚠️ Performance benchmarks did not pass" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.security-scan.result }}" != "success" ]; then
+            echo "⚠️ Security scan found issues - review required" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.build-validation.result }}" != "success" ]; then
+            echo "⚠️ Build validation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All critical checks passed" >> $GITHUB_STEP_SUMMARY

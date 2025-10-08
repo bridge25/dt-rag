@@ -1,15 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, status, Request
 from fastapi.responses import JSONResponse
-from typing import Optional, List
+from typing import Optional
 import logging
 import uuid
 
 from apps.ingestion.contracts.signals import (
     DocumentUploadCommandV1,
     DocumentFormatV1,
-    JobStatusQueryV1,
     JobStatusResponseV1,
-    ProcessingStatusV1,
 )
 from apps.ingestion.batch import JobOrchestrator
 
@@ -35,7 +33,7 @@ async def get_job_orchestrator() -> JobOrchestrator:
 )
 async def upload_document(
     file: UploadFile = File(...),
-    taxonomy_path: str = Form(...),
+    taxonomy_path: Optional[str] = Form(None),
     source_url: Optional[str] = Form(None),
     author: Optional[str] = Form(None),
     language: str = Form("ko"),
@@ -67,6 +65,9 @@ async def upload_document(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="File size exceeds 50MB limit",
             )
+
+        if not taxonomy_path:
+            taxonomy_path = "general"
 
         taxonomy_path_list = [p.strip() for p in taxonomy_path.split(",")]
 

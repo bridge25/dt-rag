@@ -1,0 +1,28 @@
+Dynamic Taxonomy RAG System Overview
+
+This document describes the Dynamic Taxonomy RAG (Retrieval-Augmented Generation) system v1.8.1,
+which combines advanced hybrid search capabilities with dynamic document classification.
+
+Key Features:
+- Hybrid Search: Combines BM25 keyword search with vector similarity search using 1536-dimensional embeddings
+- Dynamic Taxonomy: DAG-based hierarchical classification with versioning and rollback support
+- Cross-Encoder Reranking: Improves search result relevance using ms-marco-MiniLM-L-6-v2 model
+- HITL Workflow: Human-in-the-loop classification for low-confidence predictions
+- RAGAS Evaluation: Comprehensive quality assessment using Faithfulness, Context Precision, Context Recall, and Answer Relevancy metrics
+
+Architecture Components:
+1. Document Ingestion Pipeline: Supports PDF, DOCX, TXT, and HTML formats with intelligent chunking (500 tokens, 128 overlap)
+2. Embedding Service: OpenAI text-embedding-3-large for semantic vector representations
+3. Search Engine: PostgreSQL pgvector with IVFFlat index for efficient similarity search
+4. Classification Service: Multi-stage pipeline with rule-based filtering and LLM validation
+5. Orchestration Layer: LangGraph-based 7-step RAG workflow with MCP tool integration
+
+Performance Requirements (PRD v1.8.1):
+- p95 latency ≤ 4 seconds
+- Average cost per query ≤ ₩10
+- Faithfulness score ≥ 0.85
+- HITL rate ≤ 30%
+- Rollback TTR ≤ 15 minutes
+
+The system uses UUID-based primary keys throughout for distributed scalability and follows
+the PRD Annex C.4 schema specification for all database tables.

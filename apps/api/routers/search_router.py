@@ -23,14 +23,13 @@ from ..deps import verify_api_key
 from ..security.api_key_storage import APIKeyInfo
 
 # Import rate limiting
-from ..middleware.rate_limiter import limiter, RATE_LIMIT_READ, RATE_LIMIT_WRITE
+from ..middleware.rate_limiter import RATE_LIMIT_READ, RATE_LIMIT_WRITE
 
 # Import metrics tracking
 from ..monitoring.metrics import get_metrics_collector
 
 # Import common schemas
 import sys
-import os
 from pathlib import Path as PathLib
 
 # Add packages directory to Python path
@@ -41,7 +40,7 @@ if str(packages_path) not in sys.path:
 
 # Import common schemas (실제 확인된 경로: ./packages/common_schemas/common_schemas/models.py)
 sys.path.insert(0, str(project_root))
-from packages.common_schemas.common_schemas.models import (
+from packages.common_schemas.common_schemas.models import (  # noqa: E402
     SearchRequest, SearchResponse, SearchHit, SourceMeta
 )
 
@@ -281,10 +280,9 @@ async def get_search_service() -> SearchService:
 # API Endpoints
 
 @search_router.post("/", response_model=SearchResponse)
-@limiter.limit(RATE_LIMIT_WRITE)
 async def search_documents(
-    request: SearchRequest,
-    http_request: Request,
+    request: Request,
+    search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key)
 ):
@@ -301,10 +299,10 @@ async def search_documents(
     start_time = time.time()
 
     try:
-        correlation_id = http_request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+        correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
 
         # Validate search request
-        if not request.q.strip():
+        if not search_request.q.strip():
             metrics_collector.increment_counter(
                 "search_requests_error",
                 {"error_type": "empty_query"}
@@ -314,7 +312,7 @@ async def search_documents(
                 detail="Search query cannot be empty"
             )
 
-        if request.max_results > 100:
+        if search_request.max_results > 100:
             metrics_collector.increment_counter(
                 "search_requests_error",
                 {"error_type": "invalid_max_results"}
@@ -325,7 +323,7 @@ async def search_documents(
             )
 
         # Perform search with correlation tracking
-        result = await service.search(request, correlation_id=correlation_id)
+        result = await service.search(search_request, correlation_id=correlation_id)
 
         # Record latency metrics
         latency_ms = (time.time() - start_time) * 1000
@@ -369,7 +367,6 @@ async def search_documents(
         )
 
 @search_router.get("/analytics", response_model=SearchAnalytics)
-@limiter.limit(RATE_LIMIT_READ)
 async def get_search_analytics(
     request: Request,
     service: SearchService = Depends(get_search_service),
@@ -396,7 +393,6 @@ async def get_search_analytics(
         )
 
 @search_router.get("/config", response_model=SearchConfig)
-@limiter.limit(RATE_LIMIT_READ)
 async def get_search_config(
     request: Request,
     service: SearchService = Depends(get_search_service),
@@ -422,10 +418,9 @@ async def get_search_config(
         )
 
 @search_router.put("/config", response_model=SearchConfig)
-@limiter.limit(RATE_LIMIT_WRITE)
 async def update_search_config(
-    config: SearchConfig,
     request: Request,
+    config: SearchConfig,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key)
 ):
@@ -458,10 +453,9 @@ async def update_search_config(
         )
 
 @search_router.post("/reindex")
-@limiter.limit(RATE_LIMIT_WRITE)
 async def reindex_search_corpus(
-    request: ReindexRequest,
-    http_request: Request,
+    request: Request,
+    reindex_request: ReindexRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key)
 ):
@@ -474,7 +468,7 @@ async def reindex_search_corpus(
     - Force rebuild even if recent
     """
     try:
-        result = await service.reindex(request)
+        result = await service.reindex(reindex_request)
         return result
 
     except Exception as e:
@@ -485,7 +479,6 @@ async def reindex_search_corpus(
         )
 
 @search_router.get("/status")
-@limiter.limit(RATE_LIMIT_READ)
 async def get_search_status(
     request: Request,
     api_key: APIKeyInfo = Depends(verify_api_key)
@@ -532,7 +525,6 @@ async def get_search_status(
         )
 
 @search_router.post("/suggest")
-@limiter.limit(RATE_LIMIT_WRITE)
 async def search_suggestions(
     request: Request,
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
@@ -574,10 +566,9 @@ async def search_suggestions(
 # New specialized search endpoints
 
 @search_router.post("/keyword", response_model=SearchResponse)
-@limiter.limit(RATE_LIMIT_WRITE)
 async def search_documents_keyword_only(
-    request: SearchRequest,
-    http_request: Request,
+    request: Request,
+    search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key)
 ):
@@ -591,7 +582,7 @@ async def search_documents_keyword_only(
         start_time = time.time()
         request_id = str(uuid.uuid4())
 
-        if not request.q.strip():
+        if not search_request.q.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Search query cannot be empty"
@@ -599,12 +590,12 @@ async def search_documents_keyword_only(
 
         if HYBRID_SEARCH_AVAILABLE:
             # Prepare search filters
-            search_filters = service._prepare_filters(request)
+            search_filters = service._prepare_filters(search_request)
 
             # Perform keyword-only search
             search_results, search_metrics = await keyword_search(
-                query=request.q,
-                top_k=request.max_results,
+                query=search_request.q,
+                top_k=search_request.max_results,
                 filters=search_filters
             )
 
@@ -651,10 +642,9 @@ async def search_documents_keyword_only(
 
 
 @search_router.post("/vector", response_model=SearchResponse)
-@limiter.limit(RATE_LIMIT_WRITE)
 async def search_documents_vector_only(
-    request: SearchRequest,
-    http_request: Request,
+    request: Request,
+    search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key)
 ):
@@ -668,7 +658,7 @@ async def search_documents_vector_only(
         start_time = time.time()
         request_id = str(uuid.uuid4())
 
-        if not request.q.strip():
+        if not search_request.q.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Search query cannot be empty"
@@ -676,12 +666,12 @@ async def search_documents_vector_only(
 
         if HYBRID_SEARCH_AVAILABLE:
             # Prepare search filters
-            search_filters = service._prepare_filters(request)
+            search_filters = service._prepare_filters(search_request)
 
             # Perform vector-only search
             search_results, search_metrics = await vector_search(
-                query=request.q,
-                top_k=request.max_results,
+                query=search_request.q,
+                top_k=search_request.max_results,
                 filters=search_filters
             )
 
@@ -728,7 +718,6 @@ async def search_documents_vector_only(
 
 
 @search_router.post("/cache/clear")
-@limiter.limit(RATE_LIMIT_WRITE)
 async def clear_search_cache(
     request: Request,
     api_key: APIKeyInfo = Depends(verify_api_key)
@@ -754,7 +743,6 @@ async def clear_search_cache(
 
 
 @search_router.get("/performance")
-@limiter.limit(RATE_LIMIT_READ)
 async def get_search_performance(
     request: Request,
     api_key: APIKeyInfo = Depends(verify_api_key)

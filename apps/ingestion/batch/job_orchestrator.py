@@ -10,8 +10,8 @@ from apps.ingestion.contracts.signals import (
     ProcessingStatusV1,
     ChunkV1,
 )
-from apps.ingestion.parsers import ParserFactory, ParserError
-from apps.ingestion.chunking import IntelligentChunker, ChunkingError
+from apps.ingestion.parsers import ParserFactory
+from apps.ingestion.chunking import IntelligentChunker
 from apps.ingestion.pii import PIIDetector
 from apps.api.embedding_service import EmbeddingService
 from apps.core.db_session import async_session

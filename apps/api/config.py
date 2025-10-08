@@ -13,7 +13,6 @@ import secrets
 import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
-from pathlib import Path
 
 # Import new configuration management modules
 try:
@@ -39,7 +38,7 @@ class DatabaseConfig:
 @dataclass
 class RedisConfig:
     """Redis configuration for caching and rate limiting"""
-    url: str = "redis://localhost:6379/0"
+    url: str = "redis://redis:6379/0"
     max_connections: int = 10
     socket_timeout: int = 5
     socket_connect_timeout: int = 5
@@ -127,7 +126,7 @@ class RateLimitConfig:
     classification_rate: str = "30/minute"
     pipeline_rate: str = "10/minute"
     admin_rate: str = "1000/minute"
-    redis_url: str = "redis://localhost:6379/1"
+    redis_url: str = "redis://redis:6379/1"
 
 @dataclass
 class CORSConfig:
@@ -234,7 +233,6 @@ def get_api_config() -> APIConfig:
 
     # Get environment manager and LLM config
     env_manager = get_env_manager()
-    llm_config_manager = get_llm_config()
 
     # Base configuration
     config = APIConfig()

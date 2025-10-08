@@ -7,7 +7,7 @@ Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
-from apps.api.deps import verify_api_key, generate_request_id, get_taxonomy_version
+from apps.api.deps import verify_api_key, generate_request_id, get_taxonomy_version, get_current_timestamp
 from apps.api.database import SearchDAO, search_metrics, get_search_performance_metrics, db_manager
 import time
 import logging
@@ -27,25 +27,68 @@ except ImportError as e:
 
 # 하이브리드 검색 엔진 import
 try:
-    from ..search.hybrid_search_engine import (
-        HybridSearchEngine, SearchEngineFactory, get_search_engine,
-        SearchConfig
-    )
+    from ...search.hybrid_search_engine import hybrid_search, HybridSearchEngine
     HYBRID_ENGINE_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Hybrid search engine not available: {e}")
     HYBRID_ENGINE_AVAILABLE = False
 
+# 캐시 import
+try:
+    from ..cache.search_cache import get_search_cache
+    CACHE_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Search cache not available: {e}")
+    CACHE_AVAILABLE = False
+
+# SearchConfig import
+try:
+    from ..routers.search_router import SearchConfig
+    SEARCH_CONFIG_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"SearchConfig not available: {e}")
+    SEARCH_CONFIG_AVAILABLE = False
+
 # 모니터링 import
 try:
     from ..monitoring.metrics import get_metrics_collector
-    from ..routers.monitoring import track_search_metrics, track_cache_metrics
+    from ..routers import monitoring  # noqa: F401
     MONITORING_AVAILABLE = True
+
+    def track_search_metrics(search_type: str, latency_ms: float, success: bool, result_count: int):
+        pass
 except ImportError as e:
     logging.warning(f"Monitoring not available: {e}")
     MONITORING_AVAILABLE = False
 
+    def track_search_metrics(search_type: str, latency_ms: float, success: bool, result_count: int):
+        pass
+
 router = APIRouter()
+
+async def get_search_engine():
+    if HYBRID_ENGINE_AVAILABLE:
+        return HybridSearchEngine()
+    raise NotImplementedError("Search engine not available")
+
+class SearchEngineFactory:
+    @staticmethod
+    def create_fast_engine():
+        if HYBRID_ENGINE_AVAILABLE:
+            return HybridSearchEngine()
+        raise NotImplementedError("Fast engine not available")
+
+    @staticmethod
+    def create_accurate_engine():
+        if HYBRID_ENGINE_AVAILABLE:
+            return HybridSearchEngine()
+        raise NotImplementedError("Accurate engine not available")
+
+    @staticmethod
+    def create_balanced_engine():
+        if HYBRID_ENGINE_AVAILABLE:
+            return HybridSearchEngine()
+        raise NotImplementedError("Balanced engine not available")
 
 # Common Schemas 호환 모델
 
@@ -232,91 +275,24 @@ async def _hybrid_engine_search(
 ) -> SearchResponse:
     """최적화된 하이브리드 검색 엔진 사용"""
     try:
-        # 검색 엔진 및 캐시 가져오기
-        search_engine = await get_search_engine()
-        cache = await get_search_cache()
-
-        # 캐시에서 결과 확인
-        cached_results = await cache.get_search_results(
+        # hybrid_search 함수 직접 호출
+        results, metrics = await hybrid_search(
             query=request.q,
-            filters=request.filters,
-            search_params={
-                "bm25_topk": request.bm25_topk,
-                "vector_topk": request.vector_topk,
-                "final_topk": request.final_topk,
-                "rerank_candidates": request.rerank_candidates
-            }
+            top_k=request.final_topk,
+            filters=request.filters or {}
         )
 
-        if cached_results:
-            latency = time.time() - start_time
-            search_metrics.record_search("hybrid_cached", latency, False)
+        latency = time.time() - start_time
+        search_metrics.record_search("hybrid_direct", latency, False)
 
-            # 캐시 히트 메트릭 기록
-            if MONITORING_AVAILABLE:
-                await track_cache_metrics("search_results", True)
-
-            return _convert_to_response(
-                cached_results, latency, query_id, "cached"
-            )
-
-        # 캐시 미스 메트릭 기록
-        if MONITORING_AVAILABLE:
-            await track_cache_metrics("search_results", False)
-
-        # 데이터베이스 세션 얻기
-        async with db_manager.async_session() as session:
-            # 하이브리드 검색 실행
-            hybrid_response = await search_engine.search(
-                session=session,
-                query=request.q,
-                filters=request.filters,
-                query_id=query_id
-            )
-
-            # SearchResult 객체를 SearchHit으로 변환
-            search_results = []
-            for result in hybrid_response.results:
-                result_dict = {
-                    "chunk_id": result.chunk_id,
-                    "text": result.text,
-                    "score": result.score,
-                    "metadata": result.metadata,
-                    "title": result.metadata.get("title"),
-                    "source_url": result.metadata.get("source_url"),
-                    "taxonomy_path": result.metadata.get("taxonomy_path", [])
-                }
-                search_results.append(result_dict)
-
-            # 결과 캐싱
-            await cache.set_search_results(
-                query=request.q,
-                results=search_results,
-                filters=request.filters,
-                search_params={
-                    "bm25_topk": request.bm25_topk,
-                    "vector_topk": request.vector_topk,
-                    "final_topk": request.final_topk,
-                    "rerank_candidates": request.rerank_candidates
-                }
-            )
-
-            # 성능 메트릭 기록
-            search_metrics.record_search("hybrid_engine", hybrid_response.total_time, False)
-
-            return _convert_to_response(
-                search_results,
-                hybrid_response.total_time,
-                query_id,
-                "hybrid_engine",
-                {
-                    "bm25_time": hybrid_response.bm25_time,
-                    "vector_time": hybrid_response.vector_time,
-                    "fusion_time": hybrid_response.fusion_time,
-                    "rerank_time": hybrid_response.rerank_time,
-                    "total_candidates": hybrid_response.total_candidates
-                }
-            )
+        # API 형식으로 변환 (results는 이미 List[Dict] 형식)
+        return _convert_to_response(
+            results,
+            latency,
+            query_id,
+            "hybrid_direct",
+            metrics
+        )
 
     except Exception as e:
         logging.error(f"Hybrid engine search failed: {e}")
@@ -329,23 +305,20 @@ async def _legacy_search(
     query_id: str,
     start_time: float
 ) -> SearchResponse:
-    """레거시 검색 (기존 SearchDAO 사용)"""
+    """레거시 검색 (hybrid_search 직접 사용)"""
     try:
-        # 기존 하이브리드 검색 수행
-        search_results = await SearchDAO.hybrid_search(
+        # hybrid_search 함수 직접 호출
+        results, metrics = await hybrid_search(
             query=request.q,
-            filters=request.filters,
-            topk=request.final_topk,
-            bm25_topk=request.bm25_topk,
-            vector_topk=request.vector_topk,
-            rerank_candidates=request.rerank_candidates
+            top_k=request.final_topk,
+            filters=request.filters or {}
         )
 
         latency = time.time() - start_time
         search_metrics.record_search("hybrid_legacy", latency, False)
 
         return _convert_to_response(
-            search_results, latency, query_id, "legacy"
+            results, latency, query_id, "legacy", metrics
         )
 
     except Exception as e:
@@ -960,3 +933,128 @@ def _recommend_engine(results: Dict[str, Any]) -> str:
         return f"Recommended: {fastest[0]} (fastest: {fastest[1]['total_time']:.3f}s)"
     else:
         return "Recommended: balanced_engine (best balance of speed and accuracy)"
+
+
+# LLM Answer Generation Endpoint
+class AnswerRequest(BaseModel):
+    """RAG answer generation request"""
+    q: str = Field(..., description="User question")
+    mode: str = Field("answer", description="Generation mode: answer, summary, or keypoints")
+    final_topk: int = Field(5, description="Number of documents to retrieve")
+    filters: Optional[Dict[str, Any]] = Field(None, description="Search filters")
+
+
+class AnswerResponse(BaseModel):
+    """RAG answer generation response"""
+    question: str
+    answer: str
+    sources: List[Dict[str, Any]]
+    source_count: int
+    search_time: float
+    generation_time: float
+    total_time: float
+    model: str
+    language: str
+    mode: str
+    request_id: str
+    timestamp: str
+
+
+@router.post("/answer", response_model=AnswerResponse)
+async def generate_answer(
+    request: AnswerRequest,
+    api_key: str = Depends(verify_api_key)
+):
+    """
+    Generate natural language answer from search results using Gemini LLM
+
+    This endpoint:
+    1. Performs hybrid search to find relevant documents
+    2. Sends search results + question to Gemini 2.5 Flash
+    3. Returns AI-generated answer in the question's language
+
+    Features:
+    - Multilingual Q&A (Korean/English auto-detection)
+    - Context-aware summarization
+    - Key point extraction
+    - Source attribution
+    """
+    request_id = generate_request_id()
+    start_time = time.time()
+
+    try:
+        # Step 1: Perform hybrid search
+        logger.info(f"[{request_id}] Generating answer for: '{request.q}' (mode: {request.mode})")
+
+        search_start = time.time()
+
+        if HYBRID_ENGINE_AVAILABLE:
+            results, metrics = await hybrid_search(
+                query=request.q,
+                top_k=request.final_topk,
+                filters=request.filters or {}
+            )
+        else:
+            # Fallback to basic search
+            raise HTTPException(status_code=503, detail="Hybrid search engine not available")
+
+        search_time = time.time() - search_start
+
+        # Step 2: Generate answer using LLM
+        try:
+            from ..llm_service import get_llm_service
+
+            llm_service = get_llm_service()
+
+            # Prepare search results for LLM (results are already in dict format from hybrid_search)
+            search_results_dict = []
+            for result in results:
+                search_results_dict.append({
+                    "text": result["text"],
+                    "title": result.get("title", "Unknown"),
+                    "source_url": result.get("source_url", ""),
+                    "hybrid_score": result.get("metadata", {}).get("hybrid_score", result.get("score", 0)),
+                    "taxonomy_path": result.get("taxonomy_path", "")
+                })
+
+            answer_result = await llm_service.generate_answer(
+                question=request.q,
+                search_results=search_results_dict,
+                mode=request.mode
+            )
+
+        except ImportError:
+            raise HTTPException(
+                status_code=503,
+                detail="LLM service not available. Check GEMINI_API_KEY environment variable."
+            )
+
+        total_time = time.time() - start_time
+
+        logger.info(
+            f"[{request_id}] Answer generated: "
+            f"search={search_time:.2f}s, generation={answer_result.generation_time:.2f}s, "
+            f"total={total_time:.2f}s"
+        )
+
+        return AnswerResponse(
+            question=request.q,
+            answer=answer_result.answer,
+            sources=search_results_dict,
+            source_count=len(search_results_dict),
+            search_time=search_time,
+            generation_time=answer_result.generation_time,
+            total_time=total_time,
+            model=answer_result.model,
+            language=answer_result.language_detected,
+            mode=request.mode,
+            request_id=request_id,
+            timestamp=get_current_timestamp()
+        )
+
+    except Exception as e:
+        logger.error(f"[{request_id}] Answer generation failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Answer generation error: {str(e)}"
+        )

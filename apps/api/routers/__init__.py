@@ -1,12 +1,8 @@
 """
 API Routers Package
 
-Contains all FastAPI router definitions for different endpoints:
-- admin/: Administrative endpoints
-- agent_factory_router: Agent creation and management
-- classification_router: Document classification
-- search_router: Search functionality
-- And other domain-specific routers
+각 라우터는 명시적으로 import해야 합니다 (자동 export 없음).
+예: from apps.api.routers.search_router import search_router
 """
 
 from typing import List

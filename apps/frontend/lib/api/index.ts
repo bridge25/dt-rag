@@ -20,6 +20,9 @@ import {
   AgentStatusSchema,
   AgentUpdateRequestSchema,
   AgentMetricsSchema,
+  HITLTaskSchema,
+  HITLReviewRequestSchema,
+  HITLReviewResponseSchema,
   type SearchRequest,
   type SearchResponse,
   type ClassifyRequest,
@@ -39,6 +42,9 @@ import {
   type AgentStatus,
   type AgentUpdateRequest,
   type AgentMetrics,
+  type HITLTask,
+  type HITLReviewRequest,
+  type HITLReviewResponse,
 } from "./types"
 
 export async function search(request: SearchRequest): Promise<SearchResponse> {
@@ -59,14 +65,14 @@ export async function getTaxonomyTree(version: string): Promise<TaxonomyNode[]> 
 }
 
 export async function uploadDocument(formData: FormData): Promise<DocumentUploadResponse> {
-  const response = await apiClient.post("/ingestion/upload", formData, {
+  const response = await apiClient.post("http://localhost:8000/ingestion/upload", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   })
   return DocumentUploadResponseSchema.parse(response.data)
 }
 
 export async function getHealth(): Promise<HealthCheckResponse> {
-  const response = await apiClient.get("/health")
+  const response = await apiClient.get("http://localhost:8000/health")
   return HealthCheckResponseSchema.parse(response.data)
 }
 
@@ -123,6 +129,17 @@ export async function deleteAgent(agentId: string): Promise<{ message: string }>
 export async function getAgentMetrics(agentId: string): Promise<AgentMetrics> {
   const response = await apiClient.get(`/agents/${agentId}/metrics`)
   return AgentMetricsSchema.parse(response.data)
+}
+
+export async function getHITLTasks(params?: { limit?: number; priority?: string }): Promise<HITLTask[]> {
+  const response = await apiClient.get("/classify/hitl/tasks", { params })
+  return z.array(HITLTaskSchema).parse(response.data)
+}
+
+export async function submitHITLReview(request: HITLReviewRequest): Promise<HITLReviewResponse> {
+  const validated = HITLReviewRequestSchema.parse(request)
+  const response = await apiClient.post("/classify/hitl/review", validated)
+  return HITLReviewResponseSchema.parse(response.data)
 }
 
 export * from "./types"

@@ -13,8 +13,6 @@ Provides structured error reporting with 5-field format for all critical failure
 """
 
 import logging
-import time
-import traceback
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from dataclasses import dataclass, field

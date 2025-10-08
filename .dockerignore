@@ -1,0 +1,123 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+
+# Documentation and reports
+*.md
+!README.md
+*.txt
+!requirements.txt
+*.html
+*.pptx
+
+# Test and sample files
+tests/
+sample_docs/
+golden_datasets/
+backup*.sql
+*_backup.py
+test_*.py
+*_test.py
+prove_*.py
+check_*.py
+verify_*.py
+create_*.py
+generate_*.py
+simple_*.py
+quick_*.py
+direct_*.py
+evaluate_*.py
+investigate_*.py
+insert_*.py
+ingest_*.py
+search_*.py
+baseline_*.txt
+comprehensive_*.md
+*_report*.json
+*_report*.md
+*_output.txt
+*_results.json
+VibeCodingBibleKit*
+knowledge-base/
+knowledge-base.zip
+examples/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Environment
+.env.local
+.env.*.local
+.env.example
+.env.template
+.env.docker
+
+# Temporary files
+*.log
+*.tmp
+nul
+=*
+
+# Database
+*.db
+*.sqlite
+*.sql
+
+# Archives
+*.zip
+*.tar.gz
+
+# Frontend (will be built separately)
+apps/frontend/
+
+# Other apps not needed in API image
+apps/agent_system/
+apps/frontend-admin/
+apps/core/
+
+# Monitoring and evaluation (runtime only)
+apps/monitoring/
+apps/evaluation/
+
+# CI/CD
+.github/
+.claude/

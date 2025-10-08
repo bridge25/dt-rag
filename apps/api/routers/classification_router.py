@@ -8,6 +8,8 @@ Provides REST endpoints for document classification including:
 - Human-in-the-loop workflow management
 """
 
+# @CODE:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md | TEST: tests/e2e/test_complete_workflow.py
+
 import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -16,7 +18,6 @@ import uuid
 from fastapi import APIRouter, HTTPException, Query, Depends, status, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-import uuid
 
 # Import API key authentication
 try:
@@ -82,9 +83,10 @@ class ClassificationAnalytics(BaseModel):
 
 # Real classification service
 
-from apps.classification import SemanticClassifier, TaxonomyDAO
-from apps.api.embedding_service import EmbeddingService
-from apps.api.database import db_manager
+from apps.classification import SemanticClassifier, TaxonomyDAO  # noqa: E402
+from apps.classification.hitl_queue import HITLQueue  # noqa: E402
+from apps.api.embedding_service import EmbeddingService  # noqa: E402
+from apps.api.database import db_manager  # noqa: E402
 
 
 class ClassificationService:
@@ -95,6 +97,7 @@ class ClassificationService:
         self.embedding_service = None
         self.taxonomy_dao = None
         self.semantic_classifier = None
+        self.hitl_queue = HITLQueue()
 
     async def initialize(self, db_session):
         """Initialize service with database session"""
@@ -113,8 +116,8 @@ class ClassificationService:
 
         result = await self.semantic_classifier.classify(
             text=request.text,
-            confidence_threshold=request.confidence_threshold,
-            top_k=5,
+            confidence_threshold=0.7,
+            top_k=request.max_suggestions,
             correlation_id=correlation_id
         )
 
@@ -147,25 +150,48 @@ class ClassificationService:
             processing_time_ms=processing_time
         )
 
-    async def get_hitl_tasks(self, limit: int = 50) -> List[HITLTask]:
-        """Get pending HITL tasks"""
-        return [
-            HITLTask(
-                task_id=str(uuid.uuid4()),
-                chunk_id="doc456_chunk789",
-                text="Quantum computing represents a fundamental shift...",
-                suggested_classification=["Technology", "Computing", "Quantum"],
-                confidence=0.65,
+    async def get_hitl_tasks(self, limit: int = 50, priority: Optional[str] = None) -> List[HITLTask]:
+        """Get pending HITL tasks from database"""
+        tasks_data = await self.hitl_queue.get_pending_tasks(
+            limit=limit,
+            priority=priority
+        )
+
+        hitl_tasks = []
+        for task_data in tasks_data:
+            hitl_tasks.append(HITLTask(
+                task_id=task_data["task_id"],
+                chunk_id=task_data["chunk_id"],
+                text=task_data["text"],
+                suggested_classification=task_data["suggested_classification"],
+                confidence=task_data["confidence"],
                 alternatives=[],
-                created_at=datetime.utcnow(),
-                priority="high"
-            )
-        ]
+                created_at=datetime.fromisoformat(task_data["created_at"]),
+                priority=task_data.get("priority", "normal")
+            ))
+
+        return hitl_tasks
 
     async def submit_hitl_review(self, review: HITLReviewRequest) -> Dict[str, Any]:
-        """Submit HITL review"""
+        """Submit HITL review to database"""
+        task_id = str(uuid.uuid4())
+
+        success = await self.hitl_queue.complete_task(
+            task_id=task_id,
+            chunk_id=review.chunk_id,
+            approved_path=review.approved_path,
+            confidence_override=review.confidence_override,
+            reviewer_notes=review.reviewer_notes
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update classification in database"
+            )
+
         return {
-            "task_id": str(uuid.uuid4()),
+            "task_id": task_id,
             "status": "approved",
             "updated_classification": review.approved_path,
             "reviewer_notes": review.reviewer_notes
@@ -240,11 +266,11 @@ async def classify_document_chunk(
         result = await service.classify_single(request, db_session, correlation_id=correlation_id)
 
         # Add response headers
+        best_confidence = result.classifications[0].confidence if result.classifications else 0.0
         headers = {
             "X-Correlation-ID": correlation_id,
-            "X-Classification-Confidence": str(result.confidence),
-            "X-HITL-Required": str(result.hitl).lower(),
-            "X-Candidates-Count": str(len(result.candidates))
+            "X-Classification-Confidence": str(best_confidence),
+            "X-Candidates-Count": str(len(result.classifications))
         }
 
         return JSONResponse(

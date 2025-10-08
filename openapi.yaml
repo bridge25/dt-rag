@@ -1,0 +1,1396 @@
+openapi: 3.0.3
+info:
+  title: DT-RAG Hybrid Search API
+  version: 1.8.1
+  description: |
+    Dynamic Taxonomy RAG (DT-RAG) Hybrid Search API combining BM25 keyword search
+    with vector similarity search using PostgreSQL Full-text Search and pgvector.
+
+    **Key Features:**
+    - Hybrid BM25 + vector search with cross-encoder reranking
+    - Taxonomy-based content filtering
+    - Real-time performance metrics and analytics
+    - Configurable search weights and normalization
+    - Search result caching and optimization
+
+    **Performance Targets:**
+    - Recall@10 ≥ 0.85
+    - Search latency p95 ≤ 1s
+    - Cost ≤ ₩3/search
+
+  contact:
+    name: DT-RAG API Support
+    email: support@dt-rag.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+  - url: https://api.dt-rag.example.com/v1
+    description: Production server
+
+tags:
+  - name: Search
+    description: Hybrid search operations combining BM25 and vector similarity
+  - name: Configuration
+    description: Search engine configuration and management
+  - name: Analytics
+    description: Search analytics and performance metrics
+  - name: Ingestion
+    description: Document ingestion and processing operations
+
+paths:
+  /search:
+    post:
+      tags:
+        - Search
+      summary: Hybrid search with BM25 and vector similarity
+      description: |
+        Perform hybrid search combining BM25 keyword matching with vector semantic similarity.
+        Results are fused using configurable weights and optionally reranked with cross-encoder.
+
+        **Search Process:**
+        1. Generate query embedding
+        2. Execute BM25 and vector search in parallel
+        3. Fuse results with score normalization
+        4. Apply cross-encoder reranking (if enabled)
+        5. Return top-k results
+
+      operationId: hybridSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+            examples:
+              basic_search:
+                summary: Basic search query
+                value:
+                  q: "machine learning algorithms"
+                  max_results: 10
+              filtered_search:
+                summary: Search with taxonomy filter
+                value:
+                  q: "neural networks"
+                  max_results: 15
+                  canonical_in: [["Technology", "AI", "Deep Learning"]]
+                  min_score: 0.7
+              advanced_search:
+                summary: Advanced search with all options
+                value:
+                  q: "support vector machines classification"
+                  max_results: 20
+                  canonical_in: [["Technology", "AI", "Machine Learning"]]
+                  min_score: 0.6
+                  include_highlights: true
+                  search_mode: "hybrid"
+      responses:
+        '200':
+          description: Search completed successfully
+          headers:
+            X-Search-Latency:
+              description: Search latency in seconds
+              schema:
+                type: string
+                example: "0.045"
+            X-Request-ID:
+              description: Unique request identifier for tracing
+              schema:
+                type: string
+                format: uuid
+                example: "550e8400-e29b-41d4-a716-446655440000"
+            X-Total-Candidates:
+              description: Total candidate documents considered
+              schema:
+                type: string
+                example: "150"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+              examples:
+                successful_search:
+                  summary: Successful search with results
+                  value:
+                    hits:
+                      - chunk_id: "doc123_chunk456"
+                        score: 0.89
+                        text: "Machine learning algorithms are computational methods that enable computers to learn patterns from data..."
+                        source:
+                          url: "https://example.com/ml-guide"
+                          title: "Machine Learning Guide"
+                          date: "2024-01-15"
+                        taxonomy_path: ["Technology", "AI", "Machine Learning"]
+                      - chunk_id: "doc789_chunk012"
+                        score: 0.75
+                        text: "Support Vector Machines (SVMs) are powerful supervised learning algorithms..."
+                        source:
+                          url: "https://example.com/svm-tutorial"
+                          title: "SVM Tutorial"
+                          date: "2024-01-10"
+                        taxonomy_path: ["Technology", "AI", "Machine Learning", "Supervised Learning"]
+                    latency: 0.045
+                    request_id: "550e8400-e29b-41d4-a716-446655440000"
+                    total_candidates: 150
+                    sources_count: 45
+                    taxonomy_version: "1.8.1"
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                empty_query:
+                  summary: Empty search query
+                  value:
+                    detail: "Search query cannot be empty"
+                    correlationId: "550e8400-e29b-41d4-a716-446655440000"
+                    timestamp: "2025-01-14T12:00:00Z"
+                invalid_max_results:
+                  summary: Invalid max_results parameter
+                  value:
+                    detail: "Maximum results limit is 100"
+                    correlationId: "550e8400-e29b-41d4-a716-446655440001"
+                    timestamp: "2025-01-14T12:00:00Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                search_failed:
+                  summary: Search operation failed
+                  value:
+                    detail: "Search operation failed"
+                    correlationId: "550e8400-e29b-41d4-a716-446655440002"
+                    timestamp: "2025-01-14T12:00:00Z"
+
+  /search/keyword:
+    post:
+      tags:
+        - Search
+      summary: BM25 keyword search only
+      description: |
+        Perform BM25 keyword search using PostgreSQL full-text search.
+        Best for exact term searches and factual queries.
+
+      operationId: keywordSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Keyword search completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/vector:
+    post:
+      tags:
+        - Search
+      summary: Vector similarity search only
+      description: |
+        Perform vector similarity search using pgvector.
+        Best for conceptual queries and semantic understanding.
+
+      operationId: vectorSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Vector search completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/config:
+    get:
+      tags:
+        - Configuration
+      summary: Get current search configuration
+      description: |
+        Retrieve current search engine configuration including weights,
+        thresholds, and model specifications.
+
+      operationId: getSearchConfig
+      responses:
+        '200':
+          description: Search configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchConfig'
+              example:
+                bm25_weight: 0.5
+                vector_weight: 0.5
+                rerank_threshold: 0.7
+                max_candidates: 100
+                embedding_model: "sentence-transformers/all-mpnet-base-v2"
+        '500':
+          description: Failed to retrieve configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Configuration
+      summary: Update search configuration
+      description: |
+        Update search engine configuration. BM25 and vector weights must sum to 1.0.
+        Changes take effect immediately for new searches.
+
+      operationId: updateSearchConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchConfig'
+            examples:
+              balanced_weights:
+                summary: Balanced BM25 and vector weights
+                value:
+                  bm25_weight: 0.5
+                  vector_weight: 0.5
+                  rerank_threshold: 0.7
+                  max_candidates: 100
+                  embedding_model: "sentence-transformers/all-mpnet-base-v2"
+              bm25_focused:
+                summary: BM25-focused configuration
+                value:
+                  bm25_weight: 0.7
+                  vector_weight: 0.3
+                  rerank_threshold: 0.7
+                  max_candidates: 100
+                  embedding_model: "sentence-transformers/all-mpnet-base-v2"
+      responses:
+        '200':
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchConfig'
+        '400':
+          description: Invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_weights:
+                  summary: Weights do not sum to 1.0
+                  value:
+                    detail: "BM25 and vector weights must sum to 1.0"
+                    correlationId: "550e8400-e29b-41d4-a716-446655440003"
+                    timestamp: "2025-01-14T12:00:00Z"
+        '500':
+          description: Failed to update configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/analytics:
+    get:
+      tags:
+        - Analytics
+      summary: Get search analytics
+      description: |
+        Retrieve comprehensive search analytics including volume statistics,
+        performance metrics, popular queries, and usage patterns.
+
+      operationId: getSearchAnalytics
+      responses:
+        '200':
+          description: Analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchAnalytics'
+              example:
+                total_searches: 15420
+                avg_latency_ms: 45.2
+                avg_results_count: 8.3
+                top_queries:
+                  - query: "machine learning algorithms"
+                    count: 234
+                  - query: "deep learning neural networks"
+                    count: 198
+                  - query: "natural language processing"
+                    count: 156
+                search_patterns:
+                  AI: 6934
+                  ML: 5187
+                  RAG: 3456
+                  General: 1731
+        '500':
+          description: Failed to retrieve analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/status:
+    get:
+      tags:
+        - Analytics
+      summary: Get search system status
+      description: |
+        Retrieve search system health status including index statistics,
+        performance metrics, and component health checks.
+
+      operationId: getSearchStatus
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+              example:
+                status: "healthy"
+                timestamp: "2025-01-14T10:30:00Z"
+                index_stats:
+                  total_documents: 125847
+                  total_chunks: 1567234
+                  last_updated: "2025-01-14T10:30:00Z"
+                  index_size_mb: 2456.7
+                performance:
+                  avg_search_latency_ms: 45.2
+                  p95_search_latency_ms: 89.5
+                  searches_per_minute: 237
+                  cache_hit_rate: 0.73
+                health_checks:
+                  bm25_index: "healthy"
+                  vector_index: "healthy"
+                  reranker: "healthy"
+                  cache: "healthy"
+        '500':
+          description: Failed to retrieve status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/performance:
+    get:
+      tags:
+        - Analytics
+      summary: Get detailed performance metrics
+      description: |
+        Retrieve comprehensive performance metrics including database statistics,
+        engine configuration, and optimization recommendations.
+
+      operationId: getSearchPerformance
+      responses:
+        '200':
+          description: Performance metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceMetrics'
+        '500':
+          description: Failed to retrieve performance metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/cache/clear:
+    post:
+      tags:
+        - Configuration
+      summary: Clear search result cache
+      description: |
+        Clear all cached search results. Useful for testing or when
+        search configuration changes.
+
+      operationId: clearSearchCache
+      responses:
+        '200':
+          description: Cache cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Search cache cleared successfully"
+        '500':
+          description: Failed to clear cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/suggest:
+    post:
+      tags:
+        - Search
+      summary: Get search query suggestions
+      description: |
+        Get query completion suggestions and related searches based on
+        partial query input.
+
+      operationId: searchSuggestions
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Partial query for suggestions
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+          example: "machine learn"
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of suggestions
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 5
+      responses:
+        '200':
+          description: Suggestions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchSuggestions'
+              example:
+                query: "machine learn"
+                suggestions:
+                  - "machine learning algorithms"
+                  - "machine learning tutorial"
+                  - "machine learning examples"
+                  - "machine learning best practices"
+                  - "machine learning applications"
+                total: 5
+        '500':
+          description: Failed to retrieve suggestions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search/reindex:
+    post:
+      tags:
+        - Configuration
+      summary: Trigger search index rebuild
+      description: |
+        Trigger full or incremental search index rebuild.
+        This is a long-running asynchronous operation.
+
+      operationId: reindexSearchCorpus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReindexRequest'
+            examples:
+              full_reindex:
+                summary: Full index rebuild
+                value:
+                  taxonomy_version: "1.8.1"
+                  incremental: false
+                  force: false
+              incremental_reindex:
+                summary: Incremental index update
+                value:
+                  taxonomy_version: "1.8.1"
+                  incremental: true
+                  force: false
+      responses:
+        '200':
+          description: Reindex job started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReindexResponse'
+              example:
+                job_id: "550e8400-e29b-41d4-a716-446655440004"
+                status: "started"
+                estimated_duration_minutes: 15
+                incremental: false
+        '500':
+          description: Failed to start reindexing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/upload:
+    post:
+      tags:
+        - Ingestion
+      summary: Upload document for processing
+      description: |
+        Upload a document file for ingestion, processing, and indexing.
+        Supported formats: PDF, DOCX, CSV, HTML, TXT.
+
+        **Processing Pipeline:**
+        1. File validation and format detection
+        2. Content extraction with parser
+        3. Intelligent chunking (500 tokens, 128 overlap)
+        4. PII detection and masking
+        5. Embedding generation (OpenAI 1536-dim)
+        6. Vector storage with BM25 index
+
+      operationId: uploadDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DocumentUploadRequest'
+            examples:
+              pdf_upload:
+                summary: Upload PDF document
+                value:
+                  file: "(binary PDF content)"
+                  taxonomy_path: ["Technology", "AI", "Machine Learning"]
+                  source_url: "https://example.com/ml-paper.pdf"
+                  author: "John Doe"
+                  language: "en"
+      responses:
+        '202':
+          description: Document accepted for processing
+          headers:
+            X-Job-ID:
+              description: Unique job identifier for tracking
+              schema:
+                type: string
+                format: uuid
+                example: "550e8400-e29b-41d4-a716-446655440005"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestionJobResponse'
+              example:
+                job_id: "550e8400-e29b-41d4-a716-446655440005"
+                status: "pending"
+                estimated_completion_minutes: 2
+                message: "Document accepted for processing"
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_format:
+                  summary: Unsupported file format
+                  value:
+                    detail: "Unsupported file format. Supported: pdf, docx, csv, html, txt"
+                    correlationId: "550e8400-e29b-41d4-a716-446655440006"
+                    timestamp: "2025-01-14T12:00:00Z"
+                file_too_large:
+                  summary: File size exceeds limit
+                  value:
+                    detail: "File size exceeds 50MB limit"
+                    correlationId: "550e8400-e29b-41d4-a716-446655440007"
+                    timestamp: "2025-01-14T12:00:00Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingestion/status/{jobId}:
+    get:
+      tags:
+        - Ingestion
+      summary: Get ingestion job status
+      description: |
+        Poll ingestion job status and progress.
+        Job status updates in real-time during processing.
+
+      operationId: getIngestionJobStatus
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Job identifier from upload response
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440005"
+      responses:
+        '200':
+          description: Job status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatusResponse'
+              examples:
+                processing:
+                  summary: Job in progress
+                  value:
+                    job_id: "550e8400-e29b-41d4-a716-446655440005"
+                    command_id: "550e8400-e29b-41d4-a716-446655440008"
+                    status: "processing"
+                    progress_percentage: 45.0
+                    current_stage: "Generating embeddings"
+                    chunks_processed: 45
+                    total_chunks: 100
+                    started_at: "2025-01-14T12:00:00Z"
+                    estimated_completion_at: "2025-01-14T12:02:00Z"
+                completed:
+                  summary: Job completed successfully
+                  value:
+                    job_id: "550e8400-e29b-41d4-a716-446655440005"
+                    command_id: "550e8400-e29b-41d4-a716-446655440008"
+                    status: "completed"
+                    progress_percentage: 100.0
+                    current_stage: "Completed"
+                    chunks_processed: 100
+                    total_chunks: 100
+                    started_at: "2025-01-14T12:00:00Z"
+                    completed_at: "2025-01-14T12:02:00Z"
+                failed:
+                  summary: Job failed with error
+                  value:
+                    job_id: "550e8400-e29b-41d4-a716-446655440005"
+                    command_id: "550e8400-e29b-41d4-a716-446655440008"
+                    status: "failed"
+                    progress_percentage: 30.0
+                    current_stage: "Failed during parsing"
+                    chunks_processed: 0
+                    total_chunks: 0
+                    error_message: "Failed to parse PDF: corrupted file"
+                    started_at: "2025-01-14T12:00:00Z"
+                    completed_at: "2025-01-14T12:00:15Z"
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                detail: "Job not found"
+                correlationId: "550e8400-e29b-41d4-a716-446655440009"
+                timestamp: "2025-01-14T12:00:00Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    SearchRequest:
+      type: object
+      required:
+        - q
+      properties:
+        q:
+          type: string
+          description: Search query text
+          minLength: 1
+          maxLength: 500
+          example: "machine learning algorithms"
+        max_results:
+          type: integer
+          description: Maximum number of results to return
+          minimum: 1
+          maximum: 50
+          default: 10
+          example: 10
+        canonical_in:
+          type: array
+          description: Taxonomy paths to filter results
+          items:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              maxLength: 100
+          example: [["Technology", "AI", "Machine Learning"]]
+          nullable: true
+        min_score:
+          type: number
+          description: Minimum relevance score threshold
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.7
+          nullable: true
+        include_highlights:
+          type: boolean
+          description: Include highlighted text snippets in results
+          default: true
+          example: true
+        search_mode:
+          type: string
+          description: Search mode selection
+          enum: [hybrid, bm25, vector]
+          default: "hybrid"
+          example: "hybrid"
+
+    SearchResponse:
+      type: object
+      required:
+        - hits
+        - latency
+        - request_id
+      properties:
+        hits:
+          type: array
+          description: Search result hits
+          items:
+            $ref: '#/components/schemas/SearchHit'
+        latency:
+          type: number
+          description: Total search latency in seconds
+          format: float
+          minimum: 0.0
+          example: 0.045
+        request_id:
+          type: string
+          description: Unique request identifier for tracing
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        total_candidates:
+          type: integer
+          description: Total candidate documents considered
+          minimum: 0
+          example: 150
+          nullable: true
+        sources_count:
+          type: integer
+          description: Number of unique source documents
+          minimum: 0
+          example: 45
+          nullable: true
+        taxonomy_version:
+          type: string
+          description: Taxonomy version used for search
+          pattern: '^\d+\.\d+\.\d+$'
+          example: "1.8.1"
+          nullable: true
+        query_analysis:
+          type: object
+          description: Query analysis metadata
+          additionalProperties: true
+          nullable: true
+
+    SearchHit:
+      type: object
+      required:
+        - chunk_id
+        - score
+        - text
+        - source
+        - taxonomy_path
+      properties:
+        chunk_id:
+          type: string
+          description: Unique chunk identifier
+          minLength: 1
+          maxLength: 200
+          example: "doc123_chunk456"
+        score:
+          type: number
+          description: Relevance score (0-1)
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.89
+        text:
+          type: string
+          description: Matched text content
+          minLength: 1
+          maxLength: 10000
+          example: "Machine learning algorithms are computational methods..."
+        source:
+          $ref: '#/components/schemas/SourceMeta'
+        taxonomy_path:
+          type: array
+          description: Hierarchical taxonomy path
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+          minItems: 1
+          maxItems: 10
+          example: ["Technology", "AI", "Machine Learning"]
+        highlights:
+          type: array
+          description: Highlighted text snippets
+          items:
+            type: string
+            minLength: 1
+            maxLength: 500
+          nullable: true
+        metadata:
+          type: object
+          description: Additional chunk metadata
+          additionalProperties: true
+          nullable: true
+
+    SourceMeta:
+      type: object
+      required:
+        - url
+        - title
+        - date
+      properties:
+        url:
+          type: string
+          description: Document source URL
+          format: uri
+          minLength: 1
+          maxLength: 2000
+          example: "https://example.com/ml-guide"
+        title:
+          type: string
+          description: Document title
+          minLength: 1
+          maxLength: 500
+          example: "Machine Learning Guide"
+        date:
+          type: string
+          description: Document date (ISO format)
+          format: date
+          example: "2024-01-15"
+        author:
+          type: string
+          description: Document author
+          minLength: 1
+          maxLength: 200
+          nullable: true
+        content_type:
+          type: string
+          description: MIME type of source document
+          minLength: 1
+          maxLength: 100
+          example: "text/html"
+          nullable: true
+        language:
+          type: string
+          description: Document language code (ISO 639-1)
+          pattern: '^[a-z]{2}$'
+          example: "en"
+          nullable: true
+
+    SearchConfig:
+      type: object
+      required:
+        - bm25_weight
+        - vector_weight
+      properties:
+        bm25_weight:
+          type: number
+          description: Weight for BM25 keyword scores
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.5
+        vector_weight:
+          type: number
+          description: Weight for vector similarity scores
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.5
+        rerank_threshold:
+          type: number
+          description: Threshold for applying cross-encoder reranking
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          default: 0.7
+          example: 0.7
+        max_candidates:
+          type: integer
+          description: Maximum candidate documents to consider
+          minimum: 10
+          maximum: 500
+          default: 100
+          example: 100
+        embedding_model:
+          type: string
+          description: Embedding model identifier
+          minLength: 1
+          maxLength: 200
+          example: "sentence-transformers/all-mpnet-base-v2"
+
+    SearchAnalytics:
+      type: object
+      required:
+        - total_searches
+        - avg_latency_ms
+        - avg_results_count
+        - top_queries
+        - search_patterns
+      properties:
+        total_searches:
+          type: integer
+          description: Total number of searches performed
+          minimum: 0
+          example: 15420
+        avg_latency_ms:
+          type: number
+          description: Average search latency in milliseconds
+          format: float
+          minimum: 0.0
+          example: 45.2
+        avg_results_count:
+          type: number
+          description: Average number of results returned
+          format: float
+          minimum: 0.0
+          example: 8.3
+        top_queries:
+          type: array
+          description: Most popular search queries
+          items:
+            type: object
+            required:
+              - query
+              - count
+            properties:
+              query:
+                type: string
+                minLength: 1
+                maxLength: 500
+              count:
+                type: integer
+                minimum: 0
+          example:
+            - query: "machine learning algorithms"
+              count: 234
+            - query: "deep learning neural networks"
+              count: 198
+        search_patterns:
+          type: object
+          description: Search patterns by category
+          additionalProperties:
+            type: integer
+            minimum: 0
+          example:
+            Technology: 6934
+            Science: 5187
+            Business: 3456
+
+    SearchStatus:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          description: Overall system status
+          enum: [healthy, degraded, unhealthy]
+          example: "healthy"
+        timestamp:
+          type: string
+          description: Status check timestamp
+          format: date-time
+          example: "2025-01-14T10:30:00Z"
+        index_stats:
+          type: object
+          properties:
+            total_documents:
+              type: integer
+              minimum: 0
+            total_chunks:
+              type: integer
+              minimum: 0
+            last_updated:
+              type: string
+              format: date-time
+            index_size_mb:
+              type: number
+              format: float
+              minimum: 0.0
+        performance:
+          type: object
+          properties:
+            avg_search_latency_ms:
+              type: number
+              format: float
+              minimum: 0.0
+            p95_search_latency_ms:
+              type: number
+              format: float
+              minimum: 0.0
+            searches_per_minute:
+              type: integer
+              minimum: 0
+            cache_hit_rate:
+              type: number
+              format: float
+              minimum: 0.0
+              maximum: 1.0
+        health_checks:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [healthy, degraded, unhealthy]
+
+    PerformanceMetrics:
+      type: object
+      required:
+        - search_engine_status
+      properties:
+        search_engine_status:
+          type: string
+          description: Search engine availability status
+          enum: [enabled, disabled]
+          example: "enabled"
+        database_statistics:
+          type: object
+          description: Database-level statistics
+          additionalProperties: true
+        engine_configuration:
+          type: object
+          description: Current engine configuration
+          additionalProperties: true
+        performance_metrics:
+          type: object
+          description: Performance metrics
+          additionalProperties: true
+        recommendations:
+          type: array
+          description: Performance optimization recommendations
+          items:
+            type: object
+            required:
+              - type
+              - message
+              - priority
+            properties:
+              type:
+                type: string
+                minLength: 1
+                maxLength: 100
+              message:
+                type: string
+                minLength: 1
+                maxLength: 500
+              priority:
+                type: string
+                enum: [critical, high, medium, low]
+
+    SearchSuggestions:
+      type: object
+      required:
+        - query
+        - suggestions
+        - total
+      properties:
+        query:
+          type: string
+          description: Original query string
+          minLength: 1
+          maxLength: 100
+          example: "machine learn"
+        suggestions:
+          type: array
+          description: Query suggestions
+          items:
+            type: string
+            minLength: 1
+            maxLength: 200
+          example:
+            - "machine learning algorithms"
+            - "machine learning tutorial"
+        total:
+          type: integer
+          description: Total number of suggestions
+          minimum: 0
+          example: 5
+
+    ReindexRequest:
+      type: object
+      properties:
+        taxonomy_version:
+          type: string
+          description: Taxonomy version to use for reindexing
+          pattern: '^\d+\.\d+\.\d+$'
+          example: "1.8.1"
+          nullable: true
+        incremental:
+          type: boolean
+          description: Perform incremental reindex (only new/changed documents)
+          default: false
+          example: false
+        force:
+          type: boolean
+          description: Force reindex even if recent
+          default: false
+          example: false
+
+    ReindexResponse:
+      type: object
+      required:
+        - job_id
+        - status
+      properties:
+        job_id:
+          type: string
+          description: Unique job identifier
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440004"
+        status:
+          type: string
+          description: Job status
+          enum: [started, pending, processing, completed, failed]
+          example: "started"
+        estimated_duration_minutes:
+          type: integer
+          description: Estimated completion time in minutes
+          minimum: 0
+          example: 15
+        incremental:
+          type: boolean
+          description: Whether this is an incremental reindex
+          example: false
+
+    DocumentUploadRequest:
+      type: object
+      required:
+        - file
+        - taxonomy_path
+      properties:
+        file:
+          type: string
+          format: binary
+          description: Document file to upload
+        taxonomy_path:
+          type: array
+          description: Hierarchical taxonomy path for classification
+          items:
+            type: string
+            minLength: 1
+            maxLength: 100
+          minItems: 1
+          maxItems: 10
+          example: ["Technology", "AI", "Machine Learning"]
+        source_url:
+          type: string
+          format: uri
+          description: Original document source URL
+          maxLength: 2000
+          nullable: true
+          example: "https://example.com/document.pdf"
+        author:
+          type: string
+          description: Document author
+          maxLength: 200
+          nullable: true
+          example: "John Doe"
+        language:
+          type: string
+          description: Document language code (ISO 639-1)
+          pattern: '^[a-z]{2}$'
+          default: "ko"
+          example: "en"
+        priority:
+          type: integer
+          description: Processing priority (1=highest, 10=lowest)
+          minimum: 1
+          maximum: 10
+          default: 5
+          example: 5
+
+    IngestionJobResponse:
+      type: object
+      required:
+        - job_id
+        - status
+        - message
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: Unique job identifier
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          description: Current job status
+          example: "pending"
+        estimated_completion_minutes:
+          type: integer
+          description: Estimated completion time in minutes
+          minimum: 0
+          example: 2
+        message:
+          type: string
+          description: Human-readable status message
+          maxLength: 500
+          example: "Document accepted for processing"
+
+    JobStatusResponse:
+      type: object
+      required:
+        - job_id
+        - command_id
+        - status
+        - progress_percentage
+      properties:
+        job_id:
+          type: string
+          format: uuid
+          description: Unique job identifier
+          example: "550e8400-e29b-41d4-a716-446655440005"
+        command_id:
+          type: string
+          format: uuid
+          description: Internal command identifier
+          example: "550e8400-e29b-41d4-a716-446655440008"
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+          description: Current job status
+          example: "processing"
+        progress_percentage:
+          type: number
+          format: float
+          description: Job completion percentage
+          minimum: 0.0
+          maximum: 100.0
+          example: 45.0
+        current_stage:
+          type: string
+          description: Current processing stage
+          maxLength: 100
+          nullable: true
+          example: "Generating embeddings"
+        chunks_processed:
+          type: integer
+          description: Number of chunks processed
+          minimum: 0
+          example: 45
+        total_chunks:
+          type: integer
+          description: Total number of chunks
+          minimum: 0
+          example: 100
+        error_message:
+          type: string
+          description: Error message if failed
+          maxLength: 1000
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          description: Job start timestamp
+          nullable: true
+          example: "2025-01-14T12:00:00Z"
+        completed_at:
+          type: string
+          format: date-time
+          description: Job completion timestamp
+          nullable: true
+          example: "2025-01-14T12:02:00Z"
+        estimated_completion_at:
+          type: string
+          format: date-time
+          description: Estimated completion timestamp
+          nullable: true
+          example: "2025-01-14T12:02:00Z"
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+        - correlationId
+        - timestamp
+      properties:
+        detail:
+          type: string
+          description: Error message
+          minLength: 1
+          maxLength: 1000
+          example: "Search query cannot be empty"
+        correlationId:
+          type: string
+          description: Correlation ID for error tracing
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        timestamp:
+          type: string
+          description: Error timestamp
+          format: date-time
+          example: "2025-01-14T12:00:00Z"
+        code:
+          type: string
+          description: Error code
+          minLength: 1
+          maxLength: 100
+          example: "INVALID_REQUEST"
+          nullable: true
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+          nullable: true
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []

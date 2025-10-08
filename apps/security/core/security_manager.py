@@ -3,12 +3,9 @@ Core Security Manager for DT-RAG v1.8.1
 Orchestrates all security components and provides unified security interface
 """
 
-import asyncio
 import logging
-import hashlib
-import secrets
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Set
+from typing import Dict, List, Any, Set
 from dataclasses import dataclass
 from enum import Enum
 import uuid

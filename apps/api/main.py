@@ -20,25 +20,21 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Dict, Any
 
-from fastapi import FastAPI, Request, HTTPException, Depends, status
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
+# slowapi removed - using custom Redis-based rate limiter
 
-# Import existing routers (직접 확인된 경로)
+
+# Import routers
 from apps.api.routers.health import router as health_router
-from apps.api.routers.classify import router as classify_router
 from apps.api.routers.search import router as search_legacy_router
 from apps.api.routers.taxonomy import router as taxonomy_legacy_router
 from apps.api.routers.ingestion import router as ingestion_router
-
-# Import new comprehensive routers
 from apps.api.routers.taxonomy_router import taxonomy_router
 from apps.api.routers.search_router import search_router
 from apps.api.routers.classification_router import classification_router
@@ -46,6 +42,7 @@ from apps.api.routers.orchestration_router import orchestration_router
 from apps.api.routers.agent_factory_router import agent_factory_router
 from apps.api.routers.monitoring_router import router as monitoring_router
 from apps.api.routers.embedding_router import router as embedding_router
+from apps.api.routers.admin.api_keys import router as api_keys_admin_router
 
 # Import evaluation router
 try:
@@ -95,7 +92,7 @@ except ImportError:
     logging.debug("OpenAPI spec generation not available")
 
 # Import rate limiting
-from apps.api.middleware.rate_limiter import limiter, RateLimitMiddleware
+from apps.api.middleware.rate_limiter import rate_limiter, RateLimitMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -118,7 +115,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize Sentry monitoring (optional)
     if SENTRY_AVAILABLE:
-        sentry_dsn = config.get("sentry_dsn") or os.getenv("SENTRY_DSN")
+        sentry_dsn = os.getenv("SENTRY_DSN")
         if sentry_dsn:
             sentry_initialized = init_sentry(
                 dsn=sentry_dsn,
@@ -180,10 +177,24 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"⚠️ System metrics initialization failed: {e}")
 
+    # Initialize rate limiter
+    try:
+        await rate_limiter.initialize()
+        logger.info("✅ Rate limiter initialized")
+    except Exception as e:
+        logger.warning(f"⚠️ Rate limiter initialization failed: {e}")
+
     yield
 
     # Shutdown
     logger.info("🔥 Shutting down Dynamic Taxonomy RAG API")
+
+    # Close rate limiter
+    try:
+        await rate_limiter.close()
+        logger.info("✅ Rate limiter closed")
+    except Exception as e:
+        logger.warning(f"⚠️ Rate limiter cleanup failed: {e}")
 
     # Cleanup monitoring resources
     if MONITORING_AVAILABLE:
@@ -236,8 +247,8 @@ app = FastAPI(
 )
 
 # Add rate limiter state to app
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# Custom Redis-based rate limiter (initialized in lifespan)
+
 
 # CORS middleware
 app.add_middleware(
@@ -344,10 +355,34 @@ async def general_exception_handler(request: Request, exc: Exception):
 # Health check endpoint
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Basic health check endpoint"""
+    """Basic health check endpoint with database and Redis status"""
+    from apps.api.database import test_database_connection
+
+    db_status = "connected"
+    redis_status = "connected"
+
+    try:
+        db_connected = await test_database_connection()
+        if not db_connected:
+            db_status = "disconnected"
+    except Exception:
+        db_status = "error"
+
+    try:
+        from apps.api.middleware.rate_limiter import rate_limiter
+        if rate_limiter.redis_client:
+            await rate_limiter.redis_client.ping()
+            redis_status = "connected"
+        else:
+            redis_status = "not_initialized"
+    except Exception:
+        redis_status = "error"
+
     return {
-        "status": "healthy",
-        "timestamp": time.time(),
+        "status": "healthy" if db_status == "connected" and redis_status == "connected" else "degraded",
+        "database": db_status,
+        "redis": redis_status,
+        "timestamp": str(time.time()),
         "version": "1.8.1",
         "environment": config.environment
     }
@@ -358,16 +393,21 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
 
-    # Use our comprehensive OpenAPI specification
-    openapi_schema = generate_openapi_spec()
-
-    # Override with actual path operations from FastAPI
-    openapi_schema["paths"] = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )["paths"]
+    if OPENAPI_SPEC_AVAILABLE:
+        openapi_schema = generate_openapi_spec()
+        openapi_schema["paths"] = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )["paths"]
+    else:
+        openapi_schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -407,7 +447,6 @@ async def redoc_html():
 
 # Include existing routers (Bridge Pack compatibility)
 app.include_router(health_router, tags=["Health"])
-app.include_router(classify_router, tags=["Classification"])
 app.include_router(search_legacy_router, tags=["Search"])
 app.include_router(taxonomy_legacy_router, tags=["Taxonomy"])
 app.include_router(ingestion_router, tags=["Document Ingestion"])
@@ -479,6 +518,13 @@ if BATCH_SEARCH_AVAILABLE:
         prefix="/api/v1",
         tags=["Batch Processing", "Search Optimization"]
     )
+
+# Include admin routers
+app.include_router(
+    api_keys_admin_router,
+    prefix="/api/v1",
+    tags=["Admin", "API Key Management"]
+)
 
 # API versioning support
 @app.get("/api/versions", tags=["Versioning"])

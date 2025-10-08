@@ -14,8 +14,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query, Path, Depends, status
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 try:
     from ..deps import verify_api_key
@@ -82,109 +81,8 @@ class ValidationResult(BaseModel):
     warnings: List[str]
     suggestions: List[str]
 
-# Mock data and services (would be replaced with actual implementations)
-
-class TaxonomyService:
-    """Mock taxonomy service"""
-
-    async def list_versions(self, limit: int = 50, offset: int = 0) -> List[TaxonomyVersion]:
-        """List available taxonomy versions"""
-        # Mock implementation
-        return [
-            TaxonomyVersion(
-                version="1.8.1",
-                created_at=datetime.utcnow(),
-                created_by="system",
-                change_summary="Added AI/ML subcategories",
-                parent_version="1.8.0",
-                node_count=150,
-                depth=5
-            ),
-            TaxonomyVersion(
-                version="1.8.0",
-                created_at=datetime.utcnow(),
-                created_by="admin",
-                change_summary="Major taxonomy restructure",
-                parent_version="1.7.9",
-                node_count=142,
-                depth=4
-            )
-        ]
-
-    async def get_tree(self, version: str, expand_level: int = -1) -> List[TaxonomyNode]:
-        """Get taxonomy tree for a specific version"""
-        # Mock implementation
-        if version not in ["1.8.1", "1.8.0"]:
-            return None
-
-        return [
-            TaxonomyNode(
-                node_id="root-tech",
-                label="Technology",
-                canonical_path=["Technology"],
-                version=version,
-                confidence=1.0
-            ),
-            TaxonomyNode(
-                node_id="tech-ai",
-                label="Artificial Intelligence",
-                canonical_path=["Technology", "AI"],
-                version=version,
-                confidence=0.95
-            ),
-            TaxonomyNode(
-                node_id="ai-ml",
-                label="Machine Learning",
-                canonical_path=["Technology", "AI", "Machine Learning"],
-                version=version,
-                confidence=0.92
-            )
-        ]
-
-    async def get_statistics(self, version: str) -> TaxonomyStatistics:
-        """Get taxonomy statistics"""
-        return TaxonomyStatistics(
-            total_nodes=150,
-            leaf_nodes=95,
-            internal_nodes=55,
-            max_depth=5,
-            avg_depth=3.2,
-            categories_distribution={
-                "Technology": 45,
-                "Science": 38,
-                "Business": 32,
-                "Arts": 25,
-                "Other": 10
-            }
-        )
-
-    async def compare_versions(self, base_version: str, target_version: str) -> VersionComparison:
-        """Compare two taxonomy versions"""
-        return VersionComparison(
-            base_version=base_version,
-            target_version=target_version,
-            changes={
-                "added_nodes": ["Technology/AI/Machine Learning/Deep Learning"],
-                "removed_nodes": [],
-                "modified_nodes": ["Technology/AI/Natural Language Processing"],
-                "moved_nodes": []
-            },
-            summary={
-                "added": 1,
-                "removed": 0,
-                "modified": 1,
-                "moved": 0
-            }
-        )
-
-    async def validate_taxonomy(self, version: str) -> ValidationResult:
-        """Validate taxonomy structure"""
-        return ValidationResult(
-            is_valid=True,
-            errors=[],
-            warnings=["Node 'Technology/AI/NLP' could be more specific"],
-            suggestions=["Consider adding 'Computer Vision' subcategory under AI"]
-        )
+# Real taxonomy service implementation
+from ..services.taxonomy_service import TaxonomyService  # noqa: E402
 
 # Dependency injection
 async def get_taxonomy_service() -> TaxonomyService:
@@ -212,8 +110,7 @@ async def list_taxonomy_versions(
         offset = (page - 1) * limit
         versions = await service.list_versions(limit=limit, offset=offset)
 
-        # Mock total count (would come from database)
-        total_count = 25
+        total_count = len(versions)
         has_next = offset + limit < total_count
         has_previous = page > 1
 
@@ -242,7 +139,7 @@ async def list_taxonomy_versions(
             detail="Failed to retrieve taxonomy versions"
         )
 
-@taxonomy_router.get("/{version}/tree", response_model=List[TaxonomyNode])
+@taxonomy_router.get("/{version}/tree", response_model=Dict[str, Any])
 async def get_taxonomy_tree(
     version: str = Path(..., description="Taxonomy version"),
     expand_level: int = Query(-1, ge=-1, description="Tree expansion level (-1 for full tree)"),
@@ -260,23 +157,31 @@ async def get_taxonomy_tree(
     - Optional filtering by path prefix
     """
     try:
-        tree = await service.get_tree(version, expand_level)
+        tree_data = await service.get_tree(version)
 
-        if tree is None:
+        if not tree_data or not tree_data.get("nodes"):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Taxonomy version '{version}' not found"
             )
 
+        nodes = tree_data["nodes"]
+        edges = tree_data["edges"]
+
         # Apply path filtering if specified
         if filter_path:
             filter_parts = filter_path.split("/")
-            tree = [
-                node for node in tree
-                if node.canonical_path[:len(filter_parts)] == filter_parts
+            nodes = [
+                node for node in nodes
+                if node.get("canonical_path", [])[:len(filter_parts)] == filter_parts
             ]
 
-        return tree
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "version": version,
+            "metadata": tree_data.get("metadata", {})
+        }
 
     except HTTPException:
         raise
@@ -303,14 +208,6 @@ async def get_taxonomy_statistics(
     - Structural analysis
     """
     try:
-        # Verify version exists first
-        tree = await service.get_tree(version)
-        if tree is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Taxonomy version '{version}' not found"
-            )
-
         statistics = await service.get_statistics(version)
         return statistics
 
@@ -339,14 +236,6 @@ async def validate_taxonomy(
     - Naming convention validation
     """
     try:
-        # Verify version exists first
-        tree = await service.get_tree(version)
-        if tree is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Taxonomy version '{version}' not found"
-            )
-
         validation_result = await service.validate_taxonomy(version)
         return validation_result
 

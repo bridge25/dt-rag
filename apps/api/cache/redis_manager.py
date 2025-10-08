@@ -2,14 +2,12 @@
 Redis 연결 관리 및 최적화 시스템
 """
 
-import asyncio
 import logging
 import pickle
 import gzip
-import json
-from typing import Dict, Any, Optional, Union, List
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
 logger = logging.getLogger(__name__)
@@ -17,7 +15,6 @@ logger = logging.getLogger(__name__)
 # Redis 호환성 확인
 try:
     import redis.asyncio as redis
-    from redis.exceptions import ConnectionError, RedisError
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -471,7 +468,7 @@ async def get_redis_manager() -> RedisManager:
     if _redis_manager is None:
         # 환경변수에서 설정 읽기
         config = RedisConfig(
-            host=os.getenv('REDIS_HOST', 'localhost'),
+            host=os.getenv('REDIS_HOST', 'redis'),
             port=int(os.getenv('REDIS_PORT', '6379')),
             db=int(os.getenv('REDIS_DB', '0')),
             password=os.getenv('REDIS_PASSWORD'),

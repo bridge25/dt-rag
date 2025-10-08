@@ -14,8 +14,7 @@ from datetime import datetime
 import uuid
 
 from fastapi import APIRouter, HTTPException, Query, Depends, status
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 try:
     from ..deps import verify_api_key
@@ -29,7 +28,7 @@ from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
 from packages.common_schemas.common_schemas.models import (
-    FromCategoryRequest, AgentManifest, RetrievalConfig, FeaturesConfig
+    FromCategoryRequest, RetrievalConfig, FeaturesConfig
 )
 
 # Configure logging

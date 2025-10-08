@@ -11,24 +11,20 @@ Features:
 """
 
 import asyncio
-import json
 import logging
-import uuid
-from collections import defaultdict, deque
+from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
 import networkx as nx
-from sqlalchemy import and_, or_, text, select, insert, update, delete
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.exc import IntegrityError
 
 from .database import (
     TaxonomyNode, TaxonomyEdge, TaxonomyMigration,
-    db_manager, async_session
+    async_session
 )
 
 logger = logging.getLogger(__name__)
@@ -813,7 +809,7 @@ class TaxonomyDAGManager:
 
             # Check if new_parent_id is descendant of node_id
             try:
-                path = nx.shortest_path(graph, node_id, new_parent_id)
+                nx.shortest_path(graph, node_id, new_parent_id)
                 return True  # Path exists, would create cycle
             except nx.NetworkXNoPath:
                 return False  # No path, safe to move

@@ -268,6 +268,35 @@ export const DatasetEntrySchema = z.object({
 })
 
 // ============================================================================
+// HITL Models (from apps/api/routers/classification_router.py)
+// ============================================================================
+
+export const HITLTaskSchema = z.object({
+  task_id: z.string(),
+  chunk_id: z.string(),
+  text: z.string(),
+  suggested_classification: z.array(z.string()),
+  confidence: z.number(),
+  alternatives: z.array(TaxonomyNodeSchema),
+  created_at: z.string(),
+  priority: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
+})
+
+export const HITLReviewRequestSchema = z.object({
+  chunk_id: z.string(),
+  approved_path: z.array(z.string()),
+  confidence_override: z.number().optional(),
+  reviewer_notes: z.string().optional(),
+})
+
+export const HITLReviewResponseSchema = z.object({
+  task_id: z.string(),
+  status: z.string(),
+  updated_classification: z.array(z.string()),
+  reviewer_notes: z.string().optional(),
+})
+
+// ============================================================================
 // Legacy/Additional Models
 // ============================================================================
 
@@ -373,3 +402,7 @@ export type AgentResponse = z.infer<typeof AgentResponseSchema>
 export type EmbeddingGenerateRequest = z.infer<typeof EmbeddingGenerateRequestSchema>
 export type EmbeddingGenerateResponse = z.infer<typeof EmbeddingGenerateResponseSchema>
 export type TaxonomyVersion = z.infer<typeof TaxonomyVersionSchema>
+
+export type HITLTask = z.infer<typeof HITLTaskSchema>
+export type HITLReviewRequest = z.infer<typeof HITLReviewRequestSchema>
+export type HITLReviewResponse = z.infer<typeof HITLReviewResponseSchema>

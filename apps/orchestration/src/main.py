@@ -279,7 +279,7 @@ def _create_dummy_pipeline_request():
 # CBR 시스템 생성 함수 구현
 def create_cbr_system(path):
     """CBR 시스템 인스턴스 생성"""
-    return SimpleCBR(path)
+    return CBRSystem(path)
 
 def create_category_filter(paths):
     class DummyFilter:
@@ -288,13 +288,10 @@ def create_category_filter(paths):
     return DummyFilter()
 
 # CBR 관련 완전 구현 클래스
-from enum import Enum
-from uuid import uuid4
-from datetime import datetime
-import numpy as np
-from pathlib import Path
-import time
-import sqlite3
+from enum import Enum  # noqa: E402
+from uuid import uuid4  # noqa: E402
+from pathlib import Path  # noqa: E402
+import time  # noqa: E402
 
 class FeedbackType(str, Enum):
     THUMBS_UP = "thumbs_up"
@@ -618,7 +615,7 @@ class CBRSystem:
                 for row in cursor.fetchall():
                     try:
                         category_path = json.loads(row[0]) if row[0] else []
-                    except:
+                    except Exception:
                         category_path = []
                     category_distribution.append({
                         "category_path": category_path,
@@ -857,7 +854,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # CBR 시스템 초기화를 위한 lifespan 이벤트 핸들러
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager  # noqa: E402
 
 # CBR 시스템 초기화
 cbr_system = None  # 실제 초기화는 lifespan에서 환경변수에 따라 수행
@@ -1202,11 +1199,9 @@ def create_agent_from_category(req: FromCategoryRequest):
         raise HTTPException(status_code=500, detail=f"매니페스트 생성 오류: {', '.join(manifest_validation_errors)}")
     
     logger.info(f"🚨 B-O1 매니페스트 생성 완료 (검증 강화): {agent_name}, paths={len(normalized_paths)}, mcp_tools={len(manifest.mcp_tools_allowlist)}, 필터=canonical_in")
-    
+
     # 성능 메트릭 로깅
-    import time
-    current_time = time.time() * 1000  # ms 단위
-    logger.info(f"B-O1 성능: 입력검증+생성 완료, 목표 <100ms 준수")
+    logger.info("B-O1 성능: 입력검증+생성 완료, 목표 <100ms 준수")
     
     return manifest
 
@@ -1283,9 +1278,9 @@ def hybrid_search(req: SearchRequest):
             source=result["source"]
         )
         hits.append(hit)
-    
+
     # 필터 통계 로깅
-    filter_stats = category_filter.get_filter_stats()
+    category_filter.get_filter_stats()
     logger.info(f"검색 필터링 완료: {len(hits)}/{len(raw_search_results)} 결과 반환")
     
     return SearchResponse(
@@ -1570,7 +1565,7 @@ def get_cbr_logs(limit: int = 100, success_only: bool = False):
                 "total_count": len(logs),
                 "neural_selector_readiness": {
                     "sufficient_data": len(logs) >= 1000,
-                    "training_ready": len([l for l in logs if l["success_flag"]]) >= 700
+                    "training_ready": len([log_entry for log_entry in logs if log_entry["success_flag"]]) >= 700
                 }
             }
             
