@@ -71,6 +71,7 @@ class PipelineState(BaseModel):
     step_timings: Dict[str, float] = Field(default_factory=dict)
     plan: Optional[Dict[str, Any]] = None  # Meta-planner output
     tool_results: List[Dict[str, Any]] = Field(default_factory=list)  # Tool execution results
+    debate_result: Optional[Any] = None  # Debate result (DEBATE-001)
 
 
 class PipelineRequest(BaseModel):
@@ -250,58 +251,108 @@ async def step3_plan(state: PipelineState) -> PipelineState:
 async def step4_tools_debate(state: PipelineState) -> PipelineState:
     """
     # @SPEC:TOOLS-001 @IMPL:TOOLS-001:0.4
+    # @SPEC:DEBATE-001 @IMPL:DEBATE-001:0.3
     Step 4: Tools Execution & Debate
 
-    Executes tools from Meta-Planner's plan.tools list.
-    Conditional execution based on mcp_tools and tools_policy flags.
+    Executes tools from Meta-Planner's plan.tools list OR runs debate if enabled.
+    Conditional execution based on mcp_tools, tools_policy, and debate_mode flags.
     """
     from apps.api.env_manager import get_env_manager
-    from apps.orchestration.src.tool_executor import execute_tool
 
     flags = get_env_manager().get_feature_flags()
 
-    if not flags.get("mcp_tools", False):
-        logger.info("Step 4 (tools/debate) skipped (mcp_tools flag OFF)")
+    debate_enabled = flags.get("debate_mode", False)
+    tools_enabled = flags.get("mcp_tools", False)
+
+    if debate_enabled:
+        from apps.orchestration.src.debate.debate_engine import DebateEngine
+
+        logger.info("Step 4: Debate mode enabled, running multi-agent debate")
+
+        if not state.retrieved_chunks:
+            logger.warning("No retrieved chunks for debate, skipping")
+            return state
+
+        debate_engine = DebateEngine()
+
+        try:
+            result = await debate_engine.run_debate(
+                query=state.query,
+                context=state.retrieved_chunks,
+                max_rounds=2,
+                timeout=10.0,
+            )
+
+            state.answer = result.final_answer
+            state.debate_result = result
+
+            logger.info(
+                f"Debate completed: {result.rounds} rounds, {result.llm_calls} LLM calls, {result.elapsed_time:.2f}s"
+            )
+
+        except asyncio.TimeoutError:
+            logger.warning(
+                "Debate timeout - proceeding without debate answer (step5 will handle)"
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Debate failed: {e} - proceeding without debate answer (step5 will handle)"
+            )
+
         return state
 
-    plan = state.plan or {}
-    tools_to_execute = plan.get("tools", [])
+    if tools_enabled:
+        from apps.orchestration.src.tool_executor import execute_tool
 
-    if not tools_to_execute:
-        logger.info("Step 4: No tools to execute")
-        return state
+        logger.info("Step 4: Tools mode enabled")
 
-    registry = None
-    if flags.get("tools_policy", False):
-        from apps.orchestration.src.tool_registry import ToolRegistry
-        registry = ToolRegistry()
+        plan = state.plan or {}
+        tools_to_execute = plan.get("tools", [])
 
-    tool_results = []
-    for tool_name in tools_to_execute:
-        if flags.get("tools_policy", False) and registry:
-            if not registry.validate_tool(tool_name):
-                logger.warning(f"Tool '{tool_name}' blocked by whitelist")
-                tool_results.append({
+        if not tools_to_execute:
+            logger.info("Step 4: No tools to execute")
+            return state
+
+        registry = None
+        if flags.get("tools_policy", False):
+            from apps.orchestration.src.tool_registry import ToolRegistry
+
+            registry = ToolRegistry()
+
+        tool_results = []
+        for tool_name in tools_to_execute:
+            if flags.get("tools_policy", False) and registry:
+                if not registry.validate_tool(tool_name):
+                    logger.warning(f"Tool '{tool_name}' blocked by whitelist")
+                    tool_results.append(
+                        {
+                            "tool": tool_name,
+                            "success": False,
+                            "error": "Blocked by whitelist policy",
+                        }
+                    )
+                    continue
+
+            input_data = plan.get(f"{tool_name}_input", {})
+            result = await execute_tool(tool_name, input_data, timeout=30.0)
+
+            tool_results.append(
+                {
                     "tool": tool_name,
-                    "success": False,
-                    "error": "Blocked by whitelist policy"
-                })
-                continue
+                    "success": result.success,
+                    "result": result.result,
+                    "error": result.error,
+                    "elapsed": result.elapsed,
+                }
+            )
 
-        input_data = plan.get(f"{tool_name}_input", {})
-        result = await execute_tool(tool_name, input_data, timeout=30.0)
+        state.tool_results = tool_results
+        logger.info(f"Step 4 (tools) executed: {len(tool_results)} tools")
 
-        tool_results.append({
-            "tool": tool_name,
-            "success": result.success,
-            "result": result.result,
-            "error": result.error,
-            "elapsed": result.elapsed
-        })
+        return state
 
-    state.tool_results = tool_results
-    logger.info(f"Step 4 (tools) executed: {len(tool_results)} tools")
-
+    logger.info("Step 4 (tools/debate) skipped (all flags OFF)")
     return state
 
 
