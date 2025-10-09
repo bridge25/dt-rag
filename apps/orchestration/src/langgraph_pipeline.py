@@ -87,14 +87,18 @@ class PipelineResponse(BaseModel):
     step_timings: Dict[str, float] = Field(default_factory=dict)
 
 
+# @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
 # Step timeout configuration (2025-10-06 실측 기반 조정 완료)
 # 실측값 (2회 테스트 평균): intent(~0.1ms), retrieve(0.37~1.19s), compose(1.29~2.06s), respond(~0.05ms)
 # 각 단계별 최대 실측값 × 1.5 여유율 적용
 STEP_TIMEOUTS = {
-    "intent": 0.1,      # 0.1s - 간단한 파싱 (실측 0.056~0.15ms)
-    "retrieve": 2.0,    # 2.0s - Hybrid search + rerank + embedding generation (실측 0.37~1.19s)
-    "compose": 3.5,     # 3.5s - LLM 1회 호출 (Gemini API 포함, 실측 1.29~2.06s, API 변동 고려)
-    "respond": 0.1,     # 0.1s - 포맷팅 및 신뢰도 계산 (실측 0.043~0.05ms)
+    "intent": 0.1,       # 0.1s - 간단한 파싱 (실측 0.056~0.15ms)
+    "retrieve": 2.0,     # 2.0s - Hybrid search + rerank + embedding generation (실측 0.37~1.19s)
+    "plan": 0.5,         # 0.5s - Meta-level Planning (stub, Phase 1)
+    "tools_debate": 1.0, # 1.0s - Tools/Debate (stub, Phase 2B/3)
+    "compose": 3.5,      # 3.5s - LLM 1회 호출 (Gemini API 포함, 실측 1.29~2.06s, API 변동 고려)
+    "cite": 0.1,         # 0.1s - Source Citation (stub)
+    "respond": 0.1,      # 0.1s - 포맷팅 및 신뢰도 계산 (실측 0.043~0.05ms)
 }
 
 
@@ -195,6 +199,46 @@ async def step2_retrieve(state: PipelineState) -> PipelineState:
     return state
 
 
+async def step3_plan(state: PipelineState) -> PipelineState:
+    """
+    # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
+    Step 3: Meta-level Planning (stub)
+
+    Conditional execution based on meta_planner feature flag.
+    TODO: Implement meta-planning logic in Phase 1
+    """
+    from apps.api.env_manager import get_env_manager
+    flags = get_env_manager().get_feature_flags()
+
+    if not flags.get("meta_planner", False):
+        logger.info("Step 3 (plan) skipped (feature flag OFF)")
+        return state
+
+    logger.info("Step 3 (plan) executed (stub)")
+    # TODO: Implement meta-planning logic in Phase 1
+    return state
+
+
+async def step4_tools_debate(state: PipelineState) -> PipelineState:
+    """
+    # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
+    Step 4: Tools/Debate (stub)
+
+    Conditional execution based on debate_mode and tools_policy flags.
+    TODO: Implement tools/debate logic in Phase 2B/3
+    """
+    from apps.api.env_manager import get_env_manager
+    flags = get_env_manager().get_feature_flags()
+
+    if not flags.get("debate_mode", False) and not flags.get("tools_policy", False):
+        logger.info("Step 4 (tools/debate) skipped (feature flags OFF)")
+        return state
+
+    logger.info("Step 4 (tools/debate) executed (stub)")
+    # TODO: Implement tools/debate logic in Phase 2B/3
+    return state
+
+
 async def step5_compose(state: PipelineState) -> PipelineState:
     """
     Step 5: Answer Composition
@@ -274,6 +318,19 @@ async def step5_compose(state: PipelineState) -> PipelineState:
     return state
 
 
+async def step6_cite(state: PipelineState) -> PipelineState:
+    """
+    # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
+    Step 6: Source Citation (stub)
+
+    Currently citation is handled in step5_compose.
+    TODO: Extract citation logic from step5 in future
+    """
+    logger.info("Step 6 (cite) executed (currently handled in step5)")
+    # TODO: Extract citation logic from step5 in future
+    return state
+
+
 async def step7_respond(state: PipelineState) -> PipelineState:
     """
     Step 7: Final Response Formatting
@@ -304,14 +361,17 @@ async def step7_respond(state: PipelineState) -> PipelineState:
 
 
 class LangGraphPipeline:
-    """LangGraph 7-Step Pipeline (simplified 4-step for Phase 5)"""
+    """LangGraph 7-Step Pipeline"""
 
     def __init__(self):
         self.name = "DT-RAG-7Step-Pipeline"
-        logger.info("LangGraph pipeline initialized (4-step: intent, retrieve, compose, respond)")
+        logger.info("LangGraph pipeline initialized (7-step pipeline)")
 
     async def execute(self, request: PipelineRequest) -> PipelineResponse:
-        """Execute pipeline with timeout enforcement"""
+        """
+        # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
+        Execute 7-step pipeline with timeout enforcement
+        """
         start_time = time.time()
 
         # Initialize state
@@ -329,10 +389,19 @@ class LangGraphPipeline:
             # Step 2: Retrieve
             state = await execute_with_timeout(step2_retrieve, state, "retrieve")
 
-            # Step 5: Compose (skip steps 3, 4 for Phase 5)
+            # Step 3: Plan (NEW)
+            state = await execute_with_timeout(step3_plan, state, "plan")
+
+            # Step 4: Tools/Debate (NEW)
+            state = await execute_with_timeout(step4_tools_debate, state, "tools_debate")
+
+            # Step 5: Compose
             state = await execute_with_timeout(step5_compose, state, "compose")
 
-            # Step 7: Respond (skip step 6 for Phase 5)
+            # Step 6: Cite (NEW)
+            state = await execute_with_timeout(step6_cite, state, "cite")
+
+            # Step 7: Respond
             state = await execute_with_timeout(step7_respond, state, "respond")
 
             # Calculate total latency

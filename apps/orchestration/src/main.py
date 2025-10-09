@@ -344,6 +344,22 @@ class CBRSystem:
         self.db_path = str(self.data_dir / "cbr_system.db")
         self._ensure_database()
 
+    @staticmethod
+    async def generate_case_embedding(query: str) -> List[float]:
+        """
+        # @SPEC:FOUNDATION-001 @IMPL:0.2-casebank-vector
+        Generate embedding for case query (1536-dim)
+
+        Fallback to dummy vector [0.0]*1536 on failure
+        """
+        try:
+            from apps.api.embedding_service import embedding_service
+            vector = await embedding_service.generate_embedding(query)
+            return vector if vector and len(vector) == 1536 else [0.0] * 1536
+        except Exception as e:
+            logger.warning(f"Embedding generation failed: {e}, using dummy vector")
+            return [0.0] * 1536
+
     def _ensure_database(self):
         """데이터베이스 스키마 초기화"""
         with sqlite3.connect(self.db_path) as conn:
@@ -521,10 +537,17 @@ class CBRSystem:
             logger.error(f"피드백 업데이트 오류: {e}")
             return False
 
-    def add_case(self, case_data: Dict[str, Any]) -> bool:
-        """새 케이스 추가"""
+    async def add_case(self, case_data: Dict[str, Any]) -> bool:
+        """
+        # @SPEC:FOUNDATION-001 @IMPL:0.2-casebank-vector
+        새 케이스 추가 with embedding generation
+        """
         try:
             case_id = case_data.get("case_id", str(uuid4()))
+
+            # Generate embedding for query
+            query_vector = await self.generate_case_embedding(case_data["query"])  # noqa: F841
+            # Note: query_vector will be stored in PostgreSQL in future implementation
 
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute("""

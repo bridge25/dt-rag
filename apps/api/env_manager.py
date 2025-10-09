@@ -120,7 +120,9 @@ class EnvironmentManager:
 
     def get_feature_flags(self) -> Dict[str, bool]:
         """Get feature flags for current environment"""
-        return {
+        # @SPEC:FOUNDATION-001 @IMPL:0.1-feature-flags
+        base_flags = {
+            # Existing flags (8개)
             "enable_swagger_ui": self.current_env != Environment.PRODUCTION,
             "enable_redoc": self.current_env != Environment.PRODUCTION,
             "enable_metrics": True,
@@ -128,8 +130,29 @@ class EnvironmentManager:
             "enable_request_logging": True,
             "enable_error_tracking": True,
             "enable_debug_toolbar": self.current_env == Environment.DEVELOPMENT,
-            "enable_profiling": self.current_env in [Environment.DEVELOPMENT, Environment.STAGING]
+            "enable_profiling": self.current_env in [Environment.DEVELOPMENT, Environment.STAGING],
+
+            # PRD 1.5P flags (4개)
+            "neural_case_selector": self._get_flag_override("FEATURE_NEURAL_CASE_SELECTOR", False),
+            "soft_q_bandit": self._get_flag_override("FEATURE_SOFT_Q_BANDIT", False),
+            "debate_mode": self._get_flag_override("FEATURE_DEBATE_MODE", False),
+            "tools_policy": self._get_flag_override("FEATURE_TOOLS_POLICY", False),
+
+            # Memento flags (3개)
+            "meta_planner": self._get_flag_override("FEATURE_META_PLANNER", False),
+            "mcp_tools": self._get_flag_override("FEATURE_MCP_TOOLS", False),
+            "experience_replay": self._get_flag_override("FEATURE_EXPERIENCE_REPLAY", False),
         }
+        return base_flags
+
+    def _get_flag_override(self, env_var: str, default: bool) -> bool:
+        """Get feature flag with environment variable override"""
+        env_value = os.getenv(env_var, "").lower()
+        if env_value in ("true", "1", "yes"):
+            return True
+        elif env_value in ("false", "0", "no"):
+            return False
+        return default
 
     def validate_environment(self) -> Dict[str, Any]:
         """Validate current environment configuration"""

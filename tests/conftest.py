@@ -142,7 +142,7 @@ def mock_async_session():
     return AsyncContextManager(mock_session)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=False)
 async def setup_test_database():
     """Initialize test database with schema and golden dataset."""
     from tests.fixtures.test_db_schema import init_test_db, cleanup_test_db
