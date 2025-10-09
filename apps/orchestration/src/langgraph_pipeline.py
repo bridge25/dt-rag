@@ -481,12 +481,85 @@ async def step7_respond(state: PipelineState) -> PipelineState:
     return state
 
 
+_global_replay_buffer = None
+
+
+def get_global_replay_buffer():
+    """Get global replay buffer instance"""
+    global _global_replay_buffer
+    if _global_replay_buffer is None:
+        from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
+        _global_replay_buffer = ReplayBuffer(max_size=10000)
+    return _global_replay_buffer
+
+
 class LangGraphPipeline:
     """LangGraph 7-Step Pipeline"""
 
     def __init__(self):
+        from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
+
         self.name = "DT-RAG-7Step-Pipeline"
-        logger.info("LangGraph pipeline initialized (7-step pipeline)")
+        self.replay_buffer = ReplayBuffer(max_size=10000)
+        logger.info("LangGraph pipeline initialized (7-step pipeline with replay buffer)")
+
+    def _encode_state(self, state: PipelineState) -> str:
+        """
+        Encode pipeline state to hash string.
+
+        Args:
+            state: Pipeline state
+
+        Returns:
+            State hash string
+        """
+        query_prefix = state.query[:50] if len(state.query) > 50 else state.query
+        return f"{query_prefix}_{state.confidence:.2f}"
+
+    async def _save_experience_to_replay_buffer(self, state: PipelineState) -> None:
+        """
+        Save pipeline execution experience to replay buffer.
+
+        Args:
+            state: Pipeline state after step7_respond
+
+        Raises:
+            ValueError: If state is invalid
+            RuntimeError: If buffer save fails
+        """
+        from apps.api.env_manager import get_env_manager
+
+        flags = get_env_manager().get_feature_flags()
+        if not flags.get("experience_replay", False):
+            return
+
+        try:
+            if not state.query:
+                raise ValueError("state.query is empty")
+            if not (0.0 <= state.confidence <= 1.0):
+                raise ValueError(f"Invalid confidence: {state.confidence}")
+
+            state_hash = self._encode_state(state)
+            reward = state.confidence
+
+            await self.replay_buffer.add(
+                state_hash=state_hash,
+                action_idx=0,
+                reward=reward,
+                next_state_hash=state_hash,
+            )
+
+            logger.debug(
+                f"Experience saved: query='{state.query[:30]}...', "
+                f"confidence={state.confidence:.3f}, "
+                f"buffer_size={len(self.replay_buffer)}"
+            )
+
+        except ValueError as e:
+            logger.warning(f"Invalid state for replay buffer: {e}")
+        except Exception as e:
+            logger.error(f"Replay buffer save failed: {e}", exc_info=True)
+            raise RuntimeError(f"Failed to save experience: {e}") from e
 
     async def execute(self, request: PipelineRequest) -> PipelineResponse:
         """
@@ -526,6 +599,10 @@ class LangGraphPipeline:
 
             # Step 7: Respond
             state = await execute_with_timeout(step7_respond, state, "respond")
+
+            # @SPEC:REPLAY-001 @IMPL:REPLAY-001:0.3
+            # Experience Replay Buffer integration
+            await self._save_experience_to_replay_buffer(state)
 
             # Calculate total latency
             total_latency = time.time() - start_time
