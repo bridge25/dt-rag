@@ -2,6 +2,109 @@
 
 🚀 **프로덕션 환경 완료!** PostgreSQL + pgvector 데이터베이스 연결과 실제 하이브리드 검색이 구현되었습니다.
 
+## 🧪 실험 기능 (Phase 1-2)
+
+> **참고**: 아래 기능들은 Feature Flag로 제어되며, 현재 개발/테스트 단계입니다.
+> 프로덕션 환경에서는 기본적으로 비활성화되어 있습니다.
+
+### Phase 1: Meta-Planner (SPEC-PLANNER-001)
+
+**설명**: LLM 기반 메타 레벨 쿼리 계획 생성
+
+**주요 기능**:
+- 쿼리 복잡도 분석 (Heuristic + LLM)
+- 실행 계획 생성 (도구 선택, 단계 분해)
+- LangGraph step3에 통합
+
+**Feature Flag**: `FEATURE_META_PLANNER=true`
+
+**사용 예시**:
+```bash
+# Feature Flag 활성화
+export FEATURE_META_PLANNER=true
+
+# 복잡한 쿼리 처리
+curl -X POST http://localhost:8000/api/v1/answer \
+  -H "Content-Type: application/json" \
+  -d '{"q": "Compare performance metrics across 3 systems", "mode": "answer"}'
+```
+
+### Phase 2A: Neural Case Selector (SPEC-NEURAL-001)
+
+**설명**: pgvector 기반 하이브리드 검색 (Vector 70% + BM25 30%)
+
+**주요 기능**:
+- Vector Similarity Search (< 100ms)
+- BM25 + Vector 하이브리드 스코어링
+- Min-Max 정규화 및 가중 평균
+
+**Feature Flag**: `FEATURE_NEURAL_CASE_SELECTOR=true`
+
+**사용 예시**:
+```bash
+# Feature Flag 활성화
+export FEATURE_NEURAL_CASE_SELECTOR=true
+
+# 하이브리드 검색
+curl -X POST http://localhost:8000/api/v1/search \
+  -H "Content-Type: application/json" \
+  -d '{"q": "machine learning optimization", "final_topk": 5}'
+```
+
+### Phase 2B: MCP Tools (SPEC-TOOLS-001)
+
+**설명**: Model Context Protocol 기반 도구 실행 파이프라인
+
+**주요 기능**:
+- Tool Registry (Singleton 패턴)
+- Tool Executor (30s timeout, JSON schema 검증)
+- Whitelist 기반 보안 정책
+- LangGraph step4에 통합
+
+**Feature Flags**:
+- `FEATURE_MCP_TOOLS=true`: 도구 실행 활성화
+- `FEATURE_TOOLS_POLICY=true`: Whitelist 정책 활성화
+- `TOOL_WHITELIST=calculator,websearch`: 허용 도구 목록
+
+**사용 예시**:
+```bash
+# Feature Flag 활성화
+export FEATURE_MCP_TOOLS=true
+export FEATURE_TOOLS_POLICY=true
+export TOOL_WHITELIST="calculator"
+
+# 도구 사용 쿼리
+curl -X POST http://localhost:8000/api/v1/answer \
+  -H "Content-Type: application/json" \
+  -d '{"q": "Calculate 123 + 456", "mode": "answer"}'
+```
+
+### Feature Flag 전체 목록
+
+| Flag | 기본값 | 설명 | Phase |
+|------|--------|------|-------|
+| `FEATURE_META_PLANNER` | false | 메타 레벨 계획 생성 | 1 |
+| `FEATURE_NEURAL_CASE_SELECTOR` | false | Vector 하이브리드 검색 | 2A |
+| `FEATURE_MCP_TOOLS` | false | MCP 도구 실행 | 2B |
+| `FEATURE_TOOLS_POLICY` | false | 도구 Whitelist 정책 | 2B |
+| `FEATURE_SOFT_Q_BANDIT` | false | RL 기반 정책 선택 | 3 (예정) |
+| `FEATURE_DEBATE_MODE` | false | Multi-Agent Debate | 3 (예정) |
+| `FEATURE_EXPERIENCE_REPLAY` | false | 경험 리플레이 버퍼 | 3 (예정) |
+
+### 7-Step LangGraph Pipeline
+
+```
+1. step1_intent: 의도 분류
+2. step2_retrieve: 문서 검색
+3. step3_plan: 메타 계획 생성 ⭐ Phase 1
+4. step4_tools_debate: 도구 실행 / Debate ⭐ Phase 2B/3
+5. step5_compose: 답변 생성
+6. step6_cite: 인용 추가
+7. step7_respond: 최종 응답
+```
+
+---
+
 ## ✨ 새로운 프로덕션 기능
 
 ### 🗄️ 실제 PostgreSQL + pgvector 데이터베이스
