@@ -7,7 +7,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey
+from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.types import TypeDecorator, TEXT
 try:
@@ -189,6 +189,7 @@ class DocTaxonomy(Base):
     confidence: Mapped[Optional[float]] = mapped_column(Float)
     hitl_required: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('false'))
 
+# @SPEC:CASEBANK-002 @IMPL:CASEBANK-002:0.2
 class CaseBank(Base):
     __tablename__ = "case_bank"
 
@@ -202,6 +203,73 @@ class CaseBank(Base):
     success_rate: Mapped[Optional[float]] = mapped_column(Float)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('now()'))
     last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+
+    # @IMPL:CASEBANK-002:0.2.1 - Version management
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    updated_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # @IMPL:CASEBANK-002:0.2.2 - Lifecycle status
+    status: Mapped[str] = mapped_column(String(50), default='active', nullable=False)
+
+    # @IMPL:CASEBANK-002:0.2.3 - Timestamp
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False
+    )
+
+# @IMPL:CASEBANK-002:0.3 - CaseBank indices optimization
+async def optimize_casebank_indices(session: AsyncSession) -> Dict[str, Any]:
+    """
+    CaseBank 테이블 인덱스 최적화
+
+    3개 인덱스 생성:
+    - idx_casebank_status: status 필드 (필터링 성능)
+    - idx_casebank_version: version 필드 DESC (버전 조회 성능)
+    - idx_casebank_updated_at: updated_at 필드 DESC (최신 업데이트 조회 성능)
+    """
+    try:
+        optimization_queries = []
+
+        if "postgresql" in DATABASE_URL:
+            optimization_queries = [
+                "CREATE INDEX IF NOT EXISTS idx_casebank_status ON case_bank(status)",
+                "CREATE INDEX IF NOT EXISTS idx_casebank_version ON case_bank(version DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_casebank_updated_at ON case_bank(updated_at DESC)"
+            ]
+        elif "sqlite" in DATABASE_URL:
+            optimization_queries = [
+                "CREATE INDEX IF NOT EXISTS idx_casebank_status ON case_bank(status)",
+                "CREATE INDEX IF NOT EXISTS idx_casebank_version ON case_bank(version DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_casebank_updated_at ON case_bank(updated_at DESC)"
+            ]
+
+        created_indices = []
+        for query in optimization_queries:
+            try:
+                await session.execute(text(query))
+                index_name = query.split("idx_")[1].split(" ")[0] if "idx_" in query else "unknown"
+                created_indices.append(index_name)
+            except Exception as e:
+                logger.warning(f"CaseBank 인덱스 생성 실패: {e}")
+
+        await session.commit()
+
+        return {
+            "success": True,
+            "indices_created": created_indices,
+            "message": f"CaseBank {len(created_indices)}개 인덱스 최적화 완료"
+        }
+
+    except Exception as e:
+        logger.error(f"CaseBank 인덱스 최적화 실패: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "indices_created": []
+        }
+
 
 # 데이터베이스 연결 클래스
 class DatabaseManager:
