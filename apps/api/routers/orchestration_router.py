@@ -13,9 +13,15 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query, Depends, status, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+
+try:
+    from ..deps import verify_api_key
+except ImportError:
+    def verify_api_key():
+        return None
 
 # Import common schemas
 import sys
@@ -23,6 +29,9 @@ from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
 from packages.common_schemas.common_schemas.models import SearchHit, SourceMeta
+
+# Import LangGraph service
+from ..services.langgraph_service import get_langgraph_service
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -55,7 +64,7 @@ class PipelineResponse(BaseModel):
 class PipelineConfig(BaseModel):
     """Pipeline configuration"""
     max_search_results: int = Field(10, ge=1, le=50)
-    search_type: str = Field("hybrid", regex="^(bm25|vector|hybrid)$")
+    search_type: str = Field("hybrid", pattern="^(bm25|vector|hybrid)$")
     rerank_enabled: bool = Field(True)
     generation_temperature: float = Field(0.7, ge=0.0, le=2.0)
     generation_max_tokens: int = Field(1000, ge=100, le=4000)
@@ -81,69 +90,84 @@ class PipelineAnalytics(BaseModel):
     success_rate: float
     step_performance: Dict[str, Dict[str, float]]
 
-# Mock pipeline service
+# Real pipeline service using LangGraph
 
 class PipelineService:
-    """Mock pipeline orchestration service"""
+    """Real pipeline orchestration service using LangGraph 7-step pipeline"""
+
+    def __init__(self):
+        """Initialize with LangGraph service"""
+        self.langgraph_service = get_langgraph_service()
 
     async def execute_pipeline(self, request: PipelineRequest) -> PipelineResponse:
-        """Execute the 7-step RAG pipeline"""
-        # Mock pipeline execution
-        sources = [
-            SearchHit(
-                chunk_id="doc123_chunk456",
-                score=0.89,
-                text="Machine learning algorithms enable computers to learn...",
-                source=SourceMeta(
-                    url="https://example.com/ml-guide",
-                    title="ML Fundamentals",
-                    date="2024-01-15"
-                ),
-                taxonomy_path=["Technology", "AI", "Machine Learning"]
+        """
+        Execute the 7-step RAG pipeline using LangGraph
+
+        Args:
+            request: Pipeline request with query and configuration
+
+        Returns:
+            Pipeline response with answer, sources, confidence, and metadata
+
+        Raises:
+            HTTPException: If pipeline execution fails
+        """
+        try:
+            # Execute LangGraph pipeline
+            result = await self.langgraph_service.execute_pipeline(
+                query=request.query,
+                taxonomy_version=request.taxonomy_version,
+                canonical_filter=None,  # TODO: Extract from search_config if needed
+                options=request.generation_config or {}
             )
-        ]
 
-        pipeline_metadata = {
-            "steps_executed": [
-                "intent_detection",
-                "query_analysis",
-                "search_execution",
-                "result_reranking",
-                "context_preparation",
-                "answer_generation",
-                "response_validation"
-            ],
-            "step_latencies": {
-                "intent_detection": 0.023,
-                "query_analysis": 0.156,
-                "search_execution": 0.089,
-                "result_reranking": 0.067,
-                "context_preparation": 0.012,
-                "answer_generation": 1.234,
-                "response_validation": 0.045
-            },
-            "retrieval_stats": {
-                "candidates_found": 50,
-                "reranked_results": 15,
-                "final_sources": 3
-            },
-            "generation_stats": {
-                "tokens_generated": 234,
-                "model_used": "gpt-4",
-                "temperature": 0.7
+            # Convert sources from dict to SearchHit objects
+            sources = []
+            for source_dict in result.get("sources", []):
+                sources.append(
+                    SearchHit(
+                        chunk_id=source_dict.get("chunk_id", "unknown"),
+                        score=source_dict.get("score", 0.0),
+                        text=source_dict.get("text", ""),
+                        source=SourceMeta(
+                            url=source_dict.get("url", ""),
+                            title=source_dict.get("title", "Untitled"),
+                            date=source_dict.get("date", "")
+                        ),
+                        taxonomy_path=source_dict.get("taxonomy_path", [])
+                    )
+                )
+
+            # Build pipeline metadata
+            pipeline_metadata = result.get("pipeline_metadata", {})
+            pipeline_metadata["retrieval_stats"] = {
+                "final_sources": len(sources)
             }
-        }
 
-        return PipelineResponse(
-            answer="Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed.",
-            sources=sources,
-            confidence=0.89,
-            cost=8.45,
-            latency=1.626,
-            taxonomy_version="1.8.1",
-            intent="informational_query",
-            pipeline_metadata=pipeline_metadata
-        )
+            return PipelineResponse(
+                answer=result["answer"],
+                sources=sources,
+                confidence=result["confidence"],
+                cost=result["cost"],
+                latency=result["latency"],
+                taxonomy_version=result["taxonomy_version"],
+                intent=result.get("intent", "general"),
+                pipeline_metadata=pipeline_metadata
+            )
+
+        except TimeoutError as e:
+            logger.error(f"Pipeline timeout: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="Pipeline execution timed out"
+            )
+
+        except Exception as e:
+            logger.error(f"Pipeline execution failed: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Pipeline execution failed: {str(e)}"
+            )
 
     async def execute_pipeline_async(self, request: PipelineRequest) -> str:
         """Start asynchronous pipeline execution"""
@@ -200,7 +224,8 @@ async def get_pipeline_service() -> PipelineService:
 @orchestration_router.post("/execute", response_model=PipelineResponse)
 async def execute_pipeline(
     request: PipelineRequest,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Execute the complete 7-step RAG pipeline
@@ -253,7 +278,8 @@ async def execute_pipeline(
 async def execute_pipeline_async(
     request: PipelineRequest,
     background_tasks: BackgroundTasks,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Start asynchronous pipeline execution
@@ -284,7 +310,8 @@ async def execute_pipeline_async(
 @orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)
 async def get_pipeline_job(
     job_id: str,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get pipeline job status and results
@@ -316,7 +343,8 @@ async def get_pipeline_job(
 
 @orchestration_router.get("/config", response_model=PipelineConfig)
 async def get_pipeline_config(
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get current pipeline configuration
@@ -340,7 +368,8 @@ async def get_pipeline_config(
 @orchestration_router.put("/config", response_model=PipelineConfig)
 async def update_pipeline_config(
     config: PipelineConfig,
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Update pipeline configuration
@@ -372,7 +401,8 @@ async def update_pipeline_config(
 
 @orchestration_router.get("/analytics", response_model=PipelineAnalytics)
 async def get_pipeline_analytics(
-    service: PipelineService = Depends(get_pipeline_service)
+    service: PipelineService = Depends(get_pipeline_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get pipeline analytics and performance metrics
@@ -394,7 +424,9 @@ async def get_pipeline_analytics(
         )
 
 @orchestration_router.get("/status")
-async def get_pipeline_status():
+async def get_pipeline_status(
+    api_key: str = Depends(verify_api_key)
+):
     """
     Get pipeline system status and health
 

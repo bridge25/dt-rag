@@ -3,6 +3,8 @@ Database Integration Tests for Dynamic Taxonomy RAG v1.8.1
 통합 테스트 체크리스트 (A~E) - PR-2 스키마 증명
 """
 
+# @TEST:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md
+
 import pytest
 import psycopg2
 import os

@@ -1,0 +1,568 @@
+{
+  "subagent": "database-architect",
+  "timestamp": "2025-09-14T15:26:03.294887",
+  "search_results": [
+    {
+      "query": "PostgreSQL 16 pgvector performance optimization 2025",
+      "url": "https://www.crunchydata.com/blog/pgvector-performance-for-developers",
+      "title": "Performance Tips Using Postgres and pgvector | Crunchy Data Blog",
+      "content": "The single biggest factor in pgvector performance is keeping your HNSW index in memory. An HNSW index is most efficient when it fits into shared memory and avoids being evicted due to concurrent operations.",
+      "relevance_score": 0.95,
+      "timestamp": "2025-09-14 15:26:03.294927",
+      "subagent": "database-architect",
+      "category": "performance"
+    },
+    {
+      "query": "PostgreSQL 16 pgvector performance optimization 2025",
+      "url": "https://github.com/pgvector/pgvector",
+      "title": "GitHub - pgvector/pgvector: Open-source vector similarity search for Postgres",
+      "content": "Open-source vector similarity search for PostgreSQL with HNSW and IVFFlat indexing support, optimized for high-performance vector operations.",
+      "relevance_score": 0.9,
+      "timestamp": "2025-09-14 15:26:03.294956",
+      "subagent": "database-architect",
+      "category": "framework"
+    },
+    {
+      "query": "HNSW vs IVFFlat pgvector indexing strategies",
+      "url": "https://www.crunchydata.com/blog/hnsw-indexes-with-postgres-and-pgvector",
+      "title": "HNSW Indexes with Postgres and pgvector | Crunchy Data Blog",
+      "content": "IVFFlat indexes are usually faster to build and smaller in size, but slower to use and less accurate. HNSW provides better accuracy and query speed, especially for applications with frequent updates and deletes.",
+      "relevance_score": 0.92,
+      "timestamp": "2025-09-14 15:26:04.300151",
+      "subagent": "database-architect",
+      "category": "performance"
+    },
+    {
+      "query": "pgvector HNSW index optimization parameters",
+      "url": "https://cloud.google.com/blog/products/databases/faster-similarity-search-performance-with-pgvector-indexes",
+      "title": "Faster similarity search performance with pgvector indexes | Google Cloud Blog",
+      "content": "HNSW index parameters: m (maximum connections per layer, defaults to 16), ef_construction (dynamic candidate list size for graph construction, defaults to 64). Query performance can be tuned with ef parameter.",
+      "relevance_score": 0.88,
+      "timestamp": "2025-09-14 15:26:04.300168",
+      "subagent": "database-architect",
+      "category": "implementation"
+    },
+    {
+      "query": "Alembic PostgreSQL migration rollback strategies 2025",
+      "url": "https://www.pingcap.com/article/best-practices-alembic-schema-migration/",
+      "title": "Best Practices for Alembic Schema Migration",
+      "content": "Making migrations to production can be challenging as it can lead to downtime. Break migrations into smaller steps, use lock_timeout and statement_timeout. Be careful with rollback operations that may drop tables and cause data loss.",
+      "relevance_score": 0.93,
+      "timestamp": "2025-09-14 15:26:05.311685",
+      "subagent": "database-architect",
+      "category": "migration"
+    },
+    {
+      "query": "Alembic migration automation PostgreSQL best practices",
+      "url": "https://alembic.sqlalchemy.org/en/latest/autogenerate.html",
+      "title": "Auto Generating Migrations — Alembic 1.16.5 documentation",
+      "content": "Autogenerate is not intended to be perfect. Always manually review and correct candidate migrations. PostgreSQL uses various locking mechanisms during schema changes that can cause ACCESS EXCLUSIVE locks.",
+      "relevance_score": 0.89,
+      "timestamp": "2025-09-14 15:26:05.311728",
+      "subagent": "database-architect",
+      "category": "migration"
+    }
+  ],
+  "frameworks": {
+    "alembic": {
+      "name": "alembic",
+      "version": "latest",
+      "documentation_urls": [],
+      "key_features": [],
+      "implementation_examples": [],
+      "performance_considerations": [],
+      "integration_patterns": []
+    },
+    "PostgreSQL ": {
+      "name": "PostgreSQL ",
+      "version": "latest",
+      "documentation_urls": [],
+      "key_features": [],
+      "implementation_examples": [],
+      "performance_considerations": [],
+      "integration_patterns": []
+    },
+    "PostgreSQL 16": {
+      "name": "PostgreSQL 16",
+      "version": "latest",
+      "documentation_urls": [],
+      "key_features": [],
+      "implementation_examples": [],
+      "performance_considerations": [],
+      "integration_patterns": []
+    },
+    "Alembic": {
+      "name": "Alembic",
+      "version": "latest",
+      "documentation_urls": [],
+      "key_features": [],
+      "implementation_examples": [],
+      "performance_considerations": [],
+      "integration_patterns": []
+    },
+    "pgvector": {
+      "name": "pgvector",
+      "version": "0.8.0",
+      "documentation_urls": [],
+      "key_features": [
+        "Vector similarity search",
+        "Index types: IVFFlat, HNSW",
+        "Distance functions: L2, inner product, cosine",
+        "Exact and approximate search",
+        "Iterative scanning for improved recall",
+        "Binary quantization for memory optimization",
+        "Enhanced HNSW performance"
+      ],
+      "implementation_examples": [],
+      "performance_considerations": [
+        "Index parameter tuning (lists, m, ef_construction)",
+        "Vector dimension optimization",
+        "Memory usage for large vector datasets",
+        "Query performance scaling",
+        "Iterative scanning parameters (dynamic_candidates)",
+        "Binary quantization trade-offs (memory vs accuracy)",
+        "HNSW graph connectivity optimization"
+      ],
+      "integration_patterns": []
+    }
+  },
+  "best_practices": [
+    {
+      "category": "pgvector_performance",
+      "title": "pgvector Index Optimization",
+      "description": "Keep HNSW index in memory for optimal performance. HNSW index is most efficient when it fits into shared memory and avoids being evicted.",
+      "implementation": "Monitor index sizes with \\di+ command and ensure sufficient RAM for entire index"
+    },
+    {
+      "category": "pgvector_indexing", 
+      "title": "Index Configuration Strategy",
+      "description": "Use rows/1000 as recommended list size for IVFFlat indexes. Benchmark different list sizes for optimal performance.",
+      "implementation": "CREATE INDEX ON table USING ivfflat (embedding vector_l2_ops) WITH (lists = 500);"
+    },
+    {
+      "category": "alembic_migrations",
+      "title": "Safe Migration Practices", 
+      "description": "Break migrations into smaller steps, use lock_timeout and statement_timeout. Be careful with rollback operations that may cause data loss.",
+      "implementation": "Always manually review autogenerated migrations and test rollback procedures"
+    }
+  ],
+  "code_examples": [
+    {
+      "title": "pgvector Extension Setup",
+      "description": "Complete setup process for pgvector extension in PostgreSQL",
+      "code": "-- Enable extension\nCREATE EXTENSION vector;\n\n-- Create table with vector column\nCREATE TABLE items (\n  id bigserial PRIMARY KEY,\n  embedding vector(1536)\n);\n\n-- Insert vectors\nINSERT INTO items (embedding) VALUES ('[1,2,3]'), ('[4,5,6]');\n\n-- Create HNSW index for optimal performance\nCREATE INDEX ON items USING hnsw (embedding vector_l2_ops);",
+      "language": "sql"
+    },
+    {
+      "title": "Optimized Vector Similarity Query",
+      "description": "Performance-optimized query pattern for vector similarity search",
+      "code": "-- Optimized query (5ms vs 500ms for unoptimized)\nSELECT r1.id\nFROM recipes r1\nWHERE id != 142508\nORDER BY r1.embedding <-> (SELECT embedding FROM recipes WHERE id = 142508)\nLIMIT 1;",
+      "language": "sql"
+    },
+    {
+      "title": "Distance Function Examples", 
+      "description": "Different distance functions available in pgvector",
+      "code": "-- L2 distance (Euclidean)\nSELECT * FROM items ORDER BY embedding <-> '[3,1,2]' LIMIT 5;\n\n-- Cosine distance\nSELECT * FROM items ORDER BY embedding <=> '[3,1,2]' LIMIT 5;\n\n-- Inner product\nSELECT * FROM items ORDER BY embedding <#> '[3,1,2]' LIMIT 5;",
+      "language": "sql"
+    },
+    {
+      "title": "pgvector 0.8.0 Enhanced Features",
+      "description": "New features in pgvector 0.8.0: iterative scanning and binary quantization",
+      "code": "-- Create index with iterative scanning enabled\nCREATE INDEX ON embeddings USING hnsw (vector vector_l2_ops) \nWITH (m = 32, ef_construction = 128);\n\n-- Query with iterative scanning for improved recall\nSET hnsw.ef_search = 200;\nSELECT * FROM embeddings \nORDER BY vector <-> query_vector \nLIMIT 10;\n\n-- Enable binary quantization for memory optimization\n-- (Reduces memory usage by ~32x with minimal accuracy loss)\nCREATE INDEX ON large_embeddings USING hnsw (vector vector_l2_ops)\nWITH (m = 16, ef_construction = 64);\n\n-- Monitor index performance\nSELECT \n  schemaname,\n  tablename,\n  indexname,\n  pg_size_pretty(pg_relation_size(indexrelid)) as index_size,\n  idx_scan as scans,\n  idx_tup_read as tuples_read,\n  idx_tup_fetch as tuples_fetched\nFROM pg_stat_user_indexes \nWHERE indexname LIKE '%hnsw%';",
+      "language": "sql"
+    },
+    {
+      "title": "Advanced HNSW Configuration",
+      "description": "Optimized HNSW parameters for different use cases in pgvector 0.8.0",
+      "code": "-- High-accuracy configuration for critical applications\nCREATE INDEX embedding_high_accuracy_idx ON documents \nUSING hnsw (embedding vector_cosine_ops) \nWITH (\n  m = 64,                    -- Higher connectivity for better accuracy\n  ef_construction = 256      -- More candidates during construction\n);\n\n-- Balanced performance configuration\nCREATE INDEX embedding_balanced_idx ON documents \nUSING hnsw (embedding vector_l2_ops) \nWITH (\n  m = 32,                    -- Good balance of speed and accuracy\n  ef_construction = 128      -- Reasonable construction time\n);\n\n-- Fast insertion configuration for high-throughput scenarios\nCREATE INDEX embedding_fast_idx ON documents \nUSING hnsw (embedding vector_l2_ops) \nWITH (\n  m = 16,                    -- Lower connectivity for faster inserts\n  ef_construction = 64       -- Faster construction\n);\n\n-- Query-time tuning for different recall requirements\n-- High recall (slower)\nSET hnsw.ef_search = 400;\n\n-- Balanced recall/speed\nSET hnsw.ef_search = 200;\n\n-- Fast search (lower recall)\nSET hnsw.ef_search = 100;",
+      "language": "sql"
+    }
+  ],
+  "production_code_examples": [
+    {
+      "title": "Production Database Connection Manager",
+      "description": "Enterprise-grade database connection management with pooling, retry logic, and monitoring",
+      "code": "import asyncio\nimport asyncpg\nimport logging\nfrom typing import Optional, Dict, Any, List\nfrom dataclasses import dataclass\nfrom contextlib import asynccontextmanager\nimport time\nfrom prometheus_client import Counter, Histogram, Gauge\n\n# Metrics for monitoring\ndb_connections_total = Counter('db_connections_total', 'Total database connections', ['status'])\ndb_query_duration = Histogram('db_query_duration_seconds', 'Database query duration')\ndb_pool_size = Gauge('db_pool_size', 'Current database pool size')\ndb_pool_available = Gauge('db_pool_available', 'Available connections in pool')\n\n@dataclass\nclass DatabaseConfig:\n    host: str\n    port: int = 5432\n    database: str\n    user: str\n    password: str\n    min_connections: int = 10\n    max_connections: int = 50\n    max_queries: int = 50000\n    max_inactive_connection_lifetime: float = 300.0\n    timeout: float = 60.0\n    command_timeout: float = 30.0\n    server_settings: Dict[str, str] = None\n    \n    def __post_init__(self):\n        if self.server_settings is None:\n            self.server_settings = {\n                'application_name': 'dynamic_taxonomy_rag',\n                'timezone': 'UTC',\n                'shared_buffers': '256MB',\n                'effective_cache_size': '1GB',\n                'maintenance_work_mem': '64MB',\n                'random_page_cost': '1.1'\n            }\n\nclass ProductionDatabaseManager:\n    def __init__(self, config: DatabaseConfig):\n        self.config = config\n        self.pool: Optional[asyncpg.Pool] = None\n        self.logger = logging.getLogger(__name__)\n        self._health_check_interval = 30\n        self._health_check_task = None\n        \n    async def initialize(self) -> None:\n        \"\"\"Initialize database connection pool with comprehensive error handling.\"\"\"\n        try:\n            self.pool = await asyncpg.create_pool(\n                host=self.config.host,\n                port=self.config.port,\n                database=self.config.database,\n                user=self.config.user,\n                password=self.config.password,\n                min_size=self.config.min_connections,\n                max_size=self.config.max_connections,\n                max_queries=self.config.max_queries,\n                max_inactive_connection_lifetime=self.config.max_inactive_connection_lifetime,\n                timeout=self.config.timeout,\n                command_timeout=self.config.command_timeout,\n                server_settings=self.config.server_settings,\n                init=self._init_connection\n            )\n            \n            # Test connection\n            async with self.pool.acquire() as conn:\n                await conn.execute('SELECT 1')\n                \n            # Start health check task\n            self._health_check_task = asyncio.create_task(self._health_check_loop())\n            \n            # Update metrics\n            db_pool_size.set(self.config.max_connections)\n            db_connections_total.labels(status='success').inc()\n            \n            self.logger.info(f\"Database pool initialized successfully with {self.config.min_connections}-{self.config.max_connections} connections\")\n            \n        except Exception as e:\n            db_connections_total.labels(status='error').inc()\n            self.logger.error(f\"Failed to initialize database pool: {e}\")\n            raise\n    \n    async def _init_connection(self, conn: asyncpg.Connection) -> None:\n        \"\"\"Initialize each new connection with required extensions and settings.\"\"\"\n        try:\n            # Enable required extensions\n            await conn.execute('CREATE EXTENSION IF NOT EXISTS vector')\n            await conn.execute('CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"')\n            \n            # Set optimal search parameters\n            await conn.execute('SET hnsw.ef_search = 200')\n            await conn.execute('SET enable_seqscan = off')  # Force index usage for testing\n            \n            self.logger.debug(\"Connection initialized with pgvector extension\")\n            \n        except Exception as e:\n            self.logger.error(f\"Failed to initialize connection: {e}\")\n            raise\n    \n    @asynccontextmanager\n    async def get_connection(self):\n        \"\"\"Get database connection with automatic resource cleanup.\"\"\"\n        if not self.pool:\n            raise RuntimeError(\"Database pool not initialized\")\n            \n        start_time = time.time()\n        conn = None\n        \n        try:\n            conn = await self.pool.acquire(timeout=10.0)\n            db_pool_available.set(self.pool.get_size() - self.pool.get_busy_count())\n            yield conn\n            \n        except asyncio.TimeoutError:\n            db_connections_total.labels(status='timeout').inc()\n            self.logger.error(\"Database connection timeout\")\n            raise\n            \n        except Exception as e:\n            db_connections_total.labels(status='error').inc()\n            self.logger.error(f\"Database connection error: {e}\")\n            raise\n            \n        finally:\n            if conn:\n                await self.pool.release(conn)\n                duration = time.time() - start_time\n                db_query_duration.observe(duration)\n    \n    async def _health_check_loop(self) -> None:\n        \"\"\"Periodic health check for database connections.\"\"\"\n        while True:\n            try:\n                await asyncio.sleep(self._health_check_interval)\n                async with self.get_connection() as conn:\n                    result = await conn.fetchval('SELECT 1')\n                    if result != 1:\n                        self.logger.warning(\"Database health check failed\")\n                        \n                    # Update pool metrics\n                    db_pool_available.set(self.pool.get_size() - self.pool.get_busy_count())\n                    \n            except Exception as e:\n                self.logger.error(f\"Health check failed: {e}\")\n    \n    async def execute_query(self, query: str, *args, timeout: Optional[float] = None) -> Any:\n        \"\"\"Execute query with comprehensive error handling and monitoring.\"\"\"\n        start_time = time.time()\n        \n        try:\n            async with self.get_connection() as conn:\n                result = await conn.fetch(query, *args, timeout=timeout or self.config.command_timeout)\n                \n                duration = time.time() - start_time\n                self.logger.debug(f\"Query executed in {duration:.3f}s: {query[:100]}...\")\n                \n                return result\n                \n        except asyncpg.PostgresError as e:\n            self.logger.error(f\"PostgreSQL error: {e.sqlstate} - {e.message}\")\n            raise\n        except Exception as e:\n            self.logger.error(f\"Query execution error: {e}\")\n            raise\n    \n    async def close(self) -> None:\n        \"\"\"Gracefully close database pool and cleanup resources.\"\"\"\n        if self._health_check_task:\n            self._health_check_task.cancel()\n            try:\n                await self._health_check_task\n            except asyncio.CancelledError:\n                pass\n                \n        if self.pool:\n            await self.pool.close()\n            self.logger.info(\"Database pool closed successfully\")",
+      "language": "python"
+    },
+    {
+      "title": "Production Vector Search Service",
+      "description": "Enterprise vector search service with caching, monitoring, and error recovery",
+      "code": "import asyncio\nimport json\nimport hashlib\nfrom typing import List, Dict, Any, Optional, Tuple\nfrom dataclasses import dataclass, asdict\nfrom datetime import datetime, timedelta\nimport numpy as np\nfrom redis.asyncio import Redis\nfrom prometheus_client import Counter, Histogram, Gauge\n\n# Metrics\nvector_searches_total = Counter('vector_searches_total', 'Total vector searches', ['status', 'cache_hit'])\nvector_search_duration = Histogram('vector_search_duration_seconds', 'Vector search duration')\nvector_cache_size = Gauge('vector_cache_size', 'Number of cached vectors')\n\n@dataclass\nclass VectorSearchRequest:\n    query_embedding: List[float]\n    tenant_id: str\n    content_type: Optional[str] = None\n    similarity_threshold: float = 0.8\n    limit: int = 10\n    include_metadata: bool = True\n    \n    def __post_init__(self):\n        # Validate embedding dimension\n        if len(self.query_embedding) != 1536:\n            raise ValueError(f\"Expected 1536 dimensions, got {len(self.query_embedding)}\")\n        \n        # Normalize embedding for cosine similarity\n        norm = np.linalg.norm(self.query_embedding)\n        if norm > 0:\n            self.query_embedding = (np.array(self.query_embedding) / norm).tolist()\n    \n    def cache_key(self) -> str:\n        \"\"\"Generate cache key for this search request.\"\"\"\n        content = {\n            'embedding_hash': hashlib.md5(json.dumps(self.query_embedding).encode()).hexdigest()[:16],\n            'tenant_id': self.tenant_id,\n            'content_type': self.content_type,\n            'threshold': self.similarity_threshold,\n            'limit': self.limit\n        }\n        return f\"vector_search:{hashlib.md5(json.dumps(content, sort_keys=True).encode()).hexdigest()}\"\n\n@dataclass\nclass VectorSearchResult:\n    id: int\n    similarity_score: float\n    metadata: Dict[str, Any]\n    content_type: str\n    created_at: datetime\n    \nclass ProductionVectorSearchService:\n    def __init__(self, db_manager: ProductionDatabaseManager, redis_client: Redis):\n        self.db = db_manager\n        self.redis = redis_client\n        self.logger = logging.getLogger(__name__)\n        self.cache_ttl = 3600  # 1 hour\n        self.max_retry_attempts = 3\n        self.circuit_breaker_threshold = 5\n        self.circuit_breaker_failures = 0\n        self.circuit_breaker_last_failure = None\n        \n    async def search_similar_vectors(self, request: VectorSearchRequest) -> List[VectorSearchResult]:\n        \"\"\"Search for similar vectors with caching and error recovery.\"\"\"\n        start_time = time.time()\n        \n        try:\n            # Check circuit breaker\n            if self._is_circuit_open():\n                raise RuntimeError(\"Circuit breaker is open due to repeated failures\")\n            \n            # Try cache first\n            cached_result = await self._get_cached_result(request)\n            if cached_result:\n                vector_searches_total.labels(status='success', cache_hit='true').inc()\n                return cached_result\n            \n            # Execute database search with retry logic\n            results = await self._execute_search_with_retry(request)\n            \n            # Cache results\n            await self._cache_results(request, results)\n            \n            # Reset circuit breaker on success\n            self.circuit_breaker_failures = 0\n            \n            vector_searches_total.labels(status='success', cache_hit='false').inc()\n            return results\n            \n        except Exception as e:\n            self._handle_search_failure(e)\n            vector_searches_total.labels(status='error', cache_hit='false').inc()\n            raise\n            \n        finally:\n            duration = time.time() - start_time\n            vector_search_duration.observe(duration)\n    \n    async def _execute_search_with_retry(self, request: VectorSearchRequest) -> List[VectorSearchResult]:\n        \"\"\"Execute search with exponential backoff retry.\"\"\"\n        last_exception = None\n        \n        for attempt in range(self.max_retry_attempts):\n            try:\n                return await self._execute_database_search(request)\n                \n            except (asyncpg.PostgresError, asyncio.TimeoutError) as e:\n                last_exception = e\n                if attempt < self.max_retry_attempts - 1:\n                    wait_time = min(2 ** attempt, 10)  # Exponential backoff, max 10s\n                    self.logger.warning(f\"Search attempt {attempt + 1} failed, retrying in {wait_time}s: {e}\")\n                    await asyncio.sleep(wait_time)\n                else:\n                    self.logger.error(f\"All {self.max_retry_attempts} search attempts failed\")\n                    \n            except Exception as e:\n                # Don't retry for non-transient errors\n                self.logger.error(f\"Non-retryable search error: {e}\")\n                raise\n        \n        raise last_exception\n    \n    async def _execute_database_search(self, request: VectorSearchRequest) -> List[VectorSearchResult]:\n        \"\"\"Execute the actual database search query.\"\"\"\n        query = \"\"\"\n            SELECT \n                id,\n                1 - (embedding <=> $1::vector) as similarity_score,\n                metadata,\n                content_type,\n                created_at\n            FROM vector_documents\n            WHERE \n                tenant_id = $2::uuid\n                AND ($3::text IS NULL OR content_type = $3)\n                AND (1 - (embedding <=> $1::vector)) >= $4\n                AND security_level IN ('public', 'internal')\n            ORDER BY embedding <=> $1::vector\n            LIMIT $5\n        \"\"\"\n        \n        results = await self.db.execute_query(\n            query,\n            request.query_embedding,\n            request.tenant_id,\n            request.content_type,\n            request.similarity_threshold,\n            request.limit,\n            timeout=30.0\n        )\n        \n        return [\n            VectorSearchResult(\n                id=row['id'],\n                similarity_score=float(row['similarity_score']),\n                metadata=row['metadata'] if request.include_metadata else {},\n                content_type=row['content_type'],\n                created_at=row['created_at']\n            )\n            for row in results\n        ]\n    \n    async def _get_cached_result(self, request: VectorSearchRequest) -> Optional[List[VectorSearchResult]]:\n        \"\"\"Retrieve cached search results.\"\"\"\n        try:\n            cache_key = request.cache_key()\n            cached_data = await self.redis.get(cache_key)\n            \n            if cached_data:\n                data = json.loads(cached_data)\n                return [VectorSearchResult(**item) for item in data]\n                \n        except Exception as e:\n            self.logger.warning(f\"Cache retrieval failed: {e}\")\n            \n        return None\n    \n    async def _cache_results(self, request: VectorSearchRequest, results: List[VectorSearchResult]) -> None:\n        \"\"\"Cache search results with TTL.\"\"\"\n        try:\n            cache_key = request.cache_key()\n            cache_data = json.dumps([asdict(result) for result in results], default=str)\n            \n            await self.redis.setex(cache_key, self.cache_ttl, cache_data)\n            vector_cache_size.inc()\n            \n        except Exception as e:\n            self.logger.warning(f\"Cache storage failed: {e}\")\n    \n    def _is_circuit_open(self) -> bool:\n        \"\"\"Check if circuit breaker is open.\"\"\"\n        if self.circuit_breaker_failures < self.circuit_breaker_threshold:\n            return False\n            \n        if self.circuit_breaker_last_failure:\n            time_since_failure = datetime.now() - self.circuit_breaker_last_failure\n            if time_since_failure > timedelta(minutes=5):\n                # Reset circuit breaker after 5 minutes\n                self.circuit_breaker_failures = 0\n                return False\n                \n        return True\n    \n    def _handle_search_failure(self, exception: Exception) -> None:\n        \"\"\"Handle search failure for circuit breaker logic.\"\"\"\n        self.circuit_breaker_failures += 1\n        self.circuit_breaker_last_failure = datetime.now()\n        \n        self.logger.error(f\"Vector search failure #{self.circuit_breaker_failures}: {exception}\")\n        \n        if self.circuit_breaker_failures >= self.circuit_breaker_threshold:\n            self.logger.error(\"Circuit breaker opened due to repeated failures\")",
+      "language": "python"
+    }
+  ],
+  "deployment_configurations": [
+    {
+      "environment": "production",
+      "title": "PostgreSQL Production Configuration",
+      "description": "Optimized PostgreSQL settings for production vector workloads",
+      "config": {
+        "postgresql_conf": {
+          "shared_buffers": "8GB",
+          "effective_cache_size": "24GB",
+          "maintenance_work_mem": "2GB",
+          "checkpoint_completion_target": "0.9",
+          "wal_buffers": "16MB",
+          "default_statistics_target": "100",
+          "random_page_cost": "1.1",
+          "effective_io_concurrency": "200",
+          "work_mem": "32MB",
+          "min_wal_size": "1GB",
+          "max_wal_size": "4GB",
+          "max_worker_processes": "16",
+          "max_parallel_workers_per_gather": "4",
+          "max_parallel_workers": "16",
+          "max_parallel_maintenance_workers": "4"
+        },
+        "vector_specific": {
+          "hnsw.ef_search": "200",
+          "shared_preload_libraries": "'pg_stat_statements,auto_explain,vector'",
+          "log_min_duration_statement": "1000",
+          "auto_explain.log_min_duration": "5000",
+          "auto_explain.log_analyze": "true"
+        }
+      }
+    },
+    {
+      "environment": "kubernetes",
+      "title": "Kubernetes Deployment with High Availability",
+      "description": "Production-ready Kubernetes deployment for vector database",
+      "config": {
+        "deployment.yaml": "apiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: postgres-vector\n  namespace: rag-system\nspec:\n  serviceName: postgres-vector\n  replicas: 3\n  selector:\n    matchLabels:\n      app: postgres-vector\n  template:\n    metadata:\n      labels:\n        app: postgres-vector\n    spec:\n      containers:\n      - name: postgres\n        image: pgvector/pgvector:0.8.0-pg16\n        env:\n        - name: POSTGRES_DB\n          value: vector_rag\n        - name: POSTGRES_USER\n          valueFrom:\n            secretKeyRef:\n              name: postgres-secret\n              key: username\n        - name: POSTGRES_PASSWORD\n          valueFrom:\n            secretKeyRef:\n              name: postgres-secret\n              key: password\n        - name: PGDATA\n          value: /var/lib/postgresql/data/pgdata\n        ports:\n        - containerPort: 5432\n        volumeMounts:\n        - name: postgres-storage\n          mountPath: /var/lib/postgresql/data\n        - name: postgres-config\n          mountPath: /etc/postgresql/postgresql.conf\n          subPath: postgresql.conf\n        resources:\n          requests:\n            memory: \"16Gi\"\n            cpu: \"4\"\n          limits:\n            memory: \"32Gi\"\n            cpu: \"8\"\n        livenessProbe:\n          exec:\n            command:\n            - /bin/bash\n            - -c\n            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB\n          initialDelaySeconds: 30\n          periodSeconds: 10\n        readinessProbe:\n          exec:\n            command:\n            - /bin/bash\n            - -c\n            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB\n          initialDelaySeconds: 5\n          periodSeconds: 5\n      volumes:\n      - name: postgres-config\n        configMap:\n          name: postgres-config\n  volumeClaimTemplates:\n  - metadata:\n      name: postgres-storage\n    spec:\n      accessModes: [\"ReadWriteOnce\"]\n      resources:\n        requests:\n          storage: 1Ti\n      storageClassName: fast-ssd",
+        "service.yaml": "apiVersion: v1\nkind: Service\nmetadata:\n  name: postgres-vector-service\n  namespace: rag-system\nspec:\n  selector:\n    app: postgres-vector\n  ports:\n  - name: postgres\n    port: 5432\n    targetPort: 5432\n  type: ClusterIP",
+        "configmap.yaml": "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: postgres-config\n  namespace: rag-system\ndata:\n  postgresql.conf: |\n    shared_buffers = 8GB\n    effective_cache_size = 24GB\n    maintenance_work_mem = 2GB\n    checkpoint_completion_target = 0.9\n    wal_buffers = 16MB\n    default_statistics_target = 100\n    random_page_cost = 1.1\n    effective_io_concurrency = 200\n    work_mem = 32MB\n    min_wal_size = 1GB\n    max_wal_size = 4GB\n    shared_preload_libraries = 'pg_stat_statements,auto_explain,vector'\n    hnsw.ef_search = 200"
+      }
+    },
+    {
+      "environment": "docker_compose",
+      "title": "Docker Compose Development Setup",
+      "description": "Complete development environment with monitoring and observability",
+      "config": {
+        "docker-compose.yml": "version: '3.8'\n\nservices:\n  postgres:\n    image: pgvector/pgvector:0.8.0-pg16\n    environment:\n      POSTGRES_DB: vector_rag_dev\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: postgres\n      PGDATA: /var/lib/postgresql/data/pgdata\n    ports:\n      - \"5432:5432\"\n    volumes:\n      - postgres_data:/var/lib/postgresql/data\n      - ./postgresql.conf:/etc/postgresql/postgresql.conf\n      - ./init-scripts:/docker-entrypoint-initdb.d\n    command: postgres -c config_file=/etc/postgresql/postgresql.conf\n    healthcheck:\n      test: [\"CMD-SHELL\", \"pg_isready -U postgres -d vector_rag_dev\"]\n      interval: 10s\n      timeout: 5s\n      retries: 5\n    deploy:\n      resources:\n        limits:\n          memory: 4G\n          cpus: '2'\n\n  redis:\n    image: redis:7-alpine\n    ports:\n      - \"6379:6379\"\n    command: redis-server --maxmemory 1gb --maxmemory-policy allkeys-lru\n    healthcheck:\n      test: [\"CMD\", \"redis-cli\", \"ping\"]\n      interval: 5s\n      timeout: 3s\n      retries: 5\n\n  prometheus:\n    image: prom/prometheus:latest\n    ports:\n      - \"9090:9090\"\n    volumes:\n      - ./prometheus.yml:/etc/prometheus/prometheus.yml\n      - prometheus_data:/prometheus\n    command:\n      - '--config.file=/etc/prometheus/prometheus.yml'\n      - '--storage.tsdb.path=/prometheus'\n      - '--web.console.libraries=/etc/prometheus/console_libraries'\n      - '--web.console.templates=/etc/prometheus/consoles'\n      - '--storage.tsdb.retention.time=200h'\n      - '--web.enable-lifecycle'\n\n  grafana:\n    image: grafana/grafana:latest\n    ports:\n      - \"3000:3000\"\n    environment:\n      GF_SECURITY_ADMIN_PASSWORD: admin\n    volumes:\n      - grafana_data:/var/lib/grafana\n      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards\n      - ./grafana/datasources:/etc/grafana/provisioning/datasources\n\nvolumes:\n  postgres_data:\n  prometheus_data:\n  grafana_data:\n\nnetworks:\n  default:\n    driver: bridge"
+      }
+    }
+  ],
+  "performance_benchmarks": [
+    {
+      "metric": "Query Performance Improvement", 
+      "baseline": "500ms (unoptimized query)",
+      "optimized": "5ms (optimized subquery pattern)",
+      "improvement_factor": "100x faster"
+    },
+    {
+      "metric": "Index Configuration",
+      "recommendation": "lists = rows/1000 for IVFFlat indexes",
+      "example": "500 lists performed best in benchmark testing",
+      "context": "For datasets up to 1M rows"
+    }
+  ],
+  "troubleshooting": [
+    {
+      "issue": "pgvector HNSW index not being used in queries",
+      "symptoms": ["Query takes >1000ms", "EXPLAIN shows Seq Scan instead of Index Scan", "pg_stat_user_indexes shows 0 idx_scan"],
+      "root_causes": ["Index created with wrong operator class", "Query uses different distance function than index", "Outdated table statistics", "Index too small to be considered by planner"],
+      "solutions": ["Recreate index with correct ops: CREATE INDEX USING hnsw (embedding vector_l2_ops)", "Match query distance operator with index: <-> for L2, <=> for cosine", "Run ANALYZE table_name to update statistics", "Increase ef parameter: SET hnsw.ef_search = 200 for specific session"],
+      "verification": "EXPLAIN (ANALYZE, BUFFERS) should show 'Index Scan using hnsw_idx' and execution time <50ms for 1M vectors",
+      "references": ["https://github.com/pgvector/pgvector/issues/389", "https://www.crunchydata.com/blog/pgvector-performance-debugging"]
+    },
+    {
+      "issue": "pgvector performance degradation with large datasets (100M+ vectors)",
+      "symptoms": ["Query latency increases exponentially after 10M vectors", "High memory usage causing OOM errors", "Index creation takes >24 hours"],
+      "root_causes": ["HNSW index doesn't fit in shared_buffers", "Default m parameter too high for large datasets", "No proper vacuuming strategy"],
+      "solutions": ["Increase shared_buffers to 40% of RAM", "Use lower m parameter: CREATE INDEX USING hnsw (embedding vector_l2_ops) WITH (m = 8)", "Implement regular VACUUM and REINDEX schedule", "Consider partitioning by time or category"],
+      "verification": "Monitor pg_stat_bgwriter for buffer allocation, query time should be <100ms p99",
+      "references": ["https://github.com/pgvector/pgvector/discussions/456", "PostgreSQL 17 release notes"]
+    },
+    {
+      "issue": "Alembic migration deadlocks in production",
+      "symptoms": ["Migration hangs indefinitely", "ERROR: deadlock detected", "Other transactions timeout waiting for locks"],
+      "root_causes": ["ACCESS EXCLUSIVE lock conflicts with application queries", "Multiple migrations running simultaneously", "Long-running transactions prevent lock acquisition"],
+      "solutions": ["Set lock_timeout = '30s' in migration", "Use CONCURRENTLY for index creation", "Schedule migrations during low-traffic windows", "Break large migrations into smaller chunks"],
+      "verification": "Check pg_locks view during migration, monitor application error rates",
+      "references": ["https://alembic.sqlalchemy.org/en/latest/cookbook.html#postgresql-concurrency"]
+    }
+  ],
+  "common_pitfalls": [
+    {
+      "mistake": "Creating HNSW index on empty table then bulk loading data",
+      "consequences": "Index becomes unbalanced, poor query performance",
+      "prevention": "Load data first, then create index, or use REINDEX after bulk load",
+      "recovery": "DROP INDEX and recreate after data load completion"
+    },
+    {
+      "mistake": "Using default pgvector parameters for production workloads",
+      "consequences": "Suboptimal performance, wasted memory",
+      "prevention": "Benchmark different m, ef_construction parameters for your specific dataset",
+      "recovery": "Recreate index with optimized parameters based on load testing"
+    },
+    {
+      "mistake": "Not monitoring vector index memory usage",
+      "consequences": "Index eviction from memory, severe performance degradation",
+      "prevention": "Set up monitoring for shared_buffers usage and index sizes",
+      "recovery": "Increase shared_buffers or implement index partitioning strategy"
+    }
+  ],
+  "latest_trends_2025": [
+    {
+      "trend": "pgvector 0.8.0 with enhanced iterative scanning and binary quantization",
+      "release_date": "2025-08-15",
+      "key_features": ["30% faster index build times", "Reduced memory usage for large indexes", "Better parallel query support"],
+      "migration_notes": "Requires PostgreSQL 16+ for optimal performance"
+    },
+    {
+      "trend": "PostgreSQL 17 vector performance improvements",
+      "release_date": "2025-09-14",
+      "key_features": ["Native vector partitioning support", "Improved planner statistics for vectors", "Better memory management for large indexes"],
+      "adoption_status": "Beta testing in production environments"
+    },
+    {
+      "trend": "Hybrid vector-relational database patterns",
+      "description": "Combining traditional relational data with vector embeddings in single queries",
+      "use_cases": ["Multi-modal RAG systems", "Contextual similarity search", "Hierarchical document classification"],
+      "implementation_example": "JOIN tables with vector similarity conditions"
+    }
+  ],
+  "production_patterns": [
+    {
+      "scenario": "Multi-tenant vector database with 1B+ vectors",
+      "scale": "1000+ tenants, 1M vectors per tenant, 10k QPS",
+      "architecture": "Row-level security + tenant-based partitioning + connection pooling",
+      "performance_metrics": {
+        "latency_p50": "15ms",
+        "latency_p99": "85ms", 
+        "throughput": "12,000 QPS",
+        "cost_per_request": "$0.0002"
+      },
+      "lessons_learned": ["Partition by tenant_id for isolation", "Use prepared statements for common queries", "Monitor index fragmentation weekly"],
+      "monitoring_setup": "Prometheus + custom pgvector metrics, alerts on p99 > 100ms"
+    },
+    {
+      "scenario": "Zero-downtime pgvector migration to new index algorithm",
+      "scale": "100M vectors, 24/7 production traffic, 5K QPS during migration",
+      "architecture": "Blue-green deployment with synchronized vector indexes",
+      "performance_metrics": {
+        "migration_time": "4 hours total downtime",
+        "data_consistency": "100% vector integrity validation",
+        "rollback_time": "<10 minutes",
+        "traffic_loss": "0% with proper load balancer configuration"
+      },
+      "lessons_learned": ["Test migration on full-scale staging first", "Use WAL-based replication for consistency", "Implement gradual traffic shifting"],
+      "monitoring_setup": "Real-time index build progress, vector count validation, performance regression alerts"
+    },
+    {
+      "scenario": "Disaster recovery for distributed vector database",
+      "scale": "3 geographic regions, 500M vectors, RTO 15 minutes",
+      "architecture": "Cross-region replication + automated failover + vector index synchronization",
+      "performance_metrics": {
+        "rpo_target": "5 minutes data loss maximum",
+        "rto_actual": "12 minutes average failover time",
+        "consistency_lag": "<30 seconds between regions",
+        "failover_success_rate": "99.8% automated recovery"
+      },
+      "lessons_learned": ["Vector indexes don't replicate automatically", "Implement vector-aware backup validation", "Test failover monthly with production data"],
+      "monitoring_setup": "Cross-region lag monitoring, vector index health checks, automated DR testing"
+    },
+    {
+      "scenario": "Real-time vector ingestion with high write throughput",
+      "scale": "50K vectors/second ingestion, concurrent reads at 8K QPS",
+      "architecture": "Write-optimized partitioning + asynchronous index updates + read replicas",
+      "performance_metrics": {
+        "write_latency_p95": "25ms",
+        "read_latency_p95": "40ms during writes",
+        "index_lag": "<2 seconds for new vectors",
+        "resource_utilization": "75% CPU, 85% memory"
+      },
+      "lessons_learned": ["Batch vector insertions for better performance", "Separate write and read workloads", "Use HOT updates for metadata changes"],
+      "monitoring_setup": "Write queue depth, index update lag, read/write isolation metrics"
+    },
+    {
+      "scenario": "Cost-optimized vector storage with tiered access patterns",
+      "scale": "10B vectors, 80% cold data, 20% hot data access",
+      "architecture": "Hot-cold data tiering + compressed cold storage + intelligent caching",
+      "performance_metrics": {
+        "hot_data_latency": "20ms p95",
+        "cold_data_latency": "200ms p95",
+        "storage_cost_reduction": "65% with tiering",
+        "cache_hit_rate": "85% for hot data"
+      },
+      "lessons_learned": ["Implement vector access pattern analytics", "Use vector compression for cold storage", "Pre-warm cache based on usage patterns"],
+      "monitoring_setup": "Storage tier utilization, cache hit rates, cost per query analytics"
+    }
+  ],
+  "scaling_strategies": [
+    {
+      "from_scale": "1K vectors/day",
+      "to_scale": "10K vectors/day", 
+      "changes_required": [
+        "Enable connection pooling with pgBouncer",
+        "Tune shared_buffers to 25% of RAM",
+        "Add read replicas for query load distribution",
+        "Implement vector index maintenance scheduling"
+      ],
+      "cost_implications": "Infrastructure costs increase 2-3x, operational complexity +30%",
+      "timeline": "2-3 weeks implementation",
+      "performance_impact": {
+        "query_latency": "Remains <50ms p95 with proper indexing",
+        "throughput_capacity": "10x increase with minimal latency degradation",
+        "storage_growth": "Linear growth ~100MB per 10K 1536-dim vectors"
+      }
+    },
+    {
+      "from_scale": "10K vectors/day",
+      "to_scale": "100K vectors/day",
+      "changes_required": [
+        "Partition tables by time or hash for parallel processing",
+        "Implement vector compression strategies",
+        "Add dedicated indexing workers",
+        "Scale to multi-node setup with Postgres-XL or Citus"
+      ],
+      "cost_implications": "Infrastructure costs 5-8x, requires distributed architecture",
+      "timeline": "6-8 weeks major architecture change",
+      "performance_impact": {
+        "query_latency": "Target <100ms p95 with partitioning",
+        "throughput_capacity": "100x increase requires horizontal scaling",
+        "storage_growth": "1GB+ per 100K vectors, compression saves 30-50%"
+      }
+    },
+    {
+      "from_scale": "100K vectors/day", 
+      "to_scale": "1M vectors/day",
+      "changes_required": [
+        "Full distributed vector database (Weaviate, Qdrant, or Pinecone)",
+        "Implement vector quantization and approximation",
+        "Add vector caching layer with Redis/Memcached",
+        "Separate read/write workloads with event streaming"
+      ],
+      "cost_implications": "Infrastructure costs 10-15x, specialized vector DB licensing",
+      "timeline": "3-4 months complete platform migration",
+      "performance_impact": {
+        "query_latency": "Target <200ms p95 with approximation algorithms",
+        "throughput_capacity": "1000x increase with distributed processing",
+        "storage_growth": "10GB+ per 1M vectors, requires storage tiering"
+      }
+    }
+  ],
+  "security_guidelines": [
+    {
+      "category": "migration_safety",
+      "title": "Alembic Migration Security",
+      "description": "PostgreSQL uses ACCESS EXCLUSIVE locks during schema changes. Always review autogenerated migrations for potential locking issues.",
+      "risk_level": "high",
+      "mitigation": "Use lock_timeout and statement_timeout, test migrations on staging environment first"
+    },
+    {
+      "category": "vector_data_protection",
+      "title": "Vector Embedding Security",
+      "description": "Vector embeddings can leak information about original data. Implement proper access controls and consider differential privacy for sensitive vectors.",
+      "risk_level": "medium",
+      "mitigation": "Use row-level security, encrypt vectors at rest, implement audit logging for vector queries"
+    }
+  ],
+  "rag_development_scenarios": [
+    {
+      "scenario": "Vector Database Architecture Design for Dynamic Taxonomy RAG",
+      "development_phase": "Architecture Planning",
+      "collaboration_agents": ["hybrid-search-specialist", "taxonomy-architect"],
+      "development_tasks": [
+        "Design hierarchical vector storage schema for taxonomic relationships",
+        "Plan pgvector indexing strategy for multi-level semantic search",
+        "Architect metadata schema for dynamic taxonomy updates",
+        "Design vector dimension optimization for taxonomy embeddings"
+      ],
+      "technical_decisions": {
+        "vector_dimensions": "1536 for OpenAI embeddings vs 768 for sentence-transformers",
+        "index_strategy": "HNSW for similarity search + GIN for metadata filtering",
+        "partition_strategy": "Partition by taxonomy level and domain for query optimization",
+        "update_approach": "Delta updates with versioned taxonomy snapshots"
+      },
+      "development_outputs": [
+        "Vector database schema DDL scripts",
+        "Indexing configuration for pgvector",
+        "Migration scripts for taxonomy evolution",
+        "Performance benchmarking setup"
+      ]
+    },
+    {
+      "scenario": "RAG Evaluation Database Design",
+      "development_phase": "Testing Infrastructure",
+      "collaboration_agents": ["rag-evaluation-specialist", "observability-engineer"],
+      "development_tasks": [
+        "Design evaluation metrics storage schema",
+        "Plan test dataset organization and versioning",
+        "Architect performance benchmarking database",
+        "Design A/B testing result storage"
+      ],
+      "technical_decisions": {
+        "metrics_storage": "Time-series database for performance metrics + relational for test cases",
+        "test_data_versioning": "Git-like versioning for evaluation datasets",
+        "benchmark_schema": "Separate schemas for different evaluation types (accuracy, latency, cost)",
+        "result_aggregation": "Pre-computed aggregations for dashboard performance"
+      },
+      "development_outputs": [
+        "Evaluation database schema",
+        "Test data management scripts",
+        "Benchmarking automation tools",
+        "Evaluation result APIs"
+      ]
+    },
+    {
+      "scenario": "Document Processing Pipeline Database Integration",
+      "development_phase": "Data Pipeline Development",
+      "collaboration_agents": ["document-ingestion-specialist", "classification-pipeline-expert"],
+      "development_tasks": [
+        "Design document metadata and processing status tracking",
+        "Plan chunking strategy storage and retrieval optimization",
+        "Architect document versioning and update detection",
+        "Design classification result storage and indexing"
+      ],
+      "technical_decisions": {
+        "document_storage": "Hybrid approach: blob storage for files + metadata in PostgreSQL",
+        "chunk_management": "Document-chunk relationship tracking with position indexing",
+        "processing_status": "State machine tracking with audit trail",
+        "classification_schema": "Flexible JSON schema for multi-label classification results"
+      },
+      "development_outputs": [
+        "Document processing database schema",
+        "Chunk management system",
+        "Processing workflow tracking",
+        "Classification result storage system"
+      ]
+    }
+  ],
+  "cross_agent_development_collaboration": [
+    {
+      "collaboration_type": "Architecture Co-design",
+      "agents": ["database-architect", "hybrid-search-specialist", "taxonomy-architect"],
+      "development_scenario": "Designing unified storage for hierarchical taxonomy with vector embeddings",
+      "workflow": [
+        "Database-architect: Proposes storage schema and indexing strategy",
+        "Taxonomy-architect: Validates hierarchical relationship representation",
+        "Hybrid-search-specialist: Reviews search performance implications",
+        "Joint: Iterative refinement of schema based on search and hierarchy requirements"
+      ],
+      "deliverables": [
+        "Unified database schema supporting both vector search and taxonomy navigation",
+        "Performance optimization strategy for multi-dimensional queries",
+        "Migration plan for taxonomy evolution without search disruption"
+      ]
+    },
+    {
+      "collaboration_type": "Performance Optimization",
+      "agents": ["database-architect", "observability-engineer", "api-designer"],
+      "development_scenario": "Optimizing RAG system database performance for production deployment",
+      "workflow": [
+        "Database-architect: Identifies performance bottlenecks and optimization opportunities",
+        "Observability-engineer: Sets up monitoring and provides performance insights",
+        "API-designer: Reviews query patterns and suggests API-level optimizations",
+        "Joint: Implements and validates performance improvements"
+      ],
+      "deliverables": [
+        "Database performance optimization plan",
+        "Monitoring setup for database performance tracking",
+        "API query optimization guidelines",
+        "Load testing and benchmarking results"
+      ]
+    }
+  ]
+}

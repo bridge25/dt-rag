@@ -1,0 +1,12 @@
+{
+  "timestamp": 1758699080.091478,
+  "test_results": {
+    "connection": false,
+    "embedding": false,
+    "search": false,
+    "rag": false,
+    "api": false
+  },
+  "conclusion": "PARTIAL",
+  "evidence": []
+}

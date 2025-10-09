@@ -3,23 +3,20 @@ Security API Router for DT-RAG v1.8.1
 Provides security management endpoints for authentication, compliance, and monitoring
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field, EmailStr
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from ..core.security_manager import SecurityManager, SecurityLevel
-from ..auth.auth_service import Role, Permission
+from ..core.security_manager import SecurityManager
+from ..auth.auth_service import Role
 from ..compliance.compliance_manager import (
     DataSubjectRightType, ConsentType, LegalBasis, ProcessingPurpose
 )
-from ..compliance.pii_detector import PIIType
 from ..monitoring.security_monitor import ThreatLevel, AlertType
-from ..scanning.vulnerability_scanner import ScanType, SeverityLevel
-from ..middleware.security_middleware import SecurityDependency
+from ..scanning.vulnerability_scanner import ScanType
 
 logger = logging.getLogger(__name__)
 

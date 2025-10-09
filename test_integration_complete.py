@@ -53,16 +53,15 @@ class IntegrationTestSuite:
             }
 
             # 배치 임베딩 생성 테스트
-            batch_embeddings = await embedding_service.generate_batch_embeddings(test_texts)
+            batch_embeddings = await embedding_service.batch_generate_embeddings(test_texts)
             results['batch_embeddings'] = {
                 'count': len(batch_embeddings),
                 'dimensions': [len(emb) for emb in batch_embeddings]
             }
 
-            # 유사도 계산 테스트
-            similarity = await embedding_service.calculate_similarity(
-                test_texts[0], test_texts[1]
-            )
+            # 유사도 계산 테스트 (임베딩 벡터 사용)
+            embedding2 = await embedding_service.generate_embedding(test_texts[1])
+            similarity = embedding_service.calculate_similarity(embedding, embedding2)
             results['similarity'] = float(similarity)
 
             # 캐싱 테스트
@@ -330,7 +329,8 @@ class IntegrationTestSuite:
             query_text = "What is RAG in machine learning?"
             query_embedding = await embedding_service.generate_embedding(query_text)
 
-            similarity = await embedding_service.calculate_similarity(document_text, query_text)
+            # 임베딩 벡터를 사용하여 유사도 계산
+            similarity = embedding_service.calculate_similarity(document_embedding, query_embedding)
 
             # 3. RAG 응답 생성 시뮬레이션
             rag_response = "RAG (Retrieval Augmented Generation) is a technique that enhances language models by retrieving relevant information from a knowledge base before generating responses."

@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "name": "mock_golden_dataset_20251001_175908",
+    "created_at": "2025-10-01T17:59:08.943527",
+    "total_samples": 5,
+    "query_types": {
+      "simple": 2,
+      "reasoning": 2,
+      "multi_context": 1
+    },
+    "description": "Hand-crafted golden dataset for DT-RAG evaluation demo"
+  },
+  "samples": [
+    {
+      "question": "What is machine learning?",
+      "ground_truth_answer": "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. It involves algorithms that can identify patterns in data and make predictions or decisions.",
+      "retrieved_contexts": [
+        "Machine learning algorithms are computational methods that enable automatic learning from data.",
+        "AI systems use machine learning to improve performance over time."
+      ],
+      "source_doc_ids": [
+        "doc1"
+      ],
+      "query_type": "simple",
+      "taxonomy_path": [
+        "AI",
+        "ML"
+      ],
+      "metadata": {
+        "generated_by": "manual"
+      }
+    },
+    {
+      "question": "How do neural networks work?",
+      "ground_truth_answer": "Neural networks are computational models inspired by biological neural networks. They consist of interconnected nodes (neurons) organized in layers. Information flows through the network, and connections between neurons have weights that are adjusted during training to improve performance.",
+      "retrieved_contexts": [
+        "Neural networks are computational models inspired by biological neural networks.",
+        "Deep learning uses neural networks with multiple layers to process information."
+      ],
+      "source_doc_ids": [
+        "doc2"
+      ],
+      "query_type": "reasoning",
+      "taxonomy_path": [
+        "AI",
+        "DL"
+      ],
+      "metadata": {
+        "generated_by": "manual"
+      }
+    },
+    {
+      "question": "What is natural language processing used for?",
+      "ground_truth_answer": "Natural language processing (NLP) is used for analyzing and understanding human language. Applications include text classification, sentiment analysis, machine translation, question answering, and chatbots.",
+      "retrieved_contexts": [
+        "Natural language processing involves computational analysis of human language.",
+        "NLP applications include text analysis, translation, and understanding."
+      ],
+      "source_doc_ids": [
+        "doc3"
+      ],
+      "query_type": "simple",
+      "taxonomy_path": [
+        "AI",
+        "NLP"
+      ],
+      "metadata": {
+        "generated_by": "manual"
+      }
+    },
+    {
+      "question": "How does transfer learning improve model performance?",
+      "ground_truth_answer": "Transfer learning improves model performance by leveraging knowledge learned from one task to help solve a different but related task. Pre-trained models can be fine-tuned on new datasets with less data and computational resources while achieving better performance than training from scratch.",
+      "retrieved_contexts": [
+        "Transfer learning uses pre-trained models for new tasks.",
+        "Machine learning models can transfer knowledge between related domains."
+      ],
+      "source_doc_ids": [
+        "doc1",
+        "doc2"
+      ],
+      "query_type": "multi_context",
+      "taxonomy_path": [
+        "AI",
+        "ML"
+      ],
+      "metadata": {
+        "generated_by": "manual"
+      }
+    },
+    {
+      "question": "What are the key differences between supervised and unsupervised learning?",
+      "ground_truth_answer": "Supervised learning uses labeled data where the correct output is known, training the model to predict labels for new data. Unsupervised learning works with unlabeled data, discovering hidden patterns and structures without predefined categories.",
+      "retrieved_contexts": [
+        "Supervised learning requires labeled training data.",
+        "Unsupervised learning discovers patterns in unlabeled data."
+      ],
+      "source_doc_ids": [
+        "doc1"
+      ],
+      "query_type": "reasoning",
+      "taxonomy_path": [
+        "AI",
+        "ML"
+      ],
+      "metadata": {
+        "generated_by": "manual"
+      }
+    }
+  ]
+}

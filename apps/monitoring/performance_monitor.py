@@ -5,11 +5,10 @@ Real-time monitoring for PostgreSQL + pgvector + RAG system
 
 import asyncio
 import time
-import json
 import logging
 from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from dataclasses import dataclass
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 import psutil
@@ -200,7 +199,6 @@ class RAGPerformanceMonitor:
             # Import here to avoid circular imports
             from ..search.optimization import get_performance_monitor
             from ..search.optimized_hybrid_engine import get_hybrid_engine
-            from ..search.optimized_vector_engine import get_vector_engine
 
             # Get performance monitor
             try:

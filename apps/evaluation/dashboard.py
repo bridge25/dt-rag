@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 Real-time RAGAS evaluation dashboard
 
@@ -11,12 +13,11 @@ Provides interactive web dashboard for:
 
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Any
 
 from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from .quality_monitor import QualityMonitor
 from .experiment_tracker import ExperimentTracker
@@ -47,8 +48,7 @@ class ConnectionManager:
         for connection in self.active_connections:
             try:
                 await connection.send_text(message)
-            except:
-                # Remove disconnected connections
+            except Exception:
                 self.active_connections.remove(connection)
 
 manager = ConnectionManager()
@@ -501,8 +501,7 @@ async def get_dashboard_metrics():
 @dashboard_router.post("/api/simulate-evaluation")
 async def simulate_evaluation():
     """Simulate an evaluation for dashboard testing"""
-    from .ragas_engine import RAGASEvaluator
-    from .models import EvaluationRequest, EvaluationResult, EvaluationMetrics
+    from .models import EvaluationResult, EvaluationMetrics
     import random
 
     # Create simulated evaluation result

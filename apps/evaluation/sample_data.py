@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 Sample data generator for RAGAS evaluation system testing
 

@@ -1,13 +1,13 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 Database models for RAGAS evaluation system
 """
 
-import uuid
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.postgresql import UUID
 from pydantic import BaseModel, Field
 
 Base = declarative_base()
@@ -134,13 +134,16 @@ class EvaluationRequest(BaseModel):
     # Optional metadata
     session_id: Optional[str] = None
     experiment_id: Optional[str] = None
-    model_version_: Optional[str] = Field(None, alias="model_version")
+    model_version: Optional[str] = Field(None, description="Model version used for generation")
+
+    model_config = {"protected_namespaces": ()}
 
 class EvaluationResult(BaseModel):
     """Result of RAGAS evaluation"""
     evaluation_id: str
     query: str
     metrics: EvaluationMetrics
+    overall_score: float = Field(0.0, ge=0.0, le=1.0, description="Overall evaluation score")
     quality_flags: List[str] = Field(default_factory=list, description="Quality issues detected")
     recommendations: List[str] = Field(default_factory=list, description="Improvement suggestions")
     timestamp: datetime

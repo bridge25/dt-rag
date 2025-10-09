@@ -6,18 +6,16 @@
 import asyncio
 import hashlib
 import json
-import pickle
 import time
-from typing import List, Dict, Any, Optional, Tuple, Union
-from dataclasses import dataclass, asdict
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
 import logging
-from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
 # Redis 호환 인터페이스 (실제 Redis 또는 메모리 폴백)
 try:
-    import redis.asyncio as redis
+    import redis.asyncio  # noqa: F401
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False

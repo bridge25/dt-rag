@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 Quality monitoring system for RAG evaluation
 
@@ -9,17 +11,15 @@ Provides real-time quality monitoring, alerting, and trend analysis:
 - Automated quality gate enforcement
 """
 
-import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any
 from collections import defaultdict, deque
 import statistics
-import json
 
 from .models import (
     EvaluationMetrics, QualityAlert, QualityThresholds,
-    SearchLog, EvaluationResult
+    EvaluationResult
 )
 from ..api.database import db_manager
 

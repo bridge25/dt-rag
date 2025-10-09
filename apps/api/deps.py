@@ -9,12 +9,14 @@ import re
 import hashlib
 import time
 import logging
-from fastapi import Header, HTTPException, Request
+import os
+from fastapi import Header, HTTPException, Request, Depends
 from uuid import uuid4
 from datetime import datetime, timezone
 from typing import Optional, Dict, Set
 from collections import defaultdict
 import asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Configure security logging
 security_logger = logging.getLogger("security")
@@ -67,13 +69,14 @@ class APIKeyValidator:
             frequencies[char] = frequencies.get(char, 0) + 1
 
         # Calculate entropy
+        import math
         entropy = 0.0
         length = len(key)
 
         for count in frequencies.values():
             probability = count / length
             if probability > 0:
-                entropy -= probability * (probability.bit_length() - 1)
+                entropy -= probability * math.log2(probability)
 
         return entropy * length
 
@@ -209,18 +212,22 @@ def _log_security_event(event_type: str, api_key: str, client_ip: str, details: 
     )
 
 
-async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(None)):
+async def verify_api_key(
+    request: Request,
+    x_api_key: Optional[str] = Header(None),
+    db: AsyncSession = Depends(lambda: None)  # Will be injected by FastAPI
+):
     """
     Production-ready API key validation with comprehensive security checks
 
     Security Features:
+    - Database-backed API key verification
     - Minimum 32+ character length requirement
     - Character composition validation (3+ character types)
     - Entropy checks to prevent weak keys (96+ bits)
     - Format validation (base64, hex, alphanumeric)
     - Rate limiting protection (5 attempts/minute)
     - Weak pattern detection and rejection
-    - Database validation against stored key hashes
     - IP-based access control
     - Comprehensive audit logging
     - Automatic expiration checks
@@ -228,6 +235,7 @@ async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(Non
     Args:
         request: FastAPI request object for IP tracking
         x_api_key: API key from X-API-Key header
+        db: Database session (injected)
 
     Returns:
         APIKeyInfo: The validated API key information
@@ -236,8 +244,6 @@ async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(Non
         HTTPException: If validation fails
     """
     client_ip = request.client.host if request.client else "unknown"
-    endpoint = str(request.url.path)
-    method = request.method
 
     # Check if API key is provided
     if not x_api_key:
@@ -245,6 +251,66 @@ async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(Non
         raise HTTPException(
             status_code=403,
             detail="API key required. Include 'X-API-Key' header."
+        )
+
+    # Development mode: Allow test API keys (env variable controlled)
+    # SECURITY: Test keys are ONLY allowed in development/testing environments
+    ENABLE_TEST_KEYS = os.getenv("ENABLE_TEST_API_KEYS", "false").lower() == "true"
+    CURRENT_ENV = os.getenv("ENVIRONMENT", "production").lower()
+
+    # Production safety check: NEVER allow test keys in production
+    if ENABLE_TEST_KEYS and CURRENT_ENV == "production":
+        security_logger.error(
+            "SECURITY_VIOLATION: ENABLE_TEST_API_KEYS=true in production environment. "
+            "This is a critical security misconfiguration. Test keys are DISABLED."
+        )
+        ENABLE_TEST_KEYS = False
+
+    # Test keys only defined in non-production environments
+    ALLOWED_TEST_KEYS = {}
+    if CURRENT_ENV in ["development", "testing", "staging"]:
+        ALLOWED_TEST_KEYS = {
+            "7geU8-mQTM01zSG5pm6gLpdv4Tg25zbSk8cHm6Um62Y": {
+                "scope": "write",
+                "name": "Test Frontend Key",
+                "key_id": "test_key_001"
+            },
+            "admin_X4RzsowY0qgfwqqwbo1UnP25zQjOoOxX5FUXmDHR9sPc8HT7-a570": {
+                "scope": "write",
+                "name": "Legacy Frontend Key",
+                "key_id": "test_key_002"
+            },
+            "test_admin_9Kx7pLmN4qR2vW8bZhYdF3jC6tGsE5uA1nX0iO": {
+                "scope": "admin",
+                "name": "Test Admin Key",
+                "key_id": "test_admin_001"
+            }
+        }
+
+    if ENABLE_TEST_KEYS and x_api_key in ALLOWED_TEST_KEYS:
+        _log_security_event(
+            "VALID_API_KEY",
+            x_api_key,
+            client_ip,
+            f"Test API key accepted ({CURRENT_ENV} mode)"
+        )
+        from .security.api_key_storage import APIKeyInfo
+
+        key_info = ALLOWED_TEST_KEYS[x_api_key]
+        return APIKeyInfo(
+            key_id=key_info["key_id"],
+            name=key_info["name"],
+            description=f"Development test key ({CURRENT_ENV})",
+            scope=key_info["scope"],
+            permissions=["*"],
+            allowed_ips=None,
+            rate_limit=1000,
+            is_active=True,
+            expires_at=None,
+            created_at=datetime.now(timezone.utc),
+            last_used_at=None,
+            total_requests=0,
+            failed_requests=0
         )
 
     # Rate limiting check (basic validation attempts)
@@ -255,77 +321,65 @@ async def verify_api_key(request: Request, x_api_key: Optional[str] = Header(Non
             detail="Too many API key validation attempts. Please try again later."
         )
 
-    # Comprehensive format validation
-    is_valid, errors = APIKeyValidator.comprehensive_validate(x_api_key)
+    # Get database session
+    if db is None:
+        from .database import async_session
+        async with async_session() as session:
+            db = session
 
-    if not is_valid:
-        error_details = "; ".join(errors)
-        _log_security_event("INVALID_FORMAT", x_api_key, client_ip, error_details)
+    # Database validation
+    from .security.api_key_storage import APIKeyManager
 
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": "Invalid API key format",
-                "details": errors,
-                "requirements": {
-                    "min_length": APIKeyValidator.MIN_LENGTH,
-                    "min_entropy_bits": APIKeyValidator.MIN_ENTROPY_BITS,
-                    "required_char_types": APIKeyValidator.REQUIRED_CHAR_TYPES,
-                    "allowed_formats": list(APIKeyValidator.PATTERNS.keys())
-                }
-            }
+    try:
+        key_manager = APIKeyManager(db)
+
+        # Verify API key against database
+        key_info = await key_manager.verify_api_key(
+            plaintext_key=x_api_key,
+            client_ip=client_ip,
+            endpoint=request.url.path,
+            method=request.method
         )
 
-    # Database validation and permission checking
-    try:
-        # Get database session (this would be dependency injected in production)
-        from .security.api_key_storage import APIKeyManager
-        from .database import get_async_session  # Assuming this exists
+        if key_info:
+            _log_security_event("VALID_API_KEY", x_api_key, client_ip, f"Database verification successful: {key_info.name}")
+            return key_info
 
-        async with get_async_session() as db_session:
-            key_manager = APIKeyManager(db_session)
+        # If not found in database, perform comprehensive format validation for better error message
+        is_valid, errors = APIKeyValidator.comprehensive_validate(x_api_key)
 
-            # Verify against database with comprehensive checks
-            api_key_info = await key_manager.verify_api_key(
-                plaintext_key=x_api_key,
-                client_ip=client_ip,
-                endpoint=endpoint,
-                method=method
+        if not is_valid:
+            error_details = "; ".join(errors)
+            _log_security_event("INVALID_FORMAT", x_api_key, client_ip, error_details)
+
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "Invalid API key format",
+                    "details": errors,
+                    "requirements": {
+                        "min_length": APIKeyValidator.MIN_LENGTH,
+                        "min_entropy_bits": APIKeyValidator.MIN_ENTROPY_BITS,
+                        "required_char_types": APIKeyValidator.REQUIRED_CHAR_TYPES,
+                        "allowed_formats": list(APIKeyValidator.PATTERNS.keys())
+                    }
+                }
             )
 
-            if not api_key_info:
-                _log_security_event("INVALID_KEY", x_api_key, client_ip, "API key not found or invalid")
-                raise HTTPException(
-                    status_code=403,
-                    detail="Invalid API key. The key may be expired, revoked, or not found."
-                )
-
-            # Additional permission checks can be added here based on endpoint
-            # For example, check if the key has the required scope for this endpoint
-            required_scope = _get_required_scope(endpoint, method)
-            if not _check_permission(api_key_info, required_scope):
-                _log_security_event(
-                    "INSUFFICIENT_PERMISSIONS", x_api_key, client_ip,
-                    f"Required scope: {required_scope}, API key scope: {api_key_info.scope}"
-                )
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Insufficient permissions. Required scope: {required_scope}"
-                )
-
-            _log_security_event("VALID_API_KEY", x_api_key, client_ip, "API key validation successful")
-            return api_key_info
+        # Format is valid but key not found in database
+        _log_security_event("INVALID_KEY", x_api_key, client_ip, "API key not found in database")
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API key. The key may be expired, revoked, or not found."
+        )
 
     except HTTPException:
         raise
     except Exception as e:
-        # Log database errors but don't expose internal details
-        security_logger.error(f"API key validation error: {str(e)}")
-        _log_security_event("VALIDATION_ERROR", x_api_key, client_ip, f"Internal error: {type(e).__name__}")
-
+        _log_security_event("DB_ERROR", x_api_key, client_ip, f"Database error: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Internal server error during API key validation"
+            detail="API key validation failed due to internal error"
         )
 
 

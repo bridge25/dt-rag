@@ -12,6 +12,16 @@ from typing import Optional
 # Add the parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+# Load .env.local file
+try:
+    from dotenv import load_dotenv
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.local')
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+        print(f"[OK] Loaded environment from {env_path}")
+except ImportError:
+    pass
+
 # this is the Alembic Config object
 config = context.config
 
@@ -55,16 +65,16 @@ def wait_for_database(url: str, max_attempts: int = 30, delay: float = 1.0) -> b
                     conn.execute(text("SELECT 1"))
                 else:
                     conn.execute(text("SELECT 1"))
-                print(f"✅ Database connection successful on attempt {attempt}")
+                print(f"[OK] Database connection successful on attempt {attempt}")
                 test_engine.dispose()
                 return True
         except (OperationalError, ProgrammingError) as e:
-            print(f"⏳ Attempt {attempt}/{max_attempts} failed: {str(e)[:100]}...")
+            print(f"[WAIT] Attempt {attempt}/{max_attempts} failed: {str(e)[:100]}...")
             if attempt < max_attempts:
                 time.sleep(delay)
             test_engine.dispose() if 'test_engine' in locals() else None
-    
-    print(f"❌ Database not ready after {max_attempts} attempts")
+
+    print(f"[ERROR] Database not ready after {max_attempts} attempts")
     return False
 
 def ensure_extensions(connection) -> None:
@@ -77,16 +87,15 @@ def ensure_extensions(connection) -> None:
                 "SELECT 1 FROM pg_available_extensions WHERE name = 'vector'"
             ))
             if result.fetchone():
-                print("✅ pgvector extension is available")
+                print("[OK] pgvector extension is available")
                 # Create extension if not exists
                 connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
                 connection.commit()
-                print("✅ pgvector extension enabled")
+                print("[OK] pgvector extension enabled")
             else:
-                print("⚠️ pgvector extension not available, but continuing...")
+                print("[WARN] pgvector extension not available, but continuing...")
         except Exception as e:
-            print(f"⚠️ Extension check failed: {e}, but continuing...")
->>>>>>> master
+            print(f"[WARN] Extension check failed: {e}, but continuing...")
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
@@ -161,10 +170,10 @@ def run_migrations_online() -> None:
             with context.begin_transaction():
                 context.run_migrations()
         except Exception as e:
-            print(f"❌ Migration failed: {e}")
+            print(f"[ERROR] Migration failed: {e}")
             # In CI, we might want to continue with degraded functionality
             if os.getenv('CI') == 'true':
-                print("⚠️ Running in CI mode - attempting graceful handling...")
+                print("[WARN] Running in CI mode - attempting graceful handling...")
                 # Could implement fallback logic here
             raise
 

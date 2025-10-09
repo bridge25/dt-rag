@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 RAGAS evaluation engine implementation
 
@@ -11,18 +13,28 @@ Uses LLM-based evaluation with Gemini API for accurate assessment.
 """
 
 import asyncio
-import json
 import logging
 import re
 from datetime import datetime
-from typing import List, Dict, Any, Optional, Tuple
-import numpy as np
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
 import google.generativeai as genai
 import os
 
 from .models import EvaluationMetrics, EvaluationResult, QualityThresholds
+
+# Langfuse integration for LLM cost tracking
+try:
+    from ..api.monitoring.langfuse_client import observe
+    LANGFUSE_AVAILABLE = True
+except ImportError:
+    # Fallback: no-op decorator
+    def observe(name: str = "", as_type: str = "span", **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    LANGFUSE_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +60,17 @@ class RAGASEvaluator:
         self.model = None
         if GEMINI_API_KEY:
             try:
-                self.model = genai.GenerativeModel('gemini-pro')
+                # Gemini 2.5 Flash: 85% cost reduction vs gemini-pro
+                # Input: $0.075/1M tokens, Output: $0.30/1M tokens
+                self.model = genai.GenerativeModel('gemini-2.5-flash-latest')
+                logger.info("Gemini 2.5 Flash model initialized successfully")
             except Exception as e:
                 logger.warning(f"Failed to initialize Gemini model: {e}")
 
         # Quality thresholds
         self.thresholds = QualityThresholds()
 
+    @observe(name="ragas_evaluation", as_type="generation")
     async def evaluate_rag_response(
         self,
         query: str,
@@ -100,6 +116,9 @@ class RAGASEvaluator:
                 answer_relevancy=answer_relevancy
             )
 
+            # Calculate overall score
+            overall_score = self._calculate_overall_score(metrics)
+
             # Generate quality flags and recommendations
             quality_flags = self._generate_quality_flags(metrics)
             recommendations = self._generate_recommendations(metrics, quality_flags)
@@ -116,6 +135,7 @@ class RAGASEvaluator:
                 evaluation_id=evaluation_id,
                 query=query,
                 metrics=metrics,
+                overall_score=overall_score,
                 quality_flags=quality_flags,
                 recommendations=recommendations,
                 timestamp=datetime.now(),
@@ -130,6 +150,7 @@ class RAGASEvaluator:
                 evaluation_id=evaluation_id,
                 query=query,
                 metrics=EvaluationMetrics(),
+                overall_score=0.0,
                 quality_flags=["evaluation_error"],
                 recommendations=["Manual review required due to evaluation error"],
                 timestamp=datetime.now(),
@@ -253,7 +274,7 @@ class RAGASEvaluator:
         try:
             result = await self._generate_text(prompt)
             return "RELEVANT" in result.upper()
-        except:
+        except Exception:
             return False
 
     async def _llm_based_context_recall(self, query: str, contexts: List[str], ground_truth: str) -> float:
@@ -282,11 +303,10 @@ class RAGASEvaluator:
 
         try:
             result = await self._generate_text(prompt)
-            # Parse JSON response
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _llm_based_context_recall_from_response(self, query: str, response: str, contexts: List[str]) -> float:
@@ -318,7 +338,7 @@ class RAGASEvaluator:
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _llm_based_faithfulness(self, response: str, contexts: List[str]) -> float:
@@ -350,7 +370,7 @@ class RAGASEvaluator:
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("faithfulness_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _llm_based_answer_relevancy(self, query: str, response: str) -> float:
@@ -380,7 +400,7 @@ class RAGASEvaluator:
             import json
             parsed = json.loads(result.strip())
             return min(1.0, max(0.0, parsed.get("relevancy_score", 0.0)))
-        except:
+        except Exception:
             return 0.0
 
     async def _generate_text(self, prompt: str) -> str:
@@ -582,3 +602,48 @@ class RAGASEvaluator:
             weaknesses.append("Incomplete information coverage")
 
         return weaknesses
+
+    def _calculate_overall_score(self, metrics: EvaluationMetrics) -> float:
+        """
+        Calculate overall score as weighted average of RAGAS metrics
+
+        Args:
+            metrics: EvaluationMetrics object containing individual metric scores
+
+        Returns:
+            float: Overall score between 0.0 and 1.0
+        """
+        # Define weights for each metric (can be adjusted based on importance)
+        weights = {
+            'faithfulness': 0.3,        # Factual accuracy is very important
+            'answer_relevancy': 0.3,    # Response relevance is very important
+            'context_precision': 0.2,   # Quality of retrieval matters
+            'context_recall': 0.2       # Completeness of information
+        }
+
+        scores = []
+        total_weight = 0.0
+
+        # Only include metrics that have values
+        if metrics.faithfulness is not None:
+            scores.append(metrics.faithfulness * weights['faithfulness'])
+            total_weight += weights['faithfulness']
+
+        if metrics.answer_relevancy is not None:
+            scores.append(metrics.answer_relevancy * weights['answer_relevancy'])
+            total_weight += weights['answer_relevancy']
+
+        if metrics.context_precision is not None:
+            scores.append(metrics.context_precision * weights['context_precision'])
+            total_weight += weights['context_precision']
+
+        if metrics.context_recall is not None:
+            scores.append(metrics.context_recall * weights['context_recall'])
+            total_weight += weights['context_recall']
+
+        # Calculate weighted average
+        if total_weight > 0 and scores:
+            overall_score = sum(scores) / total_weight
+            return min(1.0, max(0.0, overall_score))  # Ensure within bounds
+        else:
+            return 0.0

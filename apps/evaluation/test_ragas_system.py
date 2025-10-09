@@ -1,3 +1,5 @@
+# @TEST:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md
+
 """
 Test script for RAGAS evaluation system
 
@@ -20,12 +22,12 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from apps.evaluation.ragas_engine import RAGASEvaluator
-from apps.evaluation.quality_monitor import QualityMonitor
-from apps.evaluation.experiment_tracker import ExperimentTracker
-from apps.evaluation.sample_data import SampleDataGenerator
-from apps.evaluation.models import EvaluationRequest, QualityThresholds, ExperimentConfig
-from apps.api.database import init_database
+from apps.evaluation.ragas_engine import RAGASEvaluator  # noqa: E402
+from apps.evaluation.quality_monitor import QualityMonitor  # noqa: E402
+from apps.evaluation.experiment_tracker import ExperimentTracker  # noqa: E402
+from apps.evaluation.sample_data import SampleDataGenerator  # noqa: E402
+from apps.evaluation.models import QualityThresholds, ExperimentConfig  # noqa: E402
+from apps.api.database import init_database  # noqa: E402
 
 class RAGASSystemTester:
     """Comprehensive RAGAS system tester"""
@@ -61,7 +63,7 @@ class RAGASSystemTester:
             retrieved_contexts=contexts
         )
 
-        print(f"\nEvaluation Results:")
+        print("\nEvaluation Results:")
         print(f"- Faithfulness: {result.metrics.faithfulness:.3f}")
         print(f"- Context Precision: {result.metrics.context_precision:.3f}")
         print(f"- Context Recall: {result.metrics.context_recall:.3f}")
@@ -89,7 +91,7 @@ class RAGASSystemTester:
             expected = scenario_data["expected_metrics"]
             actual = result.metrics
 
-            print(f"Expected vs Actual metrics:")
+            print("Expected vs Actual metrics:")
             print(f"- Faithfulness: {expected['faithfulness']:.2f} vs {actual.faithfulness:.2f}")
             print(f"- Context Precision: {expected['context_precision']:.2f} vs {actual.context_precision:.2f}")
             print(f"- Context Recall: {expected['context_recall']:.2f} vs {actual.context_recall:.2f}")
@@ -125,7 +127,7 @@ class RAGASSystemTester:
 
         # Check quality status
         quality_status = await self.quality_monitor.get_quality_status()
-        print(f"\nQuality Monitoring Status:")
+        print("\nQuality Monitoring Status:")
         print(f"- Current metrics available: {bool(quality_status.get('current_metrics'))}")
         print(f"- Active alerts: {len(quality_status.get('alert_summary', {}).get('total_alerts', 0))}")
         print(f"- Quality gates passing: {quality_status.get('quality_gates', {}).get('overall_passing', False)}")
@@ -204,7 +206,7 @@ class RAGASSystemTester:
         results = await self.experiment_tracker.analyze_experiment_results(experiment_id)
 
         if results:
-            print(f"\nExperiment Results:")
+            print("\nExperiment Results:")
             print(f"- Control samples: {results.control_samples}")
             print(f"- Treatment samples: {results.treatment_samples}")
             print(f"- Statistically significant: {results.is_statistically_significant}")
@@ -227,12 +229,6 @@ class RAGASSystemTester:
     async def test_canary_deployment(self):
         """Test canary deployment monitoring"""
         print("\n=== Testing Canary Deployment ===")
-
-        canary_config = {
-            "model_version": "v1.9.0",
-            "embedding_model": "new-embeddings",
-            "rerank_model": "cross-encoder-v2"
-        }
 
         print("Starting canary deployment monitoring...")
 
@@ -262,7 +258,7 @@ class RAGASSystemTester:
         from apps.evaluation.evaluation_router import validate_dataset
         validation_result = await validate_dataset(golden_entries)
 
-        print(f"Dataset validation:")
+        print("Dataset validation:")
         print(f"- Valid: {validation_result.is_valid}")
         print(f"- Quality score: {validation_result.quality_score:.2f}")
         print(f"- Total entries: {validation_result.statistics['total_entries']}")
@@ -301,7 +297,7 @@ class RAGASSystemTester:
                 session_id="test_session"
             )
 
-            print(f"Integration evaluation completed:")
+            print("Integration evaluation completed:")
             print(f"- Evaluation ID: {result.evaluation_id}")
             print(f"- Metrics calculated: {bool(result.metrics.faithfulness)}")
             print(f"- Quality flags: {result.quality_flags}")
@@ -340,7 +336,7 @@ class RAGASSystemTester:
         end_time = time.time()
         total_time = end_time - start_time
 
-        print(f"Performance Results:")
+        print("Performance Results:")
         print(f"- Evaluated {len(requests)} requests in {total_time:.2f} seconds")
         print(f"- Average time per evaluation: {total_time / len(requests):.2f} seconds")
         print(f"- Evaluations per second: {len(requests) / total_time:.1f}")
@@ -413,12 +409,12 @@ class RAGASSystemTester:
             print("\n" + "=" * 60)
             print("🎉 All tests completed successfully!")
             print("\nTest Summary:")
-            print(f"- Basic evaluation: ✅")
-            print(f"- Quality scenarios: ✅")
-            print(f"- Quality monitoring: ✅")
-            print(f"- A/B testing: ✅")
-            print(f"- Canary deployment: ✅")
-            print(f"- Golden dataset: ✅")
+            print("- Basic evaluation: ✅")
+            print("- Quality scenarios: ✅")
+            print("- Quality monitoring: ✅")
+            print("- A/B testing: ✅")
+            print("- Canary deployment: ✅")
+            print("- Golden dataset: ✅")
             print(f"- Integration test: {'✅' if test_results.get('integration_test') else '❌'}")
             print(f"- Performance test: ✅ ({test_results.get('performance', 0):.2f}s avg)")
 
@@ -449,7 +445,7 @@ async def main():
             "results": str(results)  # Convert to string for JSON serialization
         }, f, indent=2)
 
-    print(f"\n📊 Test results saved to ragas_test_results.json")
+    print("\n📊 Test results saved to ragas_test_results.json")
 
 if __name__ == "__main__":
     asyncio.run(main())

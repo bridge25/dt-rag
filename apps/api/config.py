@@ -13,7 +13,6 @@ import secrets
 import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
-from pathlib import Path
 
 # Import new configuration management modules
 try:
@@ -39,7 +38,7 @@ class DatabaseConfig:
 @dataclass
 class RedisConfig:
     """Redis configuration for caching and rate limiting"""
-    url: str = "redis://localhost:6379/0"
+    url: str = "redis://redis:6379/0"
     max_connections: int = 10
     socket_timeout: int = 5
     socket_connect_timeout: int = 5
@@ -65,6 +64,7 @@ class SecurityConfig:
     password_require_special: bool = True
     api_key_header: str = "X-API-Key"
     oauth_providers: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    trusted_hosts: List[str] = field(default_factory=list)
 
 def _generate_secure_secret() -> str:
     """
@@ -126,7 +126,7 @@ class RateLimitConfig:
     classification_rate: str = "30/minute"
     pipeline_rate: str = "10/minute"
     admin_rate: str = "1000/minute"
-    redis_url: str = "redis://localhost:6379/1"
+    redis_url: str = "redis://redis:6379/1"
 
 @dataclass
 class CORSConfig:
@@ -233,7 +233,6 @@ def get_api_config() -> APIConfig:
 
     # Get environment manager and LLM config
     env_manager = get_env_manager()
-    llm_config_manager = get_llm_config()
 
     # Base configuration
     config = APIConfig()
@@ -263,33 +262,33 @@ def get_api_config() -> APIConfig:
     if secret_key:
         # Validate the provided secret key strength
         if not _validate_secret_strength(secret_key):
-            if environment == "production":
+            if config.environment == "production":
                 raise ValueError(
                     "Provided SECRET_KEY does not meet security requirements. "
                     "Must be at least 32 characters and not use common/weak values."
                 )
             else:
                 # Log warning in non-production environments but continue
-                print(f"WARNING: Weak SECRET_KEY detected in {environment} environment")
+                print(f"WARNING: Weak SECRET_KEY detected in {config.environment} environment")
 
         config.security.secret_key = secret_key
 
-    elif environment == "production":
+    elif config.environment == "production":
         # Production MUST use environment variable
         raise ValueError(
             "SECRET_KEY environment variable is REQUIRED in production. "
             "Generate a secure secret using: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
         )
 
-    elif environment in ["development", "testing"]:
+    elif config.environment in ["development", "testing"]:
         # Generate secure secret for development/testing if not provided
         config.security.secret_key = _generate_secure_secret()
-        print(f"INFO: Generated secure secret key for {environment} environment")
+        print(f"INFO: Generated secure secret key for {config.environment} environment")
 
     else:
         # Staging and other environments should use environment variable
         raise ValueError(
-            f"SECRET_KEY environment variable is required for {environment} environment"
+            f"SECRET_KEY environment variable is required for {config.environment} environment"
         )
 
     config.security.jwt_expiration_minutes = int(os.getenv("JWT_EXPIRATION_MINUTES", "30"))
@@ -300,7 +299,7 @@ def get_api_config() -> APIConfig:
         origins = [origin.strip() for origin in cors_origins.split(",")]
 
         # Security validation: no wildcards in production
-        if environment == "production":
+        if config.environment == "production":
             if "*" in origins:
                 raise ValueError(
                     "Wildcard CORS origins are not allowed in production. "
@@ -322,13 +321,13 @@ def get_api_config() -> APIConfig:
 
         # Security validation: no wildcards
         if "*" in headers:
-            if environment == "production":
+            if config.environment == "production":
                 raise ValueError(
                     "Wildcard CORS headers are not allowed in production. "
                     "Please specify exact headers in CORS_HEADERS environment variable."
                 )
             else:
-                print(f"WARNING: Wildcard CORS headers detected in {environment} environment")
+                print(f"WARNING: Wildcard CORS headers detected in {config.environment} environment")
 
         config.cors.allow_headers = headers
 
@@ -338,12 +337,12 @@ def get_api_config() -> APIConfig:
 
         # Security warning: credentials with wildcard origins
         if config.cors.allow_credentials and "*" in config.cors.allow_origins:
-            if environment == "production":
+            if config.environment == "production":
                 raise ValueError(
                     "CORS credentials cannot be enabled with wildcard origins in production"
                 )
             else:
-                print(f"WARNING: CORS credentials with wildcard origins in {environment} environment")
+                print(f"WARNING: CORS credentials with wildcard origins in {config.environment} environment")
 
     # Monitoring configuration
     config.monitoring.enabled = os.getenv("MONITORING_ENABLED", "true").lower() == "true"

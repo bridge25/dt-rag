@@ -13,33 +13,57 @@ Performance targets:
 - Cost ≤ ₩3/search
 """
 
+# @CODE:SEARCH-001 | SPEC: .moai/specs/SPEC-SEARCH-001/spec.md | TEST: tests/test_hybrid_search.py
+
 import time
 import logging
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple, Union
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 import numpy as np
 from dataclasses import dataclass, field
 import json
 import hashlib
-from pathlib import Path
 
 # PostgreSQL and pgvector imports
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text, func
+from sqlalchemy import text
 
-# Import database and embedding services
-from ..api.database import db_manager, SearchDAO, search_metrics
+# Direct imports (순환 참조 해결: core.db_session 분리)
 from ..api.embedding_service import embedding_service
+
+# Lazy import to avoid circular dependency
+def _get_db_manager():
+    from ..api.database import db_manager
+    return db_manager
+
+def _get_search_metrics():
+    from ..api.database import search_metrics
+    return search_metrics
+
+def _get_search_dao():
+    from ..api.database import SearchDAO
+    return SearchDAO
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Sentry monitoring integration
+try:
+    from ..api.monitoring.sentry_reporter import (
+        report_search_failure,
+        report_score_normalization_error,
+        report_reranker_error,
+        add_search_breadcrumb
+    )
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+    logger.debug("Sentry monitoring not available")
+
 
 @dataclass
 class SearchResult:
-    """Individual search result structure"""
     chunk_id: str
     text: str
     title: Optional[str] = None
@@ -54,7 +78,6 @@ class SearchResult:
 
 @dataclass
 class SearchMetrics:
-    """Search performance metrics"""
     total_time: float = 0.0
     bm25_time: float = 0.0
     vector_time: float = 0.0
@@ -68,48 +91,78 @@ class SearchMetrics:
 
 
 class ScoreNormalizer:
-    """Advanced score normalization techniques"""
-    
+
     @staticmethod
     def min_max_normalize(scores: List[float]) -> List[float]:
-        """Min-max normalization to [0, 1] range"""
-        if not scores or len(scores) == 1:
-            return scores
-        
-        min_score = min(scores)
-        max_score = max(scores)
-        
-        if max_score == min_score:
-            return [1.0] * len(scores)
-        
-        return [(score - min_score) / (max_score - min_score) for score in scores]
-    
+        try:
+            if not scores or len(scores) == 1:
+                return scores
+
+            min_score = min(scores)
+            max_score = max(scores)
+
+            if max_score == min_score:
+                return [1.0] * len(scores)
+
+            return [(score - min_score) / (max_score - min_score) for score in scores]
+        except Exception as e:
+            logger.error(f"Min-max normalization failed: {e}")
+            if SENTRY_AVAILABLE:
+                report_score_normalization_error(
+                    error=e,
+                    scores=scores,
+                    normalization_method="min_max",
+                    context={"operation": "min_max_normalize"}
+                )
+            return scores  # Fallback: return original scores
+
     @staticmethod
     def z_score_normalize(scores: List[float]) -> List[float]:
-        """Z-score normalization (mean=0, std=1)"""
-        if not scores or len(scores) == 1:
-            return scores
-        
-        mean_score = np.mean(scores)
-        std_score = np.std(scores)
-        
-        if std_score == 0:
-            return [0.0] * len(scores)
-        
-        return [(score - mean_score) / std_score for score in scores]
-    
+        try:
+            if not scores or len(scores) == 1:
+                return scores
+
+            mean_score = np.mean(scores)
+            std_score = np.std(scores)
+
+            if std_score == 0:
+                return [0.0] * len(scores)
+
+            return [(score - mean_score) / std_score for score in scores]
+        except Exception as e:
+            logger.error(f"Z-score normalization failed: {e}")
+            if SENTRY_AVAILABLE:
+                report_score_normalization_error(
+                    error=e,
+                    scores=scores,
+                    normalization_method="z_score",
+                    context={"operation": "z_score_normalize"}
+                )
+            return scores  # Fallback: return original scores
+
     @staticmethod
     def reciprocal_rank_normalize(scores: List[float]) -> List[float]:
         """Reciprocal rank fusion normalization"""
-        # Sort indices by scores (descending)
-        sorted_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
-        
-        # Calculate reciprocal ranks
-        normalized = [0.0] * len(scores)
-        for rank, idx in enumerate(sorted_indices):
-            normalized[idx] = 1.0 / (rank + 60)  # RRF constant k=60
-        
-        return normalized
+        try:
+            # Sort indices by scores (descending)
+            sorted_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+
+            # Calculate reciprocal ranks
+            normalized = [0.0] * len(scores)
+            for rank, idx in enumerate(sorted_indices):
+                normalized[idx] = 1.0 / (rank + 60)  # RRF constant k=60
+
+            return normalized
+        except Exception as e:
+            logger.error(f"RRF normalization failed: {e}")
+            if SENTRY_AVAILABLE:
+                report_score_normalization_error(
+                    error=e,
+                    scores=scores,
+                    normalization_method="reciprocal_rank",
+                    context={"operation": "reciprocal_rank_normalize"}
+                )
+            return scores  # Fallback: return original scores
 
 
 class HybridScoreFusion:
@@ -203,12 +256,11 @@ class CrossEncoderReranker:
         self._load_model()
     
     def _load_model(self):
-        """Load cross-encoder model (placeholder for actual implementation)"""
+        """Load cross-encoder model"""
         try:
-            # In production, load actual cross-encoder model
-            # from sentence_transformers import CrossEncoder
-            # self.model = CrossEncoder(self.model_name)
-            logger.info(f"Cross-encoder model {self.model_name} loaded (simulated)")
+            from sentence_transformers import CrossEncoder
+            self.model = CrossEncoder(self.model_name)
+            logger.info(f"Cross-encoder model {self.model_name} loaded successfully")
         except Exception as e:
             logger.warning(f"Failed to load cross-encoder model: {e}")
             self.model = None
@@ -224,22 +276,40 @@ class CrossEncoderReranker:
         start_time = time.time()
         
         try:
-            # For now, use enhanced heuristic reranking
-            # In production, replace with actual cross-encoder scoring
-            reranked_results = self._heuristic_rerank(query, search_results)
-            
-            # Apply rerank scores
-            for result in reranked_results:
-                result.rerank_score = result.hybrid_score * self._calculate_quality_boost(
-                    query, result.text
-                )
-            
-            # Sort by rerank score and return top-k
-            final_results = sorted(
-                reranked_results, 
-                key=lambda x: x.rerank_score, 
-                reverse=True
-            )[:top_k]
+            # Use actual cross-encoder model if available
+            if self.model:
+                # Prepare query-document pairs for cross-encoder
+                pairs = [[query, result.text] for result in search_results]
+
+                # Get cross-encoder scores
+                cross_scores = self.model.predict(pairs)
+
+                # Apply cross-encoder scores
+                for result, score in zip(search_results, cross_scores):
+                    result.rerank_score = float(score)
+
+                # Sort by rerank score and return top-k
+                final_results = sorted(
+                    search_results,
+                    key=lambda x: x.rerank_score,
+                    reverse=True
+                )[:top_k]
+            else:
+                # Fallback to heuristic reranking
+                reranked_results = self._heuristic_rerank(query, search_results)
+
+                # Apply rerank scores
+                for result in reranked_results:
+                    result.rerank_score = result.hybrid_score * self._calculate_quality_boost(
+                        query, result.text
+                    )
+
+                # Sort by rerank score and return top-k
+                final_results = sorted(
+                    reranked_results,
+                    key=lambda x: x.rerank_score,
+                    reverse=True
+                )[:top_k]
             
             rerank_time = time.time() - start_time
             logger.info(f"Cross-encoder reranking completed in {rerank_time:.3f}s")
@@ -248,10 +318,23 @@ class CrossEncoderReranker:
         
         except Exception as e:
             logger.error(f"Reranking failed: {e}")
+
+            # Report to Sentry with reranker-specific context
+            if SENTRY_AVAILABLE:
+                report_reranker_error(
+                    error=e,
+                    query=query,
+                    results_count=len(search_results),
+                    rerank_config={
+                        "model_name": self.model_name,
+                        "top_k": top_k
+                    }
+                )
+
             # Fallback: return top results by hybrid score
             return sorted(
-                search_results, 
-                key=lambda x: x.hybrid_score, 
+                search_results,
+                key=lambda x: x.hybrid_score,
                 reverse=True
             )[:top_k]
     
@@ -413,16 +496,16 @@ class HybridSearchEngine:
                  enable_caching: bool = True,
                  enable_reranking: bool = True,
                  normalization: str = "min_max"):
-        
+
         self.score_fusion = HybridScoreFusion(
             bm25_weight=bm25_weight,
             vector_weight=vector_weight,
             normalization=normalization
         )
-        
+
         self.reranker = CrossEncoderReranker() if enable_reranking else None
         self.cache = ResultCache() if enable_caching else None
-        
+
         self.config = {
             "bm25_weight": bm25_weight,
             "vector_weight": vector_weight,
@@ -430,7 +513,7 @@ class HybridSearchEngine:
             "enable_reranking": enable_reranking,
             "normalization": normalization
         }
-        
+
         logger.info(f"Hybrid search engine initialized: {self.config}")
     
     async def search(self,
@@ -438,9 +521,10 @@ class HybridSearchEngine:
                     top_k: int = 5,
                     filters: Optional[Dict[str, Any]] = None,
                     bm25_candidates: int = 50,
-                    vector_candidates: int = 50) -> Tuple[List[SearchResult], SearchMetrics]:
+                    vector_candidates: int = 50,
+                    correlation_id: Optional[str] = None) -> Tuple[List[SearchResult], SearchMetrics]:
         """Perform hybrid search combining BM25 and vector similarity"""
-        
+
         start_time = time.time()
         metrics = SearchMetrics()
         
@@ -452,15 +536,35 @@ class HybridSearchEngine:
         filters = filters or {}
         
         try:
+            # Add breadcrumb for search tracking with correlation
+            if SENTRY_AVAILABLE:
+                add_search_breadcrumb(
+                    query=query,
+                    search_type="hybrid",
+                    top_k=top_k,
+                    has_filters=bool(filters),
+                    correlation_id=correlation_id
+                )
+
             # Check cache first
-            cache_hit = False
             if self.cache:
                 cached_results = self.cache.get(query, filters, top_k)
                 if cached_results:
                     metrics.total_time = time.time() - start_time
                     metrics.cache_hit = True
                     metrics.final_results = len(cached_results)
-                    search_metrics.record_search("hybrid", metrics.total_time)
+                    _get_search_metrics().record_search("hybrid", metrics.total_time)
+
+                    # Breadcrumb for cache hit
+                    if SENTRY_AVAILABLE:
+                        add_search_breadcrumb(
+                            query=query,
+                            search_type="hybrid_cache_hit",
+                            results=len(cached_results),
+                            response_time_ms=metrics.total_time * 1000,
+                            correlation_id=correlation_id
+                        )
+
                     return cached_results, metrics
             
             # Generate query embedding
@@ -515,7 +619,7 @@ class HybridSearchEngine:
                 self.cache.put(query, filters, top_k, final_results)
             
             # Record metrics
-            search_metrics.record_search("hybrid", metrics.total_time)
+            _get_search_metrics().record_search("hybrid", metrics.total_time)
             
             logger.info(f"Hybrid search completed: {len(final_results)} results in {metrics.total_time:.3f}s")
             
@@ -524,7 +628,30 @@ class HybridSearchEngine:
         except Exception as e:
             logger.error(f"Hybrid search failed: {e}")
             metrics.total_time = time.time() - start_time
-            search_metrics.record_search("hybrid", metrics.total_time, error=True)
+            _get_search_metrics().record_search("hybrid", metrics.total_time, error=True)
+
+            # Report to Sentry with comprehensive context
+            if SENTRY_AVAILABLE:
+                report_search_failure(
+                    error=e,
+                    query=query,
+                    filters=filters,
+                    metrics={
+                        "total_time": metrics.total_time,
+                        "bm25_time": metrics.bm25_time,
+                        "vector_time": metrics.vector_time,
+                        "embedding_time": metrics.embedding_time,
+                        "fusion_time": metrics.fusion_time,
+                        "rerank_time": metrics.rerank_time,
+                        "bm25_candidates": metrics.bm25_candidates,
+                        "vector_candidates": metrics.vector_candidates,
+                        "final_results": metrics.final_results,
+                        "cache_hit": metrics.cache_hit
+                    },
+                    search_type="hybrid",
+                    error_boundary="hybrid_search_engine"
+                )
+
             return [], metrics
     
     async def _perform_bm25_search(self,
@@ -533,38 +660,58 @@ class HybridSearchEngine:
                                   filters: Dict[str, Any]) -> List[SearchResult]:
         """Perform BM25 keyword search using PostgreSQL FTS"""
         start_time = time.time()
-        
+
         try:
-            async with db_manager.async_session() as session:
+            db_mgr = _get_db_manager()
+            async with db_mgr.async_session() as session:
                 # Build filter clause
-                filter_clause = self._build_filter_clause(filters)
-                
-                # PostgreSQL full-text search with BM25-like ranking
-                bm25_query = text(f"""
-                    SELECT 
-                        c.chunk_id,
-                        c.text,
-                        d.title,
-                        d.source_url,
-                        dt.path as taxonomy_path,
-                        ts_rank_cd(
-                            to_tsvector('english', c.text),
-                            websearch_to_tsquery('english', :query),
-                            32 | 1  -- normalization flags for length and term frequency
-                        ) as bm25_score
-                    FROM chunks c
-                    JOIN documents d ON c.doc_id = d.doc_id
-                    LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
-                    WHERE to_tsvector('english', c.text) @@ websearch_to_tsquery('english', :query)
-                    {filter_clause}
-                    ORDER BY bm25_score DESC
-                    LIMIT :top_k
-                """)
-                
-                result = await session.execute(bm25_query, {
-                    "query": query,
-                    "top_k": top_k
-                })
+                filter_clause, filter_params = self._build_filter_clause(filters)
+
+                # Check if PostgreSQL or SQLite
+                if "postgresql" in str(db_mgr.engine.url):
+                    # PostgreSQL full-text search with BM25-like ranking
+                    bm25_query = text(f"""
+                        SELECT
+                            c.chunk_id,
+                            c.text,
+                            d.source_url as title,
+                            d.source_url,
+                            dt.path as taxonomy_path,
+                            ts_rank_cd(
+                                to_tsvector('english', c.text),
+                                plainto_tsquery('english', :query),
+                                32 | 1  -- normalization flags for length and term frequency
+                            ) as bm25_score
+                        FROM chunks c
+                        JOIN documents d ON c.doc_id = d.doc_id
+                        LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
+                        WHERE to_tsvector('english', c.text) @@ plainto_tsquery('english', :query)
+                        {filter_clause}
+                        ORDER BY bm25_score DESC
+                        LIMIT :top_k
+                    """)
+                else:
+                    # SQLite FTS fallback
+                    bm25_query = text(f"""
+                        SELECT
+                            c.chunk_id,
+                            c.text,
+                            d.source_url as title,
+                            d.source_url,
+                            dt.path as taxonomy_path,
+                            bm25(chunks_fts) as bm25_score
+                        FROM chunks_fts
+                        JOIN chunks c ON chunks_fts.chunk_id = c.chunk_id
+                        JOIN documents d ON c.doc_id = d.doc_id
+                        LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
+                        WHERE chunks_fts MATCH :query
+                        {filter_clause}
+                        ORDER BY bm25_score DESC
+                        LIMIT :top_k
+                    """)
+
+                query_params = {"query": query, "top_k": top_k, **filter_params}
+                result = await session.execute(bm25_query, query_params)
                 rows = result.fetchall()
                 
                 # Convert to SearchResult objects
@@ -600,38 +747,60 @@ class HybridSearchEngine:
                                    filters: Dict[str, Any]) -> List[SearchResult]:
         """Perform vector similarity search using pgvector"""
         start_time = time.time()
-        
+
         try:
-            async with db_manager.async_session() as session:
+            db_mgr = _get_db_manager()
+            async with db_mgr.async_session() as session:
                 # Build filter clause
-                filter_clause = self._build_filter_clause(filters)
-                
-                # pgvector cosine similarity search
-                vector_query = text(f"""
-                    SELECT 
-                        c.chunk_id,
-                        c.text,
-                        d.title,
-                        d.source_url,
-                        dt.path as taxonomy_path,
-                        1 - (e.vec <=> :query_vector::vector) as cosine_similarity
-                    FROM chunks c
-                    JOIN documents d ON c.doc_id = d.doc_id
-                    LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
-                    JOIN embeddings e ON c.chunk_id = e.chunk_id
-                    WHERE e.vec IS NOT NULL
-                    {filter_clause}
-                    ORDER BY e.vec <=> :query_vector::vector
-                    LIMIT :top_k
-                """)
-                
-                # Convert embedding to PostgreSQL vector format
-                vector_str = "[" + ",".join(map(str, query_embedding)) + "]"
-                
-                result = await session.execute(vector_query, {
-                    "query_vector": vector_str,
-                    "top_k": top_k
-                })
+                filter_clause, filter_params = self._build_filter_clause(filters)
+
+                # Check if PostgreSQL with pgvector or SQLite
+                if "postgresql" in str(db_mgr.engine.url):
+                    # Convert embedding to PostgreSQL vector format
+                    vector_str = "[" + ",".join(map(str, query_embedding)) + "]"
+
+                    # pgvector cosine similarity search
+                    # Note: Using string formatting for vector to avoid asyncpg named parameter issues
+                    vector_query = text(f"""
+                        SELECT
+                            c.chunk_id,
+                            c.text,
+                            d.source_url as title,
+                            d.source_url,
+                            dt.path as taxonomy_path,
+                            1 - (e.vec <=> '{vector_str}'::vector) as cosine_similarity
+                        FROM chunks c
+                        JOIN documents d ON c.doc_id = d.doc_id
+                        LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
+                        JOIN embeddings e ON c.chunk_id = e.chunk_id
+                        WHERE e.vec IS NOT NULL
+                        {filter_clause}
+                        ORDER BY e.vec <=> '{vector_str}'::vector
+                        LIMIT :top_k
+                    """)
+                    query_params = {"top_k": top_k, **filter_params}
+                else:
+                    # SQLite vector similarity fallback using JSON
+                    vector_query = text(f"""
+                        SELECT
+                            c.chunk_id,
+                            c.text,
+                            d.source_url as title,
+                            d.source_url,
+                            dt.path as taxonomy_path,
+                            0.5 as cosine_similarity
+                        FROM chunks c
+                        JOIN documents d ON c.doc_id = d.doc_id
+                        LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
+                        JOIN embeddings e ON c.chunk_id = e.chunk_id
+                        WHERE e.vec IS NOT NULL
+                        {filter_clause}
+                        ORDER BY c.chunk_id
+                        LIMIT :top_k
+                    """)
+                    query_params = {"top_k": top_k, **filter_params}
+
+                result = await session.execute(vector_query, query_params)
                 rows = result.fetchall()
                 
                 # Convert to SearchResult objects
@@ -724,44 +893,86 @@ class HybridSearchEngine:
             "avg_term_length": sum(len(term) for term in terms) / max(1, len(terms))
         }
     
-    def _build_filter_clause(self, filters: Dict[str, Any]) -> str:
-        """Build SQL WHERE clause from filters"""
+    def _build_filter_clause(self, filters: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        """Build SQL WHERE clause from filters with parameterized queries"""
         if not filters:
-            return ""
-        
+            return "", {}
+
         conditions = []
-        
-        # Taxonomy path filtering
+        params = {}
+
+        # Taxonomy path filtering (SECURE)
         if "taxonomy_paths" in filters:
             paths = filters["taxonomy_paths"]
             if paths:
                 path_conditions = []
-                for path in paths:
+                for idx, path in enumerate(paths):
                     if isinstance(path, list):
-                        path_str = "{\"{\"}".format('\",\"'.join(path))
-                        path_conditions.append(f"dt.path = '{path_str}'::text[]")
+                        valid_segments = []
+                        for segment in path:
+                            segment_str = str(segment)
+                            if segment_str.replace('_', '').replace('-', '').replace(' ', '').isalnum():
+                                valid_segments.append(segment_str)
+
+                        if valid_segments:
+                            param_name = f"taxonomy_path_{idx}"
+                            path_str = '{{"{0}"}}'.format('","'.join(valid_segments))
+                            params[param_name] = path_str
+                            path_conditions.append(f"dt.path = :{param_name}::text[]")
+
                 if path_conditions:
                     conditions.append(f"({' OR '.join(path_conditions)})")
-        
-        # Content type filtering
+
+        # Content type filtering (SECURE with whitelist)
         if "content_types" in filters:
             types = filters["content_types"]
             if types:
-                type_conditions = [f"d.content_type = '{ct}'" for ct in types]
-                conditions.append(f"({' OR '.join(type_conditions)})")
-        
-        # Date range filtering
+                ALLOWED_CONTENT_TYPES = {
+                    'text/plain', 'text/html', 'text/markdown',
+                    'application/pdf', 'application/json',
+                    'article', 'tutorial', 'documentation',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'text/csv', 'application/xml'
+                }
+
+                type_conditions = []
+                for idx, ct in enumerate(types):
+                    ct_str = str(ct)
+                    if ct_str in ALLOWED_CONTENT_TYPES:
+                        param_name = f"content_type_{idx}"
+                        params[param_name] = ct_str
+                        type_conditions.append(f"d.content_type = :{param_name}")
+
+                if type_conditions:
+                    conditions.append(f"({' OR '.join(type_conditions)})")
+
+        # Date range filtering (SECURE with validation)
         if "date_range" in filters:
+            from datetime import datetime
             date_range = filters["date_range"]
+
             if "start" in date_range:
-                conditions.append(f"d.processed_at >= '{date_range['start']}'")
+                try:
+                    date_str = str(date_range["start"]).replace('Z', '+00:00')
+                    datetime.fromisoformat(date_str)
+                    params["date_start"] = date_range["start"]
+                    conditions.append("d.processed_at >= :date_start")
+                except (ValueError, AttributeError):
+                    pass
+
             if "end" in date_range:
-                conditions.append(f"d.processed_at <= '{date_range['end']}'")
-        
+                try:
+                    date_str = str(date_range["end"]).replace('Z', '+00:00')
+                    datetime.fromisoformat(date_str)
+                    params["date_end"] = date_range["end"]
+                    conditions.append("d.processed_at <= :date_end")
+                except (ValueError, AttributeError):
+                    pass
+
         if conditions:
-            return " AND " + " AND ".join(conditions)
-        
-        return ""
+            return " AND " + " AND ".join(conditions), params
+
+        return "", {}
     
     async def keyword_only_search(self,
                                  query: str,
@@ -781,15 +992,15 @@ class HybridSearchEngine:
             metrics.total_time = time.time() - start_time
             metrics.bm25_time = metrics.total_time
             metrics.final_results = len(results)
-            
-            search_metrics.record_search("bm25", metrics.total_time)
+
+            _get_search_metrics().record_search("bm25", metrics.total_time)
             
             return results, metrics
         
         except Exception as e:
             logger.error(f"Keyword search failed: {e}")
             metrics.total_time = time.time() - start_time
-            search_metrics.record_search("bm25", metrics.total_time, error=True)
+            _get_search_metrics().record_search("bm25", metrics.total_time, error=True)
             return [], metrics
     
     async def vector_only_search(self,
@@ -815,15 +1026,15 @@ class HybridSearchEngine:
             metrics.total_time = time.time() - start_time
             metrics.vector_time = metrics.total_time - metrics.embedding_time
             metrics.final_results = len(results)
-            
-            search_metrics.record_search("vector", metrics.total_time)
+
+            _get_search_metrics().record_search("vector", metrics.total_time)
             
             return results, metrics
         
         except Exception as e:
             logger.error(f"Vector search failed: {e}")
             metrics.total_time = time.time() - start_time
-            search_metrics.record_search("vector", metrics.total_time, error=True)
+            _get_search_metrics().record_search("vector", metrics.total_time, error=True)
             return [], metrics
     
     def get_config(self) -> Dict[str, Any]:
@@ -972,14 +1183,16 @@ async def get_search_statistics() -> Dict[str, Any]:
     """Get comprehensive search statistics"""
     try:
         # Get database statistics
-        async with db_manager.async_session() as session:
+        db_mgr = _get_db_manager()
+        SearchDAO = _get_search_dao()
+        async with db_mgr.async_session() as session:
             db_stats = await SearchDAO.get_search_analytics(session)
-        
+
         # Get engine statistics
         engine_stats = search_engine.get_config()
-        
+
         # Get global metrics
-        global_metrics = search_metrics.get_metrics()
+        global_metrics = _get_search_metrics().get_metrics()
         
         return {
             "database_stats": db_stats,

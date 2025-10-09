@@ -7,7 +7,7 @@ import logging
 import time
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 import aiohttp
 import psutil
@@ -234,7 +234,6 @@ class HealthChecker:
             start_time = time.time()
 
             # 스토리지 디렉토리 체크
-            import os
             from pathlib import Path
 
             storage_path = Path("./storage")
@@ -246,7 +245,7 @@ class HealthChecker:
             test_file.write_text(f"Health check at {datetime.now()}")
 
             # 읽기 테스트
-            content = test_file.read_text()
+            test_file.read_text()
 
             # 정리
             test_file.unlink()

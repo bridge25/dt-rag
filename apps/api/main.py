@@ -17,31 +17,36 @@ Features:
 """
 
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
-from typing import Dict, Any
 
-from fastapi import FastAPI, Request, HTTPException, Depends, status
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
+# slowapi removed - using custom Redis-based rate limiter
 
-# Import existing routers
-from routers import health, classify, search, taxonomy, ingestion
 
-# Import new comprehensive routers
-from routers.taxonomy_router import taxonomy_router
-from routers.search_router import search_router
-from routers.classification_router import classification_router
-from routers.orchestration_router import orchestration_router
-from routers.agent_factory_router import agent_factory_router
-from routers.monitoring_router import monitoring_router
+# Import routers
+from apps.api.routers.health import router as health_router
+from apps.api.routers.search import router as search_legacy_router
+from apps.api.routers.taxonomy import router as taxonomy_legacy_router
+from apps.api.routers.ingestion import router as ingestion_router
+from apps.api.routers.taxonomy_router import taxonomy_router
+from apps.api.routers.search_router import search_router
+from apps.api.routers.classification_router import classification_router
+from apps.api.routers.orchestration_router import orchestration_router
+from apps.api.routers.agent_factory_router import agent_factory_router
+from apps.api.routers.monitoring_router import router as monitoring_router
+from apps.api.routers.embedding_router import router as embedding_router
+from apps.api.routers.admin.api_keys import router as api_keys_admin_router
 
 # Import evaluation router
 try:
-    from routers.evaluation import router as evaluation_router
+    from apps.api.routers.evaluation import evaluation_router
     EVALUATION_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Evaluation router not available: {e}")
@@ -49,7 +54,7 @@ except ImportError as e:
 
 # Import optimization routers
 try:
-    from routers.batch_search import router as batch_search_router
+    from apps.api.routers.batch_search import router as batch_search_router
     BATCH_SEARCH_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Batch search router not available: {e}")
@@ -57,19 +62,37 @@ except ImportError as e:
 
 # Import monitoring components
 try:
-    from routers.monitoring import router as monitoring_api_router
-    from monitoring.metrics import initialize_metrics_collector, get_metrics_collector
-    from monitoring.health_check import initialize_health_checker
-    from cache.redis_manager import initialize_redis_manager
+    from apps.api.routers.monitoring import router as monitoring_api_router
+    from apps.api.monitoring.metrics import initialize_metrics_collector, get_metrics_collector
+    from apps.api.monitoring.health_check import initialize_health_checker
+    from apps.api.cache.redis_manager import initialize_redis_manager
     MONITORING_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Monitoring components not available: {e}")
     MONITORING_AVAILABLE = False
 
+# Import Sentry monitoring (optional)
+try:
+    from apps.api.monitoring.sentry_reporter import init_sentry
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+    logging.debug("Sentry monitoring not available")
+
 # Import configuration and database
-from config import get_config
-from openapi_spec import generate_openapi_spec
-from database import init_database, test_database_connection
+from apps.api.config import get_config
+from apps.api.database import init_database, test_database_connection
+
+# Import OpenAPI spec generation (optional)
+try:
+    from apps.api.openapi_spec import generate_openapi_spec
+    OPENAPI_SPEC_AVAILABLE = True
+except ImportError:
+    OPENAPI_SPEC_AVAILABLE = False
+    logging.debug("OpenAPI spec generation not available")
+
+# Import rate limiting
+from apps.api.middleware.rate_limiter import rate_limiter, RateLimitMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -89,6 +112,24 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting Dynamic Taxonomy RAG API v1.8.1")
     logger.info(f"Environment: {config.environment}")
     logger.info(f"Debug mode: {config.debug}")
+
+    # Initialize Sentry monitoring (optional)
+    if SENTRY_AVAILABLE:
+        sentry_dsn = os.getenv("SENTRY_DSN")
+        if sentry_dsn:
+            sentry_initialized = init_sentry(
+                dsn=sentry_dsn,
+                environment=config.environment,
+                release="1.8.1",
+                traces_sample_rate=0.1,  # 10% of transactions
+                profiles_sample_rate=0.1  # 10% profiling
+            )
+            if sentry_initialized:
+                logger.info("✅ Sentry monitoring initialized")
+            else:
+                logger.warning("⚠️ Sentry initialization failed")
+        else:
+            logger.info("ℹ️ Sentry DSN not configured - monitoring disabled")
 
     # Initialize monitoring systems
     if MONITORING_AVAILABLE:
@@ -136,10 +177,24 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"⚠️ System metrics initialization failed: {e}")
 
+    # Initialize rate limiter
+    try:
+        await rate_limiter.initialize()
+        logger.info("✅ Rate limiter initialized")
+    except Exception as e:
+        logger.warning(f"⚠️ Rate limiter initialization failed: {e}")
+
     yield
 
     # Shutdown
     logger.info("🔥 Shutting down Dynamic Taxonomy RAG API")
+
+    # Close rate limiter
+    try:
+        await rate_limiter.close()
+        logger.info("✅ Rate limiter closed")
+    except Exception as e:
+        logger.warning(f"⚠️ Rate limiter cleanup failed: {e}")
 
     # Cleanup monitoring resources
     if MONITORING_AVAILABLE:
@@ -191,6 +246,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Add rate limiter state to app
+# Custom Redis-based rate limiter (initialized in lifespan)
+
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -208,6 +267,9 @@ if config.security.trusted_hosts:
         TrustedHostMiddleware,
         allowed_hosts=config.security.trusted_hosts
     )
+
+# Rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
 # Request logging and monitoring middleware
 @app.middleware("http")
@@ -293,10 +355,34 @@ async def general_exception_handler(request: Request, exc: Exception):
 # Health check endpoint
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Basic health check endpoint"""
+    """Basic health check endpoint with database and Redis status"""
+    from apps.api.database import test_database_connection
+
+    db_status = "connected"
+    redis_status = "connected"
+
+    try:
+        db_connected = await test_database_connection()
+        if not db_connected:
+            db_status = "disconnected"
+    except Exception:
+        db_status = "error"
+
+    try:
+        from apps.api.middleware.rate_limiter import rate_limiter
+        if rate_limiter.redis_client:
+            await rate_limiter.redis_client.ping()
+            redis_status = "connected"
+        else:
+            redis_status = "not_initialized"
+    except Exception:
+        redis_status = "error"
+
     return {
-        "status": "healthy",
-        "timestamp": time.time(),
+        "status": "healthy" if db_status == "connected" and redis_status == "connected" else "degraded",
+        "database": db_status,
+        "redis": redis_status,
+        "timestamp": str(time.time()),
         "version": "1.8.1",
         "environment": config.environment
     }
@@ -307,16 +393,21 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
 
-    # Use our comprehensive OpenAPI specification
-    openapi_schema = generate_openapi_spec()
-
-    # Override with actual path operations from FastAPI
-    openapi_schema["paths"] = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )["paths"]
+    if OPENAPI_SPEC_AVAILABLE:
+        openapi_schema = generate_openapi_spec()
+        openapi_schema["paths"] = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )["paths"]
+    else:
+        openapi_schema = get_openapi(
+            title=app.title,
+            version=app.version,
+            description=app.description,
+            routes=app.routes,
+        )
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -355,11 +446,10 @@ async def redoc_html():
     )
 
 # Include existing routers (Bridge Pack compatibility)
-app.include_router(health.router, tags=["Health"])
-app.include_router(classify.router, tags=["Classification"])
-app.include_router(search.router, tags=["Search"])
-app.include_router(taxonomy.router, tags=["Taxonomy"])
-app.include_router(ingestion.router, tags=["Document Ingestion"])
+app.include_router(health_router, tags=["Health"])
+app.include_router(search_legacy_router, tags=["Search"])
+app.include_router(taxonomy_legacy_router, tags=["Taxonomy"])
+app.include_router(ingestion_router, tags=["Document Ingestion"])
 
 # Include new comprehensive API routers
 app.include_router(
@@ -406,6 +496,13 @@ app.include_router(
     tags=["Monitoring"]
 )
 
+# Include embedding router
+app.include_router(
+    embedding_router,
+    prefix="/api/v1",
+    tags=["Vector Embeddings"]
+)
+
 # Include evaluation router if available
 if EVALUATION_AVAILABLE:
     app.include_router(
@@ -421,6 +518,13 @@ if BATCH_SEARCH_AVAILABLE:
         prefix="/api/v1",
         tags=["Batch Processing", "Search Optimization"]
     )
+
+# Include admin routers
+app.include_router(
+    api_keys_admin_router,
+    prefix="/api/v1",
+    tags=["Admin", "API Key Management"]
+)
 
 # API versioning support
 @app.get("/api/versions", tags=["Versioning"])
@@ -505,6 +609,7 @@ async def root():
             "orchestration": "LangGraph 7-step RAG pipeline",
             "agent_factory": "Dynamic agent creation",
             "monitoring": "Real-time observability",
+            "embeddings": "Sentence Transformers 768-dim vectors",
             "simulation": "Removed - 100% real data"
         },
         "api_endpoints": {
@@ -529,7 +634,10 @@ async def root():
             "POST /api/v1/classify",
             "POST /api/v1/pipeline/execute",
             "POST /api/v1/agents/from-category",
-            "GET /api/v1/monitoring/health"
+            "GET /api/v1/monitoring/health",
+            "GET /api/v1/embeddings/health",
+            "POST /api/v1/embeddings/generate",
+            "POST /api/v1/embeddings/documents/update"
         ],
         "environment": config.environment,
         "timestamp": time.time()

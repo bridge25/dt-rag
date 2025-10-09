@@ -3,10 +3,9 @@ Common models for DT-RAG API
 Local replacement for missing common_schemas
 """
 
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
-from enum import Enum
 
 # Search models
 class SearchResult(BaseModel):

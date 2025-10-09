@@ -1,0 +1,322 @@
+[
+  {
+    "question": "What information is provided about: Machine learning is a subset of artificial intelli?",
+    "ground_truth_answer": "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed.",
+    "retrieved_contexts": [
+      "Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed."
+    ],
+    "source_doc_ids": [
+      "d0a7301e-0d00-4076-9f95-a51b124e9db0"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It uses algorithms and statistical models to analy?",
+    "ground_truth_answer": "It uses algorithms and statistical models to analyze and draw inferences from patterns in data..",
+    "retrieved_contexts": [
+      "It uses algorithms and statistical models to analyze and draw inferences from patterns in data.."
+    ],
+    "source_doc_ids": [
+      "d0a7301e-0d00-4076-9f95-a51b124e9db0"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Vector similarity search is a fundamental techniqu?",
+    "ground_truth_answer": "Vector similarity search is a fundamental technique in information retrieval and machine learning.",
+    "retrieved_contexts": [
+      "Vector similarity search is a fundamental technique in information retrieval and machine learning."
+    ],
+    "source_doc_ids": [
+      "0f1baf2b-7eb0-4267-b712-cb3d0b2fb0c1"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It involves converting documents and queries into ?",
+    "ground_truth_answer": "It involves converting documents and queries into high-dimensional vectors and finding the most similar vectors using distance metrics like cosine similarity..",
+    "retrieved_contexts": [
+      "It involves converting documents and queries into high-dimensional vectors and finding the most similar vectors using distance metrics like cosine similarity.."
+    ],
+    "source_doc_ids": [
+      "0f1baf2b-7eb0-4267-b712-cb3d0b2fb0c1"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: BM25 is a probabilistic ranking function used in i?",
+    "ground_truth_answer": "BM25 is a probabilistic ranking function used in information retrieval.",
+    "retrieved_contexts": [
+      "BM25 is a probabilistic ranking function used in information retrieval."
+    ],
+    "source_doc_ids": [
+      "f8347579-45a8-4638-8dcc-3fc64ea480b6"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It estimates the relevance of documents to a given?",
+    "ground_truth_answer": "It estimates the relevance of documents to a given search query based on term frequency, document frequency, and document length normalization..",
+    "retrieved_contexts": [
+      "It estimates the relevance of documents to a given search query based on term frequency, document frequency, and document length normalization.."
+    ],
+    "source_doc_ids": [
+      "f8347579-45a8-4638-8dcc-3fc64ea480b6"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Hybrid search systems combine multiple retrieval m?",
+    "ground_truth_answer": "Hybrid search systems combine multiple retrieval methods to improve search accuracy.",
+    "retrieved_contexts": [
+      "Hybrid search systems combine multiple retrieval methods to improve search accuracy."
+    ],
+    "source_doc_ids": [
+      "ecdf9db2-2972-4f5b-ae04-6172714551ae"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: Common approaches include combining BM25 keyword s?",
+    "ground_truth_answer": "Common approaches include combining BM25 keyword search with vector similarity search, and using cross-encoder reranking for final result optimization..",
+    "retrieved_contexts": [
+      "Common approaches include combining BM25 keyword search with vector similarity search, and using cross-encoder reranking for final result optimization.."
+    ],
+    "source_doc_ids": [
+      "ecdf9db2-2972-4f5b-ae04-6172714551ae"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Natural Language Processing (NLP) is a branch of a?",
+    "ground_truth_answer": "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language.",
+    "retrieved_contexts": [
+      "Natural Language Processing (NLP) is a branch of artificial intelligence that deals with the interaction between computers and humans through natural language."
+    ],
+    "source_doc_ids": [
+      "8e59e277-3db3-42fd-ae72-74800af24050"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It includes tasks like text classification, sentim?",
+    "ground_truth_answer": "It includes tasks like text classification, sentiment analysis, and language translation..",
+    "retrieved_contexts": [
+      "It includes tasks like text classification, sentiment analysis, and language translation.."
+    ],
+    "source_doc_ids": [
+      "8e59e277-3db3-42fd-ae72-74800af24050"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Deep learning is a subset of machine learning that?",
+    "ground_truth_answer": "Deep learning is a subset of machine learning that uses artificial neural networks with multiple layers to model and understand complex patterns in data.",
+    "retrieved_contexts": [
+      "Deep learning is a subset of machine learning that uses artificial neural networks with multiple layers to model and understand complex patterns in data."
+    ],
+    "source_doc_ids": [
+      "8d4279d3-695c-4343-a2cc-b79080c47e37"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It has revolutionized fields like computer vision ?",
+    "ground_truth_answer": "It has revolutionized fields like computer vision and natural language processing..",
+    "retrieved_contexts": [
+      "It has revolutionized fields like computer vision and natural language processing.."
+    ],
+    "source_doc_ids": [
+      "8d4279d3-695c-4343-a2cc-b79080c47e37"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Information retrieval systems are designed to find?",
+    "ground_truth_answer": "Information retrieval systems are designed to find relevant information from large collections of data.",
+    "retrieved_contexts": [
+      "Information retrieval systems are designed to find relevant information from large collections of data."
+    ],
+    "source_doc_ids": [
+      "5d599302-0b12-4b4a-b087-529eaa3f0674"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: They use various techniques including indexing, ra?",
+    "ground_truth_answer": "They use various techniques including indexing, ranking algorithms, and query processing to provide accurate search results..",
+    "retrieved_contexts": [
+      "They use various techniques including indexing, ranking algorithms, and query processing to provide accurate search results.."
+    ],
+    "source_doc_ids": [
+      "5d599302-0b12-4b4a-b087-529eaa3f0674"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Embedding models convert text, images, or other da?",
+    "ground_truth_answer": "Embedding models convert text, images, or other data into dense vector representations that capture semantic meaning.",
+    "retrieved_contexts": [
+      "Embedding models convert text, images, or other data into dense vector representations that capture semantic meaning."
+    ],
+    "source_doc_ids": [
+      "f0437f70-b371-45ff-af24-fbfaf14fcc38"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: These embeddings are crucial for tasks like simila?",
+    "ground_truth_answer": "These embeddings are crucial for tasks like similarity search, clustering, and recommendation systems..",
+    "retrieved_contexts": [
+      "These embeddings are crucial for tasks like similarity search, clustering, and recommendation systems.."
+    ],
+    "source_doc_ids": [
+      "f0437f70-b371-45ff-af24-fbfaf14fcc38"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Cross-encoder reranking is a technique used to imp?",
+    "ground_truth_answer": "Cross-encoder reranking is a technique used to improve search result quality by re-scoring candidate documents using a more sophisticated model.",
+    "retrieved_contexts": [
+      "Cross-encoder reranking is a technique used to improve search result quality by re-scoring candidate documents using a more sophisticated model."
+    ],
+    "source_doc_ids": [
+      "b332ae59-2bc9-4275-b3ce-a099ca8892f3"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It provides better accuracy than bi-encoder approa?",
+    "ground_truth_answer": "It provides better accuracy than bi-encoder approaches but at higher computational cost..",
+    "retrieved_contexts": [
+      "It provides better accuracy than bi-encoder approaches but at higher computational cost.."
+    ],
+    "source_doc_ids": [
+      "b332ae59-2bc9-4275-b3ce-a099ca8892f3"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  },
+  {
+    "question": "What information is provided about: Document classification is the task of automatical?",
+    "ground_truth_answer": "Document classification is the task of automatically assigning categories or labels to documents based on their content.",
+    "retrieved_contexts": [
+      "Document classification is the task of automatically assigning categories or labels to documents based on their content."
+    ],
+    "source_doc_ids": [
+      "911387de-5034-44e9-98c1-d98304c2ba22"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 0
+    }
+  },
+  {
+    "question": "What information is provided about: It uses machine learning algorithms and natural la?",
+    "ground_truth_answer": "It uses machine learning algorithms and natural language processing techniques to analyze text features..",
+    "retrieved_contexts": [
+      "It uses machine learning algorithms and natural language processing techniques to analyze text features.."
+    ],
+    "source_doc_ids": [
+      "911387de-5034-44e9-98c1-d98304c2ba22"
+    ],
+    "query_type": "simple",
+    "taxonomy_path": null,
+    "metadata": {
+      "generated_method": "fallback",
+      "chunk_index": 1
+    }
+  }
+]

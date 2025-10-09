@@ -4,25 +4,27 @@
 """
 import os
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
-import asyncpg
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON, text
-from sqlalchemy.dialects.postgresql import UUID, ARRAY, INT4RANGE
+from typing import List, Dict, Any, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.types import TypeDecorator, TEXT
+try:
+    from pgvector.sqlalchemy import Vector
+    PGVECTOR_AVAILABLE = True
+except ImportError:
+    PGVECTOR_AVAILABLE = False
 import json
 from datetime import datetime
 import uuid
 import logging
 import httpx
-import json
 import re
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import tiktoken
+
+# Import shared DB session (순환 참조 방지)
+from ..core.db_session import engine, async_session, Base, DATABASE_URL
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -41,9 +43,7 @@ BM25_B = 0.75  # Document length normalization
 BM25_WEIGHT = 0.5
 VECTOR_WEIGHT = 0.5
 
-# SQLite 호환 타입 정의
 class JSONType(TypeDecorator):
-    """SQLite 호환 JSON 타입"""
     impl = TEXT
     cache_ok = True
 
@@ -58,7 +58,6 @@ class JSONType(TypeDecorator):
         return value
 
 class ArrayType(TypeDecorator):
-    """SQLite 호환 Array 타입"""
     impl = TEXT
     cache_ok = True
 
@@ -73,7 +72,6 @@ class ArrayType(TypeDecorator):
         return value
 
 class UUIDType(TypeDecorator):
-    """SQLite 호환 UUID 타입"""
     impl = String(36)
     cache_ok = True
 
@@ -87,81 +85,64 @@ class UUIDType(TypeDecorator):
             return uuid.UUID(value)
         return value
 
-# 데이터베이스 타입 선택 함수
 def get_json_type():
-    """현재 데이터베이스에 맞는 JSON 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return JSONType()
     return JSON
 
 def get_array_type(item_type=String):
-    """현재 데이터베이스에 맞는 Array 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return ArrayType()
     return ARRAY(item_type)
 
+def get_vector_type(dimensions=1536):
+    """Get appropriate vector type based on database"""
+    if "postgresql" in DATABASE_URL and PGVECTOR_AVAILABLE:
+        return Vector(dimensions)
+    # SQLite fallback - use JSON array
+    return get_array_type(Float)
+
 def get_uuid_type():
-    """현재 데이터베이스에 맞는 UUID 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return UUIDType()
     return UUID(as_uuid=True)
 
-# SQLAlchemy Base
-Base = declarative_base()
-
-# 데이터베이스 URL 설정
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./dt_rag_test.db")
-
-# SQLite와 PostgreSQL 호환성을 위한 엔진 설정
-if "sqlite" in DATABASE_URL:
-    engine = create_async_engine(
-        DATABASE_URL,
-        echo=False,
-        connect_args={"check_same_thread": False}
-    )
-else:
-    engine = create_async_engine(DATABASE_URL, echo=False)
-
-async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-# 테이블 모델 정의 - SQLite 호환 버전
 class TaxonomyNode(Base):
     __tablename__ = "taxonomy_nodes"
 
-    node_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    canonical_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
-    node_name: Mapped[str] = mapped_column(String, nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(Text)
-    doc_metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(get_json_type(), default=dict)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    node_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
+    label: Mapped[Optional[str]] = mapped_column(Text)
+    canonical_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    version: Mapped[Optional[str]] = mapped_column(Text)
+    confidence: Mapped[Optional[float]] = mapped_column(Float)
 
 class TaxonomyEdge(Base):
     __tablename__ = "taxonomy_edges"
 
-    edge_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    parent_node_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    child_node_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    parent: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'), primary_key=True)
+    child: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'), primary_key=True)
+    version: Mapped[str] = mapped_column(Text, primary_key=True)
 
 class TaxonomyMigration(Base):
     __tablename__ = "taxonomy_migrations"
 
-    migration_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    from_version: Mapped[Optional[int]] = mapped_column(Integer)
-    to_version: Mapped[int] = mapped_column(Integer, nullable=False)
-    migration_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    changes: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), nullable=False)
-    applied_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    applied_by: Mapped[Optional[str]] = mapped_column(Text)
+    migration_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    from_version: Mapped[Optional[str]] = mapped_column(Text)
+    to_version: Mapped[Optional[str]] = mapped_column(Text)
+    from_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    to_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    rationale: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('now()'))
 
 class Document(Base):
     __tablename__ = "documents"
 
     doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
     source_url: Mapped[Optional[str]] = mapped_column(Text)
+    version_tag: Mapped[Optional[str]] = mapped_column(Text)
+    license_tag: Mapped[Optional[str]] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
     title: Mapped[Optional[str]] = mapped_column(Text)
     content_type: Mapped[str] = mapped_column(String(100), default='text/plain')
     file_size: Mapped[Optional[int]] = mapped_column(Integer)
@@ -174,7 +155,7 @@ class DocumentChunk(Base):
     __tablename__ = "chunks"
 
     chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
+    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('documents.doc_id', ondelete='CASCADE'), nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     # SQLite에서는 INT4RANGE 대신 TEXT로 span 저장 (예: "0,100")
     span: Mapped[str] = mapped_column(String(50), nullable=False, default="0,0")
@@ -183,13 +164,16 @@ class DocumentChunk(Base):
     embedding: Mapped[Optional[List[float]]] = mapped_column(get_array_type(Float), nullable=True)
     chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    has_pii: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    pii_types: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String), default=list)
 
 class Embedding(Base):
     __tablename__ = "embeddings"
 
     embedding_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
-    vec: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)  # Vector 저장
+    chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('chunks.chunk_id', ondelete='CASCADE'), unique=True, nullable=False)
+    vec: Mapped[List[float]] = mapped_column(get_vector_type(1536), nullable=False)
     model_name: Mapped[str] = mapped_column(String(100), nullable=False, default='text-embedding-ada-002')
     bm25_tokens: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -197,26 +181,26 @@ class Embedding(Base):
 class DocTaxonomy(Base):
     __tablename__ = "doc_taxonomy"
 
-    mapping_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
-    path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
-    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    source: Mapped[str] = mapped_column(String(50), nullable=False, default='manual')
-    assigned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    assigned_by: Mapped[Optional[str]] = mapped_column(Text)
+    mapping_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    doc_id: Mapped[Optional[uuid.UUID]] = mapped_column(get_uuid_type(), ForeignKey('documents.doc_id'))
+    node_id: Mapped[Optional[uuid.UUID]] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'))
+    version: Mapped[Optional[str]] = mapped_column(Text)
+    path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
+    confidence: Mapped[Optional[float]] = mapped_column(Float)
+    hitl_required: Mapped[Optional[bool]] = mapped_column(Boolean, server_default=text('false'))
 
 class CaseBank(Base):
     __tablename__ = "case_bank"
 
-    case_id: Mapped[str] = mapped_column(String, primary_key=True)
+    case_id: Mapped[str] = mapped_column(Text, primary_key=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     response_text: Mapped[str] = mapped_column(Text, nullable=False)
     category_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
     query_vector: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)
-    quality_score: Mapped[float] = mapped_column(Float, default=0.0)
-    usage_count: Mapped[int] = mapped_column(Integer, default=0)
-    success_rate: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    quality_score: Mapped[Optional[float]] = mapped_column(Float)
+    usage_count: Mapped[Optional[int]] = mapped_column(Integer)
+    success_rate: Mapped[Optional[float]] = mapped_column(Float)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('now()'))
     last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
 # 데이터베이스 연결 클래스
@@ -257,7 +241,7 @@ class DatabaseManager:
         """데이터베이스 연결 테스트"""
         try:
             async with self.async_session() as session:
-                result = await session.execute(text("SELECT 1"))
+                await session.execute(text("SELECT 1"))
                 return True
         except Exception as e:
             logger.error(f"데이터베이스 연결 실패: {e}")
@@ -273,11 +257,11 @@ class TaxonomyDAO:
     @staticmethod
     async def get_tree(version: str) -> List[Dict[str, Any]]:
         """분류체계 트리 조회 - 실제 데이터베이스에서"""
-        async with db_manager.async_session() as session:
+        async with async_session() as session:
             try:
                 # 실제 쿼리로 교체 - SQLAlchemy 2.0 방식
                 query = text("""
-                    SELECT node_id, node_name, canonical_path, version
+                    SELECT node_id, label, canonical_path, version
                     FROM taxonomy_nodes
                     WHERE version = :version
                     ORDER BY canonical_path
@@ -295,14 +279,14 @@ class TaxonomyDAO:
                 tree = []
                 for row in rows:
                     node = {
-                        "label": row[1],  # node_name
+                        "label": row[1],  # label column
                         "version": row[3],
-                        "node_id": row[0],
+                        "node_id": str(row[0]),
                         "canonical_path": row[2],
                         "children": []
                     }
                     tree.append(node)
-                
+
                 return tree
                 
             except Exception as e:
@@ -311,7 +295,7 @@ class TaxonomyDAO:
                 return await TaxonomyDAO._get_fallback_tree(version)
     
     @staticmethod
-    async def _insert_default_taxonomy(session, version: int):
+    async def _insert_default_taxonomy(session, version: str):
         """기본 분류체계 데이터 삽입"""
         default_nodes = [
             ("AI", ["AI"], version),
@@ -321,22 +305,22 @@ class TaxonomyDAO:
             ("General", ["AI", "General"], version),
         ]
 
-        for node_name, path, ver in default_nodes:
+        for label, path, ver in default_nodes:
             insert_query = text("""
-                INSERT INTO taxonomy_nodes (node_name, canonical_path, version)
-                VALUES (:node_name, :canonical_path, :version)
+                INSERT INTO taxonomy_nodes (label, canonical_path, version)
+                VALUES (:label, :canonical_path, :version)
                 ON CONFLICT DO NOTHING
             """)
             await session.execute(insert_query, {
-                "node_name": node_name,
+                "label": label,
                 "canonical_path": path,
                 "version": ver
             })
 
-        # commit은 호출하는 쪽에서 처리
+        await session.commit()
     
     @staticmethod
-    async def _get_fallback_tree(version: int) -> List[Dict[str, Any]]:
+    async def _get_fallback_tree(version: str) -> List[Dict[str, Any]]:
         """폴백 트리 (DB 연결 실패 시)"""
         return [
             {
@@ -437,8 +421,8 @@ class EmbeddingService:
             batch_texts = texts[i:i + batch_size]
             batch_embeddings = []
 
-            for text in batch_texts:
-                embedding = await EmbeddingService.generate_embedding(text)
+            for text_content in batch_texts:
+                embedding = await EmbeddingService.generate_embedding(text_content)
                 batch_embeddings.append(embedding)
 
             embeddings.extend(batch_embeddings)
@@ -745,19 +729,18 @@ class SearchDAO:
                     LIMIT :topk
                 """)
             else:
-                # PostgreSQL full-text search
+                # PostgreSQL full-text search (init.sql 스키마에 맞춤)
                 bm25_query = text(f"""
-                    SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
+                    SELECT d.id, d.content, d.title, 'db_document' as source_url,
+                           ARRAY[]::text[] as path,
                            ts_rank_cd(
-                               to_tsvector('english', c.text),
+                               to_tsvector('english', d.content || ' ' || d.title),
                                websearch_to_tsquery('english', :query),
                                32 -- normalization flag
                            ) as bm25_score
-                    FROM chunks c
-                    JOIN documents d ON c.doc_id = d.doc_id
-                    LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
-                    WHERE to_tsvector('english', c.text) @@ websearch_to_tsquery('english', :query)
-                    {filter_clause}
+                    FROM documents d
+                    WHERE to_tsvector('english', d.content || ' ' || d.title) @@ websearch_to_tsquery('english', :query)
+                    {filter_clause.replace('dt.', 'd.').replace('c.', 'd.') if filter_clause else ''}
                     ORDER BY bm25_score DESC
                     LIMIT :topk
                 """)
@@ -771,11 +754,11 @@ class SearchDAO:
             results = []
             for row in rows:
                 result_dict = {
-                    "chunk_id": str(row[0]),
-                    "text": row[1],
-                    "title": row[2],
-                    "source_url": row[3],
-                    "taxonomy_path": row[4] or [],
+                    "chunk_id": str(row[0]),  # document id
+                    "text": row[1],           # content
+                    "title": row[2],          # title
+                    "source_url": row[3],     # source_url (현재는 'db_document')
+                    "taxonomy_path": row[4] if row[4] else [],  # path (현재는 빈 배열)
                     "score": float(row[5]) if row[5] else 0.0,
                     "metadata": {
                         "bm25_score": float(row[5]) if row[5] else 0.0,
@@ -823,24 +806,25 @@ class SearchDAO:
                     "topk": topk
                 })
             else:
-                # PostgreSQL pgvector 검색 (asyncpg 호환성 개선)
+                # PostgreSQL pgvector 검색 (init.sql 스키마에 맞춤)
                 try:
-                    # pgvector extension 사용
+                    # init.sql의 documents 테이블 사용 (embedding 벡터가 documents 테이블에 있음)
                     vector_query = text(f"""
-                        SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
-                               1.0 - (e.vec <-> :query_vector) as vector_score
-                        FROM chunks c
-                        JOIN documents d ON c.doc_id = d.doc_id
-                        LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
-                        JOIN embeddings e ON c.chunk_id = e.chunk_id
-                        WHERE e.vec IS NOT NULL
-                        {filter_clause}
-                        ORDER BY e.vec <-> :query_vector
+                        SELECT d.id, d.content, d.title, 'db_document' as source_url,
+                               ARRAY[]::text[] as path,
+                               1.0 - (d.embedding <-> :query_vector::vector) as vector_score
+                        FROM documents d
+                        WHERE d.embedding IS NOT NULL
+                        {filter_clause.replace('dt.', 'd.').replace('c.', 'd.') if filter_clause else ''}
+                        ORDER BY d.embedding <-> :query_vector::vector
                         LIMIT :topk
                     """)
 
+                    # pgvector 벡터를 문자열로 변환
+                    vector_str = '[' + ','.join(map(str, query_embedding)) + ']'
+
                     result = await session.execute(vector_query, {
-                        "query_vector": str(query_embedding),  # Convert to string for asyncpg
+                        "query_vector": vector_str,
                         "topk": topk
                     })
                 except Exception as vector_error:
@@ -868,11 +852,11 @@ class SearchDAO:
             results = []
             for row in rows:
                 result_dict = {
-                    "chunk_id": str(row[0]),
-                    "text": row[1],
-                    "title": row[2],
-                    "source_url": row[3],
-                    "taxonomy_path": row[4] or [],
+                    "chunk_id": str(row[0]),  # document id
+                    "text": row[1],           # content
+                    "title": row[2],          # title
+                    "source_url": row[3],     # source_url (현재는 'db_document')
+                    "taxonomy_path": row[4] if row[4] else [],  # path (현재는 빈 배열)
                     "score": float(row[5]) if row[5] else 0.0,
                     "metadata": {
                         "bm25_score": 0.0,
@@ -977,7 +961,8 @@ class SearchDAO:
 
         doc_ids = []
         for title, url in sample_docs:
-            doc_insert = text("""
+            from sqlalchemy import text as sql_text
+            doc_insert = sql_text("""
                 INSERT INTO documents (title, source_url, content_type)
                 VALUES (:title, :source_url, 'text/plain')
                 RETURNING doc_id
@@ -992,7 +977,7 @@ class SearchDAO:
             (doc_ids[1], "머신러닝 분류 알고리즘에는 SVM, Random Forest 등이 있습니다.", "[1,100)", 0)
         ]
 
-        for doc_id, text, span, chunk_index in sample_chunks:
+        for doc_id, text_content, span, chunk_index in sample_chunks:
             chunk_insert = text("""
                 INSERT INTO chunks (doc_id, text, span, chunk_index)
                 VALUES (:doc_id, :text, :span, :chunk_index)
@@ -1000,7 +985,7 @@ class SearchDAO:
             """)
             await session.execute(chunk_insert, {
                 "doc_id": doc_id,
-                "text": text,
+                "text": text_content,
                 "span": span,
                 "chunk_index": chunk_index
             })
@@ -1363,3 +1348,17 @@ class SearchMetrics:
 
 # 전역 메트릭 수집기
 search_metrics = SearchMetrics()
+
+
+# FastAPI Dependency for database sessions
+async def get_async_session():
+    """
+    FastAPI dependency for providing async database sessions
+
+    Usage:
+        @app.get("/endpoint")
+        async def endpoint(db: AsyncSession = Depends(get_async_session)):
+            ...
+    """
+    async with async_session() as session:
+        yield session

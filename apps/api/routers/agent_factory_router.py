@@ -14,8 +14,13 @@ from datetime import datetime
 import uuid
 
 from fastapi import APIRouter, HTTPException, Query, Depends, status
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
+try:
+    from ..deps import verify_api_key
+except ImportError:
+    def verify_api_key():
+        return None
 
 # Import common schemas
 import sys
@@ -23,7 +28,7 @@ from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
 from packages.common_schemas.common_schemas.models import (
-    FromCategoryRequest, AgentManifest, RetrievalConfig, FeaturesConfig
+    FromCategoryRequest, RetrievalConfig, FeaturesConfig
 )
 
 # Configure logging
@@ -213,7 +218,8 @@ async def get_agent_factory_service() -> AgentFactoryService:
 @agent_factory_router.post("/from-category", response_model=AgentCreateResponse)
 async def create_agent_from_category(
     request: FromCategoryRequest,
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Create specialized agent from taxonomy categories
@@ -253,7 +259,8 @@ async def create_agent_from_category(
 async def list_agents(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum agents to return"),
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     List all agents with optional filtering
@@ -282,7 +289,8 @@ async def list_agents(
 @agent_factory_router.get("/{agent_id}", response_model=AgentStatus)
 async def get_agent(
     agent_id: str,
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get detailed information about specific agent
@@ -316,7 +324,8 @@ async def get_agent(
 async def update_agent(
     agent_id: str,
     update: AgentUpdateRequest,
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Update agent configuration
@@ -350,7 +359,8 @@ async def update_agent(
 @agent_factory_router.delete("/{agent_id}")
 async def delete_agent(
     agent_id: str,
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Delete agent
@@ -381,7 +391,8 @@ async def delete_agent(
 @agent_factory_router.get("/{agent_id}/metrics", response_model=AgentMetrics)
 async def get_agent_metrics(
     agent_id: str,
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get detailed performance metrics for agent
@@ -415,7 +426,8 @@ async def get_agent_metrics(
 @agent_factory_router.post("/{agent_id}/activate")
 async def activate_agent(
     agent_id: str,
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Activate agent for use
@@ -456,7 +468,8 @@ async def activate_agent(
 @agent_factory_router.post("/{agent_id}/deactivate")
 async def deactivate_agent(
     agent_id: str,
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Deactivate agent
@@ -496,7 +509,8 @@ async def deactivate_agent(
 
 @agent_factory_router.get("/factory/status")
 async def get_factory_status(
-    service: AgentFactoryService = Depends(get_agent_factory_service)
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
 ):
     """
     Get agent factory system status

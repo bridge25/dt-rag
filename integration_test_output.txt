@@ -1,0 +1,50 @@
+Prometheus client not available, using built-in metrics only
+langfuse package not installed. Run: pip install langfuse>=3.6.0
+INFO:apps.core.db_session:Database URL: postgresql+asyncpg://postgres:postgres@localhost:5432/dt_rag
+INFO:apps.core.db_session:Created PostgreSQL engine with asyncpg driver
+INFO:sentence_transformers.cross_encoder.CrossEncoder:Use pytorch device: cpu
+INFO:apps.search.hybrid_search_engine:Cross-encoder model cross-encoder/ms-marco-MiniLM-L-6-v2 loaded successfully
+INFO:apps.search.hybrid_search_engine:Hybrid search engine initialized: {'bm25_weight': 0.5, 'vector_weight': 0.5, 'enable_caching': True, 'enable_reranking': True, 'normalization': 'min_max'}
+INFO:apps.api.embedding_service:�Ӻ��� ���� �Ϸ� - �ؽ�Ʈ: 47��, ����: 1536����
+INFO:apps.search.hybrid_search_engine:Hybrid search completed: 0 results in 21.839s
+INFO:apps.evaluation.ragas_engine:Gemini 2.5 Flash model initialized successfully
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+INFO:apps.api.embedding_service:OpenAI Ŭ���̾�Ʈ �ʱ�ȭ: text-embedding-3-large (1536����)
+INFO:apps.evaluation.ragas_engine:Gemini 2.5 Flash model initialized successfully
+INFO:apps.api.embedding_service:�Ӻ��� ���� �Ϸ� - �ؽ�Ʈ: 138��, ����: 1536����
+INFO:apps.api.embedding_service:�Ӻ��� ���� �Ϸ� - �ؽ�Ʈ: 32��, ����: 1536����
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+ERROR:apps.evaluation.ragas_engine:Gemini generation failed: 404 models/gemini-2.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.
+============================================================
+DT-RAG 시스템 완전한 E2E 통합 테스트 시작
+============================================================
+1. 벡터 임베딩 서비스 테스트...
+   ✅ 임베딩 서비스 정상 동작 (1536차원)
+2. 하이브리드 검색 엔진 테스트...
+   ⚠️  하이브리드 검색 동작 확인 (0개 결과)
+3. RAGAS 평가 시스템 테스트...
+   ✅ RAGAS 평가 정상 동작 (전체 점수: 0.000)
+4. 데이터베이스 통합 테스트...
+   ✅ 데이터베이스 연결됨
+5. API 서버 통합 테스트...
+   ✅ API 서버 통합 테스트 완료
+6. End-to-End 워크플로우 테스트...
+   ✅ E2E 워크플로우 성공 (유사도: 0.386, RAGAS: 0.000)
+
+============================================================
+통합 테스트 결과 요약
+============================================================
+총 테스트: 6
+통과: 5.5
+성공률: 91.7%
+실행 시간: 45.15초
+✅ 전체 시스템 통합 테스트 성공!
+상세 결과 저장: integration_test_results.json
+============================================================

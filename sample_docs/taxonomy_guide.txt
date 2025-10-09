@@ -1,0 +1,31 @@
+Dynamic Taxonomy Classification Guide
+
+The DT-RAG system implements a dynamic, versioned taxonomy system based on a Directed Acyclic Graph (DAG) structure.
+
+Taxonomy Architecture:
+- Hierarchical Classification: Multi-level categories from general to specific
+- Canonical Paths: Each document has a primary classification path (e.g., ["Technology", "AI/ML", "RAG"])
+- Version Control: MAJOR.MINOR.PATCH versioning with full migration history
+- Rollback Support: Transaction-safe rollback to any previous taxonomy version
+
+Classification Pipeline (Hybrid Approach):
+1. Rule-Based Filtering: Initial classification using keyword patterns and document metadata
+2. LLM Candidate Generation: Generate 2-3 candidate classifications with reasoning
+3. Cross-Validation: Verify classifications against multiple criteria
+4. Confidence Scoring: Calculate confidence based on agreement and evidence strength
+5. HITL Queue: Route low-confidence items (< 0.70) to human review
+
+Key Tables (PRD v1.8.1):
+- taxonomy_nodes: DAG node definitions with canonical paths and confidence scores
+- taxonomy_edges: Parent-child relationships with version awareness
+- doc_taxonomy: Document-taxonomy mappings with confidence and HITL flags
+- taxonomy_migrations: Version migration history with rationale
+
+Benefits:
+- Flexible Organization: Add, move, or merge categories without breaking references
+- Quality Control: Confidence thresholds and human validation ensure accuracy
+- Auditability: Complete history of taxonomy changes with rollback capability
+- Scalability: DAG structure supports unlimited hierarchy depth
+
+The taxonomy version (e.g., "1.0.0") is tracked for every classification,
+enabling safe schema evolution and A/B testing of classification strategies.
