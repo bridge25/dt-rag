@@ -1,8 +1,20 @@
-# Dynamic Taxonomy RAG v1.8.1 - Production Ready
+# Dynamic Taxonomy RAG v2.0.0 - Memento Integration Complete
 
-🚀 **프로덕션 환경 완료!** PostgreSQL + pgvector 데이터베이스 연결과 실제 하이브리드 검색이 구현되었습니다.
+🚀 **프로덕션 + 실험 기능 완료!** PostgreSQL + pgvector 데이터베이스, 7-Step LangGraph Pipeline, Multi-Agent Debate, Soft Q-learning Bandit까지 통합 완료되었습니다.
 
-## 🧪 실험 기능 (Phase 1-2)
+## 🎯 프로젝트 개요
+
+DT-RAG는 동적 분류체계(Dynamic Taxonomy)와 사례 기반 추론(Case-Based Reasoning)을 결합한 차세대 RAG 시스템입니다.
+
+**핵심 특징**:
+- 7-Step LangGraph Pipeline (Meta-Planning → Retrieval → Tools → Debate → Compose → Cite → Response)
+- Soft Q-learning Bandit 기반 적응형 검색 전략 선택
+- Multi-Agent Debate를 통한 답변 품질 향상
+- Neural Case Selector (Vector + BM25 하이브리드 검색)
+- MCP Protocol 기반 Tool Execution
+- PostgreSQL + pgvector 기반 프로덕션 인프라
+
+## 🧪 실험 기능 (Phase 0-3.2)
 
 > **참고**: 아래 기능들은 Feature Flag로 제어되며, 현재 개발/테스트 단계입니다.
 > 프로덕션 환경에서는 기본적으로 비활성화되어 있습니다.
@@ -123,28 +135,110 @@ curl -X POST http://localhost:8000/api/v1/answer \
 - Concurrency: Round 1/2 병렬 실행 (2배 속도 향상)
 - Fallback: 타임아웃 시 step5 초기 답변 사용
 
+### Phase 3.1: Soft Q-learning Bandit
+
+**설명**: 강화학습 기반 적응형 검색 전략 선택
+
+**주요 기능**:
+- State Space: 4-feature (complexity, intent, bm25_bin, vector_bin) = 108 states
+- Action Space: 6 actions (Retrieval 3 × Compose 2)
+  - Retrieval: bm25_only, vector_only, hybrid
+  - Compose: direct, debate
+- Softmax Policy: Temperature 0.5
+- Soft Bellman Equation: Q-learning with soft value function
+- Exploration-Exploitation Balance: ε-greedy with decay
+
+**Feature Flag**: `FEATURE_SOFT_Q_BANDIT=true`
+
+**사용 예시**:
+```bash
+# Feature Flag 활성화
+export FEATURE_SOFT_Q_BANDIT=true
+
+# RL Policy로 검색 전략 자동 선택
+curl -X POST http://localhost:8000/api/v1/answer \
+  -H "Content-Type: application/json" \
+  -d '{"q": "Explain quantum computing applications", "mode": "answer"}'
+```
+
+**성능 특성**:
+- Policy Selection: < 10ms
+- Q-value Update: Async (non-blocking)
+- Exploration Rate: 0.1 → 0.01 (linear decay)
+- Discount Factor (γ): 0.95
+
 ### Feature Flag 전체 목록
 
-| Flag | 기본값 | 설명 | Phase |
-|------|--------|------|-------|
-| `FEATURE_META_PLANNER` | false | 메타 레벨 계획 생성 | 1 |
-| `FEATURE_NEURAL_CASE_SELECTOR` | false | Vector 하이브리드 검색 | 2A |
-| `FEATURE_MCP_TOOLS` | false | MCP 도구 실행 | 2B |
-| `FEATURE_TOOLS_POLICY` | false | 도구 Whitelist 정책 | 2B |
-| `FEATURE_DEBATE_MODE` | false | Multi-Agent Debate | 3.2 |
-| `FEATURE_SOFT_Q_BANDIT` | false | RL 기반 정책 선택 | 3 (예정) |
-| `FEATURE_EXPERIENCE_REPLAY` | false | 경험 리플레이 버퍼 | 3 (예정) |
+| Flag | 기본값 | 설명 | Phase | 상태 |
+|------|--------|------|-------|------|
+| `FEATURE_META_PLANNER` | false | 메타 레벨 계획 생성 | 1 | ✅ 완료 |
+| `FEATURE_NEURAL_CASE_SELECTOR` | false | Vector 하이브리드 검색 | 2A | ✅ 완료 |
+| `FEATURE_MCP_TOOLS` | false | MCP 도구 실행 | 2B | ✅ 완료 |
+| `FEATURE_TOOLS_POLICY` | false | 도구 Whitelist 정책 | 2B | ✅ 완료 |
+| `FEATURE_SOFT_Q_BANDIT` | false | RL 기반 정책 선택 | 3.1 | ✅ 완료 |
+| `FEATURE_DEBATE_MODE` | false | Multi-Agent Debate | 3.2 | ✅ 완료 |
+| `FEATURE_EXPERIENCE_REPLAY` | false | 경험 리플레이 버퍼 | 3+ | 🚧 예정 |
 
 ### 7-Step LangGraph Pipeline
 
 ```
+┌─────────────────────────────────────────────────────────────┐
+│  DT-RAG 7-Step Memento Pipeline (Feature Flag 기반)        │
+└─────────────────────────────────────────────────────────────┘
+
 1. step1_intent: 의도 분류
+   └─ Intent detection (query → search/answer/classify)
+
 2. step2_retrieve: 문서 검색
+   ├─ BM25 검색 (PostgreSQL full-text)
+   └─ Vector 검색 (pgvector, FEATURE_NEURAL_CASE_SELECTOR)
+
 3. step3_plan: 메타 계획 생성 ⭐ Phase 1
-4. step4_tools_debate: 도구 실행 / Debate ⭐ Phase 2B/3
+   ├─ Complexity analysis (simple/medium/complex)
+   ├─ LLM Meta-Planning (strategy, tools, steps)
+   └─ Feature Flag: FEATURE_META_PLANNER
+
+4. step4_tools_debate: 도구 실행 / Debate ⭐ Phase 2B/3.2
+   ├─ MCP Tools Execution (FEATURE_MCP_TOOLS)
+   │  ├─ Whitelist Policy (FEATURE_TOOLS_POLICY)
+   │  ├─ 30s timeout
+   │  └─ JSON schema validation
+   └─ Multi-Agent Debate (FEATURE_DEBATE_MODE)
+      ├─ Round 1: Affirmative vs Critical (parallel)
+      ├─ Round 2: Mutual Critique (parallel)
+      └─ Synthesis: Final answer integration
+
 5. step5_compose: 답변 생성
+   ├─ LLM answer generation
+   └─ Context integration
+
 6. step6_cite: 인용 추가
+   └─ Source citation (stub)
+
 7. step7_respond: 최종 응답
+   └─ Response formatting
+```
+
+**Adaptive Retrieval (Phase 3.1)**:
+```
+┌──────────────────────────────────────────────┐
+│  Soft Q-learning Bandit Policy (Optional)   │
+└──────────────────────────────────────────────┘
+
+IF FEATURE_SOFT_Q_BANDIT=true:
+  ├─ State: (complexity, intent, bm25_bin, vector_bin) → 108 states
+  ├─ Action: 6 actions (Retrieval × Compose)
+  │  ├─ bm25_only + direct
+  │  ├─ bm25_only + debate
+  │  ├─ vector_only + direct
+  │  ├─ vector_only + debate
+  │  ├─ hybrid + direct
+  │  └─ hybrid + debate
+  ├─ Policy: Softmax(Q-values, T=0.5)
+  └─ Update: Soft Bellman equation (async)
+
+ELSE:
+  └─ Default: hybrid retrieval + direct compose
 ```
 
 ---
