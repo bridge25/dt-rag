@@ -1,9 +1,10 @@
 ---
 id: REPLAY-001
-version: 0.1.0
-status: draft
+version: 1.0.0
+status: completed
 created: 2025-10-09
 updated: 2025-10-09
+completed_at: 2025-10-09
 author: @claude
 priority: medium
 category: enhancement
@@ -31,11 +32,27 @@ scope:
 
 ## HISTORY
 
-### v0.1.0 (2025-10-09)
-- **INITIAL**: Experience Replay Buffer SPEC 최초 작성
-- **AUTHOR**: @claude
-- **SCOPE**: Replay Buffer 구현, Batch Learning 통합, Feature Flag 연결
-- **CONTEXT**: SOFTQ-001 완료 후 Sample Efficiency 향상을 위한 경험 재사용 메커니즘
+### v1.0.0 (2025-10-09) - COMPLETED
+- **STATUS**: Draft → Completed
+- **IMPLEMENTATION**: Experience Replay Buffer with TDD
+- **FILES**: 7개 파일 (신규 6개, 수정 1개)
+  - apps/orchestration/src/bandit/__init__.py
+  - apps/orchestration/src/bandit/replay_buffer.py (113 LOC)
+  - apps/orchestration/src/bandit/q_learning.py (155 LOC)
+  - apps/orchestration/src/langgraph_pipeline.py (+60 LOC)
+  - tests/unit/test_replay_buffer.py (4 tests)
+  - tests/unit/test_q_learning.py (3 tests)
+  - tests/integration/test_pipeline_replay.py (2 tests)
+- **TESTS**: 9/9 PASSED (100%)
+- **QUALITY**: TRUST 85/100 Pass
+- **TAG CHAIN**: @IMPL:REPLAY-001:0.1-0.3, @TEST:REPLAY-001:unit/integration/pipeline
+- **COMMIT**: d17ff55 "feat(SPEC-REPLAY-001): Implement Experience Replay Buffer with TDD"
+
+### v0.1.0 (2025-10-09) - INITIAL
+- **STATUS**: Draft 생성
+- **SPEC 작성**: EARS 구조, 16개 요구사항, 3개 Specifications
+- **PLAN**: 4-Phase TDD 전략, 아키텍처 설계
+- **ACCEPTANCE**: 7개 Given-When-Then 시나리오
 
 ---
 
