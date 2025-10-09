@@ -237,6 +237,25 @@ class ExecutionLog(Base):
 
     case = relationship("CaseBank", backref="execution_logs")
 
+# @SPEC:CONSOLIDATION-001 @IMPL:CONSOLIDATION-001:0.3
+class CaseBankArchive(Base):
+    __tablename__ = "case_bank_archive"
+
+    archive_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    case_id: Mapped[str] = mapped_column(Text, nullable=False)
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+    response_text: Mapped[str] = mapped_column(Text, nullable=False)
+    category_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
+    query_vector: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)
+    usage_count: Mapped[Optional[int]] = mapped_column(Integer)
+    success_rate: Mapped[Optional[float]] = mapped_column(Float)
+    archived_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=text('CURRENT_TIMESTAMP'),
+        nullable=False
+    )
+    archived_reason: Mapped[Optional[str]] = mapped_column(String(255))
+
 # @IMPL:REFLECTION-001:0.3 - ExecutionLog indices optimization
 async def optimize_execution_log_indices(session: AsyncSession) -> Dict[str, Any]:
     """
