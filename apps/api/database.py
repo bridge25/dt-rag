@@ -1350,6 +1350,49 @@ class SearchMetrics:
 search_metrics = SearchMetrics()
 
 
+# Q-table 데이터 액세스 오브젝트
+class QTableDAO:
+    """
+    @CODE:SOFTQ-001:0.4 | Q-table 데이터 액세스
+
+    메모리 기반 Q-table 저장소 (Phase 1).
+    향후 PostgreSQL JSON 컬럼으로 마이그레이션 예정.
+    """
+
+    def __init__(self):
+        """Q-table DAO 초기화"""
+        self.q_table_storage: Dict[str, List[float]] = {}
+        logger.info("QTableDAO initialized (memory-based storage)")
+
+    async def save_q_table(self, state_hash: str, q_values: List[float]) -> None:
+        """
+        Q-table 저장
+
+        Args:
+            state_hash: State hash string
+            q_values: Q-values 리스트 (6개)
+        """
+        self.q_table_storage[state_hash] = q_values.copy()
+        logger.debug(
+            f"Saved Q-table: state={state_hash}, q_values={[round(q, 3) for q in q_values]}"
+        )
+
+    async def load_q_table(self, state_hash: str) -> Optional[List[float]]:
+        """
+        Q-table 로드
+
+        Args:
+            state_hash: State hash string
+
+        Returns:
+            Q-values 리스트 (6개) 또는 None
+        """
+        q_values = self.q_table_storage.get(state_hash)
+        if q_values:
+            logger.debug(f"Loaded Q-table: state={state_hash}")
+        return q_values
+
+
 # FastAPI Dependency for database sessions
 async def get_async_session():
     """
