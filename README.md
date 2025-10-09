@@ -79,6 +79,50 @@ curl -X POST http://localhost:8000/api/v1/answer \
   -d '{"q": "Calculate 123 + 456", "mode": "answer"}'
 ```
 
+### Phase 3.2: Multi-Agent Debate Mode (SPEC-DEBATE-001)
+
+**설명**: 2-agent debate 구조로 답변 품질 향상
+
+**주요 기능**:
+- Affirmative vs Critical 2-agent 구조
+- 2-round debate (독립 답변 → 상호 비평 → 최종 통합)
+- 병렬 LLM 호출 (Round당 2회 동시 실행)
+- 10초 타임아웃 및 폴백 메커니즘
+- LangGraph step4에 통합
+
+**Feature Flag**: `FEATURE_DEBATE_MODE=true`
+
+**아키텍처**:
+```
+Round 1: 독립 답변 생성 (병렬 LLM 호출 2회)
+├─ Affirmative Agent → answer_A1
+└─ Critical Agent → answer_C1
+
+Round 2: 상호 비평 및 개선 (병렬 LLM 호출 2회)
+├─ Affirmative Agent (+ Critique of C1) → answer_A2
+└─ Critical Agent (+ Critique of A1) → answer_C2
+
+Synthesis: 최종 답변 통합 (LLM 호출 1회)
+└─ Synthesizer → final_answer (총 5회 LLM 호출)
+```
+
+**사용 예시**:
+```bash
+# Feature Flag 활성화
+export FEATURE_DEBATE_MODE=true
+
+# Debate 모드로 답변 생성
+curl -X POST http://localhost:8000/api/v1/answer \
+  -H "Content-Type: application/json" \
+  -d '{"q": "What are the trade-offs of microservices architecture?", "mode": "answer"}'
+```
+
+**성능 특성**:
+- Latency: ~10초 (5회 LLM 호출 포함)
+- Token Budget: 2800 토큰 (Round 1/2: 각 1000, Synthesis: 800)
+- Concurrency: Round 1/2 병렬 실행 (2배 속도 향상)
+- Fallback: 타임아웃 시 step5 초기 답변 사용
+
 ### Feature Flag 전체 목록
 
 | Flag | 기본값 | 설명 | Phase |
@@ -87,8 +131,8 @@ curl -X POST http://localhost:8000/api/v1/answer \
 | `FEATURE_NEURAL_CASE_SELECTOR` | false | Vector 하이브리드 검색 | 2A |
 | `FEATURE_MCP_TOOLS` | false | MCP 도구 실행 | 2B |
 | `FEATURE_TOOLS_POLICY` | false | 도구 Whitelist 정책 | 2B |
+| `FEATURE_DEBATE_MODE` | false | Multi-Agent Debate | 3.2 |
 | `FEATURE_SOFT_Q_BANDIT` | false | RL 기반 정책 선택 | 3 (예정) |
-| `FEATURE_DEBATE_MODE` | false | Multi-Agent Debate | 3 (예정) |
 | `FEATURE_EXPERIENCE_REPLAY` | false | 경험 리플레이 버퍼 | 3 (예정) |
 
 ### 7-Step LangGraph Pipeline
