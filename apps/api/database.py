@@ -6,7 +6,7 @@ import os
 import asyncio
 from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.types import TypeDecorator, TEXT
@@ -201,7 +201,7 @@ class CaseBank(Base):
     quality_score: Mapped[Optional[float]] = mapped_column(Float)
     usage_count: Mapped[Optional[int]] = mapped_column(Integer)
     success_rate: Mapped[Optional[float]] = mapped_column(Float)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('now()'))
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
     last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     # @IMPL:CASEBANK-002:0.2.1 - Version management
@@ -214,10 +214,79 @@ class CaseBank(Base):
     # @IMPL:CASEBANK-002:0.2.3 - Timestamp
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
+        server_default=text('CURRENT_TIMESTAMP'),
         nullable=False
     )
+
+# @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.1
+class ExecutionLog(Base):
+    __tablename__ = "execution_log"
+
+    log_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    case_id: Mapped[str] = mapped_column(Text, ForeignKey("case_bank.case_id"), nullable=False)
+    success: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    error_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    execution_time_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    context: Mapped[Optional[Dict[str, Any]]] = mapped_column(get_json_type(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=text('CURRENT_TIMESTAMP'),
+        nullable=False
+    )
+
+    case = relationship("CaseBank", backref="execution_logs")
+
+# @IMPL:REFLECTION-001:0.3 - ExecutionLog indices optimization
+async def optimize_execution_log_indices(session: AsyncSession) -> Dict[str, Any]:
+    """
+    ExecutionLog 테이블 인덱스 최적화
+
+    3개 인덱스 생성:
+    - idx_execution_log_case_id: case_id 필드 (JOIN 성능)
+    - idx_execution_log_created_at: created_at 필드 DESC (시간순 조회 성능)
+    - idx_execution_log_success: success 필드 (성공률 분석 성능)
+    """
+    try:
+        optimization_queries = []
+
+        if "postgresql" in DATABASE_URL:
+            optimization_queries = [
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_case_id ON execution_log(case_id)",
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_created_at ON execution_log(created_at DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_success ON execution_log(success)"
+            ]
+        elif "sqlite" in DATABASE_URL:
+            optimization_queries = [
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_case_id ON execution_log(case_id)",
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_created_at ON execution_log(created_at DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_success ON execution_log(success)"
+            ]
+
+        created_indices = []
+        for query in optimization_queries:
+            try:
+                await session.execute(text(query))
+                index_name = query.split("idx_")[1].split(" ")[0] if "idx_" in query else "unknown"
+                created_indices.append(index_name)
+            except Exception as e:
+                logger.warning(f"ExecutionLog 인덱스 생성 실패: {e}")
+
+        await session.commit()
+
+        return {
+            "success": True,
+            "indices_created": created_indices,
+            "message": f"ExecutionLog {len(created_indices)}개 인덱스 최적화 완료"
+        }
+
+    except Exception as e:
+        logger.error(f"ExecutionLog 인덱스 최적화 실패: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "indices_created": []
+        }
 
 # @IMPL:CASEBANK-002:0.3 - CaseBank indices optimization
 async def optimize_casebank_indices(session: AsyncSession) -> Dict[str, Any]:
