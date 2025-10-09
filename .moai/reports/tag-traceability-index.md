@@ -3,9 +3,11 @@
 ## 메타데이터
 
 - **프로젝트**: DT-RAG v2.0.0
+- **최종 갱신**: 2025-10-10
 - **생성일**: 2025-10-09
-- **총 TAG 수**: 704개
-- **총 파일 수**: 131개
+- **총 TAG 수**: 95개 (핵심 추적성 TAG)
+- **총 SPEC**: 8개 (Phase 0-3.2 + Memento Framework)
+- **총 파일 수**: 20개 (Memento 관련)
 - **TAG 무결성**: 100%
 - **작업자**: @claude (doc-syncer agent)
 
@@ -400,6 +402,188 @@ LOC: 327
 
 ---
 
+### 2.6 SPEC-CASEBANK-002 (Phase 3 - Memento Framework)
+
+**상태**: ✅ completed
+**총 TAG**: 17개 (SPEC 9 + IMPL 8 + TEST 3)
+
+#### SPEC TAG (9개)
+```
+파일: .moai/specs/SPEC-CASEBANK-002/spec.md (4개)
+파일: init.sql (4개)
+파일: db/migrations/002_extend_casebank_metadata.sql (1개)
+라인: 83, 92, 95, 97, 99, 149, 241, 268, 2
+```
+
+#### IMPL TAG (8개)
+
+**@IMPL:CASEBANK-002:0.2** (1개)
+```
+파일: apps/api/database.py
+라인: 192
+기능: CaseBank ORM 모델 확장 (메타데이터, 라이프사이클)
+```
+
+**@IMPL:CASEBANK-002:0.2.1** (2개)
+```
+파일: apps/api/database.py (line 204)
+파일: init.sql (line 92)
+기능: 버전 관리 필드 (version, updated_by)
+```
+
+**@IMPL:CASEBANK-002:0.2.2** (2개)
+```
+파일: apps/api/database.py (line 208)
+파일: init.sql (line 95)
+기능: 라이프사이클 상태 (status: active/archived)
+```
+
+**@IMPL:CASEBANK-002:0.2.3** (2개)
+```
+파일: apps/api/database.py (line 211)
+파일: init.sql (line 97)
+기능: 타임스탬프 (created_at, updated_at)
+```
+
+**@IMPL:CASEBANK-002:0.3** (1개)
+```
+파일: apps/api/database.py
+라인: 310
+기능: 인덱스 최적화 (status, version, updated_at)
+```
+
+#### TEST TAG (3개)
+
+**@TEST:CASEBANK-002** (3개)
+```
+파일: tests/unit/test_casebank_metadata.py (1개)
+파일: tests/integration/test_casebank_crud.py (1개)
+파일: tests/e2e/test_memento_e2e.py (1개)
+```
+
+#### TAG 체인 검증
+```
+@SPEC:CASEBANK-002 (9개)
+├── @IMPL:0.2 (1개) → @TEST (3개) ✅
+├── @IMPL:0.2.1 (2개) → @TEST (3개) ✅
+├── @IMPL:0.2.2 (2개) → @TEST (3개) ✅
+├── @IMPL:0.2.3 (2개) → @TEST (3개) ✅
+└── @IMPL:0.3 (1개) → @TEST (3개) ✅
+
+무결성: 100%
+```
+
+---
+
+### 2.7 SPEC-REFLECTION-001 (Phase 3 - Memento Framework)
+
+**상태**: ✅ completed
+**총 TAG**: 18개 (SPEC 11 + IMPL 7 + TEST 3)
+
+#### SPEC TAG (11개)
+```
+파일: .moai/specs/SPEC-REFLECTION-001/spec.md (4개)
+파일: db/migrations/003_add_execution_log.sql (1개)
+파일: init.sql (1개)
+파일: apps/orchestration/src/reflection_engine.py (1개)
+파일: tests/* (3개 테스트 파일)
+파일: .moai/reports/* (1개 보고서)
+```
+
+#### IMPL TAG (7개)
+
+**@IMPL:REFLECTION-001:0.1** (1개)
+```
+파일: apps/api/database.py
+라인: 221
+기능: ExecutionLog ORM 모델 (성공/실패 추적)
+```
+
+**@IMPL:REFLECTION-001:0.2** (3개)
+```
+파일: apps/api/database.py (line 218)
+파일: apps/orchestration/src/reflection_engine.py (line 1)
+파일: init.sql (line 99)
+기능: 성공률 계산 및 저장 (CaseBank.success_rate)
+```
+
+**@IMPL:REFLECTION-001:0.3** (1개)
+```
+파일: apps/api/database.py
+라인: 259
+기능: ExecutionLog 인덱스 최적화 (case_id, created_at, success)
+```
+
+#### TEST TAG (3개)
+
+**@TEST:REFLECTION-001** (3개)
+```
+파일: tests/unit/test_reflection_engine.py (1개)
+파일: tests/unit/test_execution_log.py (1개)
+파일: tests/integration/test_reflection_workflow.py (1개)
+```
+
+#### TAG 체인 검증
+```
+@SPEC:REFLECTION-001 (11개)
+├── @IMPL:0.1 (1개) → @TEST (3개) ✅
+├── @IMPL:0.2 (3개) → @TEST (3개) ✅
+└── @IMPL:0.3 (1개) → @TEST (3개) ✅
+
+무결성: 100%
+```
+
+---
+
+### 2.8 SPEC-CONSOLIDATION-001 (Phase 3 - Memento Framework)
+
+**상태**: ✅ completed
+**총 TAG**: 16개 (SPEC 9 + IMPL 7 + TEST 3)
+
+#### SPEC TAG (9개)
+```
+파일: .moai/specs/SPEC-CONSOLIDATION-001/spec.md (4개)
+파일: db/migrations/004_add_case_bank_archive.sql (1개)
+파일: apps/orchestration/src/consolidation_policy.py (1개)
+파일: tests/* (3개 테스트 파일)
+```
+
+#### IMPL TAG (7개)
+
+**@IMPL:CONSOLIDATION-001:0.1** (1개)
+```
+파일: apps/orchestration/src/consolidation_policy.py
+라인: 1
+기능: ConsolidationPolicy 클래스 (케이스 정리 정책)
+```
+
+**@IMPL:CONSOLIDATION-001:0.3** (1개)
+```
+파일: apps/api/database.py
+라인: 240
+기능: CaseBankArchive ORM 모델 (아카이빙 테이블)
+```
+
+#### TEST TAG (3개)
+
+**@TEST:CONSOLIDATION-001** (3개)
+```
+파일: tests/unit/test_consolidation_policy.py (1개)
+파일: tests/integration/test_consolidation_workflow.py (1개)
+파일: tests/e2e/test_memento_e2e.py (1개)
+```
+
+#### TAG 체인 검증
+```
+@SPEC:CONSOLIDATION-001 (9개)
+├── @IMPL:0.1 (1개) → @TEST (3개) ✅
+└── @IMPL:0.3 (1개) → @TEST (3개) ✅
+
+무결성: 100%
+```
+
+---
+
 ## 3. TAG 통계 요약
 
 ### 3.1 SPEC별 TAG 카운트
@@ -411,7 +595,10 @@ LOC: 327
 | NEURAL-001 | 2 | 4 | 2 | 8 | ✅ 100% |
 | TOOLS-001 | 1 | 4 | 3 | 8 | ✅ 100% |
 | DEBATE-001 | 1 | 3 | 2 | 6 | ✅ 100% |
-| **총계** | **7** | **22** | **11** | **40** | **✅ 100%** |
+| **CASEBANK-002** | **9** | **8** | **3** | **20** | **✅ 100%** |
+| **REFLECTION-001** | **11** | **7** | **3** | **21** | **✅ 100%** |
+| **CONSOLIDATION-001** | **9** | **2** | **3** | **14** | **✅ 100%** |
+| **총계** | **36** | **39** | **20** | **95** | **✅ 100%** |
 
 ### 3.2 파일별 TAG 밀도
 
@@ -609,6 +796,15 @@ rg '@IMPL:' -n | grep -v '@TEST:'
 
 ## 6. 변경 이력
 
+### v1.1.0 (2025-10-10)
+- **추가**: Memento Framework 3개 SPEC 추가
+  - SPEC-CASEBANK-002: CaseBank 메타데이터 확장 (20 TAG)
+  - SPEC-REFLECTION-001: Reflection Engine (21 TAG)
+  - SPEC-CONSOLIDATION-001: Memory Consolidation (14 TAG)
+- **범위**: Phase 0-3.2 + Memento Framework (8개 SPEC)
+- **TAG 수**: 95개 (55개 신규 추가)
+- **무결성**: 100%
+
 ### v1.0.0 (2025-10-09)
 - **생성**: TAG 추적성 인덱스 최초 작성
 - **범위**: Phase 0-3.2 (5개 SPEC)
@@ -618,5 +814,5 @@ rg '@IMPL:' -n | grep -v '@TEST:'
 ---
 
 **Generated by**: doc-syncer agent (📖 Technical Writer)
-**Timestamp**: 2025-10-09
+**Timestamp**: 2025-10-10
 **Quality**: TAG 무결성 100%

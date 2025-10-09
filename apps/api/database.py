@@ -193,16 +193,13 @@ class DocTaxonomy(Base):
 class CaseBank(Base):
     __tablename__ = "case_bank"
 
-    case_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    case_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
     query: Mapped[str] = mapped_column(Text, nullable=False)
-    response_text: Mapped[str] = mapped_column(Text, nullable=False)
-    category_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
-    query_vector: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)
-    quality_score: Mapped[Optional[float]] = mapped_column(Float)
-    usage_count: Mapped[Optional[int]] = mapped_column(Integer)
-    success_rate: Mapped[Optional[float]] = mapped_column(Float)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('CURRENT_TIMESTAMP'))
-    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    sources: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), nullable=False)
+    category_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String), nullable=True)
+    quality: Mapped[Optional[float]] = mapped_column(Float)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=text('NOW()'))
 
     # @IMPL:CASEBANK-002:0.2.1 - Version management
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
@@ -218,12 +215,15 @@ class CaseBank(Base):
         nullable=False
     )
 
+    # @IMPL:REFLECTION-001:0.2 - Performance metrics
+    success_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
 # @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.1
 class ExecutionLog(Base):
     __tablename__ = "execution_log"
 
     log_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    case_id: Mapped[str] = mapped_column(Text, ForeignKey("case_bank.case_id"), nullable=False)
+    case_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey("case_bank.case_id"), nullable=False)
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)
     error_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -242,12 +242,12 @@ class CaseBankArchive(Base):
     __tablename__ = "case_bank_archive"
 
     archive_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    case_id: Mapped[str] = mapped_column(Text, nullable=False)
+    case_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
     query: Mapped[str] = mapped_column(Text, nullable=False)
-    response_text: Mapped[str] = mapped_column(Text, nullable=False)
-    category_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
-    query_vector: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)
-    usage_count: Mapped[Optional[int]] = mapped_column(Integer)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    sources: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), nullable=False)
+    category_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String), nullable=True)
+    quality: Mapped[Optional[float]] = mapped_column(Float)
     success_rate: Mapped[Optional[float]] = mapped_column(Float)
     archived_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

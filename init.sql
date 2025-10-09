@@ -79,7 +79,8 @@ CREATE TABLE IF NOT EXISTS taxonomy_migrations (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Case bank for CBR (PRD line 173)
+-- Case bank for CBR (PRD line 173 + Memento Framework Extensions)
+-- @SPEC:CASEBANK-002 - Extended with version management and lifecycle tracking
 CREATE TABLE IF NOT EXISTS case_bank (
     case_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     query TEXT NOT NULL,
@@ -87,7 +88,16 @@ CREATE TABLE IF NOT EXISTS case_bank (
     sources JSONB NOT NULL,
     category_path TEXT[],
     quality FLOAT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- @IMPL:CASEBANK-002:0.2.1 - Version management
+    version INTEGER DEFAULT 1 NOT NULL,
+    updated_by VARCHAR(255),
+    -- @IMPL:CASEBANK-002:0.2.2 - Lifecycle status
+    status VARCHAR(50) DEFAULT 'active' NOT NULL,
+    -- @IMPL:CASEBANK-002:0.2.3 - Timestamp
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    -- @IMPL:REFLECTION-001:0.2 - Performance metrics
+    success_rate FLOAT
 );
 
 -- Search logs for RAGAS evaluation
@@ -135,6 +145,11 @@ CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_path ON doc_taxonomy USING gin(path)
 CREATE INDEX IF NOT EXISTS idx_taxonomy_nodes_version ON taxonomy_nodes(version);
 CREATE INDEX IF NOT EXISTS idx_taxonomy_nodes_canonical_path ON taxonomy_nodes USING gin(canonical_path);
 CREATE INDEX IF NOT EXISTS idx_search_logs_created_at ON search_logs(created_at);
+
+-- CaseBank indexes (@SPEC:CASEBANK-002)
+CREATE INDEX IF NOT EXISTS idx_casebank_status ON case_bank(status);
+CREATE INDEX IF NOT EXISTS idx_casebank_version ON case_bank(version DESC);
+CREATE INDEX IF NOT EXISTS idx_casebank_updated_at ON case_bank(updated_at DESC);
 
 -- ============================================================================
 -- LEGACY SYSTEM ISOLATION (Deprecated - DO NOT USE)
@@ -223,6 +238,22 @@ CREATE TRIGGER update_ingestion_jobs_updated_at
 BEFORE UPDATE ON ingestion_jobs
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- CaseBank auto-update trigger (@SPEC:CASEBANK-002)
+CREATE OR REPLACE FUNCTION update_casebank_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    IF TG_OP = 'UPDATE' THEN
+        NEW.version = OLD.version + 1;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_casebank_update_timestamp
+BEFORE UPDATE ON case_bank
+FOR EACH ROW EXECUTE FUNCTION update_casebank_timestamp();
+
 -- ============================================================================
 -- COMMENTS (Documentation)
 -- ============================================================================
@@ -234,5 +265,5 @@ COMMENT ON TABLE taxonomy_nodes IS 'PRD v1.8.1 compliant: DAG nodes with canonic
 COMMENT ON TABLE taxonomy_edges IS 'PRD v1.8.1 compliant: Parent-child relationships with version awareness';
 COMMENT ON TABLE doc_taxonomy IS 'PRD v1.8.1 compliant: Document-taxonomy mappings with confidence and HITL flags';
 COMMENT ON TABLE taxonomy_migrations IS 'PRD v1.8.1 compliant: Taxonomy version migration history';
-COMMENT ON TABLE case_bank IS 'PRD v1.8.1 compliant: Case-based reasoning repository (read-only in 1P)';
+COMMENT ON TABLE case_bank IS 'Memento Framework: Case-based reasoning with lifecycle management and version tracking (@SPEC:CASEBANK-002)';
 COMMENT ON SCHEMA legacy IS 'DEPRECATED: Legacy system tables isolated for migration purposes only';

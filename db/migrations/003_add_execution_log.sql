@@ -6,7 +6,7 @@
 -- Create ExecutionLog table
 CREATE TABLE IF NOT EXISTS execution_log (
     log_id SERIAL PRIMARY KEY,
-    case_id TEXT NOT NULL REFERENCES case_bank(case_id),
+    case_id UUID NOT NULL REFERENCES case_bank(case_id),
     success BOOLEAN NOT NULL,
     error_type VARCHAR(100),
     error_message TEXT,

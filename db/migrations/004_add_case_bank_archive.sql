@@ -10,12 +10,12 @@ BEGIN;
 -- 1. Create CaseBankArchive table (optional backup)
 CREATE TABLE IF NOT EXISTS case_bank_archive (
     archive_id SERIAL PRIMARY KEY,
-    case_id TEXT NOT NULL,
+    case_id UUID NOT NULL,
     query TEXT NOT NULL,
-    response_text TEXT NOT NULL,
-    category_path TEXT[] NOT NULL,
-    query_vector FLOAT[] NOT NULL,
-    usage_count INTEGER,
+    answer TEXT NOT NULL,
+    sources JSONB NOT NULL,
+    category_path TEXT[],
+    quality FLOAT,
     success_rate REAL,
     archived_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     archived_reason VARCHAR(255)
@@ -34,12 +34,12 @@ CREATE INDEX IF NOT EXISTS idx_archive_archived_reason
 -- 3. Add comments for documentation
 COMMENT ON TABLE case_bank_archive IS 'Archive table for removed CaseBank cases (backup/audit)';
 COMMENT ON COLUMN case_bank_archive.archive_id IS 'Primary key auto-incrementing ID';
-COMMENT ON COLUMN case_bank_archive.case_id IS 'Original case_id from case_bank';
+COMMENT ON COLUMN case_bank_archive.case_id IS 'Original case_id from case_bank (UUID)';
 COMMENT ON COLUMN case_bank_archive.query IS 'Original query text';
-COMMENT ON COLUMN case_bank_archive.response_text IS 'Original response text';
+COMMENT ON COLUMN case_bank_archive.answer IS 'Original answer text';
+COMMENT ON COLUMN case_bank_archive.sources IS 'Original sources (JSONB)';
 COMMENT ON COLUMN case_bank_archive.category_path IS 'Original taxonomy category path';
-COMMENT ON COLUMN case_bank_archive.query_vector IS 'Original query embedding vector';
-COMMENT ON COLUMN case_bank_archive.usage_count IS 'Usage count at time of archiving';
+COMMENT ON COLUMN case_bank_archive.quality IS 'Quality score at time of archiving';
 COMMENT ON COLUMN case_bank_archive.success_rate IS 'Success rate at time of archiving';
 COMMENT ON COLUMN case_bank_archive.archived_at IS 'Timestamp when case was archived';
 COMMENT ON COLUMN case_bank_archive.archived_reason IS 'Reason for archiving (low_performance, duplicate, inactive)';
