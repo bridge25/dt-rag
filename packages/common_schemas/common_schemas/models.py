@@ -38,6 +38,7 @@ class SearchRequest(BaseModel):
     min_score: Optional[float] = Field(None, description="Minimum relevance score", ge=0, le=1)
     include_highlights: bool = Field(True, description="Include highlighted text snippets")
     search_mode: Optional[str] = Field("hybrid", description="Search mode: hybrid, bm25, vector")
+    use_neural: bool = Field(False, description="Enable neural vector search (SPEC-NEURAL-001)")
 
 
 class SearchResponse(BaseModel):
@@ -49,6 +50,7 @@ class SearchResponse(BaseModel):
     sources_count: Optional[int] = Field(None, description="Number of unique source documents")
     taxonomy_version: Optional[str] = Field(None, description="Taxonomy version used")
     query_analysis: Optional[Dict[str, Any]] = Field(None, description="Query analysis metadata")
+    mode: Optional[str] = Field(None, description="Search mode used: neural, bm25, hybrid, bm25_fallback (SPEC-NEURAL-001)")
 
 
 # Additional models for orchestration and other systems

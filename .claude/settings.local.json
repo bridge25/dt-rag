@@ -140,7 +140,15 @@
       "SlashCommand(/alfred:9-update)",
       "Read(//home/a/.npm-global/lib/node_modules/moai-adk/templates/**)",
       "Bash(do echo \"=== SPEC-$spec-001 ===\")",
-      "Read(//mnt/c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/**)"
+      "Read(//mnt/c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/**)",
+      "SlashCommand(/alfred:1-spec \"Feature Flag 시스템 강화 및 CaseBank Vector 활성화\")",
+      "Bash(__NEW_LINE__ git checkout -b feature/SPEC-FOUNDATION-001)",
+      "Bash(__NEW_LINE__ git add .moai/specs/SPEC-FOUNDATION-001/spec.md .moai/specs/SPEC-FOUNDATION-001/plan.md .moai/specs/SPEC-FOUNDATION-001/acceptance.md)",
+      "Bash(__NEW_LINE__ git log --oneline -1)",
+      "Bash(__NEW_LINE__ git show HEAD --stat)",
+      "SlashCommand(/alfred:2-build:*)",
+      "Bash(pytest:*)",
+      "SlashCommand(/alfred:3-sync:*)"
     ],
     "deny": [],
     "ask": []

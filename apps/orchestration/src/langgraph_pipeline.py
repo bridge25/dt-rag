@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 # Import hybrid search engine (lazy to avoid initialization delays)
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 logging.basicConfig(level=logging.INFO)
@@ -32,25 +33,30 @@ logger = logging.getLogger(__name__)
 _search_engine = None
 _llm_service = None
 
+
 def get_search_engine():
     """Lazy load search engine"""
     global _search_engine
     if _search_engine is None:
         from apps.search.hybrid_search_engine import search_engine
+
         _search_engine = search_engine
     return _search_engine
+
 
 def get_llm_service_cached():
     """Lazy load LLM service"""
     global _llm_service
     if _llm_service is None:
         from apps.api.llm_service import get_llm_service
+
         _llm_service = get_llm_service()
     return _llm_service
 
 
 class PipelineState(BaseModel):
     """Minimal state schema for 7-Step pipeline (6 fields)"""
+
     query: str
     intent: Optional[str] = None
     retrieved_chunks: List[Dict[str, Any]] = Field(default_factory=list)
@@ -63,10 +69,13 @@ class PipelineState(BaseModel):
     canonical_filter: Optional[List[List[str]]] = None
     start_time: float = Field(default_factory=time.time)
     step_timings: Dict[str, float] = Field(default_factory=dict)
+    plan: Optional[Dict[str, Any]] = None  # Meta-planner output
+    tool_results: List[Dict[str, Any]] = Field(default_factory=list)  # Tool execution results
 
 
 class PipelineRequest(BaseModel):
     """Request to LangGraph pipeline"""
+
     query: str
     taxonomy_version: str = "1.0.0"
     canonical_filter: Optional[List[List[str]]] = None
@@ -75,6 +84,7 @@ class PipelineRequest(BaseModel):
 
 class PipelineResponse(BaseModel):
     """Response from LangGraph pipeline"""
+
     answer: str
     sources: List[Dict[str, Any]]
     confidence: float
@@ -92,13 +102,13 @@ class PipelineResponse(BaseModel):
 # 실측값 (2회 테스트 평균): intent(~0.1ms), retrieve(0.37~1.19s), compose(1.29~2.06s), respond(~0.05ms)
 # 각 단계별 최대 실측값 × 1.5 여유율 적용
 STEP_TIMEOUTS = {
-    "intent": 0.1,       # 0.1s - 간단한 파싱 (실측 0.056~0.15ms)
-    "retrieve": 2.0,     # 2.0s - Hybrid search + rerank + embedding generation (실측 0.37~1.19s)
-    "plan": 0.5,         # 0.5s - Meta-level Planning (stub, Phase 1)
-    "tools_debate": 1.0, # 1.0s - Tools/Debate (stub, Phase 2B/3)
-    "compose": 3.5,      # 3.5s - LLM 1회 호출 (Gemini API 포함, 실측 1.29~2.06s, API 변동 고려)
-    "cite": 0.1,         # 0.1s - Source Citation (stub)
-    "respond": 0.1,      # 0.1s - 포맷팅 및 신뢰도 계산 (실측 0.043~0.05ms)
+    "intent": 0.1,  # 0.1s - 간단한 파싱 (실측 0.056~0.15ms)
+    "retrieve": 2.0,  # 2.0s - Hybrid search + rerank + embedding generation (실측 0.37~1.19s)
+    "plan": 0.5,  # 0.5s - Meta-level Planning (stub, Phase 1)
+    "tools_debate": 1.0,  # 1.0s - Tools/Debate (stub, Phase 2B/3)
+    "compose": 3.5,  # 3.5s - LLM 1회 호출 (Gemini API 포함, 실측 1.29~2.06s, API 변동 고려)
+    "cite": 0.1,  # 0.1s - Source Citation (stub)
+    "respond": 0.1,  # 0.1s - 포맷팅 및 신뢰도 계산 (실측 0.043~0.05ms)
 }
 
 
@@ -116,8 +126,12 @@ async def execute_with_timeout(step_func, state: PipelineState, step_name: str):
 
     except asyncio.TimeoutError:
         elapsed = time.time() - step_start
-        logger.error(f"Step {step_name} timeout after {elapsed:.3f}s (limit: {timeout}s)")
-        raise TimeoutError(f"Pipeline step '{step_name}' exceeded timeout of {timeout}s")
+        logger.error(
+            f"Step {step_name} timeout after {elapsed:.3f}s (limit: {timeout}s)"
+        )
+        raise TimeoutError(
+            f"Pipeline step '{step_name}' exceeded timeout of {timeout}s"
+        )
 
 
 async def step1_intent(state: PipelineState) -> PipelineState:
@@ -134,7 +148,9 @@ async def step1_intent(state: PipelineState) -> PipelineState:
     query_lower = state.query.lower()
 
     # Simple intent classification
-    if "?" in state.query or any(q in query_lower for q in ["what", "how", "why", "when", "where", "who"]):
+    if "?" in state.query or any(
+        q in query_lower for q in ["what", "how", "why", "when", "where", "who"]
+    ):
         intent = "question"
     elif any(cmd in query_lower for cmd in ["explain", "describe", "tell me"]):
         intent = "explanation"
@@ -201,41 +217,91 @@ async def step2_retrieve(state: PipelineState) -> PipelineState:
 
 async def step3_plan(state: PipelineState) -> PipelineState:
     """
-    # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
-    Step 3: Meta-level Planning (stub)
+    # @SPEC:PLANNER-001 @IMPL:PLANNER-001:0.3
+    Step 3: Meta-level Planning
 
+    Analyzes query complexity and generates execution plan using LLM.
     Conditional execution based on meta_planner feature flag.
-    TODO: Implement meta-planning logic in Phase 1
     """
     from apps.api.env_manager import get_env_manager
+    from apps.orchestration.src.meta_planner import analyze_complexity, generate_plan
+
     flags = get_env_manager().get_feature_flags()
 
     if not flags.get("meta_planner", False):
         logger.info("Step 3 (plan) skipped (feature flag OFF)")
         return state
 
-    logger.info("Step 3 (plan) executed (stub)")
-    # TODO: Implement meta-planning logic in Phase 1
+    complexity_result = await analyze_complexity(state.query)
+    logger.info(f"Query complexity: {complexity_result['complexity']}")
+
+    plan = await generate_plan(
+        query=state.query, complexity=complexity_result["complexity"], timeout=10.0
+    )
+
+    state.plan = plan
+    logger.info(
+        f"Step 3 (plan) executed: strategy={plan['strategy']}, tools={plan['tools']}"
+    )
+
     return state
 
 
 async def step4_tools_debate(state: PipelineState) -> PipelineState:
     """
-    # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
-    Step 4: Tools/Debate (stub)
+    # @SPEC:TOOLS-001 @IMPL:TOOLS-001:0.4
+    Step 4: Tools Execution & Debate
 
-    Conditional execution based on debate_mode and tools_policy flags.
-    TODO: Implement tools/debate logic in Phase 2B/3
+    Executes tools from Meta-Planner's plan.tools list.
+    Conditional execution based on mcp_tools and tools_policy flags.
     """
     from apps.api.env_manager import get_env_manager
+    from apps.orchestration.src.tool_executor import execute_tool
+
     flags = get_env_manager().get_feature_flags()
 
-    if not flags.get("debate_mode", False) and not flags.get("tools_policy", False):
-        logger.info("Step 4 (tools/debate) skipped (feature flags OFF)")
+    if not flags.get("mcp_tools", False):
+        logger.info("Step 4 (tools/debate) skipped (mcp_tools flag OFF)")
         return state
 
-    logger.info("Step 4 (tools/debate) executed (stub)")
-    # TODO: Implement tools/debate logic in Phase 2B/3
+    plan = state.plan or {}
+    tools_to_execute = plan.get("tools", [])
+
+    if not tools_to_execute:
+        logger.info("Step 4: No tools to execute")
+        return state
+
+    registry = None
+    if flags.get("tools_policy", False):
+        from apps.orchestration.src.tool_registry import ToolRegistry
+        registry = ToolRegistry()
+
+    tool_results = []
+    for tool_name in tools_to_execute:
+        if flags.get("tools_policy", False) and registry:
+            if not registry.validate_tool(tool_name):
+                logger.warning(f"Tool '{tool_name}' blocked by whitelist")
+                tool_results.append({
+                    "tool": tool_name,
+                    "success": False,
+                    "error": "Blocked by whitelist policy"
+                })
+                continue
+
+        input_data = plan.get(f"{tool_name}_input", {})
+        result = await execute_tool(tool_name, input_data, timeout=30.0)
+
+        tool_results.append({
+            "tool": tool_name,
+            "success": result.success,
+            "result": result.result,
+            "error": result.error,
+            "elapsed": result.elapsed
+        })
+
+    state.tool_results = tool_results
+    logger.info(f"Step 4 (tools) executed: {len(tool_results)} tools")
+
     return state
 
 
@@ -257,10 +323,12 @@ async def step5_compose(state: PipelineState) -> PipelineState:
 
     # Build context from top chunks
     context_chunks = state.retrieved_chunks[:5]
-    context_text = "\n\n".join([
-        f"[출처 {i+1}] {chunk['title']}\n{chunk['text'][:500]}..."
-        for i, chunk in enumerate(context_chunks)
-    ])
+    context_text = "\n\n".join(
+        [
+            f"[출처 {i + 1}] {chunk['title']}\n{chunk['text'][:500]}..."
+            for i, chunk in enumerate(context_chunks)
+        ]
+    )
 
     # Build prompt
     f"""다음 정보를 바탕으로 사용자 질문에 답변하세요.
@@ -288,11 +356,11 @@ async def step5_compose(state: PipelineState) -> PipelineState:
                     "text": chunk["text"],
                     "source_url": chunk["source_url"],
                     "title": chunk["title"],
-                    "hybrid_score": chunk["score"]
+                    "hybrid_score": chunk["score"],
                 }
                 for chunk in context_chunks
             ],
-            mode="answer"
+            mode="answer",
         )
 
         state.answer = result.answer.strip()
@@ -355,7 +423,9 @@ async def step7_respond(state: PipelineState) -> PipelineState:
     # Final confidence
     state.confidence = min(max(top_score * source_penalty, 0.0), 1.0)
 
-    logger.info(f"Confidence score: {state.confidence:.3f} (top_score={top_score:.3f}, sources={source_count})")
+    logger.info(
+        f"Confidence score: {state.confidence:.3f} (top_score={top_score:.3f}, sources={source_count})"
+    )
 
     return state
 
@@ -379,7 +449,7 @@ class LangGraphPipeline:
             query=request.query,
             taxonomy_version=request.taxonomy_version,
             canonical_filter=request.canonical_filter,
-            start_time=start_time
+            start_time=start_time,
         )
 
         try:
@@ -393,7 +463,9 @@ class LangGraphPipeline:
             state = await execute_with_timeout(step3_plan, state, "plan")
 
             # Step 4: Tools/Debate (NEW)
-            state = await execute_with_timeout(step4_tools_debate, state, "tools_debate")
+            state = await execute_with_timeout(
+                step4_tools_debate, state, "tools_debate"
+            )
 
             # Step 5: Compose
             state = await execute_with_timeout(step5_compose, state, "compose")
@@ -416,7 +488,7 @@ class LangGraphPipeline:
                 latency=total_latency,
                 cost=0.0,  # TODO: Calculate actual cost
                 intent=state.intent,
-                step_timings=state.step_timings
+                step_timings=state.step_timings,
             )
 
             logger.info(f"Pipeline completed in {total_latency:.3f}s (p95 target: 4s)")

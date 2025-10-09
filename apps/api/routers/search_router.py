@@ -91,68 +91,229 @@ class SearchService:
     """Production search service with hybrid BM25 + vector search"""
 
     async def search(self, request: SearchRequest, correlation_id: Optional[str] = None) -> SearchResponse:
-        """Perform hybrid search using BM25 + vector similarity + reranking"""
+        """
+        Perform hybrid search using BM25 + vector similarity + reranking
+
+        @SPEC:NEURAL-001 @IMPL:NEURAL-001:0.4
+        Supports neural case selector feature flag and fallback logic.
+        """
         start_time = time.time()
         request_id = str(uuid.uuid4())
         correlation_id = correlation_id or str(uuid.uuid4())
 
         try:
-            if not HYBRID_SEARCH_AVAILABLE:
-                raise HTTPException(
-                    status_code=503,
-                    detail="Search service unavailable - hybrid search engine not initialized"
+            # Check neural case selector feature flag
+            from ..env_manager import get_env_manager
+            env_manager = get_env_manager()
+            flags = env_manager.get_feature_flags()
+            neural_enabled = request.use_neural and flags.get("neural_case_selector", False)
+
+            # If neural search disabled, use existing hybrid search
+            if not neural_enabled:
+                return await self._legacy_hybrid_search(request, request_id, correlation_id, start_time)
+
+            # Neural search enabled - use CaseBank vector search
+            try:
+                return await self._neural_search(request, request_id, correlation_id, start_time)
+            except Exception as e:
+                logger.warning(f"Neural search failed, falling back to BM25: {e}")
+                return await self._bm25_fallback_search(request, request_id, correlation_id, start_time)
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Search operation failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="Search operation failed"
+            )
+
+    async def _legacy_hybrid_search(self, request: SearchRequest, request_id: str,
+                                    correlation_id: str, start_time: float) -> SearchResponse:
+        """Legacy hybrid search (existing implementation)"""
+        if not HYBRID_SEARCH_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="Search service unavailable - hybrid search engine not initialized"
+            )
+
+        # Prepare search parameters
+        search_filters = self._prepare_filters(request)
+
+        # Perform hybrid search with correlation tracking
+        search_results, search_metrics = await hybrid_search(
+            query=request.q,
+            top_k=request.max_results,
+            filters=search_filters,
+            bm25_candidates=min(100, request.max_results * 4),
+            vector_candidates=min(100, request.max_results * 4),
+            correlation_id=correlation_id
+        )
+
+        # Convert to SearchHit objects
+        hits = []
+        for result in search_results:
+            hit = SearchHit(
+                chunk_id=result["chunk_id"],
+                score=result["score"],
+                text=result["text"],
+                source=SourceMeta(
+                    url=result["source_url"] or "",
+                    title=result["title"] or "Untitled",
+                    date=result.get("metadata", {}).get("date", "")
+                ),
+                taxonomy_path=result["taxonomy_path"]
+            )
+            hits.append(hit)
+
+        # Calculate response metrics
+        total_latency = time.time() - start_time
+
+        return SearchResponse(
+            hits=hits,
+            latency=total_latency,
+            request_id=request_id,
+            total_candidates=search_metrics.get("candidates_found", {}).get("bm25", 0) +
+                            search_metrics.get("candidates_found", {}).get("vector", 0),
+            sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
+            taxonomy_version="1.8.1",
+            mode="bm25"  # Legacy mode
+        )
+
+    async def _neural_search(self, request: SearchRequest, request_id: str,
+                            correlation_id: str, start_time: float) -> SearchResponse:
+        """
+        Neural search using CaseBank vector similarity
+
+        @SPEC:NEURAL-001 @IMPL:NEURAL-001:0.4
+        """
+        from ..neural_selector import vector_similarity_search, calculate_hybrid_score
+        from ..database import EmbeddingService, async_session
+
+        # Generate query embedding
+        query_embedding = await EmbeddingService.generate_embedding(request.q)
+
+        async with async_session() as session:
+            # Vector search on CaseBank
+            vector_results = await vector_similarity_search(
+                session, query_embedding, limit=request.max_results, timeout=0.1
+            )
+
+            # BM25 search (fallback to simple if needed)
+            bm25_results = await self._simple_bm25_search(session, request.q, request.max_results)
+
+            # Combine using hybrid scores
+            if vector_results and bm25_results:
+                vector_scores = [r["score"] for r in vector_results]
+                bm25_scores = [r.get("score", 0.5) for r in bm25_results[:len(vector_scores)]]
+
+                hybrid_scores = calculate_hybrid_score(
+                    vector_scores, bm25_scores, vector_weight=0.7, bm25_weight=0.3
                 )
 
-            # Prepare search parameters
-            search_filters = self._prepare_filters(request)
+                # Merge and re-rank
+                for i, result in enumerate(vector_results):
+                    result["score"] = hybrid_scores[i] if i < len(hybrid_scores) else result["score"]
 
-            # Perform hybrid search with correlation tracking
-            search_results, search_metrics = await hybrid_search(
-                query=request.q,
-                top_k=request.max_results,
-                filters=search_filters,
-                bm25_candidates=min(100, request.max_results * 4),
-                vector_candidates=min(100, request.max_results * 4),
-                correlation_id=correlation_id
-            )
+                # Sort by hybrid score
+                combined_results = sorted(vector_results, key=lambda x: x["score"], reverse=True)
+                search_mode = "hybrid"
+            else:
+                combined_results = vector_results or bm25_results
+                search_mode = "neural" if vector_results else "bm25"
 
             # Convert to SearchHit objects
             hits = []
-            for result in search_results:
+            for result in combined_results[:request.max_results]:
                 hit = SearchHit(
-                    chunk_id=result["chunk_id"],
+                    chunk_id=result.get("case_id", "unknown"),
                     score=result["score"],
-                    text=result["text"],
+                    text=result.get("response_text", result.get("text", "")),
                     source=SourceMeta(
-                        url=result["source_url"] or "",
-                        title=result["title"] or "Untitled",
-                        date=result.get("metadata", {}).get("date", "")
+                        url="casebank://case",
+                        title=result.get("query", "Case"),
+                        date=""
                     ),
-                    taxonomy_path=result["taxonomy_path"]
+                    taxonomy_path=result.get("category_path", [])
                 )
                 hits.append(hit)
 
-            # Calculate response metrics
             total_latency = time.time() - start_time
 
             return SearchResponse(
                 hits=hits,
                 latency=total_latency,
                 request_id=request_id,
-                total_candidates=search_metrics.get("candidates_found", {}).get("bm25", 0) +
-                                search_metrics.get("candidates_found", {}).get("vector", 0),
-                sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
-                taxonomy_version="1.8.1"
+                total_candidates=len(vector_results) + len(bm25_results),
+                sources_count=len(hits),
+                taxonomy_version="1.8.1",
+                mode=search_mode
             )
 
-        except HTTPException:
-            raise
-        except Exception as e:
-            logger.error(f"Hybrid search failed: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail="Search operation failed"
+    async def _bm25_fallback_search(self, request: SearchRequest, request_id: str,
+                                    correlation_id: str, start_time: float) -> SearchResponse:
+        """BM25 fallback search when neural search fails"""
+        from ..database import async_session
+
+        async with async_session() as session:
+            bm25_results = await self._simple_bm25_search(session, request.q, request.max_results)
+
+            hits = []
+            for result in bm25_results:
+                hit = SearchHit(
+                    chunk_id=result.get("case_id", "unknown"),
+                    score=result.get("score", 0.5),
+                    text=result.get("text", ""),
+                    source=SourceMeta(
+                        url="casebank://case",
+                        title="Fallback Result",
+                        date=""
+                    ),
+                    taxonomy_path=[]
+                )
+                hits.append(hit)
+
+            total_latency = time.time() - start_time
+
+            return SearchResponse(
+                hits=hits,
+                latency=total_latency,
+                request_id=request_id,
+                total_candidates=len(bm25_results),
+                sources_count=len(hits),
+                taxonomy_version="1.8.1",
+                mode="bm25_fallback"
             )
+
+    async def _simple_bm25_search(self, session, query: str, limit: int) -> List[Dict[str, Any]]:
+        """Simple BM25 search on CaseBank"""
+        from sqlalchemy import text
+
+        # Simple text search on CaseBank
+        bm25_query = text("""
+            SELECT case_id, query, response_text, category_path
+            FROM case_bank
+            WHERE query LIKE :search_pattern OR response_text LIKE :search_pattern
+            LIMIT :limit
+        """)
+
+        result = await session.execute(bm25_query, {
+            "search_pattern": f"%{query}%",
+            "limit": limit
+        })
+
+        rows = result.fetchall()
+
+        return [
+            {
+                "case_id": row[0],
+                "query": row[1],
+                "text": row[2],
+                "category_path": row[3],
+                "score": 0.5  # Static score for simple search
+            }
+            for row in rows
+        ]
 
     def _prepare_filters(self, request: SearchRequest) -> Dict[str, Any]:
         """Convert SearchRequest to internal filter format"""

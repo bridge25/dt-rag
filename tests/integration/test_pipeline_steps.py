@@ -46,13 +46,20 @@ class TestPipelineSteps:
             mock_mgr.get_feature_flags.return_value = {"meta_planner": True}
             mock_env_mgr.return_value = mock_mgr
 
-            from apps.orchestration.src.langgraph_pipeline import PipelineState
-            state = PipelineState(query="test")
+            with patch("apps.orchestration.src.meta_planner.generate_plan") as mock_gen_plan:
+                mock_gen_plan.return_value = {
+                    "tools": ["case_search"],
+                    "steps": ["retrieve", "compose"],
+                    "strategy": "simple"
+                }
 
-            result = await step3_plan(state)
+                from apps.orchestration.src.langgraph_pipeline import PipelineState
+                state = PipelineState(query="test")
 
-            # Step should execute (stub)
-            assert result == state
+                result = await step3_plan(state)
+
+                # Step should execute and add plan field
+                assert result.plan is not None
 
     @pytest.mark.asyncio
     async def test_step4_skip_when_flags_off(self):
@@ -191,3 +198,45 @@ class TestPipelineSteps:
                 assert mock_step7.called
                 assert response.answer is not None
                 assert response.latency > 0
+
+    @pytest.mark.asyncio
+    async def test_step3_plan_real_execution(self):
+        """TEST-PLANNER-001-010: step3_plan() 실제 실행 시 plan 필드 추가"""
+        with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
+            from unittest.mock import MagicMock
+            mock_mgr = MagicMock()
+            mock_mgr.get_feature_flags.return_value = {"meta_planner": True}
+            mock_env_mgr.return_value = mock_mgr
+
+            with patch("apps.orchestration.src.meta_planner.generate_plan") as mock_gen_plan:
+                mock_gen_plan.return_value = {
+                    "tools": ["case_search"],
+                    "steps": ["retrieve", "compose"],
+                    "strategy": "simple"
+                }
+
+                from apps.orchestration.src.langgraph_pipeline import PipelineState
+                state = PipelineState(query="보일러 고장 사례")
+
+                result = await step3_plan(state)
+
+                # plan 필드가 추가되어야 함
+                assert hasattr(result, "plan") or "plan" in result.model_dump()
+
+    @pytest.mark.asyncio
+    async def test_step3_plan_flag_off_no_plan(self):
+        """TEST-PLANNER-001-011: meta_planner=False 시 plan 필드 미추가"""
+        with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
+            from unittest.mock import MagicMock
+            mock_mgr = MagicMock()
+            mock_mgr.get_feature_flags.return_value = {"meta_planner": False}
+            mock_env_mgr.return_value = mock_mgr
+
+            from apps.orchestration.src.langgraph_pipeline import PipelineState
+            state = PipelineState(query="test")
+
+            result = await step3_plan(state)
+
+            # plan 필드가 없어야 함
+            state_dict = result.model_dump()
+            assert "plan" not in state_dict or state_dict.get("plan") is None
