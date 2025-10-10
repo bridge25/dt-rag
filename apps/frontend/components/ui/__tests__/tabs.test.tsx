@@ -1,8 +1,8 @@
-import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { Tabs, TabList, Tab, TabPanel } from '../tabs'
+import React from "react"
+import { render, screen, fireEvent } from "@testing-library/react"
+import { Tabs, TabList, Tab, TabPanel } from "../tabs"
 
-describe('Tabs', () => {
+describe("Tabs", () => {
   const TabsExample = () => (
     <Tabs defaultValue="tab1">
       <TabList>
@@ -22,58 +22,58 @@ describe('Tabs', () => {
     </Tabs>
   )
 
-  test('renders all tabs', () => {
+  test("renders all tabs", () => {
     render(<TabsExample />)
-    expect(screen.getByText('Tab 1')).toBeInTheDocument()
-    expect(screen.getByText('Tab 2')).toBeInTheDocument()
-    expect(screen.getByText('Tab 3')).toBeInTheDocument()
+    expect(screen.getByText("Tab 1")).toBeInTheDocument()
+    expect(screen.getByText("Tab 2")).toBeInTheDocument()
+    expect(screen.getByText("Tab 3")).toBeInTheDocument()
   })
 
-  test('shows default tab content', () => {
+  test("shows default tab content", () => {
     render(<TabsExample />)
-    expect(screen.getByText('Content 1')).toBeInTheDocument()
-    expect(screen.queryByText('Content 2')).not.toBeInTheDocument()
+    expect(screen.getByText("Content 1")).toBeInTheDocument()
+    expect(screen.queryByText("Content 2")).not.toBeInTheDocument()
   })
 
-  test('switches tab content on click', () => {
+  test("switches tab content on click", () => {
     render(<TabsExample />)
 
-    const tab2 = screen.getByText('Tab 2')
+    const tab2 = screen.getByText("Tab 2")
     fireEvent.click(tab2)
 
-    expect(screen.getByText('Content 2')).toBeInTheDocument()
-    expect(screen.queryByText('Content 1')).not.toBeInTheDocument()
+    expect(screen.getByText("Content 2")).toBeInTheDocument()
+    expect(screen.queryByText("Content 1")).not.toBeInTheDocument()
   })
 
-  test('highlights active tab', () => {
+  test("highlights active tab", () => {
     render(<TabsExample />)
 
-    const tab1 = screen.getByText('Tab 1')
-    expect(tab1).toHaveClass('border-accent-600', 'text-accent-600')
+    const tab1 = screen.getByText("Tab 1")
+    expect(tab1).toHaveClass("border-accent-600", "text-accent-600")
 
-    const tab2 = screen.getByText('Tab 2')
+    const tab2 = screen.getByText("Tab 2")
     fireEvent.click(tab2)
 
-    expect(tab2).toHaveClass('border-accent-600', 'text-accent-600')
-    expect(tab1).not.toHaveClass('border-accent-600')
+    expect(tab2).toHaveClass("border-accent-600", "text-accent-600")
+    expect(tab1).not.toHaveClass("border-accent-600")
   })
 
-  test('has accessible attributes', () => {
+  test("has accessible attributes", () => {
     render(<TabsExample />)
 
-    const tab1 = screen.getByText('Tab 1')
-    expect(tab1).toHaveAttribute('role', 'tab')
-    expect(tab1).toHaveAttribute('aria-selected', 'true')
+    const tab1 = screen.getByText("Tab 1")
+    expect(tab1).toHaveAttribute("role", "tab")
+    expect(tab1).toHaveAttribute("aria-selected", "true")
 
-    const tab2 = screen.getByText('Tab 2')
-    expect(tab2).toHaveAttribute('aria-selected', 'false')
+    const tab2 = screen.getByText("Tab 2")
+    expect(tab2).toHaveAttribute("aria-selected", "false")
   })
 })
 
-describe('Tabs with controlled value', () => {
-  test('uses controlled value', () => {
+describe("Tabs with controlled value", () => {
+  test("uses controlled value", () => {
     const ControlledTabs = () => {
-      const [value, setValue] = React.useState('tab2')
+      const [value, setValue] = React.useState("tab2")
 
       return (
         <Tabs value={value} onValueChange={setValue}>
@@ -88,6 +88,6 @@ describe('Tabs with controlled value', () => {
     }
 
     render(<ControlledTabs />)
-    expect(screen.getByText('Content 2')).toBeInTheDocument()
+    expect(screen.getByText("Content 2")).toBeInTheDocument()
   })
 })

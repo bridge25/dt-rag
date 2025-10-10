@@ -5,6 +5,21 @@
     "react/react-in-jsx-scope": "off",
     "linebreak-style": "off",
     "semi": "off",
-    "indent": "off"
+    "indent": "off",
+    "no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }]
+  },
+  "overrides": [
+    {
+      "files": ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
+      "env": {
+        "jest": true
+      }
+    }
+  ],
+  "globals": {
+    "NodeJS": "readonly"
   }
 }

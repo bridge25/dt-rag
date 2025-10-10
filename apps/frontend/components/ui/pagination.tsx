@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import React from 'react'
-import { ChevronsLeft, ChevronsRight } from 'lucide-react'
+import React from "react"
+import { ChevronsLeft, ChevronsRight } from "lucide-react"
 
 export interface PaginationProps {
   currentPage: number
   totalPages: number
-  onPageChange: (page: number) => void
+  onPageChange: (_page: number) => void
 }
 
 export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
@@ -24,7 +24,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
     }
 
     if (currentPage - delta > 2) {
-      rangeWithDots.push(1, '...')
+      rangeWithDots.push(1, "...")
     } else {
       rangeWithDots.push(1)
     }
@@ -32,7 +32,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
     rangeWithDots.push(...range)
 
     if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push('...', totalPages)
+      rangeWithDots.push("...", totalPages)
     } else if (totalPages > 1) {
       rangeWithDots.push(totalPages)
     }
@@ -54,7 +54,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       </button>
 
       {pages.map((page, index) => {
-        if (page === '...') {
+        if (page === "...") {
           return (
             <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">
               ...
@@ -73,12 +73,12 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
               px-3 py-2 rounded border transition-colors
               ${
                 isCurrentPage
-                  ? 'bg-accent-600 text-white border-accent-600'
-                  : 'border-gray-300 hover:bg-gray-50'
+                  ? "bg-accent-600 text-white border-accent-600"
+                  : "border-gray-300 hover:bg-gray-50"
               }
             `}
             aria-label={isCurrentPage ? `Current page ${pageNum}` : `Go to page ${pageNum}`}
-            aria-current={isCurrentPage ? 'page' : undefined}
+            aria-current={isCurrentPage ? "page" : undefined}
           >
             {pageNum}
           </button>

@@ -440,7 +440,7 @@ async def get_search_service() -> SearchService:
 
 # API Endpoints
 
-@search_router.post("/", response_model=SearchResponse)
+@search_router.post("", response_model=SearchResponse)
 async def search_documents(
     request: Request,
     search_request: SearchRequest,

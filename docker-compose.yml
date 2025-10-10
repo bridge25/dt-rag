@@ -88,6 +88,7 @@ services:
       - ./alembic:/app/alembic
       - ./apps:/app/apps
       - ./tests:/app/tests
+      - ./packages:/app/packages
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

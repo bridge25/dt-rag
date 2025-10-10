@@ -93,7 +93,7 @@ class SearchEngineFactory:
 # Common Schemas 호환 모델
 
 
-class SearchRequest(BaseModel):
+class LegacySearchRequest(BaseModel):
     q: str = Field(..., min_length=1, description="검색 쿼리")
     filters: Optional[Dict[str, Any]] = Field(None, description="검색 필터")
     bm25_topk: int = Field(12, ge=1, le=100, description="BM25 상위 K개")
@@ -102,7 +102,7 @@ class SearchRequest(BaseModel):
     final_topk: int = Field(5, ge=1, le=50, description="최종 결과 수")
 
 
-class SearchHit(BaseModel):
+class LegacySearchHit(BaseModel):
     chunk_id: str
     score: float = Field(ge=0.0, description="검색 점수")
     text: Optional[str] = Field(None, description="텍스트 내용")
@@ -110,8 +110,8 @@ class SearchHit(BaseModel):
     source: Optional[Dict[str, Any]] = Field(None, description="소스 메타데이터")
 
 
-class SearchResponse(BaseModel):
-    hits: List[SearchHit]
+class LegacySearchResponse(BaseModel):
+    hits: List[LegacySearchHit]
     latency: float = Field(ge=0.0, description="검색 지연시간(초)")
     request_id: str
     total_candidates: Optional[int] = Field(None, description="전체 후보 수")
@@ -119,9 +119,9 @@ class SearchResponse(BaseModel):
     taxonomy_version: str = "1.8.1"
 
 
-@router.post("/search", response_model=SearchResponse)
+@router.post("/search", response_model=LegacySearchResponse)
 async def search_documents(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     http_request: Request,
     api_key: str = Depends(verify_api_key)
 ):
@@ -175,10 +175,10 @@ async def search_documents(
 
 
 async def _execute_optimized_search(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     query_id: str,
     start_time: float
-) -> SearchResponse:
+) -> LegacySearchResponse:
     """최적화된 검색 실행"""
     try:
         # 동시성 제어
@@ -222,11 +222,11 @@ async def _execute_optimized_search(
 
 
 async def _execute_search(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     query_id: str,
     start_time: float,
     search_type: str
-) -> SearchResponse:
+) -> LegacySearchResponse:
     """검색 실행 래퍼"""
     if HYBRID_ENGINE_AVAILABLE:
         return await _hybrid_engine_search(request, query_id, start_time)
@@ -269,10 +269,10 @@ async def _record_optimized_metrics(
 
 
 async def _hybrid_engine_search(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     query_id: str,
     start_time: float
-) -> SearchResponse:
+) -> LegacySearchResponse:
     """최적화된 하이브리드 검색 엔진 사용"""
     try:
         # hybrid_search 함수 직접 호출
@@ -301,10 +301,10 @@ async def _hybrid_engine_search(
 
 
 async def _legacy_search(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     query_id: str,
     start_time: float
-) -> SearchResponse:
+) -> LegacySearchResponse:
     """레거시 검색 (hybrid_search 직접 사용)"""
     try:
         # hybrid_search 함수 직접 호출
@@ -333,9 +333,9 @@ def _convert_to_response(
     query_id: str,
     search_type: str,
     perf_info: Dict[str, Any] = None
-) -> SearchResponse:
-    """검색 결과를 SearchResponse로 변환"""
-    # SearchHit 객체로 변환
+) -> LegacySearchResponse:
+    """검색 결과를 LegacySearchResponse로 변환"""
+    # LegacySearchHit 객체로 변환
     hits = []
     for result in search_results:
         # 메타데이터 구조 개선
@@ -347,7 +347,7 @@ def _convert_to_response(
             "performance_info": perf_info
         })
 
-        hit = SearchHit(
+        hit = LegacySearchHit(
             chunk_id=result["chunk_id"],
             score=result["score"],
             text=result.get("text"),
@@ -363,7 +363,7 @@ def _convert_to_response(
             doc_key = hit.source.get("source_url") or hit.source.get("title") or hit.chunk_id
             source_docs.add(doc_key)
 
-    return SearchResponse(
+    return LegacySearchResponse(
         hits=hits,
         latency=round(latency, 3),
         request_id=query_id,
@@ -560,7 +560,7 @@ async def reset_search_metrics(api_key: str = Depends(verify_api_key)):
 # 개별 검색 모드 엔드포인트 (테스트/비교용)
 @router.post("/dev/search-bm25")
 async def search_bm25_only(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     api_key: str = Depends(verify_api_key)
 ):
     """
@@ -583,9 +583,9 @@ async def search_bm25_only(
             search_metrics.record_search("bm25", latency)
 
             # 응답 형식 통일
-            hits = [SearchHit(**result) for result in bm25_results]
+            hits = [LegacySearchHit(**result) for result in bm25_results]
 
-            return SearchResponse(
+            return LegacySearchResponse(
                 hits=hits,
                 latency=round(latency, 3),
                 request_id=generate_request_id(),
@@ -604,7 +604,7 @@ async def search_bm25_only(
 
 @router.post("/dev/search-vector")
 async def search_vector_only(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     api_key: str = Depends(verify_api_key)
 ):
     """
@@ -631,9 +631,9 @@ async def search_vector_only(
             search_metrics.record_search("vector", latency)
 
             # 응답 형식 통일
-            hits = [SearchHit(**result) for result in vector_results]
+            hits = [LegacySearchHit(**result) for result in vector_results]
 
-            return SearchResponse(
+            return LegacySearchResponse(
                 hits=hits,
                 latency=round(latency, 3),
                 request_id=generate_request_id(),
@@ -681,7 +681,7 @@ class OptimizedSearchRequest(BaseModel):
     max_query_time: float = Field(2.0, ge=0.1, le=10.0, description="최대 쿼리 시간(초)")
 
 
-@router.post("/v2/search", response_model=SearchResponse)
+@router.post("/v2/search", response_model=LegacySearchResponse)
 async def optimized_search(
     request: OptimizedSearchRequest,
     api_key: str = Depends(verify_api_key)
@@ -806,7 +806,7 @@ async def optimized_search(
 
 @router.post("/v2/search/benchmark")
 async def benchmark_search_engines(
-    request: SearchRequest,
+    request: LegacySearchRequest,
     api_key: str = Depends(verify_api_key)
 ):
     """

@@ -885,18 +885,20 @@ class SearchDAO:
                     LIMIT :topk
                 """)
             else:
-                # PostgreSQL full-text search (init.sql 스키마에 맞춤)
+                # PostgreSQL full-text search (정규화 스키마: chunks.text 사용)
                 bm25_query = text(f"""
-                    SELECT d.id, d.content, d.title, 'db_document' as source_url,
-                           ARRAY[]::text[] as path,
+                    SELECT c.chunk_id, c.text, d.title, d.source_url,
+                           dt.path,
                            ts_rank_cd(
-                               to_tsvector('english', d.content || ' ' || d.title),
+                               to_tsvector('english', c.text || ' ' || COALESCE(d.title, '')),
                                websearch_to_tsquery('english', :query),
                                32 -- normalization flag
                            ) as bm25_score
-                    FROM documents d
-                    WHERE to_tsvector('english', d.content || ' ' || d.title) @@ websearch_to_tsquery('english', :query)
-                    {filter_clause.replace('dt.', 'd.').replace('c.', 'd.') if filter_clause else ''}
+                    FROM chunks c
+                    JOIN documents d ON c.doc_id = d.doc_id
+                    LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
+                    WHERE to_tsvector('english', c.text || ' ' || COALESCE(d.title, '')) @@ websearch_to_tsquery('english', :query)
+                    {filter_clause}
                     ORDER BY bm25_score DESC
                     LIMIT :topk
                 """)
@@ -962,17 +964,20 @@ class SearchDAO:
                     "topk": topk
                 })
             else:
-                # PostgreSQL pgvector 검색 (init.sql 스키마에 맞춤)
+                # PostgreSQL pgvector 검색 (정규화 스키마: embeddings.vec 사용)
                 try:
-                    # init.sql의 documents 테이블 사용 (embedding 벡터가 documents 테이블에 있음)
+                    # chunks + embeddings JOIN으로 벡터 검색
                     vector_query = text(f"""
-                        SELECT d.id, d.content, d.title, 'db_document' as source_url,
-                               ARRAY[]::text[] as path,
-                               1.0 - (d.embedding <-> :query_vector::vector) as vector_score
-                        FROM documents d
-                        WHERE d.embedding IS NOT NULL
-                        {filter_clause.replace('dt.', 'd.').replace('c.', 'd.') if filter_clause else ''}
-                        ORDER BY d.embedding <-> :query_vector::vector
+                        SELECT c.chunk_id, c.text, d.title, d.source_url,
+                               dt.path,
+                               1.0 - (e.vec <-> :query_vector::vector) as vector_score
+                        FROM chunks c
+                        JOIN documents d ON c.doc_id = d.doc_id
+                        JOIN embeddings e ON c.chunk_id = e.chunk_id
+                        LEFT JOIN doc_taxonomy dt ON d.doc_id = dt.doc_id
+                        WHERE e.vec IS NOT NULL
+                        {filter_clause}
+                        ORDER BY e.vec <-> :query_vector::vector
                         LIMIT :topk
                     """)
 

@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import React, { useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import FocusLock from 'react-focus-lock'
-import { X } from 'lucide-react'
+import React, { useEffect } from "react"
+import { createPortal } from "react-dom"
+import FocusLock from "react-focus-lock"
+import { X } from "lucide-react"
 
 export interface ModalProps {
   isOpen: boolean
@@ -17,17 +17,17 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     if (!isOpen) return
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose()
       }
     }
 
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
+    document.addEventListener("keydown", handleEscape)
+    return () => document.removeEventListener("keydown", handleEscape)
   }, [isOpen, onClose])
 
   if (!isOpen) return null
-  if (typeof window === 'undefined') return null
+  if (typeof window === "undefined") return null
 
   return createPortal(
     <FocusLock>

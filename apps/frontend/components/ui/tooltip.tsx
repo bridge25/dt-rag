@@ -1,16 +1,16 @@
-'use client'
+"use client"
 
-import React, { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useState, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 
 export interface TooltipProps {
   content: string
   children: React.ReactElement
-  position?: 'top' | 'bottom' | 'left' | 'right'
+  position?: "top" | "bottom" | "left" | "right"
   delay?: number
 }
 
-export function Tooltip({ content, children, position = 'top', delay = 200 }: TooltipProps) {
+export function Tooltip({ content, children, position = "top", delay = 200 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [coords, setCoords] = useState({ x: 0, y: 0 })
   const triggerRef = useRef<HTMLElement>(null)
@@ -67,10 +67,10 @@ export function Tooltip({ content, children, position = 'top', delay = 200 }: To
   }, [])
 
   const positionClasses = {
-    top: '-translate-x-1/2 -translate-y-full',
-    bottom: '-translate-x-1/2',
-    left: '-translate-x-full -translate-y-1/2',
-    right: '-translate-y-1/2'
+    top: "-translate-x-1/2 -translate-y-full",
+    bottom: "-translate-x-1/2",
+    left: "-translate-x-full -translate-y-1/2",
+    right: "-translate-y-1/2"
   }
 
   const clonedChild = React.cloneElement(children, {
@@ -82,7 +82,7 @@ export function Tooltip({ content, children, position = 'top', delay = 200 }: To
   return (
     <>
       {clonedChild}
-      {isVisible && typeof window !== 'undefined' && createPortal(
+      {isVisible && typeof window !== "undefined" && createPortal(
         <div
           className={`
             fixed z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded

@@ -56,12 +56,12 @@ except ImportError as e:
         score: float
         source: Dict[str, Any]
 
-    class SearchRequest(BaseModel):
+    class OrchestrationSearchRequest(BaseModel):
         query: str
         filters: Optional[Dict[str, Any]] = None
         limit: int = 10
 
-    class SearchResponse(BaseModel):
+    class OrchestrationSearchResponse(BaseModel):
         hits: List[SearchHit]
         latency: float
         total_count: int
@@ -1228,8 +1228,8 @@ def create_agent_from_category(req: FromCategoryRequest):
     
     return manifest
 
-@app.post("/search", response_model=SearchResponse, tags=["search"])
-def hybrid_search(req: SearchRequest):
+@app.post("/search", response_model=OrchestrationSearchResponse, tags=["search"])
+def hybrid_search(req: OrchestrationSearchRequest):
     """하이브리드 검색 (BM25 + Vector + Rerank) with B-O2 필터링"""
     logger.info(f"검색 요청: query='{req.query}', filters={req.filters}")
     
@@ -1238,7 +1238,7 @@ def hybrid_search(req: SearchRequest):
     
     if not allowed_paths:
         logger.warning("allowed_category_paths가 없습니다. 모든 결과가 차단됩니다.")
-        return SearchResponse(hits=[], latency=0.1, total_count=0)
+        return OrchestrationSearchResponse(hits=[], latency=0.1, total_count=0)
     
     # CategoryFilter 생성
     category_filter = create_category_filter(allowed_paths)
@@ -1305,8 +1305,8 @@ def hybrid_search(req: SearchRequest):
     # 필터 통계 로깅
     category_filter.get_filter_stats()
     logger.info(f"검색 필터링 완료: {len(hits)}/{len(raw_search_results)} 결과 반환")
-    
-    return SearchResponse(
+
+    return OrchestrationSearchResponse(
         hits=hits,
         latency=1.23 + 0.05,  # 필터링 오버헤드 포함
         total_count=len(hits)

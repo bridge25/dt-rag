@@ -1,63 +1,63 @@
-import { render, screen } from '@testing-library/react'
-import { Container } from '../container'
+import { render, screen } from "@testing-library/react"
+import { Container } from "../container"
 
-describe('Container', () => {
-  test('renders children', () => {
+describe("Container", () => {
+  test("renders children", () => {
     render(
       <Container>
         <p>Test content</p>
       </Container>
     )
-    expect(screen.getByText('Test content')).toBeInTheDocument()
+    expect(screen.getByText("Test content")).toBeInTheDocument()
   })
 
-  test('applies default max-width', () => {
+  test("applies default max-width", () => {
     const { container } = render(
       <Container>
         <p>Content</p>
       </Container>
     )
     const containerElement = container.firstChild as HTMLElement
-    expect(containerElement).toHaveClass('max-w-7xl')
+    expect(containerElement).toHaveClass("max-w-7xl")
   })
 
-  test('applies glass morphism when enabled', () => {
+  test("applies glass morphism when enabled", () => {
     const { container } = render(
       <Container glass>
         <p>Content</p>
       </Container>
     )
     const containerElement = container.firstChild as HTMLElement
-    expect(containerElement).toHaveClass('backdrop-blur-lg')
+    expect(containerElement).toHaveClass("backdrop-blur-lg")
   })
 
-  test('does not apply glass morphism by default', () => {
+  test("does not apply glass morphism by default", () => {
     const { container } = render(
       <Container>
         <p>Content</p>
       </Container>
     )
     const containerElement = container.firstChild as HTMLElement
-    expect(containerElement).not.toHaveClass('backdrop-blur-lg')
+    expect(containerElement).not.toHaveClass("backdrop-blur-lg")
   })
 
-  test('applies custom className', () => {
+  test("applies custom className", () => {
     const { container } = render(
       <Container className="custom-class">
         <p>Content</p>
       </Container>
     )
     const containerElement = container.firstChild as HTMLElement
-    expect(containerElement).toHaveClass('custom-class')
+    expect(containerElement).toHaveClass("custom-class")
   })
 
-  test('centers content by default', () => {
+  test("centers content by default", () => {
     const { container } = render(
       <Container>
         <p>Content</p>
       </Container>
     )
     const containerElement = container.firstChild as HTMLElement
-    expect(containerElement).toHaveClass('mx-auto')
+    expect(containerElement).toHaveClass("mx-auto")
   })
 })

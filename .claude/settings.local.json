@@ -148,7 +148,9 @@
       "Bash(__NEW_LINE__ git show HEAD --stat)",
       "SlashCommand(/alfred:2-build:*)",
       "Bash(pytest:*)",
-      "SlashCommand(/alfred:3-sync:*)"
+      "SlashCommand(/alfred:3-sync:*)",
+      "Bash(where node)",
+      "SlashCommand(/alfred:1-spec:*)"
     ],
     "deny": [],
     "ask": []

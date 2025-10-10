@@ -1,19 +1,19 @@
-'use client'
+"use client"
 
-import React from 'react'
+import React from "react"
 
 export interface ProgressProps {
   value: number
   showLabel?: boolean
-  color?: 'primary' | 'accent'
+  color?: "primary" | "accent"
 }
 
-export function Progress({ value, showLabel = false, color = 'primary' }: ProgressProps) {
+export function Progress({ value, showLabel = false, color = "primary" }: ProgressProps) {
   const clampedValue = Math.min(100, Math.max(0, value))
 
   const colorClasses = {
-    primary: 'bg-gradient-to-r from-purple-600 to-slate-800',
-    accent: 'bg-gradient-to-r from-purple-500 to-blue-500'
+    primary: "bg-gradient-to-r from-purple-600 to-slate-800",
+    accent: "bg-gradient-to-r from-purple-500 to-blue-500"
   }
 
   return (

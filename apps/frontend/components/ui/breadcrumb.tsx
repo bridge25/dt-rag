@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import React from 'react'
-import { ChevronRight } from 'lucide-react'
+import React from "react"
+import { ChevronRight } from "lucide-react"
 
 export interface BreadcrumbItem {
   label: string
@@ -20,7 +20,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
 
     return [
       items[0],
-      { label: '...', href: '#' },
+      { label: "...", href: "#" },
       items[items.length - 1]
     ]
   }, [items])
@@ -30,7 +30,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
       <ol className="flex items-center space-x-2 text-sm">
         {displayItems.map((item, index) => {
           const isLast = index === displayItems.length - 1
-          const isEllipsis = item.label === '...'
+          const isEllipsis = item.label === "..."
 
           return (
             <li key={`${item.href}-${index}`} className="flex items-center">
