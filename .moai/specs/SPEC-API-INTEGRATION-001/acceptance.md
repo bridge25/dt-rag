@@ -242,9 +242,9 @@ Given NEXT_PUBLIC_API_URL 환경 변수가 "http://localhost:8000/api/v1"로 설
 When 사용자가 getHealth 함수를 호출하면
   getHealth()
 
-Then API 요청이 "http://localhost:8000/api/v1/health"로 전송되고
+Then API 요청이 "http://localhost:8000/api/v1/healthz"로 전송되고
   And 하드코딩된 "http://localhost:8000/health"가 사용되지 않고
-  And apiClient의 baseURL과 상대 경로 "/health"가 조합되어 사용되고
+  And apiClient의 baseURL과 상대 경로 "/healthz"가 조합되어 사용되고
   And HealthCheckResponse 스키마에 맞는 데이터가 반환된다
 ```
 
@@ -255,7 +255,7 @@ Then API 요청이 "http://localhost:8000/api/v1/health"로 전송되고
 test('getHealth는 baseURL을 사용한다', async () => {
   // Arrange
   const mockAdapter = new MockAdapter(apiClient);
-  mockAdapter.onGet('/health').reply(200, {
+  mockAdapter.onGet('/healthz').reply(200, {
     status: "healthy",
     timestamp: new Date().toISOString()
   });
@@ -265,7 +265,7 @@ test('getHealth는 baseURL을 사용한다', async () => {
 
   // Assert
   const lastRequest = mockAdapter.history.get[0];
-  expect(lastRequest.url).toBe('/health');
+  expect(lastRequest.url).toBe('/healthz');
   expect(lastRequest.url).not.toContain('localhost:8000');
   expect(response.status).toBe("healthy");
 });
@@ -274,7 +274,7 @@ test('getHealth는 baseURL을 사용한다', async () => {
 **수동 검증** (Browser DevTools):
 1. Health check 호출 (앱 시작 시 또는 수동)
 2. Network 탭 확인:
-   - Request URL: `http://localhost:8000/api/v1/health`
+   - Request URL: `http://localhost:8000/api/v1/healthz`
    - Status Code: `200 OK`
 
 **통과 기준**:

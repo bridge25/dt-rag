@@ -47,12 +47,14 @@ import {
   type HITLReviewResponse,
 } from "./types"
 
+// @CODE:API-INTEGRATION-001:TRAILING-SLASH-SEARCH
 export async function search(request: SearchRequest): Promise<SearchResponse> {
   const validated = SearchRequestSchema.parse(request)
   const response = await apiClient.post("/search", validated)
   return SearchResponseSchema.parse(response.data)
 }
 
+// @CODE:API-INTEGRATION-001:TRAILING-SLASH-CLASSIFY
 export async function classify(request: ClassifyRequest): Promise<ClassifyResponse> {
   const validated = ClassifyRequestSchema.parse(request)
   const response = await apiClient.post("/classify", validated)
@@ -64,6 +66,7 @@ export async function getTaxonomyTree(version: string): Promise<TaxonomyNode[]> 
   return z.array(TaxonomyNodeSchema).parse(response.data)
 }
 
+// @CODE:API-INTEGRATION-001:HARDCODED-UPLOAD
 export async function uploadDocument(formData: FormData): Promise<DocumentUploadResponse> {
   const response = await apiClient.post("/ingestion/upload", formData, {
     headers: { "Content-Type": "multipart/form-data" },
@@ -71,6 +74,7 @@ export async function uploadDocument(formData: FormData): Promise<DocumentUpload
   return DocumentUploadResponseSchema.parse(response.data)
 }
 
+// @CODE:API-INTEGRATION-001:HARDCODED-HEALTH
 export async function getHealth(): Promise<HealthCheckResponse> {
   const response = await apiClient.get("/healthz")
   return HealthCheckResponseSchema.parse(response.data)
@@ -93,6 +97,7 @@ export async function evaluateRagResponse(request: EvaluationRequest): Promise<E
   return EvaluationResultSchema.parse(response.data)
 }
 
+// @CODE:API-INTEGRATION-001:TRAILING-SLASH-BATCH
 export async function batchSearch(request: BatchSearchRequest): Promise<BatchSearchResponse> {
   const validated = BatchSearchRequestSchema.parse(request)
   const response = await apiClient.post("/batch-search", validated)

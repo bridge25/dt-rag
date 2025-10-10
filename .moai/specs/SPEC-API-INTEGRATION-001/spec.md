@@ -273,7 +273,7 @@ const response = await apiClient.post("/ingestion/upload", formData, {
 const response = await apiClient.get("http://localhost:8000/health")
 
 // After
-const response = await apiClient.get("/health")
+const response = await apiClient.get("/healthz")
 ```
 
 **태그**: @CODE:API-INTEGRATION-001:HARDCODED-HEALTH

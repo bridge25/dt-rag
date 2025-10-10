@@ -13,6 +13,7 @@ describe("API Integration Fixes - SPEC-API-INTEGRATION-001", () => {
     mock.restore()
   })
 
+  // @TEST:API-INTEGRATION-001:TRAILING-SLASH
   describe("AC-1: Trailing slash removal", () => {
     test("search should call /search without trailing slash", async () => {
       const validResponse = {
@@ -61,6 +62,7 @@ describe("API Integration Fixes - SPEC-API-INTEGRATION-001", () => {
     })
   })
 
+  // @TEST:API-INTEGRATION-001:HARDCODED-URL
   describe("AC-2: baseURL usage (no hardcoded URLs)", () => {
     test("uploadDocument should use relative path /ingestion/upload", async () => {
       const validResponse = {
@@ -133,6 +135,7 @@ describe("API Integration Fixes - SPEC-API-INTEGRATION-001", () => {
     })
   })
 
+  // @TEST:API-INTEGRATION-001:ENV
   describe("AC-3: Environment variable application", () => {
     test("all API calls should use baseURL from env config", async () => {
       const validResponse = {
