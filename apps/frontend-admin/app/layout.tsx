@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { ToastProvider } from '@/contexts/ToastContext'
-import '@/app/globals.css'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Dynamic Taxonomy RAG System',

@@ -200,22 +200,22 @@ export default function HomePage() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-bold mb-4">📱 기능 메뉴</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-4 border rounded text-center">
+          <a href="/dashboard" className="p-4 border rounded text-center hover:bg-blue-50 hover:border-blue-500 transition cursor-pointer">
             <h3 className="font-bold">🏠 Dashboard</h3>
             <p className="text-sm text-gray-600">메인 대시보드</p>
-          </div>
-          <div className="p-4 border rounded text-center">
+          </a>
+          <a href="/admin" className="p-4 border rounded text-center hover:bg-purple-50 hover:border-purple-500 transition cursor-pointer">
             <h3 className="font-bold">👤 Admin</h3>
             <p className="text-sm text-gray-600">관리자 페이지</p>
-          </div>
-          <div className="p-4 border rounded text-center">
+          </a>
+          <a href="/agents" className="p-4 border rounded text-center hover:bg-green-50 hover:border-green-500 transition cursor-pointer">
             <h3 className="font-bold">🤖 Agents</h3>
             <p className="text-sm text-gray-600">AI 에이전트</p>
-          </div>
-          <div className="p-4 border rounded text-center">
+          </a>
+          <a href="/chat" className="p-4 border rounded text-center hover:bg-orange-50 hover:border-orange-500 transition cursor-pointer">
             <h3 className="font-bold">💬 Chat</h3>
             <p className="text-sm text-gray-600">채팅 인터페이스</p>
-          </div>
+          </a>
         </div>
       </div>
 
@@ -379,7 +379,7 @@ export default function HomePage() {
           <p className="text-sm text-gray-600 mb-4">계층적 분류 구조 확인</p>
           <button
             className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
-            onClick={() => window.open('http://localhost:8001/api/v1/taxonomy', '_blank')}
+            onClick={() => window.open('http://localhost:8000/api/v1/taxonomy', '_blank')}
           >
             분류체계 보기
           </button>
@@ -390,7 +390,7 @@ export default function HomePage() {
           <p className="text-sm text-gray-600 mb-4">실시간 시스템 상태</p>
           <button
             className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700"
-            onClick={() => window.open('http://localhost:8001/api/v1/monitoring/health', '_blank')}
+            onClick={() => window.open('http://localhost:8000/api/v1/monitoring/health', '_blank')}
           >
             상태 확인
           </button>
@@ -401,7 +401,7 @@ export default function HomePage() {
           <p className="text-sm text-gray-600 mb-4">Interactive Swagger UI</p>
           <button
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            onClick={() => window.open('http://localhost:8001/docs', '_blank')}
+            onClick={() => window.open('http://localhost:8000/docs', '_blank')}
           >
             문서 열기
           </button>
