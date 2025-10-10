@@ -6,9 +6,10 @@ export interface ProgressProps {
   value: number
   showLabel?: boolean
   color?: "primary" | "accent"
+  className?: string
 }
 
-export function Progress({ value, showLabel = false, color = "primary" }: ProgressProps) {
+export function Progress({ value, showLabel = false, color = "primary", className = "" }: ProgressProps) {
   const clampedValue = Math.min(100, Math.max(0, value))
 
   const colorClasses = {
@@ -19,7 +20,7 @@ export function Progress({ value, showLabel = false, color = "primary" }: Progre
   return (
     <div className="w-full">
       <div
-        className="relative h-2 bg-gray-200 rounded-full overflow-hidden"
+        className={`relative h-2 bg-gray-200 rounded-full overflow-hidden ${className}`}
         role="progressbar"
         aria-valuenow={clampedValue}
         aria-valuemin={0}
