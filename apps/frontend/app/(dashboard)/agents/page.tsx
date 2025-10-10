@@ -212,9 +212,8 @@ export default function AgentsPage() {
 
       {agentsData && agentsData.agents.length > 0 && (
         <div className="grid gap-4">
-          {agentsData.agents.map((agent, index) => {
+          {agentsData.agents.map((agent) => {
             const isSelected = selectedAgent?.agent_id === agent.agent_id
-            const variant = index % 3 === 0 ? "purple" : index % 3 === 1 ? "green" : "teal"
 
             return (
               <ModernCard

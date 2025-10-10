@@ -8,6 +8,7 @@ export interface ToastProps {
   type?: "success" | "error" | "info" | "warning"
   message: string
   duration?: number
+  // eslint-disable-next-line no-unused-vars
   onClose: (id: string) => void
   showConfetti?: boolean
 }
@@ -114,6 +115,7 @@ export function Toast({
 
 export interface ToastContainerProps {
   toasts: ToastProps[]
+  // eslint-disable-next-line no-unused-vars
   onRemove: (id: string) => void
 }
 

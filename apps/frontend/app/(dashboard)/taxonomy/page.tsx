@@ -84,7 +84,7 @@ export default function TaxonomyPage() {
 
                   {node.children && node.children.length > 0 && (
                     <div className="mt-6 pl-4 border-l-4 border-white/30 space-y-4">
-                      {node.children.map((child, childIndex) => (
+                      {node.children.map((child) => (
                         <div
                           key={child.id}
                           className="group transition-all duration-200 hover:translate-x-2"
