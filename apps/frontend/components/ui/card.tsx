@@ -1,76 +1,97 @@
-import * as React from "react"
+"use client"
 
-import { cn } from "@/lib/utils"
+import React from "react"
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-xl border bg-card text-card-foreground shadow",
-      className
-    )}
-    {...props}
-  />
-))
-Card.displayName = "Card"
+export interface CardProps {
+  children: React.ReactNode
+  elevation?: 0 | 1 | 2 | 3 | 4
+  hoverable?: boolean
+  className?: string
+  onClick?: () => void
+}
 
-const CardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
-    {...props}
-  />
-))
-CardHeader.displayName = "CardHeader"
+export function Card({
+  children,
+  elevation = 1,
+  hoverable = false,
+  className = "",
+  onClick
+}: CardProps) {
+  const baseStyles = "bg-white rounded-lg transition-all duration-normal"
 
-const CardTitle = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("font-semibold leading-none tracking-tight", className)}
-    {...props}
-  />
-))
-CardTitle.displayName = "CardTitle"
+  const elevationStyles = {
+    0: "shadow-none",
+    1: "shadow-elevation-1",
+    2: "shadow-elevation-2",
+    3: "shadow-elevation-3",
+    4: "shadow-elevation-4"
+  }
 
-const CardDescription = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
-CardDescription.displayName = "CardDescription"
+  const hoverStyles = hoverable
+    ? "hover:shadow-elevation-2 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 cursor-pointer"
+    : ""
 
-const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-))
-CardContent.displayName = "CardContent"
+  return (
+    <div
+      className={`
+        ${baseStyles}
+        ${elevationStyles[elevation]}
+        ${hoverStyles}
+        ${className}
+      `}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyPress={onClick ? (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onClick()
+        }
+      } : undefined}
+    >
+      {children}
+    </div>
+  )
+}
 
-const CardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
-    {...props}
-  />
-))
-CardFooter.displayName = "CardFooter"
+export function CardHeader({
+  children,
+  className = ""
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={`p-6 border-b border-gray-200 ${className}`}>
+      {children}
+    </div>
+  )
+}
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+export function CardContent({
+  children,
+  className = ""
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={`p-6 ${className}`}>
+      {children}
+    </div>
+  )
+}
+
+export function CardFooter({
+  children,
+  className = ""
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={`p-6 border-t border-gray-200 ${className}`}>
+      {children}
+    </div>
+  )
+}
