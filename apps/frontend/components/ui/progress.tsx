@@ -1,28 +1,40 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import * as ProgressPrimitive from "@radix-ui/react-progress"
+import React from 'react'
 
-import { cn } from "@/lib/utils"
+export interface ProgressProps {
+  value: number
+  showLabel?: boolean
+  color?: 'primary' | 'accent'
+}
 
-const Progress = React.forwardRef<
-  React.ElementRef<typeof ProgressPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
->(({ className, value, ...props }, ref) => (
-  <ProgressPrimitive.Root
-    ref={ref}
-    className={cn(
-      "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
-      className
-    )}
-    {...props}
-  >
-    <ProgressPrimitive.Indicator
-      className="h-full w-full flex-1 bg-primary transition-all"
-      style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
-    />
-  </ProgressPrimitive.Root>
-))
-Progress.displayName = ProgressPrimitive.Root.displayName
+export function Progress({ value, showLabel = false, color = 'primary' }: ProgressProps) {
+  const clampedValue = Math.min(100, Math.max(0, value))
 
-export { Progress }
+  const colorClasses = {
+    primary: 'bg-gradient-to-r from-purple-600 to-slate-800',
+    accent: 'bg-gradient-to-r from-purple-500 to-blue-500'
+  }
+
+  return (
+    <div className="w-full">
+      <div
+        className="relative h-2 bg-gray-200 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={clampedValue}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
+        <div
+          className={`h-full transition-all duration-normal ease-out motion-reduce:duration-0 ${colorClasses[color]}`}
+          style={{ width: `${clampedValue}%` }}
+        />
+      </div>
+      {showLabel && (
+        <p className="mt-2 text-sm text-center font-medium text-gray-700">
+          {clampedValue}%
+        </p>
+      )}
+    </div>
+  )
+}
