@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 # Prometheus 메트릭 (선택적)
 try:
-    from prometheus_client import Counter, Histogram, Gauge, Summary, generate_latest, CONTENT_TYPE_LATEST
+    from prometheus_client import Counter, Histogram, Gauge, generate_latest
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
@@ -200,7 +200,7 @@ class MetricsCollector:
             self.record_latency(operation_name, duration, labels)
             self.increment_counter(f"{operation_name}_success", labels)
 
-        except Exception as e:
+        except Exception:
             # 실패한 경우
             duration = (time.time() - start_time) * 1000  # ms
             self.record_latency(operation_name, duration, labels)
@@ -430,7 +430,7 @@ def track_performance(operation_name: str):
                 collector.record_latency(operation_name, duration)
                 collector.increment_counter(f"{operation_name}_success")
                 return result
-            except Exception as e:
+            except Exception:
                 duration = (time.time() - start_time) * 1000
                 collector.record_latency(operation_name, duration)
                 collector.increment_counter(f"{operation_name}_error")

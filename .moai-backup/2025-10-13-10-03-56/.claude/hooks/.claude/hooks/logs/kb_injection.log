@@ -1,0 +1,38 @@
+[2025-09-25T23:21:48.036729] [INFO] Tool input parsed: Task
+[2025-09-25T23:21:48.037794] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-25T23:21:48.038767] [WARNING] Knowledge base not found: C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\rag-evaluation-specialist_knowledge.json
+[2025-09-25T23:21:48.039152] [ERROR] Creating error response: Knowledge base not found for rag-evaluation-specialist
+[2025-09-25T23:21:48.039553] [INFO] Tool input parsed: Task
+[2025-09-25T23:21:48.039845] [INFO] Processing Task for database-architect
+[2025-09-25T23:21:48.040171] [WARNING] Knowledge base not found: C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\database-architect_knowledge.json
+[2025-09-25T23:21:48.040586] [ERROR] Creating error response: Knowledge base not found for database-architect
+[2025-09-25T23:21:48.040936] [INFO] Tool input parsed: Task
+[2025-09-25T23:21:48.041202] [INFO] Processing Task for hybrid-search-specialist
+[2025-09-25T23:21:48.041500] [WARNING] Knowledge base not found: C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\hybrid-search-specialist_knowledge.json
+[2025-09-25T23:21:48.041777] [ERROR] Creating error response: Knowledge base not found for hybrid-search-specialist
+[2025-09-25T23:21:48.042096] [INFO] Tool input parsed: Read
+[2025-09-25T23:21:48.042361] [INFO] Skipping non-Task tool: Read
+[2025-09-25T23:21:48.042662] [INFO] Tool input parsed: Task
+[2025-09-25T23:21:48.042900] [INFO] No subagent_type in Task input
+[2025-09-25T23:34:36.395193] [INFO] Tool input parsed: Task
+[2025-09-25T23:34:36.395692] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-25T23:34:36.397547] [INFO] Loaded KB for rag-evaluation-specialist: 6 items
+[2025-09-25T23:34:36.397922] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-25T23:34:36.398241] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:34:36.398584] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-25T23:34:36.398963] [INFO] Tool input parsed: Task
+[2025-09-25T23:34:36.399246] [INFO] Processing Task for database-architect
+[2025-09-25T23:34:36.400311] [INFO] Loaded KB for database-architect: 7 items
+[2025-09-25T23:34:36.400622] [INFO] Active keywords: ['postgres', 'pgvector', 'hnsw', 'index', 'migration']
+[2025-09-25T23:34:36.400927] [INFO] Filtered 7 relevant items from 7 total
+[2025-09-25T23:34:36.401242] [INFO] Successfully injected knowledge for database-architect
+[2025-09-25T23:34:36.401581] [INFO] Tool input parsed: Task
+[2025-09-25T23:34:36.401874] [INFO] Processing Task for hybrid-search-specialist
+[2025-09-25T23:34:36.402912] [INFO] Loaded KB for hybrid-search-specialist: 7 items
+[2025-09-25T23:34:36.403213] [INFO] Active keywords: ['bm25', 'vector', 'hybrid', 'rerank', 'cross-encoder']
+[2025-09-25T23:34:36.403502] [INFO] Filtered 7 relevant items from 7 total
+[2025-09-25T23:34:36.403789] [INFO] Successfully injected knowledge for hybrid-search-specialist
+[2025-09-25T23:34:36.404219] [INFO] Tool input parsed: Read
+[2025-09-25T23:34:36.404494] [INFO] Skipping non-Task tool: Read
+[2025-09-25T23:34:36.404787] [INFO] Tool input parsed: Task
+[2025-09-25T23:34:36.405054] [INFO] No subagent_type in Task input

@@ -1,0 +1,201 @@
+{
+  "spec_id": "AGENT-GROWTH-004",
+  "title": "Agent Growth Platform Phase 3 - Real Background Tasks",
+  "version": "0.1.0",
+  "status": "completed",
+  "phase": "Phase 3",
+  "created_at": "2025-10-12T00:00:00Z",
+  "updated_at": "2025-10-13T00:00:00Z",
+  "completed_at": "2025-10-13T00:00:00Z",
+  "author": "@sonheungmin",
+  "category": "feature",
+  "priority": "high",
+  "labels": [
+    "background-tasks",
+    "redis",
+    "job-queue",
+    "webhook",
+    "coverage-history"
+  ],
+  "dependencies": [
+    "AGENT-GROWTH-001",
+    "AGENT-GROWTH-002",
+    "AGENT-GROWTH-003"
+  ],
+  "implementation_phases": {
+    "phase_3_1": {
+      "name": "Database Schema & Migration",
+      "status": "completed",
+      "files": [
+        "apps/api/database.py",
+        "alembic/versions/0012_add_background_tasks_coverage_history.py"
+      ],
+      "completed_at": "2025-10-13T00:00:00Z"
+    },
+    "phase_3_2": {
+      "name": "AgentTaskQueue & WebhookService",
+      "status": "completed",
+      "files": [
+        "apps/api/background/agent_task_queue.py",
+        "apps/api/background/webhook_service.py",
+        "apps/api/background/coverage_history_dao.py"
+      ],
+      "completed_at": "2025-10-13T00:00:00Z"
+    },
+    "phase_3_3": {
+      "name": "AgentTaskWorker Implementation",
+      "status": "completed",
+      "files": [
+        "apps/api/background/agent_task_worker.py"
+      ],
+      "tests_passed": "8/8",
+      "completed_at": "2025-10-13T00:00:00Z"
+    },
+    "phase_3_4": {
+      "name": "API Endpoint Updates",
+      "status": "completed",
+      "files": [
+        "apps/api/routers/agent_router.py",
+        "apps/api/schemas/agent_schemas.py"
+      ],
+      "endpoints_updated": 4,
+      "completed_at": "2025-10-13T00:00:00Z"
+    },
+    "phase_3_5": {
+      "name": "E2E Tests & Documentation",
+      "status": "completed",
+      "files": [
+        "README.md"
+      ],
+      "tests_passed": "9/9",
+      "completed_at": "2025-10-13T00:00:00Z"
+    }
+  },
+  "code_artifacts": {
+    "source_files": {
+      "background_module": [
+        "apps/api/background/__init__.py",
+        "apps/api/background/agent_task_queue.py",
+        "apps/api/background/agent_task_worker.py",
+        "apps/api/background/webhook_service.py",
+        "apps/api/background/coverage_history_dao.py"
+      ],
+      "api_updates": [
+        "apps/api/routers/agent_router.py",
+        "apps/api/schemas/agent_schemas.py"
+      ],
+      "database_models": [
+        "apps/api/database.py"
+      ],
+      "migrations": [
+        "alembic/versions/0012_add_background_tasks_coverage_history.py"
+      ]
+    },
+    "test_files": {
+      "unit_tests": [
+        "tests/unit/test_agent_task_queue.py",
+        "tests/unit/test_agent_task_worker.py"
+      ],
+      "integration_tests": [
+        "tests/integration/test_agent_background_tasks.py",
+        "tests/integration/test_agent_background_tasks_migration.py",
+        "tests/integration/test_agent_api_phase3.py"
+      ],
+      "e2e_tests": []
+    },
+    "documentation": [
+      "README.md"
+    ]
+  },
+  "test_coverage": {
+    "unit_tests": {
+      "total": 8,
+      "passed": 8,
+      "coverage_percent": 90
+    },
+    "integration_tests": {
+      "total": 9,
+      "passed": 9,
+      "coverage_percent": 95
+    },
+    "e2e_tests": {
+      "total": 0,
+      "passed": 0,
+      "coverage_percent": 0
+    }
+  },
+  "tag_system": {
+    "primary_tags": [
+      "@SPEC:AGENT-GROWTH-004",
+      "@CODE:AGENT-GROWTH-004:QUEUE",
+      "@CODE:AGENT-GROWTH-004:WORKER",
+      "@CODE:AGENT-GROWTH-004:SERVICE",
+      "@CODE:AGENT-GROWTH-004:DAO",
+      "@CODE:AGENT-GROWTH-004:BACKGROUND"
+    ],
+    "tag_count": 6,
+    "files_with_tags": 5
+  },
+  "database_changes": {
+    "tables_added": [
+      "background_tasks",
+      "coverage_history"
+    ],
+    "indexes_added": [
+      "idx_background_tasks_agent_id",
+      "idx_background_tasks_status",
+      "idx_background_tasks_created_at",
+      "idx_background_tasks_agent_status",
+      "idx_coverage_history_agent_id",
+      "idx_coverage_history_timestamp",
+      "idx_coverage_history_agent_timestamp"
+    ],
+    "migration_version": "0012"
+  },
+  "api_changes": {
+    "endpoints_updated": [
+      "POST /api/v1/agents/{agent_id}/coverage/refresh",
+      "GET /api/v1/agents/{agent_id}/coverage/status/{task_id}",
+      "GET /api/v1/agents/{agent_id}/coverage/history"
+    ],
+    "endpoints_added": [
+      "DELETE /api/v1/agents/tasks/{task_id}"
+    ],
+    "schemas_added": [
+      "TaskStatusResponse"
+    ]
+  },
+  "quality_metrics": {
+    "code_lines_added": 782,
+    "test_lines_added": 450,
+    "documentation_lines_added": 165,
+    "total_lines_added": 1397
+  },
+  "acceptance_criteria": {
+    "ac_1_background_coverage_refresh": "passed",
+    "ac_2_background_task_processing": "passed",
+    "ac_3_task_status_query": "passed",
+    "ac_4_coverage_history_query": "passed",
+    "ac_5_coverage_history_date_filters": "passed",
+    "ac_6_task_cancellation_pending": "passed",
+    "ac_7_task_cancellation_running": "passed",
+    "ac_8_task_timeout": "passed",
+    "ac_9_webhook_delivery_success": "passed"
+  },
+  "deployment_status": {
+    "environment": "development",
+    "branch": "feature/SPEC-AGENT-GROWTH-004",
+    "commit_sha": "pending",
+    "deployed_at": null,
+    "rollback_available": true
+  },
+  "notes": [
+    "All Phase 3 implementation phases completed successfully",
+    "8/8 unit tests passed",
+    "9/9 integration tests passed",
+    "README.md AgentTaskWorker section added",
+    "Database migration 0012 applied successfully",
+    "All acceptance criteria validated",
+    "Ready for git-manager commit and PR creation"
+  ]
+}

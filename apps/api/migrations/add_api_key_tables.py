@@ -11,7 +11,6 @@ Run with: python -m alembic revision --autogenerate -m "Add API key security tab
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import Index
 
 def upgrade():
     """Add API key security tables"""
@@ -101,8 +100,6 @@ def downgrade():
 # Additional helper functions for data migration if needed
 def create_default_admin_key():
     """Create a default admin API key for initial setup"""
-    from ...security import generate_admin_key, APIKeyManager
-    from ...database import get_sync_session
 
     # This would be called after the migration to create an initial admin key
     # Implementation would depend on your specific database setup

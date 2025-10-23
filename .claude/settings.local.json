@@ -1,45 +1,128 @@
 {
+  "env": {
+    "MOAI_RUNTIME": "typescript",
+    "MOAI_PROJECT_PATH": "./.",
+    "MOAI_AUTO_ROUTING": "true",
+    "MOAI_PERFORMANCE_MONITORING": "true",
+    "NODE_ENV": "personal"
+  },
   "permissions": {
     "allow": [
-      "Bash(PYTHONIOENCODING=utf-8 /c/Users/a/AppData/Local/Programs/Python/Python313/python.exe test_integration_simple.py)",
-      "WebFetch(domain:github.com)",
-      "Bash(gh pr view:*)",
-      "Bash(flake8:*)",
-      "Bash(python:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(./bin/gh.exe pr view:*)",
-      "Bash(git log:*)",
-      "Bash(./bin/gh.exe pr list --state all --limit 10)",
-      "Bash(unzip:*)",
-      "mcp__sequential-thinking__sequentialthinking",
-      "Bash(tree:*)",
-      "Bash(git remote:*)",
-      "Bash(git fetch:*)",
-      "Bash(git config:*)",
-      "Bash(git rev-parse:*)",
-      "Bash(git merge:*)",
-      "Bash(./bin/gh.exe run list --repo bridge25/Unmanned --limit 2)",
-      "Bash(./bin/gh.exe pr merge 16 --merge --delete-branch)",
-      "Bash(git for-each-ref:*)",
-      "Read(//c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/.github/workflows/**)",
-      "Bash(python3 -m pytest --version)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(systeminfo)",
+      "Bash(wmic:*)",
+      "Bash(tasklist:*)",
+      "Bash(powershell:*)",
+      "Bash(netstat:*)",
+      "Read(//c/**)",
+      "Bash(del /Q \"C:\\Users\\a\\.claude\\shell-snapshots\\*.sh\")",
+      "Bash(find:*)",
+      "Bash(echo $TERM)",
+      "Bash(ls:*)",
       "Bash(python3:*)",
-      "Bash(pip3 install:*)"
+      "SlashCommand(/alfred:9-update:*)",
+      "Bash(npm view:*)",
+      "Bash(claude --version:*)",
+      "WebSearch",
+      "Bash(if [ -f \"package.json\" ])",
+      "Bash(then npm install moai-adk@latest)",
+      "Bash(else npm install -g moai-adk@latest)",
+      "Bash(fi)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm uninstall:*)",
+      "Bash(pip3 install:*)",
+      "Bash(pip3 show:*)",
+      "Bash(moai:*)",
+      "Bash(moai-adk update:*)",
+      "Bash($env:PYTHONIOENCODING=\"utf-8\")",
+      "Bash(export PYTHONIOENCODING=utf-8)",
+      "Bash(pip3 uninstall:*)",
+      "Bash(wsl pip3 install:*)",
+      "Bash(wsl python3:*)",
+      "Bash(wsl sudo add-apt-repository:*)",
+      "Bash(wsl sudo apt update:*)",
+      "Bash(wsl sudo apt install:*)",
+      "Bash(wsl ps:*)",
+      "Bash(wsl moai:*)",
+      "Bash(wsl python3.14:*)",
+      "Bash(wsl bash -c \"cd /mnt/c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/dt-rag && python3.14 -m moai_adk status\")",
+      "Bash(wsl bash -c \"cd /mnt/c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/dt-rag && python3.14 -m moai_adk init --yes\")",
+      "Bash(npm install:*)",
+      "Bash(grep:*)",
+      "Bash(awk:*)",
+      "Bash(test:*)",
+      "Bash(pip3 index:*)",
+      "Bash(pip3 search:*)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(moai-adk --version:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(echo:*)",
+      "Read(//home/a/.local/lib/**)",
+      "Read(//home/a/.local/bin/**)",
+      "Bash(git rev-parse:*)",
+      "Bash(md5sum:*)",
+      "Bash(dos2unix:*)",
+      "Bash(curl:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker start:*)",
+      "Bash(docker rm:*)",
+      "Bash(docker run:*)",
+      "Bash(docker network:*)",
+      "Bash(docker restart:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker image inspect:*)",
+      "Bash(docker cp:*)",
+      "Bash(docker commit:*)",
+      "Bash(docker tag:*)",
+      "Bash(tree:*)",
+      "Bash(while read f)",
+      "Bash(do echo \"=== $f ===\")",
+      "Bash(wc:*)",
+      "Bash(done)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "default"
   },
   "hooks": {
+    "PostToolUse": [],
     "PreToolUse": [
       {
-        "matcher": "Task",
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "cmd /c \"set PYTHONIOENCODING=utf-8 && C:\\Users\\a\\AppData\\Local\\Programs\\Python\\Python313\\python.exe .claude/hooks/knowledge_injector.py\"",
-            "timeout": 10
+            "command": "node .claude/hooks/alfred/pre-write-guard.cjs"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/alfred/tag-enforcer.cjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/alfred/policy-block.cjs"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/alfred/session-notice.cjs"
           }
         ]
       }

@@ -1,0 +1,272 @@
+name: DT-RAG Test Suite
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: false
+        default: 'ci'
+        type: choice
+        options:
+        - ci
+        - unit
+        - integration
+        - e2e
+        - all
+
+env:
+  TESTING: true
+  CI_ENVIRONMENT: true
+  DATABASE_URL: sqlite+aiosqlite:///:memory:
+  REDIS_ENABLED: false
+  SECRET_KEY: github-actions-test-key-do-not-use-in-production
+  PYTHONPATH: ${{ github.workspace }}
+
+jobs:
+  test-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+        test-type: ["unit", "integration", "e2e"]
+        include:
+          - python-version: "3.11"
+            test-type: "ci"
+            coverage: true
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sqlite3
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio pytest-cov httpx
+
+        # Install project dependencies if they exist
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
+        if [ -f pyproject.toml ]; then pip install -e .; fi
+
+    - name: Check environment
+      run: |
+        python tests/test_runner.py --check-env
+
+    - name: Run tests with environment detection
+      run: |
+        python tests/test_runner.py ${{ matrix.test-type }} --verbose
+
+    - name: Upload coverage reports (if enabled)
+      if: matrix.coverage == true
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.python-version }}-${{ matrix.test-type }}
+        path: |
+          htmlcov/
+          .pytest_cache/
+          *.log
+        retention-days: 5
+
+  # Optional: Test with real services (only on specific triggers)
+  test-with-services:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[test-services]')
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: dt_rag_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/dt_rag_test
+      REDIS_URL: redis://localhost:6379/15
+      TEST_WITH_REDIS: true
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio pytest-cov httpx psycopg2-binary redis
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Wait for services
+      run: |
+        # Wait for PostgreSQL
+        until pg_isready -h localhost -p 5432; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+
+        # Wait for Redis
+        until redis-cli -h localhost -p 6379 ping; do
+          echo "Waiting for Redis..."
+          sleep 2
+        done
+
+    - name: Run integration tests with real services
+      run: |
+        python tests/test_runner.py integration --verbose
+
+    - name: Run E2E tests with real services
+      run: |
+        python tests/test_runner.py e2e --verbose
+
+  # Security and quality checks
+  quality-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install quality tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy bandit safety
+
+    - name: Run code formatting checks
+      run: |
+        black --check --diff tests/
+        isort --check-only --diff tests/
+
+    - name: Run linting
+      run: |
+        flake8 tests/ --max-line-length=100 --ignore=E203,W503
+
+    - name: Run type checking
+      continue-on-error: true  # Type checking failures shouldn't block CI
+      run: |
+        mypy tests/ --ignore-missing-imports || true
+
+    - name: Run security checks
+      run: |
+        bandit -r tests/ -f json -o bandit-report.json || true
+        safety check || true
+
+    - name: Upload quality reports
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-reports
+        path: |
+          bandit-report.json
+        retention-days: 5
+
+  # Performance and load testing (optional)
+  performance-tests:
+    if: contains(github.event.head_commit.message, '[test-performance]')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-asyncio pytest-benchmark httpx
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run performance tests
+      env:
+        TEST_PERFORMANCE_SCENARIOS: true
+        TEST_E2E_COMPREHENSIVE: true
+      run: |
+        python tests/test_runner.py e2e --verbose
+
+# Workflow summary and notifications
+  test-summary:
+    if: always()
+    needs: [test-matrix, quality-checks]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Test Summary
+      run: |
+        echo "## Test Suite Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Test Matrix | ${{ needs.test-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Quality Checks | ${{ needs.quality-checks.result }} |" >> $GITHUB_STEP_SUMMARY
+
+        if [[ "${{ needs.test-matrix.result }}" == "success" && "${{ needs.quality-checks.result }}" == "success" ]]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "❌ Some tests failed. Please check the job details above." >> $GITHUB_STEP_SUMMARY
+        fi

@@ -2,14 +2,12 @@
 Redis 연결 관리 및 최적화 시스템
 """
 
-import asyncio
 import logging
 import pickle
 import gzip
-import json
-from typing import Dict, Any, Optional, Union, List
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 
 logger = logging.getLogger(__name__)
@@ -17,7 +15,6 @@ logger = logging.getLogger(__name__)
 # Redis 호환성 확인
 try:
     import redis.asyncio as redis
-    from redis.exceptions import ConnectionError, RedisError
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -54,12 +51,9 @@ class RedisConfig:
 
     def __post_init__(self):
         if self.socket_keepalive_options is None:
-            # Linux TCP keepalive 설정
-            self.socket_keepalive_options = {
-                1: 1,     # TCP_KEEPIDLE
-                2: 3,     # TCP_KEEPINTVL
-                3: 5,     # TCP_KEEPCNT
-            }
+            # TCP keepalive는 플랫폼 specific하므로 기본적으로 비활성화
+            # 필요시 외부에서 socket.TCP_* 상수를 사용하여 설정
+            self.socket_keepalive_options = {}
 
         if self.ttl_configs is None:
             self.ttl_configs = {
@@ -371,6 +365,51 @@ class RedisManager:
             logger.warning(f"Redis MEMORY USAGE failed for key {key}: {e}")
             return None
 
+    async def lpush(self, key: str, *values: Any) -> Optional[int]:
+        """List 왼쪽에 값 추가"""
+        if not await self.ensure_connection():
+            return None
+
+        try:
+            self.stats['operations_total'] += 1
+            result = await self.client.lpush(key, *values)
+            self.stats['operations_success'] += 1
+            return result
+        except Exception as e:
+            logger.warning(f"Redis LPUSH failed for key {key}: {e}")
+            self.stats['operations_failed'] += 1
+            return None
+
+    async def brpop(self, *keys: str, timeout: int = 0) -> Optional[tuple]:
+        """List 오른쪽에서 값 블로킹 팝"""
+        if not await self.ensure_connection():
+            return None
+
+        try:
+            self.stats['operations_total'] += 1
+            result = await self.client.brpop(*keys, timeout=timeout)
+            self.stats['operations_success'] += 1
+            return result
+        except Exception as e:
+            logger.warning(f"Redis BRPOP failed: {e}")
+            self.stats['operations_failed'] += 1
+            return None
+
+    async def llen(self, key: str) -> int:
+        """List 길이 조회"""
+        if not await self.ensure_connection():
+            return 0
+
+        try:
+            self.stats['operations_total'] += 1
+            result = await self.client.llen(key)
+            self.stats['operations_success'] += 1
+            return result
+        except Exception as e:
+            logger.warning(f"Redis LLEN failed for key {key}: {e}")
+            self.stats['operations_failed'] += 1
+            return 0
+
     def get_stats(self) -> Dict[str, Any]:
         """성능 통계"""
         total_ops = self.stats['operations_total']
@@ -471,7 +510,7 @@ async def get_redis_manager() -> RedisManager:
     if _redis_manager is None:
         # 환경변수에서 설정 읽기
         config = RedisConfig(
-            host=os.getenv('REDIS_HOST', 'localhost'),
+            host=os.getenv('REDIS_HOST', 'redis'),
             port=int(os.getenv('REDIS_PORT', '6379')),
             db=int(os.getenv('REDIS_DB', '0')),
             password=os.getenv('REDIS_PASSWORD'),

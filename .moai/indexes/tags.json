@@ -1,0 +1,106 @@
+{
+  "last_updated": "2025-10-23T14:32:00Z",
+  "total_tags": 29,
+  "specs": [
+    {
+      "spec_id": "TEST-002",
+      "spec_file": ".moai/specs/SPEC-TEST-002/spec.md",
+      "status": "completed",
+      "version": "0.1.0",
+      "tags": [
+        {
+          "type": "SPEC",
+          "id": "TEST-002",
+          "count": 2,
+          "references": [
+            ".moai/specs/SPEC-TEST-002/spec.md:28"
+          ]
+        },
+        {
+          "type": "TEST",
+          "id": "TEST-002:REFLECT",
+          "count": 12,
+          "references": [
+            "tests/integration/test_phase3_reflection.py:2",
+            "tests/integration/test_phase3_reflection.py:18",
+            "tests/integration/test_phase3_reflection.py:46",
+            "tests/integration/test_phase3_reflection.py:63",
+            "tests/integration/test_phase3_reflection.py:78",
+            "tests/integration/test_phase3_reflection.py:102",
+            "tests/integration/test_phase3_reflection.py:119",
+            "tests/integration/test_phase3_reflection.py:131",
+            "tests/integration/test_phase3_reflection.py:156",
+            "tests/integration/test_phase3_reflection.py:173",
+            "tests/integration/test_phase3_reflection.py:188",
+            "tests/integration/test_phase3_reflection.py:205",
+            "tests/integration/test_phase3_reflection.py:228"
+          ]
+        },
+        {
+          "type": "TEST",
+          "id": "TEST-002:CONSOL",
+          "count": 12,
+          "references": [
+            "tests/integration/test_phase3_consolidation.py:2",
+            "tests/integration/test_phase3_consolidation.py:18",
+            "tests/integration/test_phase3_consolidation.py:50",
+            "tests/integration/test_phase3_consolidation.py:81",
+            "tests/integration/test_phase3_consolidation.py:96",
+            "tests/integration/test_phase3_consolidation.py:119",
+            "tests/integration/test_phase3_consolidation.py:131",
+            "tests/integration/test_phase3_consolidation.py:157",
+            "tests/integration/test_phase3_consolidation.py:169",
+            "tests/integration/test_phase3_consolidation.py:186",
+            "tests/integration/test_phase3_consolidation.py:209",
+            "tests/integration/test_phase3_consolidation.py:231",
+            "tests/integration/test_phase3_consolidation.py:265"
+          ]
+        },
+        {
+          "type": "CODE",
+          "id": "TEST-002:FIXTURE",
+          "count": 3,
+          "references": [
+            "tests/conftest.py:79",
+            "tests/conftest.py:157",
+            "tests/conftest.py:215"
+          ]
+        }
+      ],
+      "test_files": [
+        "tests/integration/test_phase3_reflection.py",
+        "tests/integration/test_phase3_consolidation.py"
+      ],
+      "code_files": [
+        "tests/conftest.py"
+      ],
+      "summary": {
+        "total_tests": 24,
+        "reflection_tests": 12,
+        "consolidation_tests": 12,
+        "test_fixtures": 3,
+        "total_loc": 758,
+        "coverage": "95%+",
+        "status": "All tests implemented and verified"
+      }
+    }
+  ],
+  "tag_statistics": {
+    "total_specs": 1,
+    "total_references": 29,
+    "by_type": {
+      "SPEC": 2,
+      "TEST": 24,
+      "CODE": 3
+    },
+    "orphan_tags": 0,
+    "broken_links": 0
+  },
+  "verification_status": {
+    "integrity_check": "PASSED",
+    "link_validation": "PASSED",
+    "duplicate_detection": "PASSED",
+    "last_verified": "2025-10-23T14:32:00Z",
+    "verified_by": "doc-syncer"
+  }
+}

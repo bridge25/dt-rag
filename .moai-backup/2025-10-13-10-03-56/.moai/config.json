@@ -1,0 +1,39 @@
+{
+  "version": "0.0.2",
+  "mode": "personal",
+  "projectName": "dt-rag",
+  "projectType": "fullstack",
+  "projectLanguage": "hybrid",
+  "languages": {
+    "backend": "python",
+    "frontend": "typescript"
+  },
+  "frameworks": {
+    "backend": "fastapi",
+    "frontend": "nextjs"
+  },
+  "testFramework": {
+    "backend": "pytest",
+    "frontend": "vitest"
+  },
+  "linter": {
+    "backend": "black",
+    "frontend": "eslint"
+  },
+  "features": [
+    "dynamic-taxonomy",
+    "hybrid-search",
+    "multi-agent-debate",
+    "agent-growth-platform",
+    "feature-flags"
+  ],
+  "backup": {
+    "enabled": true,
+    "retentionDays": 30
+  },
+  "git": {
+    "enabled": true,
+    "autoCommit": false,
+    "branchPrefix": "feature/"
+  }
+}

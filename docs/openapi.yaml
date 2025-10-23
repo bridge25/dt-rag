@@ -1,0 +1,303 @@
+openapi: 3.0.3
+info:
+  title: Dynamic Taxonomy RAG API
+  description: |
+    동적 다단계 분류(DAG+버전/롤백)·트리형 UI·카테고리-한정 에이전트 시스템
+    
+    ## 핵심 NFR 가드
+    - 성능: p95≤4s, p50≤1.5s
+    - 비용: 평균 비용/쿼리 ≤₩10
+    - 품질: Faithfulness ≥ 0.85 (RAGAS 기반)
+    - 운영: 롤백 TTR ≤ 15분
+  version: "1.8.1"
+  contact:
+    name: A팀 (Taxonomy & Data Platform)
+    email: team-a@example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.dt-rag.example.com
+    description: Production server
+
+paths:
+  /classify:
+    post:
+      summary: 혼합 분류 파이프라인
+      description: |
+        룰→LLM→교차검증 체인으로 문서 청크를 분류
+        - 1단계: 룰 기반 1차 분류 (민감도/패턴 매칭)
+        - 2단계: LLM 2차 분류 (후보 경로 + 근거≥2)
+        - 3단계: 교차검증 로직 (룰 vs LLM 결과 비교)
+        - 4단계: Confidence<0.7 → HITL 처리
+      tags: [Classification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifyRequest'
+      responses:
+        '200':
+          description: 분류 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassifyResponse'
+        '400':
+          description: 잘못된 요청
+        '500':
+          description: 서버 오류
+
+  /search:
+    post:
+      summary: 하이브리드 검색 + Rerank
+      description: |
+        BM25 + Vector 하이브리드 검색 후 Cross-Encoder Reranking
+        - BM25 검색 (topk=12) + Vector 검색 (topk=12)
+        - 후보 union/dedup → Cross-Encoder Rerank (50→5)
+        - p95≤4s 성능 보장
+      tags: [Search]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: 검색 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: 잘못된 요청
+        '500':
+          description: 서버 오류
+
+  /taxonomy/{version}/tree:
+    get:
+      summary: 택소노미 트리 조회
+      description: 특정 버전의 노드/엣지 구조 JSON 반환
+      tags: [Taxonomy]
+      parameters:
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "1.8.1"
+      responses:
+        '200':
+          description: 트리 구조 반환
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  nodes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TaxonomyNode'
+                  edges:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        parent:
+                          type: string
+                        child:
+                          type: string
+                        version:
+                          type: string
+        '404':
+          description: 버전을 찾을 수 없음
+
+components:
+  schemas:
+    SourceMeta:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/doc1"
+        title:
+          type: string
+          example: "RAG System Guide"
+        date:
+          type: string
+          format: date
+          example: "2025-09-04"
+        version:
+          type: string
+          example: "v1.0"
+        span:
+          type: array
+          items:
+            type: integer
+          minItems: 2
+          maxItems: 2
+          example: [0, 100]
+
+    TaxonomyNode:
+      type: object
+      required: [node_id, label, canonical_path, version]
+      properties:
+        node_id:
+          type: string
+          example: "node_001"
+        label:
+          type: string
+          example: "Machine Learning"
+        canonical_path:
+          type: array
+          items:
+            type: string
+          example: ["AI", "ML"]
+        version:
+          type: string
+          example: "1.8.1"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0
+          example: 0.85
+
+    ClassifyRequest:
+      type: object
+      required: [chunk_id, text]
+      properties:
+        chunk_id:
+          type: string
+          example: "chunk_001"
+        text:
+          type: string
+          example: "머신러닝 모델을 사용한 RAG 시스템 구축"
+        hint_paths:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+          example: [["AI", "ML"], ["AI", "RAG"]]
+
+    ClassifyResponse:
+      type: object
+      required: [canonical, candidates, hitl, confidence, reasoning]
+      properties:
+        canonical:
+          type: array
+          items:
+            type: string
+          example: ["AI", "RAG"]
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxonomyNode'
+        hitl:
+          type: boolean
+          default: false
+          description: "Confidence<0.7 시 true"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.85
+        reasoning:
+          type: array
+          items:
+            type: string
+          minItems: 2
+          example: ["AI 키워드 감지", "RAG 패턴 매칭"]
+
+    SearchHit:
+      type: object
+      required: [chunk_id, score]
+      properties:
+        chunk_id:
+          type: string
+          example: "chunk_001"
+        score:
+          type: number
+          minimum: 0
+          example: 0.95
+        source:
+          $ref: '#/components/schemas/SourceMeta'
+        text:
+          type: string
+          example: "RAG 시스템 구축 방법..."
+        taxonomy_path:
+          type: array
+          items:
+            type: string
+          example: ["AI", "RAG"]
+
+    SearchRequest:
+      type: object
+      required: [q]
+      properties:
+        q:
+          type: string
+          example: "AI RAG 시스템 구축"
+        filters:
+          type: object
+          additionalProperties: true
+          example:
+            canonical_in: [["AI", "RAG"]]
+        bm25_topk:
+          type: integer
+          default: 12
+          minimum: 1
+        vector_topk:
+          type: integer
+          default: 12
+          minimum: 1
+        rerank_candidates:
+          type: integer
+          default: 50
+          minimum: 1
+          description: "Cross-Encoder 입력 후보 수"
+        final_topk:
+          type: integer
+          default: 5
+          minimum: 1
+
+    SearchResponse:
+      type: object
+      required: [hits, latency, request_id]
+      properties:
+        hits:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchHit'
+        latency:
+          type: number
+          minimum: 0
+          example: 1.23
+          description: "응답 시간 (초)"
+        request_id:
+          type: string
+          example: "search_1725436800000"
+        total_candidates:
+          type: integer
+          minimum: 0
+          description: "전체 후보 수 (선택사항)"
+        sources_count:
+          type: integer
+          minimum: 0
+          description: "소스 개수 (선택사항)"
+        taxonomy_version:
+          type: string
+          example: "1.8.1"
+          description: "사용된 택소노미 버전 (선택사항)"
+
+tags:
+  - name: Classification
+    description: 문서 분류 관련 API
+  - name: Search  
+    description: 검색 관련 API
+  - name: Taxonomy
+    description: 택소노미 관리 API

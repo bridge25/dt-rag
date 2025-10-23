@@ -1,0 +1,19 @@
+io_ratio_min: 20
+rules:
+  forbid_guesses: true
+  single_source_of_truth: code
+  max_files_per_commit: 5
+  split_impl_and_verify_dialog: true
+lints:
+  python: [ruff, mypy]
+  js: [eslint, typescript]
+tests:
+  python: pytest
+  js: vitest
+context:
+  include_extensions: [".py", ".ts", ".tsx", ".js", ".json", ".yaml", ".yml", ".md"]
+  exclude_dirs: ["node_modules", ".git", "dist", "build"]
+  max_chunk_tokens: 12000
+prompts:
+  short_answer: true
+  explain_before_code: true

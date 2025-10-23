@@ -1,0 +1,289 @@
+[2025-09-19T12:28:03.294464] [INFO] Tool input parsed: Task
+[2025-09-19T12:28:03.295218] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-19T12:28:03.298000] [INFO] Loaded KB for rag-evaluation-specialist: 6 items
+[2025-09-19T12:28:03.298493] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-19T12:28:03.298866] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-19T12:28:03.299294] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-19T12:28:32.960563] [INFO] Tool input parsed: Task
+[2025-09-19T12:28:32.960951] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-19T12:28:32.961268] [INFO] Cache hit for rag-evaluation-specialist
+[2025-09-19T12:28:32.961595] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-19T12:28:32.961904] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-19T12:28:32.962271] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-19T12:31:24.173021] [INFO] Tool input parsed: Task
+[2025-09-19T12:31:24.173449] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-19T12:31:24.173789] [INFO] Cache hit for rag-evaluation-specialist
+[2025-09-19T12:31:24.174098] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-19T12:31:24.174533] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-19T12:31:24.175067] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-19T12:32:53.736691] [INFO] Tool input parsed: Task
+[2025-09-19T12:32:53.737096] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-19T12:32:53.737394] [INFO] Cache hit for rag-evaluation-specialist
+[2025-09-19T12:32:53.737662] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-19T12:32:53.737948] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-19T12:32:53.738731] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-19T12:33:20.835999] [INFO] Tool input parsed: Task
+[2025-09-19T12:33:20.836457] [INFO] Processing Task for database-architect
+[2025-09-19T12:33:20.838997] [INFO] Loaded KB for database-architect: 6 items
+[2025-09-19T12:33:20.839485] [INFO] Active keywords: ['postgres', 'pgvector', 'hnsw', 'index', 'migration']
+[2025-09-19T12:33:20.839925] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-19T12:33:20.840425] [INFO] Successfully injected knowledge for database-architect
+[2025-09-19T23:15:18.757948] [INFO] Tool input parsed: unknown
+[2025-09-19T23:15:18.758738] [ERROR] Creating error response: Invalid tool input
+[2025-09-19T23:15:55.077788] [INFO] Tool input parsed: Task
+[2025-09-19T23:15:55.078400] [INFO] Processing Task for gemini-assistant
+[2025-09-19T23:15:55.078965] [WARNING] Knowledge base not found: C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\gemini-assistant_knowledge.json
+[2025-09-19T23:15:55.079374] [ERROR] Creating error response: Knowledge base not found for gemini-assistant
+[2025-09-20T11:51:32.920303] [INFO] Tool input parsed: Task
+[2025-09-20T11:51:32.920753] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-20T11:51:32.923565] [INFO] Loaded KB for rag-evaluation-specialist: 6 items
+[2025-09-20T11:51:32.924058] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-20T11:51:32.924400] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-20T11:51:32.925519] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-20T11:55:23.248014] [INFO] Tool input parsed: Task
+[2025-09-20T11:55:23.248425] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-20T11:55:23.248748] [INFO] Cache hit for rag-evaluation-specialist
+[2025-09-20T11:55:23.249100] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-20T11:55:23.249588] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-20T11:55:23.250093] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-20T11:55:23.250624] [INFO] Tool input parsed: Task
+[2025-09-20T11:55:23.251050] [INFO] Processing Task for database-architect
+[2025-09-20T11:55:23.254143] [INFO] Loaded KB for database-architect: 6 items
+[2025-09-20T11:55:23.254535] [INFO] Active keywords: ['postgres', 'pgvector', 'hnsw', 'index', 'migration']
+[2025-09-20T11:55:23.255945] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-20T11:55:23.256310] [INFO] Successfully injected knowledge for database-architect
+[2025-09-20T11:55:23.256672] [INFO] Tool input parsed: Task
+[2025-09-20T11:55:23.256943] [INFO] Processing Task for hybrid-search-specialist
+[2025-09-20T11:55:23.259977] [INFO] Loaded KB for hybrid-search-specialist: 6 items
+[2025-09-20T11:55:23.260325] [INFO] Active keywords: ['bm25', 'vector', 'hybrid', 'rerank', 'cross-encoder']
+[2025-09-20T11:55:23.260631] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-20T11:55:23.260949] [INFO] Successfully injected knowledge for hybrid-search-specialist
+[2025-09-20T11:55:23.261273] [INFO] Tool input parsed: Read
+[2025-09-20T11:55:23.261527] [INFO] Skipping non-Task tool: Read
+[2025-09-20T11:55:23.261826] [INFO] Tool input parsed: Task
+[2025-09-20T11:55:23.262067] [INFO] No subagent_type in Task input
+[2025-09-20T11:55:45.416533] [INFO] Tool input parsed: Task
+[2025-09-20T11:55:45.417049] [INFO] Skipping gemini-assistant - no knowledge injection needed
+[2025-09-25T23:25:29.441765] [INFO] Tool input parsed: unknown
+[2025-09-25T23:25:29.442595] [ERROR] Creating error response: Invalid tool input
+[2025-09-25T23:28:39.058008] [INFO] Tool input parsed: Task
+[2025-09-25T23:28:39.058436] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-25T23:28:39.058867] [WARNING] Knowledge base not found: C:\MYCLAUDE_PROJECT\sonheungmin\Unmanned\dt-rag\knowledge-base\rag-evaluation-specialist_knowledge.json
+[2025-09-25T23:28:39.059203] [ERROR] Creating error response: Knowledge base not found for rag-evaluation-specialist
+[2025-09-25T23:33:13.690596] [INFO] Tool input parsed: Task
+[2025-09-25T23:33:13.691024] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-25T23:33:13.692530] [INFO] Loaded KB for rag-evaluation-specialist: 6 items
+[2025-09-25T23:33:13.692998] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-25T23:33:13.693362] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:33:13.700351] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-25T23:33:13.700789] [INFO] Tool input parsed: Task
+[2025-09-25T23:33:13.701115] [INFO] Processing Task for database-architect
+[2025-09-25T23:33:13.702277] [INFO] Loaded KB for database-architect: 7 items
+[2025-09-25T23:33:13.702656] [INFO] Active keywords: ['postgres', 'pgvector', 'hnsw', 'index', 'migration']
+[2025-09-25T23:33:13.703011] [INFO] Filtered 7 relevant items from 7 total
+[2025-09-25T23:33:13.703400] [INFO] Successfully injected knowledge for database-architect
+[2025-09-25T23:33:13.703758] [INFO] Tool input parsed: Task
+[2025-09-25T23:33:13.704062] [INFO] Processing Task for hybrid-search-specialist
+[2025-09-25T23:33:13.705238] [INFO] Loaded KB for hybrid-search-specialist: 7 items
+[2025-09-25T23:33:13.705611] [INFO] Active keywords: ['bm25', 'vector', 'hybrid', 'rerank', 'cross-encoder']
+[2025-09-25T23:33:13.705966] [INFO] Filtered 7 relevant items from 7 total
+[2025-09-25T23:33:13.706311] [INFO] Successfully injected knowledge for hybrid-search-specialist
+[2025-09-25T23:33:27.103200] [INFO] Tool input parsed: Task
+[2025-09-25T23:33:27.103585] [INFO] Processing Task for document-ingestion-specialist
+[2025-09-25T23:33:27.104895] [INFO] Loaded KB for document-ingestion-specialist: 6 items
+[2025-09-25T23:33:27.105328] [INFO] Active keywords: ['chunk', 'parse', 'extract', 'document', 'pdf']
+[2025-09-25T23:33:27.105719] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:33:27.106101] [INFO] Successfully injected knowledge for document-ingestion-specialist
+[2025-09-25T23:33:27.106449] [INFO] Tool input parsed: Task
+[2025-09-25T23:33:27.106729] [INFO] Processing Task for taxonomy-architect
+[2025-09-25T23:33:27.107964] [INFO] Loaded KB for taxonomy-architect: 7 items
+[2025-09-25T23:33:27.108330] [INFO] Active keywords: ['dag', 'hierarchy', 'classification', 'ontology', 'tree']
+[2025-09-25T23:33:27.108650] [INFO] Filtered 7 relevant items from 7 total
+[2025-09-25T23:33:27.108975] [INFO] Successfully injected knowledge for taxonomy-architect
+[2025-09-25T23:40:02.602676] [INFO] Tool input parsed: unknown
+[2025-09-25T23:40:02.603050] [ERROR] Creating error response: Invalid tool input
+[2025-09-25T23:56:27.725063] [INFO] Tool input parsed: Task
+[2025-09-25T23:56:27.725580] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-25T23:56:27.728134] [INFO] Loaded KB for rag-evaluation-specialist: 6 items
+[2025-09-25T23:56:27.728558] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-25T23:56:27.728923] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:56:27.729322] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-25T23:56:27.729724] [INFO] Tool input parsed: Task
+[2025-09-25T23:56:27.730021] [INFO] Processing Task for database-architect
+[2025-09-25T23:56:27.732508] [INFO] Loaded KB for database-architect: 6 items
+[2025-09-25T23:56:27.733010] [INFO] Active keywords: ['postgres', 'pgvector', 'hnsw', 'index', 'migration']
+[2025-09-25T23:56:27.734386] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:56:27.734806] [INFO] Successfully injected knowledge for database-architect
+[2025-09-25T23:56:27.735238] [INFO] Tool input parsed: Task
+[2025-09-25T23:56:27.735653] [INFO] Processing Task for hybrid-search-specialist
+[2025-09-25T23:56:27.738674] [INFO] Loaded KB for hybrid-search-specialist: 6 items
+[2025-09-25T23:56:27.739037] [INFO] Active keywords: ['bm25', 'vector', 'hybrid', 'rerank', 'cross-encoder']
+[2025-09-25T23:56:27.739620] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:56:27.740185] [INFO] Successfully injected knowledge for hybrid-search-specialist
+[2025-09-25T23:56:27.740774] [INFO] Tool input parsed: Read
+[2025-09-25T23:56:27.741211] [INFO] Skipping non-Task tool: Read
+[2025-09-25T23:56:27.741707] [INFO] Tool input parsed: Task
+[2025-09-25T23:56:27.742116] [INFO] No subagent_type in Task input
+[2025-09-25T23:57:32.398326] [INFO] Tool input parsed: Task
+[2025-09-25T23:57:32.398735] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-25T23:57:32.399179] [INFO] Cache hit for rag-evaluation-specialist
+[2025-09-25T23:57:32.399632] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-25T23:57:32.400017] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:57:32.400393] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-25T23:57:32.400793] [INFO] Tool input parsed: Task
+[2025-09-25T23:57:32.401072] [INFO] Processing Task for database-architect
+[2025-09-25T23:57:32.401346] [INFO] Cache hit for database-architect
+[2025-09-25T23:57:32.401618] [INFO] Active keywords: ['postgres', 'pgvector', 'hnsw', 'index', 'migration']
+[2025-09-25T23:57:32.401922] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:57:32.402219] [INFO] Successfully injected knowledge for database-architect
+[2025-09-25T23:57:32.402567] [INFO] Tool input parsed: Task
+[2025-09-25T23:57:32.402849] [INFO] Processing Task for hybrid-search-specialist
+[2025-09-25T23:57:32.403117] [INFO] Cache hit for hybrid-search-specialist
+[2025-09-25T23:57:32.403388] [INFO] Active keywords: ['bm25', 'vector', 'hybrid', 'rerank', 'cross-encoder']
+[2025-09-25T23:57:32.403657] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:57:32.403949] [INFO] Successfully injected knowledge for hybrid-search-specialist
+[2025-09-25T23:57:32.404273] [INFO] Tool input parsed: Read
+[2025-09-25T23:57:32.404526] [INFO] Skipping non-Task tool: Read
+[2025-09-25T23:57:32.404825] [INFO] Tool input parsed: Task
+[2025-09-25T23:57:32.405078] [INFO] No subagent_type in Task input
+[2025-09-25T23:58:41.429089] [INFO] Tool input parsed: unknown
+[2025-09-25T23:58:41.429479] [ERROR] Creating error response: Invalid tool input
+[2025-09-25T23:58:47.834777] [INFO] Tool input parsed: Task
+[2025-09-25T23:58:47.835155] [INFO] Processing Task for rag-evaluation-specialist
+[2025-09-25T23:58:47.835479] [INFO] Cache hit for rag-evaluation-specialist
+[2025-09-25T23:58:47.835776] [INFO] Active keywords: ['ragas', 'metric', 'evaluation', 'assess', 'measure']
+[2025-09-25T23:58:47.836060] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:58:47.836368] [INFO] Successfully injected knowledge for rag-evaluation-specialist
+[2025-09-25T23:58:47.836714] [INFO] Tool input parsed: Task
+[2025-09-25T23:58:47.837020] [INFO] Processing Task for database-architect
+[2025-09-25T23:58:47.837272] [INFO] Cache hit for database-architect
+[2025-09-25T23:58:47.837514] [INFO] Active keywords: ['postgres', 'pgvector', 'hnsw', 'index', 'migration']
+[2025-09-25T23:58:47.837778] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:58:47.838061] [INFO] Successfully injected knowledge for database-architect
+[2025-09-25T23:58:47.838385] [INFO] Tool input parsed: Task
+[2025-09-25T23:58:47.838622] [INFO] Processing Task for hybrid-search-specialist
+[2025-09-25T23:58:47.838845] [INFO] Cache hit for hybrid-search-specialist
+[2025-09-25T23:58:47.839089] [INFO] Active keywords: ['bm25', 'vector', 'hybrid', 'rerank', 'cross-encoder']
+[2025-09-25T23:58:47.839402] [INFO] Filtered 6 relevant items from 6 total
+[2025-09-25T23:58:47.839667] [INFO] Successfully injected knowledge for hybrid-search-specialist
+[2025-09-25T23:58:47.839967] [INFO] Tool input parsed: Read
+[2025-09-25T23:58:47.840222] [INFO] Skipping non-Task tool: Read
+[2025-09-25T23:58:47.840488] [INFO] Tool input parsed: Task
+[2025-09-25T23:58:47.840715] [INFO] No subagent_type in Task input
+[2025-09-26T00:04:39.771814] [INFO] Tool input parsed: unknown
+[2025-09-26T00:04:39.772221] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T00:14:40.143052] [INFO] Tool input parsed: unknown
+[2025-09-26T00:14:40.143519] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T00:14:54.200349] [INFO] Tool input parsed: unknown
+[2025-09-26T00:14:54.200733] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T00:25:02.754045] [INFO] Tool input parsed: unknown
+[2025-09-26T00:25:02.754433] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T00:31:03.569634] [INFO] Tool input parsed: unknown
+[2025-09-26T00:31:03.570043] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T12:40:47.541618] [INFO] Tool input parsed: unknown
+[2025-09-26T12:40:47.542154] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T12:53:11.856537] [INFO] Tool input parsed: unknown
+[2025-09-26T12:53:11.857158] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T13:04:30.938286] [INFO] Tool input parsed: unknown
+[2025-09-26T13:04:30.938680] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T13:28:16.386966] [INFO] Tool input parsed: unknown
+[2025-09-26T13:28:16.387409] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T19:04:36.248343] [INFO] Tool input parsed: unknown
+[2025-09-26T19:04:36.248801] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T20:04:45.684385] [INFO] Tool input parsed: unknown
+[2025-09-26T20:04:45.684780] [ERROR] Creating error response: Invalid tool input
+[2025-09-26T20:15:37.245207] [INFO] Tool input parsed: unknown
+[2025-09-26T20:15:37.245636] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T14:50:54.062228] [INFO] Tool input parsed: unknown
+[2025-10-01T14:50:54.064842] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T14:50:54.079619] [INFO] Tool input parsed: unknown
+[2025-10-01T14:50:54.080200] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T14:50:54.200430] [INFO] Tool input parsed: unknown
+[2025-10-01T14:50:54.201074] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T16:50:21.435267] [INFO] Tool input parsed: unknown
+[2025-10-01T16:50:21.435890] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T16:50:21.453436] [INFO] Tool input parsed: unknown
+[2025-10-01T16:50:21.453933] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T16:50:21.513880] [INFO] Tool input parsed: unknown
+[2025-10-01T16:50:21.514425] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T16:50:21.537379] [INFO] Tool input parsed: unknown
+[2025-10-01T16:50:21.537885] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T17:06:05.125944] [INFO] Tool input parsed: unknown
+[2025-10-01T17:06:05.126588] [ERROR] Creating error response: Invalid tool input
+[2025-10-01T17:06:05.127186] [INFO] Tool input parsed: unknown
+[2025-10-01T17:06:05.127788] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T15:26:01.917113] [INFO] Tool input parsed: unknown
+[2025-10-02T15:26:01.919196] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T15:26:01.919270] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T15:26:01.919471] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T15:26:01.946188] [INFO] Tool input parsed: unknown
+[2025-10-02T15:26:01.946525] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T17:21:38.110979] [INFO] Tool input parsed: unknown
+[2025-10-02T17:21:38.111741] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T17:21:38.140377] [INFO] Tool input parsed: unknown
+[2025-10-02T17:21:38.140855] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T17:21:38.179896] [INFO] Tool input parsed: unknown
+[2025-10-02T17:21:38.180318] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T17:21:38.203012] [INFO] Tool input parsed: unknown
+[2025-10-02T17:21:38.203395] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T17:35:36.934725] [INFO] Tool input parsed: unknown
+[2025-10-02T17:35:36.935240] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T17:35:36.958134] [INFO] Tool input parsed: unknown
+[2025-10-02T17:35:36.958580] [ERROR] Creating error response: Invalid tool input
+[2025-10-02T17:35:36.997357] [INFO] Tool input parsed: unknown
+[2025-10-02T17:35:36.997774] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T16:05:10.686827] [INFO] Tool input parsed: unknown
+[2025-10-03T16:05:10.688187] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T16:05:10.688698] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T16:05:10.719329] [INFO] Tool input parsed: unknown
+[2025-10-03T16:05:10.719826] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T16:05:10.771632] [INFO] Tool input parsed: unknown
+[2025-10-03T16:05:10.772161] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T16:05:10.803042] [INFO] Tool input parsed: unknown
+[2025-10-03T16:05:10.803386] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T16:11:33.037190] [INFO] Tool input parsed: unknown
+[2025-10-03T16:11:33.037393] [INFO] Tool input parsed: unknown
+[2025-10-03T16:11:33.037566] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T16:11:33.037856] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T17:41:02.483148] [INFO] Tool input parsed: unknown
+[2025-10-03T17:41:02.483734] [ERROR] Creating error response: Invalid tool input
+[2025-10-03T17:41:02.520436] [INFO] Tool input parsed: unknown
+[2025-10-03T17:41:02.520843] [ERROR] Creating error response: Invalid tool input
+[2025-10-05T18:26:47.235918] [INFO] Tool input parsed: unknown
+[2025-10-05T18:26:47.236597] [ERROR] Creating error response: Invalid tool input
+[2025-10-05T18:26:47.236644] [ERROR] Creating error response: Invalid tool input
+[2025-10-05T19:08:01.055301] [INFO] Tool input parsed: unknown
+[2025-10-05T19:08:01.055816] [ERROR] Creating error response: Invalid tool input
+[2025-10-05T19:08:01.074385] [INFO] Tool input parsed: unknown
+[2025-10-05T19:08:01.074908] [ERROR] Creating error response: Invalid tool input
+[2025-10-05T19:08:01.101341] [INFO] Tool input parsed: unknown
+[2025-10-05T19:08:01.101679] [ERROR] Creating error response: Invalid tool input
+[2025-10-05T21:59:21.758137] [INFO] Tool input parsed: unknown
+[2025-10-05T21:59:21.758567] [ERROR] Creating error response: Invalid tool input
+[2025-10-05T22:01:47.910731] [INFO] Tool input parsed: unknown
+[2025-10-05T22:01:47.911120] [ERROR] Creating error response: Invalid tool input
+[2025-10-06T10:16:21.254405] [INFO] Tool input parsed: unknown
+[2025-10-06T10:16:21.255332] [ERROR] Creating error response: Invalid tool input
+[2025-10-06T10:18:54.211056] [INFO] Tool input parsed: unknown
+[2025-10-06T10:18:54.211544] [ERROR] Creating error response: Invalid tool input
+[2025-10-07T08:15:17.247223] [INFO] Tool input parsed: unknown
+[2025-10-07T08:15:17.247820] [ERROR] Creating error response: Invalid tool input
+[2025-10-07T08:15:17.247916] [ERROR] Creating error response: Invalid tool input
+[2025-10-07T09:53:14.198522] [INFO] Tool input parsed: unknown
+[2025-10-07T09:53:14.199108] [ERROR] Creating error response: Invalid tool input
+[2025-10-07T09:53:14.201064] [INFO] Tool input parsed: unknown
+[2025-10-07T09:53:14.201677] [ERROR] Creating error response: Invalid tool input
+[2025-10-07T09:53:14.271679] [INFO] Tool input parsed: unknown
+[2025-10-07T09:53:14.272108] [ERROR] Creating error response: Invalid tool input
+[2025-10-10T20:47:18.498434] [INFO] Tool input parsed: unknown
+[2025-10-10T20:47:18.499694] [ERROR] Creating error response: Invalid tool input
+[2025-10-10T20:53:48.996526] [INFO] Tool input parsed: unknown
+[2025-10-10T20:53:48.996916] [ERROR] Creating error response: Invalid tool input
+[2025-10-10T20:59:05.783763] [INFO] Tool input parsed: unknown
+[2025-10-10T20:59:05.784274] [ERROR] Creating error response: Invalid tool input
+[2025-10-10T21:00:40.847274] [INFO] Tool input parsed: unknown
+[2025-10-10T21:00:40.847632] [ERROR] Creating error response: Invalid tool input
+[2025-10-10T21:26:38.113565] [INFO] Tool input parsed: unknown
+[2025-10-10T21:26:38.114284] [ERROR] Creating error response: Invalid tool input
+[2025-10-12T22:52:11.622602] [INFO] Tool input parsed: unknown
+[2025-10-12T22:52:11.624570] [ERROR] Creating error response: Invalid tool input

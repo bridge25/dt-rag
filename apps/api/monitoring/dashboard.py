@@ -5,11 +5,10 @@
 import asyncio
 import logging
 from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
-from dataclasses import asdict
 
-from .metrics import get_metrics_collector, PerformanceSnapshot
+from .metrics import get_metrics_collector
 from .health_check import get_health_checker, HealthStatus
 
 logger = logging.getLogger(__name__)

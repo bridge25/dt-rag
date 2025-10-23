@@ -4,18 +4,15 @@ FastAPI middleware that implements comprehensive security controls
 Integrates with the security framework for request/response processing
 """
 
-import asyncio
 import json
 import logging
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any
 from fastapi import Request, Response, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import JSONResponse
-import ipaddress
 
 from ..core.security_manager import SecurityManager, SecurityException, SecurityContext
 from ..audit.audit_logger import EventType, SeverityLevel

@@ -5,14 +5,13 @@ This module provides database models and management functions for secure API key
 including proper hashing, rate limiting, and audit logging.
 """
 
-import asyncio
 import hashlib
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from sqlalchemy import (
     Column, Integer, String, DateTime, Boolean, Text, Index,
-    select, update, delete, and_, or_
+    select, delete, and_, func, desc
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase
@@ -105,7 +104,7 @@ class APIKeyUsage(Base):
     timestamp = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
 
     # Additional metadata
-    metadata = Column(Text, nullable=True)  # JSON for additional data
+    request_metadata = Column(Text, nullable=True)  # JSON for additional data
 
     # Indexes for performance
     __table_args__ = (
@@ -276,7 +275,7 @@ class APIKeyManager:
         stmt = select(APIKey).where(
             and_(
                 APIKey.key_id == key_id,
-                APIKey.is_active == True
+                APIKey.is_active
             )
         )
         result = await self.db.execute(stmt)
@@ -338,7 +337,7 @@ class APIKeyManager:
         conditions = []
 
         if active_only:
-            conditions.append(APIKey.is_active == True)
+            conditions.append(APIKey.is_active)
 
         if owner_id:
             conditions.append(APIKey.owner_id == owner_id)
@@ -400,6 +399,109 @@ class APIKeyManager:
         logger.info(f"Revoked API key: key_id={key_id}, revoked_by={revoked_by}")
         return True
 
+    async def update_api_key(
+        self,
+        key_id: str,
+        updated_by: str,
+        client_ip: str,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        allowed_ips: Optional[List[str]] = None,
+        rate_limit: Optional[int] = None,
+        is_active: Optional[bool] = None
+    ) -> Optional[APIKeyInfo]:
+        """
+        Update an existing API key's metadata and settings
+
+        Args:
+            key_id: The API key ID to update
+            updated_by: User ID performing the update
+            client_ip: Client IP address
+            name: New name (optional)
+            description: New description (optional)
+            allowed_ips: New allowed IPs list (optional)
+            rate_limit: New rate limit (optional)
+            is_active: New active status (optional)
+
+        Returns:
+            Updated APIKeyInfo if successful, None if key not found
+
+        Note:
+            Scope and permissions cannot be updated for security reasons.
+            To change scope/permissions, revoke and create a new key.
+        """
+        stmt = select(APIKey).where(APIKey.key_id == key_id)
+        result = await self.db.execute(stmt)
+        api_key = result.scalar_one_or_none()
+
+        if not api_key:
+            logger.warning(f"Update failed: API key not found: key_id={key_id}")
+            return None
+
+        # Store old values for audit log
+        old_values = {
+            "name": api_key.name,
+            "description": api_key.description,
+            "allowed_ips": api_key.allowed_ips,
+            "rate_limit": api_key.rate_limit,
+            "is_active": api_key.is_active
+        }
+
+        # Update fields if provided
+        updated_fields = []
+        if name is not None:
+            api_key.name = name
+            updated_fields.append("name")
+
+        if description is not None:
+            api_key.description = description
+            updated_fields.append("description")
+
+        if allowed_ips is not None:
+            api_key.allowed_ips = json.dumps(allowed_ips)
+            updated_fields.append("allowed_ips")
+
+        if rate_limit is not None:
+            if rate_limit < 1 or rate_limit > 10000:
+                logger.warning(f"Update failed: Invalid rate_limit={rate_limit}")
+                return None
+            api_key.rate_limit = rate_limit
+            updated_fields.append("rate_limit")
+
+        if is_active is not None:
+            api_key.is_active = is_active
+            updated_fields.append("is_active")
+
+        # Update timestamp
+        api_key.updated_at = datetime.now(timezone.utc)
+
+        # Store new values for audit log
+        new_values = {
+            "name": api_key.name,
+            "description": api_key.description,
+            "allowed_ips": api_key.allowed_ips,
+            "rate_limit": api_key.rate_limit,
+            "is_active": api_key.is_active
+        }
+
+        # Log the update operation
+        await self._log_operation(
+            operation="UPDATE",
+            key_id=key_id,
+            performed_by=updated_by,
+            client_ip=client_ip,
+            old_values=json.dumps(old_values),
+            new_values=json.dumps(new_values),
+            reason=f"API key updated: {', '.join(updated_fields)}"
+        )
+
+        await self.db.commit()
+
+        logger.info(f"Updated API key: key_id={key_id}, fields={updated_fields}, updated_by={updated_by}")
+
+        # Return updated info
+        return await self.get_api_key_info(key_id)
+
     async def get_api_key_info(self, key_id: str) -> Optional[APIKeyInfo]:
         """Get API key information by ID"""
         stmt = select(APIKey).where(APIKey.key_id == key_id)
@@ -441,7 +543,7 @@ class APIKeyManager:
         return usage_count < rate_limit
 
     async def _log_usage(self, key_id: str, endpoint: str, method: str, client_ip: str,
-                        status_code: int, response_time_ms: Optional[int], metadata: str = None):
+                        status_code: int, response_time_ms: Optional[int], request_metadata: str = None):
         """Log API key usage"""
         usage = APIKeyUsage(
             key_id=key_id,
@@ -450,7 +552,7 @@ class APIKeyManager:
             client_ip=client_ip,
             status_code=status_code,
             response_time_ms=response_time_ms,
-            metadata=metadata
+            request_metadata=request_metadata
         )
         self.db.add(usage)
 
@@ -490,6 +592,96 @@ class APIKeyManager:
             return False
 
         return False
+
+    async def get_api_key_usage_stats(
+        self,
+        key_id: str,
+        days: int = 7
+    ) -> Optional[dict]:
+        """
+        Get usage statistics for an API key
+
+        Args:
+            key_id: API key identifier
+            days: Number of days to analyze (default: 7)
+
+        Returns:
+            Dictionary with usage statistics or None if key not found
+        """
+        key_info = await self.get_api_key_info(key_id)
+        if not key_info:
+            return None
+
+        now = datetime.now(timezone.utc)
+
+        total_stmt = select(
+            func.count(APIKeyUsage.id).label('total_requests'),
+            func.count(func.nullif(APIKeyUsage.status_code >= 400, False)).label('failed_requests'),
+            func.max(APIKeyUsage.timestamp).label('last_used_at')
+        ).where(APIKeyUsage.key_id == key_id)
+
+        total_result = await self.db.execute(total_stmt)
+        total_row = total_result.first()
+
+        total_requests = total_row.total_requests if total_row else 0
+        failed_requests = total_row.failed_requests if total_row and total_row.failed_requests else 0
+        last_used_at = total_row.last_used_at if total_row else None
+
+        cutoff_24h = now - timedelta(hours=24)
+        requests_24h_stmt = select(func.count(APIKeyUsage.id)).where(
+            and_(
+                APIKeyUsage.key_id == key_id,
+                APIKeyUsage.timestamp >= cutoff_24h
+            )
+        )
+        requests_24h_result = await self.db.execute(requests_24h_stmt)
+        requests_last_24h = requests_24h_result.scalar() or 0
+
+        cutoff_7d = now - timedelta(days=days)
+        requests_7d_stmt = select(func.count(APIKeyUsage.id)).where(
+            and_(
+                APIKeyUsage.key_id == key_id,
+                APIKeyUsage.timestamp >= cutoff_7d
+            )
+        )
+        requests_7d_result = await self.db.execute(requests_7d_stmt)
+        requests_last_7d = requests_7d_result.scalar() or 0
+
+        endpoints_stmt = select(
+            APIKeyUsage.endpoint,
+            APIKeyUsage.method,
+            func.count(APIKeyUsage.id).label('request_count')
+        ).where(
+            and_(
+                APIKeyUsage.key_id == key_id,
+                APIKeyUsage.timestamp >= cutoff_7d
+            )
+        ).group_by(
+            APIKeyUsage.endpoint,
+            APIKeyUsage.method
+        ).order_by(
+            desc('request_count')
+        ).limit(10)
+
+        endpoints_result = await self.db.execute(endpoints_stmt)
+        most_used_endpoints = [
+            {
+                "endpoint": row.endpoint,
+                "method": row.method,
+                "count": row.request_count
+            }
+            for row in endpoints_result
+        ]
+
+        return {
+            "key_id": key_id,
+            "total_requests": total_requests,
+            "failed_requests": failed_requests,
+            "requests_last_24h": requests_last_24h,
+            "requests_last_7d": requests_last_7d,
+            "most_used_endpoints": most_used_endpoints,
+            "last_used_at": last_used_at
+        }
 
     async def cleanup_expired_usage_logs(self, days_to_keep: int = 30):
         """Clean up old usage logs to prevent database bloat"""

@@ -1,7 +1,7 @@
 """AsyncPG compatibility fixes and vector operator optimization
 
 Revision ID: 0004
-Revises: 0003
+Revises: None
 Create Date: 2025-09-19 13:10:00.000000
 
 This migration addresses Critical Issues found in Phase 2:
@@ -15,7 +15,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = '0004'
-down_revision = '0003'
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -44,27 +44,40 @@ def upgrade() -> None:
         # 1. Ensure doc_metadata column exists in taxonomy_nodes
         # (This should already exist from earlier migrations, but we'll verify)
         try:
-            # Try to add the column - will fail if it already exists
-            op.add_column('taxonomy_nodes',
-                         sa.Column('doc_metadata', postgresql.JSONB(), nullable=True))
-            print("Added doc_metadata column to taxonomy_nodes")
-        except Exception:
-            # Column likely already exists, which is fine
-            print("doc_metadata column already exists in taxonomy_nodes")
+            # Check if taxonomy_nodes table exists
+            inspector = sa.inspect(bind)
+            if 'taxonomy_nodes' in inspector.get_table_names():
+                # Try to add the column - will fail if it already exists
+                try:
+                    op.add_column('taxonomy_nodes',
+                                 sa.Column('doc_metadata', postgresql.JSONB(), nullable=True))
+                    print("Added doc_metadata column to taxonomy_nodes")
+                except Exception:
+                    # Column likely already exists, which is fine
+                    print("doc_metadata column already exists in taxonomy_nodes")
+            else:
+                print("taxonomy_nodes table does not exist yet - skipping")
+        except Exception as e:
+            print(f"Could not check taxonomy_nodes table: {e}")
 
         # 2. Add better vector indexes for asyncpg compatibility
         try:
-            # Drop old vector index if it exists
-            op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_cosine')
-            op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_ivf')
+            # Check if embeddings table exists
+            inspector = sa.inspect(bind)
+            if 'embeddings' in inspector.get_table_names():
+                # Drop old vector index if it exists
+                op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_cosine')
+                op.execute('DROP INDEX IF EXISTS idx_embeddings_vec_ivf')
 
-            # Create HNSW index for better performance with asyncpg
-            op.execute('''
-                CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw
-                ON embeddings USING hnsw (vec vector_cosine_ops)
-                WITH (m = 16, ef_construction = 64)
-            ''')
-            print("Created HNSW vector index for better asyncpg compatibility")
+                # Create HNSW index for better performance with asyncpg
+                op.execute('''
+                    CREATE INDEX IF NOT EXISTS idx_embeddings_vec_hnsw
+                    ON embeddings USING hnsw (vec vector_cosine_ops)
+                    WITH (m = 16, ef_construction = 64)
+                ''')
+                print("Created HNSW vector index for better asyncpg compatibility")
+            else:
+                print("embeddings table does not exist yet - skipping vector index")
 
         except Exception as e:
             print(f"Vector index creation failed (expected if pgvector not installed): {e}")
@@ -84,15 +97,25 @@ def upgrade() -> None:
         ''')
 
         # 4. Add indexes for better query performance
-        op.execute('CREATE INDEX IF NOT EXISTS idx_chunks_doc_id_text ON chunks (doc_id, text)')
-        op.execute('CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_doc_path ON doc_taxonomy (doc_id, path)')
-        op.execute('CREATE INDEX IF NOT EXISTS idx_embeddings_chunk_model ON embeddings (chunk_id, model_name)')
+        try:
+            inspector = sa.inspect(bind)
+            if 'chunks' in inspector.get_table_names():
+                op.execute('CREATE INDEX IF NOT EXISTS idx_chunks_doc_id_text ON chunks (doc_id, text)')
+            if 'doc_taxonomy' in inspector.get_table_names():
+                op.execute('CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_doc_path ON doc_taxonomy (doc_id, path)')
+            if 'embeddings' in inspector.get_table_names():
+                op.execute('CREATE INDEX IF NOT EXISTS idx_embeddings_chunk_model ON embeddings (chunk_id, model_name)')
+        except Exception as e:
+            print(f"Index creation skipped: {e}")
 
         # 5. Update statistics for better query planning
-        op.execute('ANALYZE taxonomy_nodes')
-        op.execute('ANALYZE chunks')
-        op.execute('ANALYZE embeddings')
-        op.execute('ANALYZE doc_taxonomy')
+        try:
+            inspector = sa.inspect(bind)
+            for table in ['taxonomy_nodes', 'chunks', 'embeddings', 'doc_taxonomy']:
+                if table in inspector.get_table_names():
+                    op.execute(f'ANALYZE {table}')
+        except Exception as e:
+            print(f"ANALYZE skipped: {e}")
 
         print("PostgreSQL asyncpg compatibility fixes applied successfully")
 
