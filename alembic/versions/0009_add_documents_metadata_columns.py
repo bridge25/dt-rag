@@ -40,6 +40,27 @@ def upgrade() -> None:
 
     is_postgresql = 'postgresql' in database_url
 
+    # Check if we're in offline mode (MockConnection doesn't support inspection)
+    is_offline_mode = bind.__class__.__name__ == 'MockConnection'
+
+    if is_offline_mode:
+        # In offline mode, generate SQL for all columns unconditionally
+        op.add_column('documents', sa.Column('title', sa.Text(), nullable=True))
+        op.add_column('documents', sa.Column('content_type', sa.String(100), nullable=False, server_default='text/plain'))
+        op.add_column('documents', sa.Column('file_size', sa.Integer(), nullable=True))
+        op.add_column('documents', sa.Column('checksum', sa.String(64), nullable=True))
+
+        if is_postgresql:
+            op.add_column('documents', sa.Column('doc_metadata', postgresql.JSONB(), nullable=False, server_default='{}'))
+            op.add_column('documents', sa.Column('chunk_metadata', postgresql.JSONB(), nullable=False, server_default='{}'))
+        else:
+            op.add_column('documents', sa.Column('doc_metadata', sa.TEXT(), nullable=False, server_default='{}'))
+            op.add_column('documents', sa.Column('chunk_metadata', sa.TEXT(), nullable=False, server_default='{}'))
+
+        op.add_column('documents', sa.Column('processed_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')))
+        return
+
+    # Online mode: check existing columns before adding
     inspector = sa.inspect(bind)
 
     if 'documents' not in inspector.get_table_names():
@@ -98,6 +119,18 @@ def downgrade() -> None:
     """Remove added columns from documents table"""
 
     bind = op.get_bind()
+
+    # Check if we're in offline mode (MockConnection doesn't support inspection)
+    is_offline_mode = bind.__class__.__name__ == 'MockConnection'
+
+    if is_offline_mode:
+        # In offline mode, generate SQL for dropping all columns unconditionally
+        for column in ['processed_at', 'chunk_metadata', 'doc_metadata', 'checksum',
+                       'file_size', 'content_type', 'title']:
+            op.drop_column('documents', column)
+        return
+
+    # Online mode: check existing columns before dropping
     inspector = sa.inspect(bind)
 
     if 'documents' not in inspector.get_table_names():
