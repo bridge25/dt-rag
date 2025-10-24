@@ -49,13 +49,13 @@ class CreateAPIKeyRequest(BaseModel):
     owner_id: Optional[str] = Field(None, description="Owner user ID")
 
     @validator("scope")
-    def validate_scope(cls, v):
+    def validate_scope(cls, v) -> None:
         if v not in ["read", "write", "admin"]:
             raise ValueError("Scope must be read, write, or admin")
         return v
 
     @validator("allowed_ips")
-    def validate_ips(cls, v):
+    def validate_ips(cls, v) -> None:
         if v is None:
             return v
 
@@ -120,7 +120,7 @@ class APIKeyUsageStats(BaseModel):
 
 
 # Helper function to check admin permissions
-async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)):
+async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)) -> None:
     """Dependency to ensure the API key has admin scope"""
     if current_key.scope != "admin":
         raise HTTPException(

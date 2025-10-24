@@ -215,7 +215,7 @@ class ConsolidationPolicy:
 
         return archived_ids
 
-    async def _archive_case(self, case: CaseBank, reason: str):
+    async def _archive_case(self, case: CaseBank, reason: str) -> None:
         """
         Archive a case to the archive table.
 

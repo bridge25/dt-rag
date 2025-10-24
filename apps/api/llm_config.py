@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class LLMConfigManager:
     """LLM Configuration Manager"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.services = {
             "openai": {"status": "available", "models": ["gpt-3.5-turbo", "gpt-4"]},
             "anthropic": {

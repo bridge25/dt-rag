@@ -20,7 +20,7 @@ try:
     from ..deps import verify_api_key
 except ImportError:
 
-    def verify_api_key():
+    def verify_api_key() -> None:
         return None
 
 
@@ -214,7 +214,7 @@ async def evaluate_batch(
 
 
 @evaluation_router.get("/thresholds", response_model=QualityThresholds)
-async def get_quality_thresholds(api_key: str = Depends(verify_api_key)):
+async def get_quality_thresholds(api_key: str = Depends(verify_api_key)) -> None:
     """
     Get current quality thresholds for monitoring
 
@@ -254,7 +254,7 @@ async def update_quality_thresholds(
 
 
 @evaluation_router.get("/status")
-async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)):
+async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)) -> None:
     """
     Get evaluation system status and health
 

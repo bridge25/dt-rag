@@ -308,7 +308,7 @@ def generate_custom_key(
 
 
 # CLI utility function
-def main():
+def main() -> None:
     """CLI utility for generating API keys"""
     import argparse
 

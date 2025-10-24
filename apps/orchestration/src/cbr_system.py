@@ -351,7 +351,7 @@ class CBRUsageLogger:
 
         self._write_log(self.feedback_log_file, log_entry)
 
-    def _write_log(self, file_path: str, log_entry: Dict[str, Any]):
+    def _write_log(self, file_path: str, log_entry: Dict[str, Any]) -> None:
         """로그 파일 쓰기"""
         try:
             with open(file_path, "a", encoding="utf-8") as f:
@@ -369,7 +369,7 @@ from sentence_transformers import SentenceTransformer
 _embedding_model = None
 
 
-def get_embedding_model():
+def get_embedding_model() -> None:
     """싱글톤 패턴으로 임베딩 모델 반환"""
     global _embedding_model
     if _embedding_model is None:

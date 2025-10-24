@@ -17,33 +17,33 @@ except ImportError:
 
     # Use same mock classes as in metrics_collector.py
     class Counter:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             pass
 
-        def inc(self, *args, **kwargs):
+        def inc(self, *args, **kwargs) -> None:
             pass
 
-        def labels(self, *args, **kwargs):
+        def labels(self, *args, **kwargs) -> None:
             return self
 
     class Gauge:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             pass
 
-        def set(self, *args, **kwargs):
+        def set(self, *args, **kwargs) -> None:
             pass
 
-        def labels(self, *args, **kwargs):
+        def labels(self, *args, **kwargs) -> None:
             return self
 
     class Histogram:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             pass
 
-        def observe(self, *args, **kwargs):
+        def observe(self, *args, **kwargs) -> None:
             pass
 
-        def labels(self, *args, **kwargs):
+        def labels(self, *args, **kwargs) -> None:
             return self
 
 
@@ -58,7 +58,7 @@ class RAGASMetricsExtension:
     including faithfulness, relevancy, precision, recall, and quality gates.
     """
 
-    def __init__(self, registry=None):
+    def __init__(self, registry=None) -> None:
         self.registry = registry
         self.enabled = PROMETHEUS_AVAILABLE and registry is not None
 
@@ -71,7 +71,7 @@ class RAGASMetricsExtension:
         self._initialize_ragas_metrics()
         logger.info("RAGAS metrics extension initialized")
 
-    def _initialize_ragas_metrics(self):
+    def _initialize_ragas_metrics(self) -> None:
         """Initialize all RAGAS-specific Prometheus metrics"""
 
         # Core RAGAS Metrics
@@ -296,7 +296,7 @@ class RAGASMetricsExtension:
         except Exception as e:
             logger.error(f"Failed to record RAGAS metrics: {e}")
 
-    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, float]]):
+    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, float]]) -> None:
         """
         Update quality gates status metrics
 
@@ -365,7 +365,7 @@ class RAGASMetricsExtension:
         except Exception as e:
             logger.error(f"Failed to record batch evaluation progress: {e}")
 
-    def update_evaluation_success_rate(self, success_rate: float):
+    def update_evaluation_success_rate(self, success_rate: float) -> None:
         """
         Update overall evaluation success rate
 
@@ -455,7 +455,7 @@ class RAGASMetricsExtension:
             return {"error": f"Failed to get summary: {e}"}
 
 
-def extend_metrics_collector(metrics_collector):
+def extend_metrics_collector(metrics_collector) -> None:
     """
     Extend an existing MetricsCollector with RAGAS metrics
 

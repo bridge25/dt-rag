@@ -18,7 +18,7 @@ from .models import DatasetEntry, EvaluationRequest, ExperimentConfig
 class SampleDataGenerator:
     """Generate realistic sample data for evaluation testing"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.sample_queries = [
             "What is Retrieval-Augmented Generation (RAG)?",
             "How does vector similarity search work?",

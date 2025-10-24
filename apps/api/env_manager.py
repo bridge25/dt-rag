@@ -19,7 +19,7 @@ class ConfigData:
 
 
 class EnvManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.current_env = self.get_environment()
         self.config = ConfigData(
             debug=self.get_bool("DEBUG", True),

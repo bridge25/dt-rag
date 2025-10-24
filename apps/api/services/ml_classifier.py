@@ -41,7 +41,7 @@ class MLClassifier:
             "AI/Computer Vision": "Image processing, object detection, image classification, visual recognition, and computer vision algorithms.",
         }
 
-    def load_model(self):
+    def load_model(self) -> None:
         """모델 로드 (lazy loading)"""
         if self.model is None:
             logger.info(f"Loading sentence-transformers model: {self.model_name}")
@@ -49,7 +49,7 @@ class MLClassifier:
             self._precompute_taxonomy_embeddings()
             logger.info("Model loaded successfully")
 
-    def _precompute_taxonomy_embeddings(self):
+    def _precompute_taxonomy_embeddings(self) -> None:
         """택소노미 정의 임베딩 사전 계산"""
         if self.model is None:
             raise RuntimeError("Model not loaded. Call load_model() first.")

@@ -93,7 +93,7 @@ config = get_config()
 
 # Application lifespan context manager
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> None:
     """Application startup and shutdown lifecycle"""
     # Startup
     logger.info("🚀 Starting Dynamic Taxonomy RAG API v1.8.1")
@@ -223,7 +223,7 @@ if config.security.trusted_hosts:
 
 # Request logging and monitoring middleware
 @app.middleware("http")
-async def log_requests_and_track_metrics(request: Request, call_next):
+async def log_requests_and_track_metrics(request: Request, call_next) -> None:
     """Log all HTTP requests and track performance metrics"""
     start_time = time.time()
 
@@ -275,7 +275,7 @@ async def log_requests_and_track_metrics(request: Request, call_next):
 
 # Global exception handler
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
+async def http_exception_handler(request: Request, exc: HTTPException) -> None:
     """Handle HTTP exceptions with RFC 7807 Problem Details format"""
     return JSONResponse(
         status_code=exc.status_code,
@@ -292,7 +292,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
+async def general_exception_handler(request: Request, exc: Exception) -> None:
     """Handle unexpected exceptions"""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
 
@@ -311,7 +311,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
-async def health_check():
+async def health_check() -> None:
     """Basic health check endpoint"""
     return {
         "status": "healthy",
@@ -322,7 +322,7 @@ async def health_check():
 
 
 # Custom OpenAPI schema generation
-def custom_openapi():
+def custom_openapi() -> None:
     """Generate custom OpenAPI schema"""
     if app.openapi_schema:
         return app.openapi_schema
@@ -347,7 +347,7 @@ app.openapi = custom_openapi
 
 # Custom documentation endpoints
 @app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
+async def custom_swagger_ui_html() -> None:
     """Custom Swagger UI with enhanced styling"""
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
@@ -369,7 +369,7 @@ async def custom_swagger_ui_html():
 
 
 @app.get("/redoc", include_in_schema=False)
-async def redoc_html():
+async def redoc_html() -> None:
     """Custom ReDoc documentation"""
     return get_redoc_html(
         openapi_url=app.openapi_url,
@@ -432,7 +432,7 @@ if BATCH_SEARCH_AVAILABLE:
 
 # API versioning support
 @app.get("/api/versions", tags=["Versioning"])
-async def list_api_versions():
+async def list_api_versions() -> None:
     """List available API versions"""
     return {
         "versions": [
@@ -459,7 +459,7 @@ async def list_api_versions():
 
 # Rate limiting info endpoint
 @app.get("/api/v1/rate-limits", tags=["Rate Limiting"])
-async def get_rate_limit_info():
+async def get_rate_limit_info() -> None:
     """Get rate limiting information for current user"""
     # TODO: Implement actual rate limit checking based on user/API key
     return {
@@ -485,7 +485,7 @@ async def get_rate_limit_info():
 
 
 @app.get("/", tags=["Root"])
-async def root():
+async def root() -> None:
     """API root endpoint with comprehensive system information"""
     # 데이터베이스 연결 상태 확인
     db_status = await test_database_connection()

@@ -266,7 +266,7 @@ a_team_client = ATaxonomyAPIClient()
 
 # Graceful resource cleanup: close shared HTTP client on shutdown
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     try:
         await a_team_client.client.aclose()
     except Exception as e:
@@ -274,7 +274,7 @@ async def shutdown_event():
 
 
 @app.get("/health")
-async def health():
+async def health() -> None:
     return {"status": "healthy", "service": "orchestration"}
 
 
@@ -282,7 +282,7 @@ async def health():
 
 
 @app.post("/api/classify", response_model=ClassifyResponse)
-async def api_classify(request: ClassifyRequest):
+async def api_classify(request: ClassifyRequest) -> None:
     # Reuse B-team classify logic against A-team API with hardening
     try:
         a_team_request = {
@@ -309,7 +309,7 @@ async def api_classify(request: ClassifyRequest):
 
 
 @app.post("/api/search", response_model=SearchResponse)
-async def api_search(request: SearchRequest):
+async def api_search(request: SearchRequest) -> None:
     try:
         a_team_request = {
             "q": request.q,
@@ -341,7 +341,7 @@ async def api_search(request: SearchRequest):
 
 
 @app.get("/api/taxonomy/tree/{version}")
-async def api_taxonomy_tree(version: str):
+async def api_taxonomy_tree(version: str) -> None:
     try:
         return await a_team_client.get_taxonomy_tree(version)
     except Exception as e:
@@ -353,7 +353,7 @@ async def api_taxonomy_tree(version: str):
 
 
 @app.post("/classify", response_model=ClassifyResponse)
-async def classify(request: ClassifyRequest):
+async def classify(request: ClassifyRequest) -> None:
     """
     B팀 오케스트레이션: A팀 분류 API를 호출하여 결과 반환 (PRD 준수)
     """
@@ -390,7 +390,7 @@ async def classify(request: ClassifyRequest):
 
 
 @app.post("/chat/run")
-async def run_chat_pipeline(request: dict):
+async def run_chat_pipeline(request: dict) -> None:
     """
     B-O3: 7-Step LangGraph 파이프라인 실행
     intent→retrieve→plan→(tools/debate)→compose→cite→respond
@@ -439,7 +439,7 @@ async def run_chat_pipeline(request: dict):
 
 
 @app.post("/search", response_model=SearchResponse)
-async def search(request: SearchRequest):
+async def search(request: SearchRequest) -> None:
     """
     B팀 오케스트레이션: A팀 검색 API를 호출하여 결과 반환 (PRD 준수)
     """
@@ -480,7 +480,7 @@ async def search(request: SearchRequest):
 
 
 @app.post("/agents/from-category", response_model=AgentManifest)
-async def create_agent_from_category(request: FromCategoryRequest):
+async def create_agent_from_category(request: FromCategoryRequest) -> None:
     """
     B-O1: Agent Manifest Builder
     노드 경로 입력 → AgentManifest 생성 (필터 canonical 강제)
@@ -523,7 +523,7 @@ async def create_agent_from_category(request: FromCategoryRequest):
 
 
 @app.post("/cbr/suggest", response_model=CBRSuggestResponse)
-async def suggest_cbr_cases(request: CBRSuggestRequest):
+async def suggest_cbr_cases(request: CBRSuggestRequest) -> None:
     """
     B-O4: CBR 조회/로그 수집 (Neural Selector 데이터)
     k-NN 조회 엔드포인트 + 유사도 계산 + 성과 로깅
@@ -606,7 +606,7 @@ async def suggest_cbr_cases(request: CBRSuggestRequest):
 
 
 @app.post("/cbr/feedback")
-async def submit_cbr_feedback(feedback: CBRFeedback):
+async def submit_cbr_feedback(feedback: CBRFeedback) -> None:
     """
     B-O4: CBR 피드백 수집
     사용자 피드백 수집 (thumbs up/down + 성공 여부)
@@ -632,7 +632,7 @@ async def submit_cbr_feedback(feedback: CBRFeedback):
 
 
 @app.get("/taxonomy/{version}/tree")
-async def get_taxonomy_tree(version: str):
+async def get_taxonomy_tree(version: str) -> None:
     """
     B팀 오케스트레이션: A팀 택소노미 트리 API 호출 (PRD 준수)
     """

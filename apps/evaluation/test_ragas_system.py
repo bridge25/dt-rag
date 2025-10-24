@@ -35,13 +35,13 @@ from apps.evaluation.sample_data import SampleDataGenerator
 class RAGASSystemTester:
     """Comprehensive RAGAS system tester"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
         self.sample_generator = SampleDataGenerator()
 
-    async def test_basic_evaluation(self):
+    async def test_basic_evaluation(self) -> None:
         """Test basic RAGAS evaluation functionality"""
         print("\n=== Testing Basic RAGAS Evaluation ===")
 
@@ -74,7 +74,7 @@ class RAGASSystemTester:
 
         return result
 
-    async def test_quality_scenarios(self):
+    async def test_quality_scenarios(self) -> None:
         """Test different quality scenarios"""
         print("\n=== Testing Quality Scenarios ===")
 
@@ -118,7 +118,7 @@ class RAGASSystemTester:
             ):
                 print("⚠️  Warning: Low precision not detected")
 
-    async def test_quality_monitoring(self):
+    async def test_quality_monitoring(self) -> None:
         """Test quality monitoring system"""
         print("\n=== Testing Quality Monitoring ===")
 
@@ -166,7 +166,7 @@ class RAGASSystemTester:
 
         return quality_status
 
-    async def test_ab_testing(self):
+    async def test_ab_testing(self) -> None:
         """Test A/B testing functionality"""
         print("\n=== Testing A/B Testing ===")
 
@@ -264,7 +264,7 @@ class RAGASSystemTester:
 
         return results
 
-    async def test_canary_deployment(self):
+    async def test_canary_deployment(self) -> None:
         """Test canary deployment monitoring"""
         print("\n=== Testing Canary Deployment ===")
 
@@ -290,7 +290,7 @@ class RAGASSystemTester:
 
         return monitoring_result
 
-    async def test_golden_dataset(self):
+    async def test_golden_dataset(self) -> None:
         """Test golden dataset functionality"""
         print("\n=== Testing Golden Dataset ===")
 
@@ -314,7 +314,7 @@ class RAGASSystemTester:
 
         return validation_result
 
-    async def run_integration_test(self):
+    async def run_integration_test(self) -> None:
         """Run integration test with database"""
         print("\n=== Running Integration Test ===")
 
@@ -366,7 +366,7 @@ class RAGASSystemTester:
             print(f"❌ Integration test failed: {e}")
             return False
 
-    async def run_performance_test(self):
+    async def run_performance_test(self) -> None:
         """Run performance test"""
         print("\n=== Running Performance Test ===")
 
@@ -404,7 +404,7 @@ class RAGASSystemTester:
 
         return total_time / len(requests)
 
-    async def generate_dashboard_test_data(self):
+    async def generate_dashboard_test_data(self) -> None:
         """Generate test data for dashboard"""
         print("\n=== Generating Dashboard Test Data ===")
 
@@ -440,7 +440,7 @@ class RAGASSystemTester:
 
         print("✅ Dashboard test data generated")
 
-    async def run_all_tests(self):
+    async def run_all_tests(self) -> None:
         """Run all tests in sequence"""
         print("🚀 Starting RAGAS System Comprehensive Test")
         print("=" * 60)
@@ -493,7 +493,7 @@ class RAGASSystemTester:
             return {"error": str(e)}
 
 
-async def main():
+async def main() -> None:
     """Main test function"""
     # Check if Gemini API key is available
     gemini_key = os.getenv("GEMINI_API_KEY")

@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agents", tags=["agents"])
 
 
-async def get_session():
+async def get_session() -> None:
     async with async_session() as session:
         yield session
 
@@ -768,7 +768,7 @@ async def query_agent_stream(
 ):
     logger.info(f"Streaming query for agent: {agent_id}, query: {request.query}")
 
-    async def event_generator():
+    async def event_generator() -> None:
         try:
             agent = await AgentDAO.get_agent(session, agent_id)
 

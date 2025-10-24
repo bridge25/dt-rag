@@ -29,7 +29,7 @@ from apps.orchestration.src.debate.agent_prompts import (
 logger = logging.getLogger(__name__)
 
 
-def get_llm_service_cached():
+def get_llm_service_cached() -> None:
     """Lazy load LLM service"""
     from apps.api.llm_service import get_llm_service
 
@@ -144,7 +144,7 @@ class DebateEngine:
     followed by synthesis of final answer.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.affirmative_agent = DebateAgent(role="affirmative", max_tokens=500)
         self.critical_agent = DebateAgent(role="critical", max_tokens=500)
 
@@ -292,7 +292,7 @@ class DebateEngine:
         """
         start_time = time.time()
 
-        async def _execute_debate():
+        async def _execute_debate() -> None:
             affirmative_r1, critical_r1 = await self._run_round1(query, context)
 
             affirmative_r2, critical_r2 = await self._run_round2(

@@ -5,7 +5,7 @@ from .models import CoverageMetrics, CoverageResult, Gap
 
 
 class CoverageMeterService:
-    def __init__(self, session_factory=None):
+    def __init__(self, session_factory=None) -> None:
         self._session_factory = session_factory
 
     # @IMPL:AGENT-GROWTH-001:0.2.1

@@ -83,7 +83,7 @@ class MigrationPlan:
 class TaxonomyDAGManager:
     """Core DAG management with versioning and rollback capabilities"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.current_version = 1
         self._graph_cache = {}
         self._lock = asyncio.Lock()
@@ -978,7 +978,7 @@ class TaxonomyDAGManager:
             "parameters": operation.parameters,
         }
 
-    async def _create_default_taxonomy(self, session: AsyncSession):
+    async def _create_default_taxonomy(self, session: AsyncSession) -> None:
         """Create default taxonomy structure"""
 
         # Create root node
@@ -1009,7 +1009,7 @@ class TaxonomyDAGManager:
         root_edge = TaxonomyEdge(version=1, parent_node_id=1, child_node_id=2)
         session.add(root_edge)
 
-    def _invalidate_cache(self):
+    def _invalidate_cache(self) -> None:
         """Invalidate graph cache"""
         self._graph_cache.clear()
 

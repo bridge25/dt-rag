@@ -32,10 +32,10 @@ except ImportError:
     logger.warning("langfuse package not installed. Run: pip install langfuse>=3.6.0")
 
     # Fallback: no-op decorator
-    def observe(name: str = "", as_type: str = "span", **kwargs):
+    def observe(name: str = "", as_type: str = "span", **kwargs) -> None:
         """No-op decorator when Langfuse is not available"""
 
-        def decorator(func):
+        def decorator(func) -> None:
             return func
 
         return decorator

@@ -32,7 +32,7 @@ router = APIRouter(
 
 
 @router.get("/health", response_model=Dict[str, Any])
-async def get_embedding_health():
+async def get_embedding_health() -> None:
     """임베딩 서비스 헬스체크"""
     try:
         health_status = health_check()
@@ -47,7 +47,7 @@ async def get_embedding_health():
 
 
 @router.get("/info", response_model=Dict[str, Any])
-async def get_embedding_info():
+async def get_embedding_info() -> None:
     """임베딩 서비스 정보 조회"""
     try:
         service_info = get_service_info()
@@ -62,7 +62,7 @@ async def get_embedding_info():
 
 
 @router.get("/status", response_model=Dict[str, Any])
-async def get_embeddings_status():
+async def get_embeddings_status() -> None:
     """임베딩 데이터베이스 상태 조회"""
     try:
         status = await get_embedding_status()
@@ -203,7 +203,7 @@ async def update_documents_embeddings(
 
 
 @router.post("/cache/clear", response_model=Dict[str, Any])
-async def clear_embedding_cache():
+async def clear_embedding_cache() -> None:
     """임베딩 캐시 클리어"""
     try:
         cleared_count = embedding_service.clear_cache()
@@ -220,7 +220,7 @@ async def clear_embedding_cache():
 
 
 @router.get("/models", response_model=Dict[str, Any])
-async def get_supported_models():
+async def get_supported_models() -> None:
     """지원하는 모델 목록 조회"""
     try:
         return {
@@ -236,7 +236,7 @@ async def get_supported_models():
 
 
 @router.get("/analytics", response_model=Dict[str, Any])
-async def get_embedding_analytics():
+async def get_embedding_analytics() -> None:
     """임베딩 시스템 분석 정보"""
     try:
         # 서비스 상태

@@ -12,7 +12,7 @@ except ImportError:
 
 
 class DOCXParser(BaseParser):
-    def __init__(self):
+    def __init__(self) -> None:
         if not DOCX_AVAILABLE:
             raise ParserError("python-docx not installed")
 

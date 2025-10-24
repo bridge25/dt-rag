@@ -178,7 +178,7 @@ async def get_job_status(
 
 
 @router.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     global _job_orchestrator
     if _job_orchestrator is not None:
         await _job_orchestrator.stop()

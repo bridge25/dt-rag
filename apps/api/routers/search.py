@@ -453,7 +453,7 @@ async def create_embeddings(
 
 
 @router.get("/admin/search-analytics")
-async def get_search_analytics(api_key: str = Depends(verify_api_key)):
+async def get_search_analytics(api_key: str = Depends(verify_api_key)) -> None:
     """
     검색 시스템 분석 정보 조회 (관리자용)
 
@@ -546,7 +546,7 @@ async def clear_search_cache(
 
 
 @router.post("/admin/optimize-indices")
-async def optimize_search_indices(api_key: str = Depends(verify_api_key)):
+async def optimize_search_indices(api_key: str = Depends(verify_api_key)) -> None:
     """
     검색 인덱스 최적화 (관리자용)
     """
@@ -564,7 +564,7 @@ async def optimize_search_indices(api_key: str = Depends(verify_api_key)):
 
 
 @router.get("/admin/metrics")
-async def get_search_metrics(api_key: str = Depends(verify_api_key)):
+async def get_search_metrics(api_key: str = Depends(verify_api_key)) -> None:
     """
     실시간 검색 성능 메트릭 조회
     """
@@ -577,7 +577,7 @@ async def get_search_metrics(api_key: str = Depends(verify_api_key)):
 
 
 @router.post("/admin/reset-metrics")
-async def reset_search_metrics(api_key: str = Depends(verify_api_key)):
+async def reset_search_metrics(api_key: str = Depends(verify_api_key)) -> None:
     """
     검색 메트릭 초기화
     """

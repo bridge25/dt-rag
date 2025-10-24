@@ -31,20 +31,20 @@ experiment_tracker = ExperimentTracker()
 
 # WebSocket connection manager
 class ConnectionManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_connections: List[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> None:
         await websocket.accept()
         self.active_connections.append(websocket)
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket) -> None:
         self.active_connections.remove(websocket)
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
+    async def send_personal_message(self, message: str, websocket: WebSocket) -> None:
         await websocket.send_text(message)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: str) -> None:
         for connection in self.active_connections:
             try:
                 await connection.send_text(message)
@@ -398,13 +398,13 @@ DASHBOARD_HTML = """
 
 
 @dashboard_router.get("/", response_class=HTMLResponse)
-async def get_dashboard(request: Request):
+async def get_dashboard(request: Request) -> None:
     """Get the evaluation dashboard HTML page"""
     return HTMLResponse(content=DASHBOARD_HTML)
 
 
 @dashboard_router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
     """WebSocket endpoint for real-time dashboard updates"""
     await manager.connect(websocket)
 
@@ -504,13 +504,13 @@ async def get_system_statistics() -> Dict[str, Any]:
 
 
 @dashboard_router.get("/api/metrics")
-async def get_dashboard_metrics():
+async def get_dashboard_metrics() -> None:
     """API endpoint to get current dashboard metrics"""
     return await get_dashboard_data()
 
 
 @dashboard_router.post("/api/simulate-evaluation")
-async def simulate_evaluation():
+async def simulate_evaluation() -> None:
     """Simulate an evaluation for dashboard testing"""
     import random
 

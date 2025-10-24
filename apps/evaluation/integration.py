@@ -27,14 +27,14 @@ logger = logging.getLogger(__name__)
 class RAGEvaluationMiddleware(BaseHTTPMiddleware):
     """Middleware to automatically evaluate RAG responses"""
 
-    def __init__(self, app, enable_evaluation: bool = True):
+    def __init__(self, app, enable_evaluation: bool = True) -> None:
         super().__init__(app)
         self.enable_evaluation = enable_evaluation
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> None:
         response = await call_next(request)
 
         # Only evaluate search endpoints
@@ -50,7 +50,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    async def _evaluate_search_response(self, request: Request, response: Response):
+    async def _evaluate_search_response(self, request: Request, response: Response) -> None:
         """Evaluate search response in background"""
         try:
             # Extract query and response data
@@ -177,7 +177,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
 class EvaluationIntegration:
     """Integration utilities for evaluation system"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()

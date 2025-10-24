@@ -11,7 +11,7 @@ except ImportError:
 
 
 class HTMLParser(BaseParser):
-    def __init__(self):
+    def __init__(self) -> None:
         if not BS4_AVAILABLE:
             raise ParserError("beautifulsoup4 not installed")
 

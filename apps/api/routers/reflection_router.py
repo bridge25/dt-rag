@@ -83,7 +83,7 @@ class ImprovementSuggestionsResponse(BaseModel):
 
 
 # Dependency: Get ReflectionEngine instance
-async def get_reflection_engine():
+async def get_reflection_engine() -> None:
     """ReflectionEngine 인스턴스 생성"""
     async with db_manager.get_session() as session:
         engine = ReflectionEngine(db_session=session)
@@ -121,7 +121,7 @@ async def analyze_case_performance(
 
 
 @router.post("/batch", response_model=ReflectionBatchResponse)
-async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)):
+async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) -> None:
     """
     배치 Reflection 실행
 
@@ -178,7 +178,7 @@ async def generate_improvement_suggestions(
 
 
 @router.get("/health")
-async def health_check():
+async def health_check() -> None:
     """Reflection 서비스 상태 확인"""
     return {
         "status": "healthy",

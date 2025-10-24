@@ -38,7 +38,7 @@ class AgentTaskQueue:
         """
         self.job_queue = job_queue or JobQueue()
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize underlying JobQueue"""
         await self.job_queue.initialize()
 

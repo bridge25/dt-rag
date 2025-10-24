@@ -106,7 +106,7 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
 
 
 @router.get("/taxonomy/{version}/tree")
-async def get_taxonomy_tree(version: str, api_key: str = Depends(verify_api_key)):
+async def get_taxonomy_tree(version: str, api_key: str = Depends(verify_api_key)) -> None:
     """
     Bridge Pack 스펙: GET /taxonomy/{version}/tree
     실제 PostgreSQL 데이터베이스에서 분류체계 로드
@@ -138,7 +138,7 @@ async def get_taxonomy_tree(version: str, api_key: str = Depends(verify_api_key)
 
 
 @router.get("/taxonomy/versions")
-def get_taxonomy_versions(api_key: str = Depends(verify_api_key)):
+def get_taxonomy_versions(api_key: str = Depends(verify_api_key)) -> None:
     """
     사용 가능한 taxonomy 버전 목록
     """

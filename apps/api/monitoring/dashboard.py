@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class MonitoringDashboard:
     """모니터링 대시보드"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.metrics_collector = get_metrics_collector()
         self.health_checker = get_health_checker()
 
@@ -247,7 +247,7 @@ class MonitoringDashboard:
         # JSON 형식으로 익스포트
         dashboard_data = await self.get_dashboard_data()
 
-        def json_serializer(obj):
+        def json_serializer(obj) -> None:
             """JSON 직렬화를 위한 커스텀 직렬화 함수"""
             if hasattr(obj, "isoformat"):  # datetime 객체
                 return obj.isoformat()

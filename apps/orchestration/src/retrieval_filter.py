@@ -192,7 +192,7 @@ class SecurityFilter:
 class AuditLogger:
     """감사 로그 - 누가/언제/어떤 범위로 접근했는지"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = logging.getLogger("audit")
 
     def log_access(

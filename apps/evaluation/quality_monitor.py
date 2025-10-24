@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class QualityMonitor:
     """Real-time quality monitoring and alerting system"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.thresholds = QualityThresholds()
 
         # In-memory metric buffers for real-time monitoring
@@ -53,7 +53,7 @@ class QualityMonitor:
         self.trend_window_minutes = 60
         self.quality_history = deque(maxlen=1440)  # 24 hours of minute-level data
 
-    async def record_evaluation(self, evaluation: EvaluationResult):
+    async def record_evaluation(self, evaluation: EvaluationResult) -> None:
         """Record new evaluation result and check for quality issues"""
         try:
             # Update metric buffers
@@ -183,7 +183,7 @@ class QualityMonitor:
             logger.error(f"Failed to get quality alerts: {e}")
             return []
 
-    async def update_thresholds(self, thresholds: QualityThresholds):
+    async def update_thresholds(self, thresholds: QualityThresholds) -> None:
         """Update quality monitoring thresholds"""
         self.thresholds = thresholds
         logger.info(f"Quality thresholds updated: {thresholds.dict()}")
@@ -521,7 +521,7 @@ class QualityMonitor:
             suggested_actions=suggested_actions,
         )
 
-    async def _process_alert(self, alert: QualityAlert):
+    async def _process_alert(self, alert: QualityAlert) -> None:
         """Process and store alert"""
         try:
             # Check if we're in cooldown for this metric

@@ -13,7 +13,7 @@ except ImportError:
 
 
 class PDFParser(BaseParser):
-    def __init__(self):
+    def __init__(self) -> None:
         if not PYMUPDF_AVAILABLE:
             raise ParserError("pymupdf and pymupdf4llm not installed")
 

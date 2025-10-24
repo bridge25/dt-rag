@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/healthz")
-def health_check(api_key: str = Depends(verify_api_key)):
+def health_check(api_key: str = Depends(verify_api_key)) -> None:
     """
     Bridge Pack 스펙: GET /healthz
     Expected Response:

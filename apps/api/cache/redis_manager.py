@@ -52,7 +52,7 @@ class RedisConfig:
     default_ttl: int = 3600  # 1시간
     ttl_configs: Dict[str, int] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.socket_keepalive_options is None:
             # TCP keepalive는 플랫폼 specific하므로 기본적으로 비활성화
             # 필요시 외부에서 socket.TCP_* 상수를 사용하여 설정
@@ -501,7 +501,7 @@ class RedisManager:
                 "connection_attempts": self.connection_attempts,
             }
 
-    async def close(self):
+    async def close(self) -> None:
         """연결 종료"""
         if self.client:
             await self.client.close()

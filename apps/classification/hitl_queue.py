@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class HITLQueue:
     """Human-in-the-loop queue manager"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize HITL queue manager"""
         logger.info("HITLQueue initialized")
 

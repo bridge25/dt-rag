@@ -196,7 +196,7 @@ class MemoryMonitor:
         logger.info(f"메모리 정리 완료: {freed_mb:.1f}MB 확보, {collected}개 객체 수집")
         return result
 
-    async def start_monitoring(self, interval: float = 30.0):
+    async def start_monitoring(self, interval: float = 30.0) -> None:
         """메모리 모니터링 시작 (백그라운드)"""
         if self.monitoring_active:
             logger.warning("메모리 모니터링이 이미 활성화되어 있습니다")
@@ -237,7 +237,7 @@ class MemoryMonitor:
         finally:
             self.monitoring_active = False
 
-    def stop_monitoring(self):
+    def stop_monitoring(self) -> None:
         """메모리 모니터링 중단"""
         self.monitoring_active = False
 
@@ -254,7 +254,7 @@ class PipelineResilienceManager:
         self.memory_monitor = MemoryMonitor(memory_thresholds)
         self.monitoring_task: Optional[asyncio.Task] = None
 
-    async def start(self):
+    async def start(self) -> None:
         """복원력 시스템 시작"""
         logger.info("파이프라인 복원력 시스템 시작")
 
@@ -263,7 +263,7 @@ class PipelineResilienceManager:
             self.memory_monitor.start_monitoring(interval=30.0)
         )
 
-    async def stop(self):
+    async def stop(self) -> None:
         """복원력 시스템 중단"""
         logger.info("파이프라인 복원력 시스템 중단")
 
@@ -331,13 +331,13 @@ def get_resilience_manager() -> PipelineResilienceManager:
 
 
 # 데코레이터 함수들
-def with_retry(retry_config: Optional[RetryConfig] = None):
+def with_retry(retry_config: Optional[RetryConfig] = None) -> None:
     """재시도 데코레이터"""
 
-    def decorator(func):
+    def decorator(func) -> None:
         handler = PipelineRetryHandler(retry_config)
 
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs) -> None:
             return await handler.execute_with_retry(func, *args, **kwargs)
 
         return wrapper
@@ -345,13 +345,13 @@ def with_retry(retry_config: Optional[RetryConfig] = None):
     return decorator
 
 
-def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None):
+def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None) -> None:
     """메모리 모니터링 데코레이터"""
 
-    def decorator(func):
+    def decorator(func) -> None:
         monitor = MemoryMonitor(thresholds)
 
-        async def wrapper(*args, **kwargs):
+        async def wrapper(*args, **kwargs) -> None:
             # 실행 전 메모리 체크
             health_before = monitor.check_memory_health()
             if health_before["status"] in ["critical", "emergency"]:
@@ -372,7 +372,7 @@ def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None):
 
 
 # 테스트용 함수
-async def test_resilience_system():
+async def test_resilience_system() -> None:
     """복원력 시스템 테스트"""
     manager = get_resilience_manager()
     await manager.start()
@@ -384,7 +384,7 @@ async def test_resilience_system():
         print(f"메모리 사용량: {health['memory']['usage']['current_mb']:.1f}MB")
 
         # 테스트 함수 실행
-        async def test_function():
+        async def test_function() -> None:
             await asyncio.sleep(1)
             return "테스트 성공"
 

@@ -109,10 +109,10 @@ class PipelineResponse(BaseModel):
 class SimpleGraph:
     """간단한 순차 실행 그래프"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.steps = []
 
-    def add_step(self, name: str, func: Callable):
+    def add_step(self, name: str, func: Callable) -> None:
         self.steps.append((name, func))
 
     async def ainvoke(self, state: PipelineState) -> PipelineState:
@@ -288,7 +288,7 @@ class LangGraphPipeline:
         docs_count = len(state["retrieved_docs"])
         intent = state["intent"]
 
-        async def determine_strategy():
+        async def determine_strategy() -> None:
             """답변 전략 결정"""
             if intent == "search" and docs_count > 0:
                 return "search_results_summary"
@@ -297,7 +297,7 @@ class LangGraphPipeline:
             else:
                 return "general_answer"
 
-        async def generate_reasoning(strategy_type):
+        async def generate_reasoning(strategy_type) -> None:
             """전략별 추론 생성"""
             if strategy_type == "search_results_summary":
                 return [
@@ -617,7 +617,7 @@ def get_pipeline() -> LangGraphPipeline:
 
 
 # 사용 예시
-async def main():
+async def main() -> None:
     """테스트 실행 예시"""
     pipeline = get_pipeline()
 

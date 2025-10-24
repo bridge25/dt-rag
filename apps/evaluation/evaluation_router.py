@@ -199,7 +199,7 @@ async def evaluate_batch(
 
 
 @evaluation_router.get("/quality/dashboard", response_model=QualityDashboard)
-async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_monitor)):
+async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_monitor)) -> None:
     """
     Get comprehensive quality monitoring dashboard
 

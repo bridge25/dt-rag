@@ -50,7 +50,7 @@ class PIIDetector:
         PIIType.BANK_ACCOUNT: "[계좌번호]",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.compiled_patterns: Dict[PIIType, List[re.Pattern]] = {}
         for pii_type, patterns in self.PATTERNS.items():
             self.compiled_patterns[pii_type] = [

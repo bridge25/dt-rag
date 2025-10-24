@@ -378,7 +378,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             logger.error(f"Response sanitization failed: {e}")
             return response
 
-    def _add_security_headers(self, response: Response):
+    def _add_security_headers(self, response: Response) -> None:
         """Add security headers to response"""
 
         security_headers = SecurityHeaders.get_default_headers()
@@ -660,7 +660,7 @@ class CSRFProtection:
     def __init__(self, secret_key: str):
         self.secret_key = secret_key
 
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, request: Request, call_next) -> None:
         """CSRF protection middleware"""
 
         # Skip CSRF for GET, HEAD, OPTIONS
@@ -694,11 +694,11 @@ class CSRFProtection:
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Request logging middleware for security monitoring"""
 
-    def __init__(self, app, security_manager: SecurityManager):
+    def __init__(self, app, security_manager: SecurityManager) -> None:
         super().__init__(app)
         self.security_manager = security_manager
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next) -> None:
         """Log all requests for security monitoring"""
 
         start_time = time.time()

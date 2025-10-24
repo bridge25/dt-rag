@@ -47,7 +47,7 @@ class ExperimentAssignment:
 class ExperimentTracker:
     """A/B testing and canary deployment tracker"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_experiments = {}  # experiment_id -> ExperimentConfig
         self.user_assignments = {}  # user_id -> ExperimentAssignment
         self.experiment_data = {}  # experiment_id -> {'control': [], 'treatment': []}
@@ -464,7 +464,7 @@ class ExperimentTracker:
             logger.error(f"Failed to get experiment status: {e}")
             return {"error": str(e)}
 
-    async def _periodic_experiment_analysis(self, experiment_id: str):
+    async def _periodic_experiment_analysis(self, experiment_id: str) -> None:
         """Periodic analysis to check for early stopping conditions"""
         try:
             results = await self.analyze_experiment_results(experiment_id)

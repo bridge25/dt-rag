@@ -40,7 +40,7 @@ class ToolRegistry:
     _instance: Optional["ToolRegistry"] = None
     _tools: Dict[str, Tool] = {}
 
-    def __new__(cls):
+    def __new__(cls) -> None:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance

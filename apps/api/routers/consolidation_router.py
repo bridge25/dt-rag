@@ -107,7 +107,7 @@ async def run_consolidation(
 
 
 @router.post("/dry-run", response_model=ConsolidationResponse)
-async def dry_run_consolidation(api_key: APIKeyInfo = Depends(verify_api_key)):
+async def dry_run_consolidation(api_key: APIKeyInfo = Depends(verify_api_key)) -> None:
     """
     Consolidation 시뮬레이션 (변경 없음)
 
@@ -130,7 +130,7 @@ async def dry_run_consolidation(api_key: APIKeyInfo = Depends(verify_api_key)):
 
 
 @router.get("/summary", response_model=ConsolidationSummaryResponse)
-async def get_consolidation_summary(api_key: APIKeyInfo = Depends(verify_api_key)):
+async def get_consolidation_summary(api_key: APIKeyInfo = Depends(verify_api_key)) -> None:
     """
     Consolidation 후보 요약 조회
 
@@ -152,7 +152,7 @@ async def get_consolidation_summary(api_key: APIKeyInfo = Depends(verify_api_key
 
 
 @router.get("/health")
-async def health_check():
+async def health_check() -> None:
     """Consolidation 서비스 상태 확인"""
     return {
         "status": "healthy",

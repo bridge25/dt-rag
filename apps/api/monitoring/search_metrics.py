@@ -21,7 +21,7 @@ class SearchMetrics:
     내부적으로 MetricsCollector를 사용하여 메트릭을 저장합니다.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """SearchMetrics 초기화"""
         self.metrics_collector = get_metrics_collector()
         self._search_counts: Dict[str, int] = defaultdict(int)

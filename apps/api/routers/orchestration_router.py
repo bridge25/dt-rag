@@ -334,7 +334,7 @@ async def get_pipeline_job(
 
 
 @orchestration_router.get("/config", response_model=PipelineConfig)
-async def get_pipeline_config(service: PipelineService = Depends(get_pipeline_service)):
+async def get_pipeline_config(service: PipelineService = Depends(get_pipeline_service)) -> None:
     """
     Get current pipeline configuration
 
@@ -413,7 +413,7 @@ async def get_pipeline_analytics(
 
 
 @orchestration_router.get("/status")
-async def get_pipeline_status():
+async def get_pipeline_status() -> None:
     """
     Get pipeline system status and health
 

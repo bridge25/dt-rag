@@ -54,13 +54,13 @@ class AgentTaskWorker:
             f"AgentTaskWorker initialized: worker_id={worker_id}, timeout={timeout}s"
         )
 
-    async def start(self):
+    async def start(self) -> None:
         """Start worker loop"""
         self.running = True
         logger.info(f"AgentTaskWorker {self.worker_id} started")
         await self._worker_loop()
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop worker gracefully"""
         self.running = False
         logger.info(f"AgentTaskWorker {self.worker_id} stopping...")
@@ -72,7 +72,7 @@ class AgentTaskWorker:
             except asyncio.CancelledError:
                 pass
 
-    async def _worker_loop(self):
+    async def _worker_loop(self) -> None:
         """
         Main worker loop
 
@@ -101,7 +101,7 @@ class AgentTaskWorker:
                 logger.error(f"Worker {self.worker_id} error: {e}", exc_info=True)
                 await asyncio.sleep(1)
 
-    async def _process_coverage_task(self, task_id: str, job_data: Dict[str, Any]):
+    async def _process_coverage_task(self, task_id: str, job_data: Dict[str, Any]) -> None:
         """
         Process coverage refresh task
 

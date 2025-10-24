@@ -41,14 +41,14 @@ class DocumentUploadCommandV1(BaseModel):
     requested_at: datetime = Field(default_factory=datetime.utcnow)
 
     @validator("file_content")
-    def validate_file_size(cls, v):
+    def validate_file_size(cls, v) -> None:
         max_size = 50 * 1024 * 1024
         if len(v) > max_size:
             raise ValueError(f"File size exceeds {max_size} bytes")
         return v
 
     @validator("file_name")
-    def validate_file_extension(cls, v, values):
+    def validate_file_extension(cls, v, values) -> None:
         if "file_format" in values:
             expected_ext = f".{values['file_format'].value}"
             if not v.lower().endswith(expected_ext):

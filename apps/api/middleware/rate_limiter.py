@@ -40,11 +40,11 @@ class RedisRateLimiter:
     Redis-based rate limiter using Fixed Window algorithm
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.redis_client: Optional[aioredis.Redis] = None
         self.enabled = REDIS_RATE_LIMIT_ENABLED
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize Redis connection"""
         if not self.enabled:
             logger.info("Rate limiting disabled (REDIS_RATE_LIMIT_ENABLED=false)")
@@ -64,7 +64,7 @@ class RedisRateLimiter:
             logger.error(f"Failed to connect to Redis for rate limiting: {e}")
             self.enabled = False
 
-    async def close(self):
+    async def close(self) -> None:
         """Close Redis connection"""
         if self.redis_client:
             await self.redis_client.close()

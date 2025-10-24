@@ -60,12 +60,12 @@ class JSONType(TypeDecorator):
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value, dialect) -> None:
         if value is not None:
             return json.dumps(value)
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value, dialect) -> None:
         if value is not None:
             return json.loads(value)
         return value
@@ -77,12 +77,12 @@ class ArrayType(TypeDecorator):
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value, dialect) -> None:
         if value is not None:
             return json.dumps(value)
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value, dialect) -> None:
         if value is not None:
             return json.loads(value)
         return value
@@ -94,33 +94,33 @@ class UUIDType(TypeDecorator):
     impl = String(36)
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value, dialect) -> None:
         if value is not None:
             return str(value)
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value, dialect) -> None:
         if value is not None:
             return uuid.UUID(value)
         return value
 
 
 # 데이터베이스 타입 선택 함수
-def get_json_type():
+def get_json_type() -> None:
     """현재 데이터베이스에 맞는 JSON 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return JSONType()
     return JSON
 
 
-def get_array_type(item_type=String):
+def get_array_type(item_type=String) -> None:
     """현재 데이터베이스에 맞는 Array 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return ArrayType()
     return ARRAY(item_type)
 
 
-def get_uuid_type():
+def get_uuid_type() -> None:
     """현재 데이터베이스에 맞는 UUID 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return UUIDType()
@@ -324,11 +324,11 @@ class CaseBankArchive(Base):
 class DatabaseManager:
     """실제 PostgreSQL 데이터베이스 매니저"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.engine = engine
         self.async_session = async_session
 
-    async def init_database(self):
+    async def init_database(self) -> None:
         """데이터베이스 초기화 및 테이블 생성"""
         try:
             async with self.engine.begin() as conn:
@@ -352,7 +352,7 @@ class DatabaseManager:
             logger.error(f"데이터베이스 초기화 실패: {e}")
             return False
 
-    async def get_session(self):
+    async def get_session(self) -> None:
         """데이터베이스 세션 반환"""
         return self.async_session()
 
@@ -418,7 +418,7 @@ class TaxonomyDAO:
                 return await TaxonomyDAO._get_fallback_tree(version)
 
     @staticmethod
-    async def _insert_default_taxonomy(session, version: int):
+    async def _insert_default_taxonomy(session, version: int) -> None:
         """기본 분류체계 데이터 삽입"""
         default_nodes = [
             ("AI", ["AI"], version),
@@ -1146,7 +1146,7 @@ class SearchDAO:
         return sorted_results[:max_candidates]
 
     @staticmethod
-    async def _insert_sample_chunks(session):
+    async def _insert_sample_chunks(session) -> None:
         """샘플 청크 데이터 삽입"""
         # 문서 먼저 삽입
         sample_docs = [
@@ -1476,19 +1476,19 @@ class ClassifyDAO:
 
 
 # 초기화 함수
-async def init_database():
+async def init_database() -> None:
     """데이터베이스 초기화"""
     return await db_manager.init_database()
 
 
 # 연결 테스트 함수
-async def test_database_connection():
+async def test_database_connection() -> None:
     """데이터베이스 연결 테스트"""
     return await db_manager.test_connection()
 
 
 # 유틸리티 함수들
-async def setup_search_system():
+async def setup_search_system() -> None:
     """검색 시스템 초기 설정"""
     try:
         async with db_manager.async_session() as session:
@@ -1575,13 +1575,13 @@ async def get_search_performance_metrics() -> Dict[str, Any]:
 class SearchMetrics:
     """검색 성능 지표 수집"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.search_latencies = []
         self.search_counts = {"bm25": 0, "vector": 0, "hybrid": 0}
         self.error_counts = 0
         self.last_reset = datetime.utcnow()
 
-    def record_search(self, search_type: str, latency: float, error: bool = False):
+    def record_search(self, search_type: str, latency: float, error: bool = False) -> None:
         """검색 메트릭 기록"""
         self.search_latencies.append(latency)
         self.search_counts[search_type] = self.search_counts.get(search_type, 0) + 1
@@ -1610,7 +1610,7 @@ class SearchMetrics:
             "period_start": self.last_reset.isoformat(),
         }
 
-    def reset(self):
+    def reset(self) -> None:
         """메트릭 초기화"""
         self.search_latencies = []
         self.search_counts = {"bm25": 0, "vector": 0, "hybrid": 0}

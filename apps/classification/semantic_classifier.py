@@ -218,7 +218,7 @@ class SemanticClassifier:
 class TaxonomyDAO:
     """Data Access Object for taxonomy operations"""
 
-    def __init__(self, db_session):
+    def __init__(self, db_session) -> None:
         """Initialize with database session"""
         self.db_session = db_session
 

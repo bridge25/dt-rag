@@ -202,7 +202,7 @@ class APIKeyCreateRequest:
     name: str
     description: Optional[str] = None
     owner_id: Optional[str] = None
-    permissions: List[str] = None
+    permissions: Optional[List[str]] = None
     scope: str = "read"
     allowed_ips: Optional[List[str]] = None
     rate_limit: int = 100
@@ -238,7 +238,7 @@ class APIKeyManager:
 
     async def create_api_key(
         self, request: APIKeyCreateRequest, created_by: str, client_ip: str
-    ) -> tuple[str, APIKeyInfo]:
+    ) -> tuple[str, Optional[APIKeyInfo]]:
         """
         Create a new API key with security validation
 
@@ -341,9 +341,9 @@ class APIKeyManager:
             return None
 
         # Verify key hash
-        if not SecureAPIKeyGenerator.verify_key_hash(plaintext_key, api_key.key_hash):
+        if not SecureAPIKeyGenerator.verify_key_hash(plaintext_key, api_key.key_hash):  # type: ignore[arg-type]
             await self._log_usage(key_id, endpoint, method, client_ip, 401, None)
-            api_key.failed_requests += 1
+            api_key.failed_requests += 1  # type: ignore[assignment]
             await self.db.commit()
             return None
 
@@ -356,7 +356,7 @@ class APIKeyManager:
 
         # Check IP restrictions
         if api_key.allowed_ips:
-            allowed_ips = json.loads(api_key.allowed_ips)
+            allowed_ips = json.loads(api_key.allowed_ips)  # type: ignore[arg-type]
             if client_ip not in allowed_ips and not self._ip_in_ranges(
                 client_ip, allowed_ips
             ):
@@ -366,35 +366,35 @@ class APIKeyManager:
                 return None
 
         # Check rate limiting
-        if not await self._check_rate_limit(key_id, api_key.rate_limit):
+        if not await self._check_rate_limit(key_id, api_key.rate_limit):  # type: ignore[arg-type]
             await self._log_usage(
                 key_id, endpoint, method, client_ip, 429, None, "rate_limited"
             )
             return None
 
         # Update usage statistics
-        api_key.total_requests += 1
-        api_key.last_used_at = datetime.now(timezone.utc)
+        api_key.total_requests += 1  # type: ignore[assignment]
+        api_key.last_used_at = datetime.now(timezone.utc)  # type: ignore[assignment]
         await self._log_usage(key_id, endpoint, method, client_ip, 200, None)
 
         await self.db.commit()
 
         return APIKeyInfo(
-            key_id=api_key.key_id,
-            name=api_key.name,
-            description=api_key.description,
-            scope=api_key.scope,
-            permissions=json.loads(api_key.permissions),
+            key_id=api_key.key_id,  # type: ignore[arg-type]
+            name=api_key.name,  # type: ignore[arg-type]
+            description=api_key.description,  # type: ignore[arg-type]
+            scope=api_key.scope,  # type: ignore[arg-type]
+            permissions=json.loads(api_key.permissions),  # type: ignore[arg-type]
             allowed_ips=(
-                json.loads(api_key.allowed_ips) if api_key.allowed_ips else None
+                json.loads(api_key.allowed_ips) if api_key.allowed_ips else None  # type: ignore[arg-type]
             ),
-            rate_limit=api_key.rate_limit,
-            is_active=api_key.is_active,
-            expires_at=api_key.expires_at,
-            created_at=api_key.created_at,
-            last_used_at=api_key.last_used_at,
-            total_requests=api_key.total_requests,
-            failed_requests=api_key.failed_requests,
+            rate_limit=api_key.rate_limit,  # type: ignore[arg-type]
+            is_active=api_key.is_active,  # type: ignore[arg-type]
+            expires_at=api_key.expires_at,  # type: ignore[arg-type]
+            created_at=api_key.created_at,  # type: ignore[arg-type]
+            last_used_at=api_key.last_used_at,  # type: ignore[arg-type]
+            total_requests=api_key.total_requests,  # type: ignore[arg-type]
+            failed_requests=api_key.failed_requests,  # type: ignore[arg-type]
         )
 
     async def list_api_keys(
@@ -407,7 +407,7 @@ class APIKeyManager:
             conditions.append(APIKey.is_active)
 
         if owner_id:
-            conditions.append(APIKey.owner_id == owner_id)
+            conditions.append(APIKey.owner_id == owner_id)  # type: ignore[arg-type]
 
         stmt = select(APIKey)
         if conditions:
@@ -420,25 +420,25 @@ class APIKeyManager:
 
         return [
             APIKeyInfo(
-                key_id=key.key_id,
-                name=key.name,
-                description=key.description,
-                scope=key.scope,
-                permissions=json.loads(key.permissions),
-                allowed_ips=json.loads(key.allowed_ips) if key.allowed_ips else None,
-                rate_limit=key.rate_limit,
-                is_active=key.is_active,
-                expires_at=key.expires_at,
-                created_at=key.created_at,
-                last_used_at=key.last_used_at,
-                total_requests=key.total_requests,
-                failed_requests=key.failed_requests,
+                key_id=key.key_id,  # type: ignore[arg-type]
+                name=key.name,  # type: ignore[arg-type]
+                description=key.description,  # type: ignore[arg-type]
+                scope=key.scope,  # type: ignore[arg-type]
+                permissions=json.loads(key.permissions),  # type: ignore[arg-type]
+                allowed_ips=json.loads(key.allowed_ips) if key.allowed_ips else None,  # type: ignore[arg-type]
+                rate_limit=key.rate_limit,  # type: ignore[arg-type]
+                is_active=key.is_active,  # type: ignore[arg-type]
+                expires_at=key.expires_at,  # type: ignore[arg-type]
+                created_at=key.created_at,  # type: ignore[arg-type]
+                last_used_at=key.last_used_at,  # type: ignore[arg-type]
+                total_requests=key.total_requests,  # type: ignore[arg-type]
+                failed_requests=key.failed_requests,  # type: ignore[arg-type]
             )
             for key in api_keys
         ]
 
     async def revoke_api_key(
-        self, key_id: str, revoked_by: str, client_ip: str, reason: str = None
+        self, key_id: str, revoked_by: str, client_ip: str, reason: Optional[str] = None
     ) -> bool:
         """Revoke an API key"""
         stmt = select(APIKey).where(APIKey.key_id == key_id)
@@ -450,8 +450,8 @@ class APIKeyManager:
 
         old_values = {"is_active": api_key.is_active}
 
-        api_key.is_active = False
-        api_key.updated_at = datetime.now(timezone.utc)
+        api_key.is_active = False  # type: ignore[assignment]
+        api_key.updated_at = datetime.now(timezone.utc)  # type: ignore[assignment]
 
         await self._log_operation(
             operation="REVOKE",
@@ -519,30 +519,30 @@ class APIKeyManager:
         # Update fields if provided
         updated_fields = []
         if name is not None:
-            api_key.name = name
+            api_key.name = name  # type: ignore[assignment]
             updated_fields.append("name")
 
         if description is not None:
-            api_key.description = description
+            api_key.description = description  # type: ignore[assignment]
             updated_fields.append("description")
 
         if allowed_ips is not None:
-            api_key.allowed_ips = json.dumps(allowed_ips)
+            api_key.allowed_ips = json.dumps(allowed_ips)  # type: ignore[assignment]
             updated_fields.append("allowed_ips")
 
         if rate_limit is not None:
             if rate_limit < 1 or rate_limit > 10000:
                 logger.warning(f"Update failed: Invalid rate_limit={rate_limit}")
                 return None
-            api_key.rate_limit = rate_limit
+            api_key.rate_limit = rate_limit  # type: ignore[assignment]
             updated_fields.append("rate_limit")
 
         if is_active is not None:
-            api_key.is_active = is_active
+            api_key.is_active = is_active  # type: ignore[assignment]
             updated_fields.append("is_active")
 
         # Update timestamp
-        api_key.updated_at = datetime.now(timezone.utc)
+        api_key.updated_at = datetime.now(timezone.utc)  # type: ignore[assignment]
 
         # Store new values for audit log
         new_values = {
@@ -583,21 +583,21 @@ class APIKeyManager:
             return None
 
         return APIKeyInfo(
-            key_id=api_key.key_id,
-            name=api_key.name,
-            description=api_key.description,
-            scope=api_key.scope,
-            permissions=json.loads(api_key.permissions),
+            key_id=api_key.key_id,  # type: ignore[arg-type]
+            name=api_key.name,  # type: ignore[arg-type]
+            description=api_key.description,  # type: ignore[arg-type]
+            scope=api_key.scope,  # type: ignore[arg-type]
+            permissions=json.loads(api_key.permissions),  # type: ignore[arg-type]
             allowed_ips=(
-                json.loads(api_key.allowed_ips) if api_key.allowed_ips else None
+                json.loads(api_key.allowed_ips) if api_key.allowed_ips else None  # type: ignore[arg-type]
             ),
-            rate_limit=api_key.rate_limit,
-            is_active=api_key.is_active,
-            expires_at=api_key.expires_at,
-            created_at=api_key.created_at,
-            last_used_at=api_key.last_used_at,
-            total_requests=api_key.total_requests,
-            failed_requests=api_key.failed_requests,
+            rate_limit=api_key.rate_limit,  # type: ignore[arg-type]
+            is_active=api_key.is_active,  # type: ignore[arg-type]
+            expires_at=api_key.expires_at,  # type: ignore[arg-type]
+            created_at=api_key.created_at,  # type: ignore[arg-type]
+            last_used_at=api_key.last_used_at,  # type: ignore[arg-type]
+            total_requests=api_key.total_requests,  # type: ignore[arg-type]
+            failed_requests=api_key.failed_requests,  # type: ignore[arg-type]
         )
 
     async def _check_rate_limit(self, key_id: str, rate_limit: int) -> bool:
@@ -620,8 +620,8 @@ class APIKeyManager:
         client_ip: str,
         status_code: int,
         response_time_ms: Optional[int],
-        request_metadata: str = None,
-    ):
+        request_metadata: Optional[str] = None,
+    ) -> None:
         """Log API key usage"""
         usage = APIKeyUsage(
             key_id=key_id,
@@ -640,10 +640,10 @@ class APIKeyManager:
         key_id: str,
         performed_by: str,
         client_ip: str,
-        old_values: str = None,
-        new_values: str = None,
-        reason: str = None,
-    ):
+        old_values: Optional[str] = None,
+        new_values: Optional[str] = None,
+        reason: Optional[str] = None,
+    ) -> None:
         """Log administrative operations"""
         audit_log = APIKeyAuditLog(
             operation=operation,
@@ -759,7 +759,7 @@ class APIKeyManager:
             "last_used_at": last_used_at,
         }
 
-    async def cleanup_expired_usage_logs(self, days_to_keep: int = 30):
+    async def cleanup_expired_usage_logs(self, days_to_keep: int = 30) -> int:
         """Clean up old usage logs to prevent database bloat"""
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
 

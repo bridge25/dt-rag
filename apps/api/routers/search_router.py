@@ -206,7 +206,7 @@ async def search_documents(
 
 
 @search_router.get("/analytics", response_model=SearchAnalytics)
-async def get_search_analytics(service: SearchService = Depends(get_search_service)):
+async def get_search_analytics(service: SearchService = Depends(get_search_service)) -> None:
     """
     Get search analytics and performance metrics
 
@@ -229,7 +229,7 @@ async def get_search_analytics(service: SearchService = Depends(get_search_servi
 
 
 @search_router.get("/config", response_model=SearchConfig)
-async def get_search_config(service: SearchService = Depends(get_search_service)):
+async def get_search_config(service: SearchService = Depends(get_search_service)) -> None:
     """
     Get current search configuration
 
@@ -308,7 +308,7 @@ async def reindex_search_corpus(
 
 
 @search_router.get("/status")
-async def get_search_status():
+async def get_search_status() -> None:
     """
     Get search system status and health
 

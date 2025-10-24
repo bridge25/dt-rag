@@ -505,7 +505,7 @@ class SecurityManager:
         session_age = datetime.utcnow() - context.timestamp
         return session_age > timedelta(minutes=self.policy.session_timeout_minutes)
 
-    async def _invalidate_session(self, session_id: str):
+    async def _invalidate_session(self, session_id: str) -> None:
         """Invalidate a session"""
         if session_id in self._active_sessions:
             context = self._active_sessions[session_id]

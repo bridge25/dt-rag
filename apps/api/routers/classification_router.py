@@ -434,7 +434,7 @@ async def get_classification_confidence(
 
 
 @classification_router.get("/status")
-async def get_classification_status():
+async def get_classification_status() -> None:
     """
     Get classification system status and health
 

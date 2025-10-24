@@ -12,7 +12,7 @@ except ImportError:
 
 
 class CSVParser(BaseParser):
-    def __init__(self):
+    def __init__(self) -> None:
         if not PANDAS_AVAILABLE:
             raise ParserError("pandas not installed")
 

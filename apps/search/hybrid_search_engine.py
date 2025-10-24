@@ -211,7 +211,7 @@ class CrossEncoderReranker:
         self.model = None
         self._load_model()
 
-    def _load_model(self):
+    def _load_model(self) -> None:
         """Load cross-encoder model (placeholder for actual implementation)"""
         try:
             # In production, load actual cross-encoder model
@@ -381,7 +381,7 @@ class ResultCache:
         self.access_times[cache_key] = time.time()
         logger.debug(f"Cached results for query: {query[:50]}...")
 
-    def _evict_oldest(self):
+    def _evict_oldest(self) -> None:
         """Evict oldest cache entry"""
         if not self.access_times:
             return
@@ -390,7 +390,7 @@ class ResultCache:
         del self.cache[oldest_key]
         del self.access_times[oldest_key]
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear all cache entries"""
         self.cache.clear()
         self.access_times.clear()
@@ -853,7 +853,7 @@ class HybridSearchEngine:
             config["cache_stats"] = self.cache.get_stats()
         return config
 
-    def update_config(self, **kwargs):
+    def update_config(self, **kwargs) -> None:
         """Update search engine configuration"""
         if "bm25_weight" in kwargs or "vector_weight" in kwargs:
             bm25_weight = kwargs.get("bm25_weight", self.config["bm25_weight"])
@@ -876,7 +876,7 @@ class HybridSearchEngine:
 
         logger.info(f"Search engine configuration updated: {kwargs}")
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear search result cache"""
         if self.cache:
             self.cache.clear()
@@ -991,12 +991,12 @@ def get_search_engine_config() -> Dict[str, Any]:
     return search_engine.get_config()
 
 
-def update_search_engine_config(**kwargs):
+def update_search_engine_config(**kwargs) -> None:
     """Update search engine configuration"""
     search_engine.update_config(**kwargs)
 
 
-def clear_search_cache():
+def clear_search_cache() -> None:
     """Clear search result cache"""
     search_engine.clear_cache()
 

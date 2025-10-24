@@ -16,7 +16,7 @@ try:
 except ImportError:
     AUTH_AVAILABLE = False
 
-    def verify_api_key():
+    def verify_api_key() -> None:
         return None
 
 
@@ -37,7 +37,7 @@ router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 
 
 @router.get("/health")
-async def get_system_health():
+async def get_system_health() -> None:
     """Get comprehensive system health status"""
     try:
         cpu_percent = psutil.cpu_percent(interval=1)
@@ -75,7 +75,7 @@ async def get_system_health():
 
 
 @router.get("/llm-costs")
-async def get_llm_costs():
+async def get_llm_costs() -> None:
     """
     Get LLM cost tracking dashboard (Gemini 2.5 Flash + OpenAI Embedding)
 
@@ -198,7 +198,7 @@ async def get_llm_costs():
 
 
 @router.get("/langfuse-status")
-async def get_langfuse_integration_status():
+async def get_langfuse_integration_status() -> None:
     """Get Langfuse integration status and configuration"""
     if not LANGFUSE_AVAILABLE:
         return {"available": False, "message": "Langfuse package not installed"}

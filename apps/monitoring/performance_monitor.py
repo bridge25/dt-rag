@@ -82,7 +82,7 @@ class RAGPerformanceMonitor:
         self.running = False
         self._monitor_task = None
 
-    async def start_monitoring(self, session_factory):
+    async def start_monitoring(self, session_factory) -> None:
         """Start continuous performance monitoring"""
         if self.running:
             return
@@ -91,7 +91,7 @@ class RAGPerformanceMonitor:
         self._monitor_task = asyncio.create_task(self._monitoring_loop(session_factory))
         logger.info("Performance monitoring started")
 
-    async def stop_monitoring(self):
+    async def stop_monitoring(self) -> None:
         """Stop performance monitoring"""
         self.running = False
         if self._monitor_task:
@@ -102,7 +102,7 @@ class RAGPerformanceMonitor:
                 pass
         logger.info("Performance monitoring stopped")
 
-    async def _monitoring_loop(self, session_factory):
+    async def _monitoring_loop(self, session_factory) -> None:
         """Main monitoring loop"""
         while self.running:
             try:
@@ -208,7 +208,7 @@ class RAGPerformanceMonitor:
         except Exception as e:
             logger.warning(f"Database metrics collection failed: {e}")
 
-    async def _collect_search_metrics(self, metrics: PerformanceMetrics):
+    async def _collect_search_metrics(self, metrics: PerformanceMetrics) -> None:
         """Collect search engine metrics"""
         try:
             # Import here to avoid circular imports
@@ -252,7 +252,7 @@ class RAGPerformanceMonitor:
         except Exception as e:
             logger.warning(f"Search metrics collection failed: {e}")
 
-    def _collect_system_metrics(self, metrics: PerformanceMetrics):
+    def _collect_system_metrics(self, metrics: PerformanceMetrics) -> None:
         """Collect system performance metrics"""
         try:
             # CPU usage
@@ -301,7 +301,7 @@ class RAGPerformanceMonitor:
         except Exception as e:
             logger.warning(f"Data metrics collection failed: {e}")
 
-    async def _check_alerts(self, metrics: PerformanceMetrics):
+    async def _check_alerts(self, metrics: PerformanceMetrics) -> None:
         """Check for performance alerts"""
         alerts = []
 

@@ -86,7 +86,7 @@ class LatencyTracker:
         self.samples = deque(maxlen=max_samples)
         self.lock = threading.Lock()
 
-    def add_sample(self, latency_ms: float):
+    def add_sample(self, latency_ms: float) -> None:
         """지연시간 샘플 추가"""
         with self.lock:
             self.samples.append(latency_ms)
@@ -137,7 +137,7 @@ class MetricsCollector:
             f"MetricsCollector initialized (Prometheus: {self.enable_prometheus})"
         )
 
-    def _init_prometheus_metrics(self):
+    def _init_prometheus_metrics(self) -> None:
         """Prometheus 메트릭 초기화"""
         if not self.enable_prometheus:
             return
@@ -186,7 +186,7 @@ class MetricsCollector:
         self.qps_gauge = Gauge("dt_rag_queries_per_second", "Queries per second")
 
     @asynccontextmanager
-    async def track_operation(self, operation_name: str, labels: Dict[str, str] = None):
+    async def track_operation(self, operation_name: str, labels: Dict[str, str] = None) -> None:
         """작업 시간 추적 컨텍스트 매니저"""
         labels = labels or {}
         start_time = time.time()
@@ -244,7 +244,7 @@ class MetricsCollector:
                 status = labels.get("status", "") if labels else ""
                 self.search_requests.labels(search_type, status).inc(value)
 
-    def set_gauge(self, gauge_name: str, value: float, labels: Dict[str, str] = None):
+    def set_gauge(self, gauge_name: str, value: float, labels: Dict[str, str] = None) -> None:
         """게이지 값 설정"""
         self.gauges[gauge_name] = value
 
@@ -278,7 +278,7 @@ class MetricsCollector:
         if self.enable_prometheus and hasattr(self, "cache_operations"):
             self.cache_operations.labels(operation, result).inc()
 
-    def update_system_metrics(self):
+    def update_system_metrics(self) -> None:
         """시스템 메트릭 업데이트"""
         try:
             # CPU 사용률
@@ -387,7 +387,7 @@ class MetricsCollector:
 
         return generate_latest()
 
-    def reset_metrics(self):
+    def reset_metrics(self) -> None:
         """메트릭 초기화"""
         self.metrics.clear()
         self.counters.clear()
@@ -420,16 +420,16 @@ def initialize_metrics_collector(enable_prometheus: bool = True) -> MetricsColle
 
 
 # 데코레이터
-def track_performance(operation_name: str):
+def track_performance(operation_name: str) -> None:
     """성능 추적 데코레이터"""
 
-    def decorator(func):
-        async def async_wrapper(*args, **kwargs):
+    def decorator(func) -> None:
+        async def async_wrapper(*args, **kwargs) -> None:
             collector = get_metrics_collector()
             async with collector.track_operation(operation_name):
                 return await func(*args, **kwargs)
 
-        def sync_wrapper(*args, **kwargs):
+        def sync_wrapper(*args, **kwargs) -> None:
             collector = get_metrics_collector()
             start_time = time.time()
             try:

@@ -134,7 +134,7 @@ class WebhookService:
 
         return f"sha256={signature}"
 
-    async def _backoff(self, retry_count: int):
+    async def _backoff(self, retry_count: int) -> None:
         """
         Exponential backoff delay
 

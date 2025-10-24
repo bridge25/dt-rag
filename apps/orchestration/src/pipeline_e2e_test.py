@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class PipelineE2ETest:
     """B-O3 파이프라인 E2E 테스트 시스템"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.pipeline = LangGraphPipeline()
         self.test_cases = self._generate_test_cases()
         self.results = []
@@ -289,7 +289,7 @@ class PipelineE2ETest:
         # 병렬 실행 (최대 5개 동시)
         semaphore = asyncio.Semaphore(5)
 
-        async def run_with_semaphore(test_case):
+        async def run_with_semaphore(test_case) -> None:
             async with semaphore:
                 return await self.run_single_test(test_case)
 
@@ -364,7 +364,7 @@ class PipelineE2ETest:
 
 
 # 스크립트 실행용
-async def main():
+async def main() -> None:
     """E2E 테스트 메인 실행"""
     test_runner = PipelineE2ETest()
     summary = await test_runner.run_all_tests()

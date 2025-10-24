@@ -47,7 +47,7 @@ class ContextAnalysis:
 class RAGASEvaluator:
     """RAGAS evaluation engine with Gemini-powered assessments"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.model = None
         if GEMINI_API_KEY:
             try:
