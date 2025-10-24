@@ -4,6 +4,26 @@
 
 ---
 
+## ⚠️ CRITICAL: Working Directory (영구 준수사항)
+
+**작업 디렉토리**: `/mnt/c/MYCLAUDE_PROJECT/sonheungmin/dt-rag-standalone`
+
+> **중요**: 이 프로젝트는 2025-10-24에 `Unmanned/dt-rag`에서 독립 저장소로 이관되었습니다.
+> - ❌ 절대 금지: `/mnt/c/MYCLAUDE_PROJECT/sonheungmin/Unmanned/dt-rag` 에서 작업
+> - ✅ 유일한 정상 경로: `/mnt/c/MYCLAUDE_PROJECT/sonheungmin/dt-rag-standalone`
+>
+> 모든 명령은 반드시 `cd /mnt/c/MYCLAUDE_PROJECT/sonheungmin/dt-rag-standalone &&` 로 시작하여
+> 올바른 디렉토리에서 실행되도록 보장하세요.
+
+**검증 방법**:
+```bash
+# 작업 시작 전 항상 확인
+pwd  # 출력: /mnt/c/MYCLAUDE_PROJECT/sonheungmin/dt-rag-standalone
+git remote -v  # 출력: origin https://github.com/yourusername/dt-rag-standalone.git
+```
+
+---
+
 ## ▶◀ Meet Alfred: Your MoAI SuperAgent
 
 **Alfred** orchestrates the MoAI-ADK agentic workflow across a four-layer stack (Commands → Sub-agents → Skills → Hooks). The SuperAgent interprets user intent, activates the right specialists, streams Claude Skills on demand, and enforces the TRUST 5 principles so every project follows the SPEC → TDD → Sync rhythm.
