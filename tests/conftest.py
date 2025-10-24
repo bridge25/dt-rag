@@ -7,6 +7,7 @@ import os
 import sys
 from typing import Generator
 import asyncio
+import subprocess
 
 # Add apps/api to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'apps', 'api'))
@@ -246,3 +247,64 @@ async def async_client():
         base_url="http://test"
     ) as ac:
         yield ac
+
+
+@pytest.fixture(scope="session", autouse=True)
+def validate_imports():
+    """
+    @TEST:CICD-001:FIXTURE | SPEC: SPEC-CICD-001.md | CODE: .claude/hooks/alfred/import-validator.py
+    Validate Python imports before running any tests.
+
+    This session-scoped fixture runs once at pytest initialization to catch
+    import errors early, preventing test execution on broken code.
+
+    Validation steps:
+    1. compileall - Verify all Python files compile successfully
+    2. API import - Ensure FastAPI application can be imported
+
+    If validation fails, pytest exits immediately with a clear error message.
+
+    HISTORY:
+    v0.0.1 (2025-01-24): INITIAL - Phase 3 pytest fixture implementation
+    """
+    print("\n" + "=" * 60)
+    print("🔍 Validating imports before test execution...")
+    print("=" * 60)
+
+    # Get project root directory
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    # Step 1: Validate Python syntax with compileall
+    print("🔍 Step 1: Python syntax validation")
+    result = subprocess.run(
+        ["python3", "-m", "compileall", "-q", "apps/", "tests/"],
+        cwd=project_root,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        error_msg = result.stderr.strip() if result.stderr else "Unknown compilation error"
+        print("=" * 60)
+        pytest.fail(
+            f"❌ Import validation failed (compileall):\n{error_msg}",
+            pytrace=False
+        )
+
+    print("✓ Python syntax validation passed")
+
+    # Step 2: Validate API imports
+    print("🔍 Step 2: API import validation")
+    try:
+        from apps.api.main import app
+        print("✓ API imports validated")
+    except ImportError as e:
+        print("=" * 60)
+        pytest.fail(
+            f"❌ Import validation failed (API):\n{str(e)}",
+            pytrace=False
+        )
+
+    print("=" * 60)
+    print("✅ All imports validated successfully")
+    print("=" * 60 + "\n")
