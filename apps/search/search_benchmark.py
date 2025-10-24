@@ -19,7 +19,7 @@ import time
 import statistics
 import json
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime
 import argparse

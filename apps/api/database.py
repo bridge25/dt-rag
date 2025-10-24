@@ -1042,7 +1042,7 @@ class SearchDAO:
             (doc_ids[1], "머신러닝 분류 알고리즘에는 SVM, Random Forest 등이 있습니다.", "[1,100)", 0)
         ]
 
-        for doc_id, text, span, chunk_index in sample_chunks:
+        for doc_id, chunk_text, span, chunk_index in sample_chunks:
             chunk_insert = text("""
                 INSERT INTO chunks (doc_id, text, span, chunk_index)
                 VALUES (:doc_id, :text, :span, :chunk_index)
@@ -1050,7 +1050,7 @@ class SearchDAO:
             """)
             await session.execute(chunk_insert, {
                 "doc_id": doc_id,
-                "text": text,
+                "text": chunk_text,
                 "span": span,
                 "chunk_index": chunk_index
             })

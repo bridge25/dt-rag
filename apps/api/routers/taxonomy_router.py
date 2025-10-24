@@ -22,7 +22,7 @@ import sys
 from pathlib import Path as PathLib
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-# from packages.common_schemas.common_schemas.models import TaxonomyNode
+from apps.api.database import TaxonomyNode
 
 # Configure logging
 logger = logging.getLogger(__name__)
