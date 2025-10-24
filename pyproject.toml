@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dt-rag"
-version = "1.8.1"
+version = "1.9.0"
 description = "Digital Twin RAG System with Advanced AI Agent Orchestration"
 authors = [
     {name = "DT-RAG Team", email = "team@dt-rag.com"}
