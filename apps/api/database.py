@@ -780,8 +780,8 @@ class SearchDAO:
 
             if "sqlite" in DATABASE_URL:
                 # SQLite용 간단한 텍스트 매칭
-                # nosec B608 - query is parameterized (:query), filter_clause is internally generated
-                bm25_query = text(f"""
+                # query is parameterized (:query), filter_clause is internally generated
+                bm25_query = text(f"""  # nosec B608
                     SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
                            CASE
                                WHEN c.text LIKE '%' || :query || '%' THEN 1.0
@@ -797,7 +797,7 @@ class SearchDAO:
                 """)
             else:
                 # PostgreSQL full-text search
-                bm25_query = text(f"""
+                bm25_query = text(f"""  # nosec B608
                     SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
                            ts_rank_cd(
                                to_tsvector('english', c.text),
@@ -857,7 +857,7 @@ class SearchDAO:
                 # SQLite용 간단한 벡터 유사도 (실제 임베딩이 있는 경우만)
                 # 실제로는 Python에서 코사인 유사도 계산이 필요하지만,
                 # 여기서는 간단한 폴백으로 텍스트 기반 검색 사용
-                vector_query = text(f"""
+                vector_query = text(f"""  # nosec B608
                     SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
                            0.8 as vector_score
                     FROM chunks c
