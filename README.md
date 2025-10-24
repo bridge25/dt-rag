@@ -1,5 +1,9 @@
 # Dynamic Taxonomy RAG System v2.0
 
+> ⚠️ **REPOSITORY MIGRATION NOTICE**
+> This repository was migrated from [bridge25/Unmanned](https://github.com/bridge25/Unmanned) monorepo on 2025-10-24.
+> **For commit history before 2025-10-24**, see [MIGRATION.md](./MIGRATION.md) and the original [Unmanned repository](https://github.com/bridge25/Unmanned).
+
 > 🔥 **UNIFIED SINGLE-DEVELOPER PROJECT**
 > Originally planned as A/B/C team collaboration, now **fully integrated by one developer**.
 
