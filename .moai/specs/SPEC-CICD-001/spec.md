@@ -1,8 +1,8 @@
 ---
 id: CICD-001
 title: CI/CD Import 검증 자동화
-version: 0.0.1
-status: draft
+version: 0.1.0
+status: active
 created: 2025-01-24
 domain: CICD
 priority: high
@@ -13,6 +13,13 @@ priority: high
 **@SPEC:CICD-001**
 
 ## HISTORY
+
+### v0.1.0 (2025-01-24)
+- **PHASE 2 COMPLETE**: Pre-commit Hook 구현 완료
+- `.claude/hooks/alfred/import-validator.py` 생성
+- `.githooks/pre-commit` Git hook 설정
+- 로컬 테스트 및 검증 완료 (성공/실패 케이스)
+- WSL 환경 최적화: compileall 제거, API import 검증만 유지
 
 ### v0.0.1 (2025-01-24)
 - **INITIAL**: CI/CD Import 검증 자동화 SPEC 초안 작성
@@ -352,6 +359,110 @@ def validate_imports():
 
 ---
 
+## 9. Phase 2 사용 가이드 (Pre-commit Hook)
+
+### 9.1 설치 방법
+
+**자동 설치** (권장):
+```bash
+# dt-rag 디렉토리에서 실행
+./scripts/install-git-hooks.sh
+```
+
+**수동 확인**:
+```bash
+# .githooks/pre-commit 파일이 이미 커밋되어 있음
+ls -la /path/to/Unmanned/.githooks/pre-commit
+
+# Git이 .githooks 경로를 사용하는지 확인
+git config --get core.hooksPath
+# 출력: .githooks
+```
+
+### 9.2 사용 방법
+
+**정상 동작 확인**:
+```bash
+# 1. Python 파일 수정
+# 2. git add <file>
+# 3. git commit -m "your message"
+
+# Hook 실행 예시:
+📝 Python 파일 변경 감지 - import 검증 실행 중...
+============================================================
+🛡️ MoAI-ADK Pre-commit Import Validation (Phase 2)
+============================================================
+📁 Project root: /path/to/dt-rag
+
+🔍 API import 검증 중...
+✓ API import 검증 통과
+
+============================================================
+✅ Import 검증 통과 - 커밋을 진행합니다
+============================================================
+```
+
+**Import 오류 발생 시**:
+```bash
+# Hook이 커밋을 차단하고 오류 메시지 표시:
+❌ ✗ API import errors found:
+ModuleNotFoundError: No module named 'nonexistent_module'
+
+❌ Import 검증 실패 - 커밋이 차단되었습니다
+
+💡 문제를 수정한 후 다시 커밋하세요:
+   1. 위의 오류 메시지를 확인하세요
+   2. Import 오류를 수정하세요
+   3. git commit을 다시 실행하세요
+```
+
+**긴급 시 검증 건너뛰기** (권장하지 않음):
+```bash
+git commit --no-verify -m "emergency fix"
+```
+
+### 9.3 검증 범위
+
+- **검증 대상**: `dt-rag/` 디렉토리의 `.py` 파일만
+- **검증 방법**: `from apps.api.main import app` import 테스트
+- **포함 검증**: Python 구문 오류 + import 오류 모두 감지
+- **제외**: `tests/`, `docs/`, `.moai/` 등 비 API 코드는 간접 검증
+
+### 9.4 성능 최적화
+
+- **WSL 환경 최적화**: compileall 제거, API import만 검증
+- **실행 시간**: 평균 1-3초 (WSL 환경)
+- **타임아웃**: 60초 (긴 import 체인 대응)
+
+### 9.5 문제 해결
+
+**Hook이 실행되지 않을 때**:
+```bash
+# 1. Hook 파일 존재 확인
+ls -la .githooks/pre-commit
+
+# 2. 실행 권한 확인
+chmod +x .githooks/pre-commit
+
+# 3. Git hooks 경로 확인
+git config --get core.hooksPath
+# 출력이 없거나 .git/hooks이면:
+git config core.hooksPath .githooks
+```
+
+**Import 검증이 통과하지만 실제로 오류가 있을 때**:
+```bash
+# 수동으로 import 테스트
+cd dt-rag
+python3 -c "from apps.api.main import app"
+
+# 오류가 발생하면 해당 파일 수정
+```
+
+---
+
 **문서 작성자**: spec-builder agent
 **최종 수정일**: 2025-01-24
-**다음 단계**: `/alfred:2-run SPEC-CICD-001` 실행하여 Phase 1 구현 시작
+**Phase 1 완료**: 2025-01-24 (GitHub Actions Workflow)
+**Phase 2 완료**: 2025-01-24 (Pre-commit Hook)
+**다음 단계**: Phase 3 (Pytest Fixture) - Optional
