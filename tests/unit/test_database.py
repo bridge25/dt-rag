@@ -25,8 +25,7 @@ from apps.api.database import (
     SearchMetrics,
     init_database,
     test_database_connection,
-    setup_search_system,
-    get_search_performance_metrics
+    setup_search_system
 )
 
 
@@ -728,43 +727,16 @@ class TestUtilityFunctions:
             assert result is False
 
     @pytest.mark.unit
+    @pytest.mark.skip(reason="get_search_performance_metrics removed - use monitoring.search_metrics instead")
     async def test_get_search_performance_metrics_success(self):
         """Test getting search performance metrics successfully"""
-        mock_analytics = {
-            "statistics": {
-                "total_chunks": 100,
-                "embedded_chunks": 80,
-                "total_docs": 50,
-                "taxonomy_mappings": 30
-            }
-        }
-
-        with patch('apps.api.database.db_manager.async_session') as mock_session_factory:
-            mock_session = AsyncMock()
-            mock_session_factory.return_value.__aenter__.return_value = mock_session
-
-            with patch.object(SearchDAO, 'get_search_analytics', return_value=mock_analytics):
-                result = await get_search_performance_metrics()
-
-                assert "performance" in result
-                assert "analytics" in result
-                assert "recommendations" in result
-                assert result["performance"]["embedding_coverage"] == 80.0
-                assert result["performance"]["search_readiness"] is True
-                assert result["performance"]["hybrid_ready"] is True
+        pass
 
     @pytest.mark.unit
+    @pytest.mark.skip(reason="get_search_performance_metrics removed - use monitoring.search_metrics instead")
     async def test_get_search_performance_metrics_failure(self):
         """Test getting search performance metrics with database error"""
-        with patch('apps.api.database.db_manager.async_session') as mock_session_factory:
-            mock_session_factory.side_effect = Exception("Database error")
-
-            result = await get_search_performance_metrics()
-
-            assert "error" in result
-            assert result["performance"] == {}
-            assert result["analytics"] == {}
-            assert result["recommendations"] == []
+        pass
 
 
 # Integration-style tests that test multiple components together

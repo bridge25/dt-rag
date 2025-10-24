@@ -8,9 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from ..deps import verify_api_key, generate_request_id, get_taxonomy_version
-from ..database import SearchDAO, search_metrics, get_search_performance_metrics, db_manager
+from ..database import SearchDAO, db_manager
 import time
 import logging
+from datetime import datetime
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ try:
         HybridSearchEngine, SearchEngineFactory, get_search_engine,
         SearchConfig
     )
+    from ..cache.search_cache import get_search_cache
     HYBRID_ENGINE_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Hybrid search engine not available: {e}")
@@ -39,11 +41,15 @@ except ImportError as e:
 # 모니터링 import
 try:
     from ..monitoring.metrics import get_metrics_collector
+    from ..monitoring.search_metrics import get_search_metrics
     from ..routers.monitoring import track_search_metrics, track_cache_metrics
     MONITORING_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Monitoring not available: {e}")
     MONITORING_AVAILABLE = False
+
+# SearchMetrics 전역 인스턴스 초기화 (방어적 프로그래밍)
+search_metrics = get_search_metrics() if MONITORING_AVAILABLE else None
 
 router = APIRouter()
 
@@ -444,24 +450,39 @@ async def create_embeddings(
 async def get_search_analytics(api_key: str = Depends(verify_api_key)):
     """
     검색 시스템 분석 정보 조회 (관리자용)
+
+    기존 모니터링 시스템 (search_metrics, hybrid_engine, cache) 활용
     """
     try:
-        analytics = await get_search_performance_metrics()
+        analytics = {}
 
-        # 고급 분석 정보 추가
+        # 1. Search Metrics (MONITORING_AVAILABLE)
+        if MONITORING_AVAILABLE:
+            search_metrics_data = search_metrics.get_metrics()
+            analytics["search_metrics"] = search_metrics_data
+
+        # 2. Hybrid Engine Stats (HYBRID_ENGINE_AVAILABLE)
         if HYBRID_ENGINE_AVAILABLE:
             search_engine = await get_search_engine()
             performance_stats = search_engine.get_performance_stats()
             analytics["hybrid_engine_stats"] = performance_stats
 
-            # 캐시 통계
+            # 3. Cache Stats
             cache = await get_search_cache()
             cache_stats = await cache.get_cache_stats()
             analytics["cache_stats"] = cache_stats
 
+        # 4. System Status
+        analytics["system_status"] = {
+            "monitoring_enabled": MONITORING_AVAILABLE,
+            "hybrid_engine_enabled": HYBRID_ENGINE_AVAILABLE,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
         return analytics
 
     except Exception as e:
+        logger.error(f"Analytics error: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Analytics error: {str(e)}"

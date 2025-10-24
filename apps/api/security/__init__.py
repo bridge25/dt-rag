@@ -3,15 +3,27 @@ API Security Package
 
 Contains authentication, authorization, and security utilities:
 - API key validation
-- JWT token handling  
+- JWT token handling
 - Rate limiting
 - Security middleware
 """
 
 from .api_key_generator import SecureAPIKeyGenerator
-from .api_key_storage import APIKeyStorage
+from .api_key_storage import (
+    APIKeyManager,
+    APIKey,
+    APIKeyUsage,
+    APIKeyAuditLog,
+    APIKeyInfo,
+    APIKeyCreateRequest
+)
 
 __all__ = [
     "SecureAPIKeyGenerator",
-    "APIKeyStorage"
+    "APIKeyManager",
+    "APIKey",
+    "APIKeyUsage",
+    "APIKeyAuditLog",
+    "APIKeyInfo",
+    "APIKeyCreateRequest"
 ]

@@ -1,6 +1,6 @@
 {
-  "last_updated": "2025-10-23T14:32:00Z",
-  "total_tags": 29,
+  "last_updated": "2025-10-24T00:00:00Z",
+  "total_tags": 36,
   "specs": [
     {
       "spec_id": "TEST-002",
@@ -83,15 +83,81 @@
         "coverage": "95%+",
         "status": "All tests implemented and verified"
       }
+    },
+    {
+      "spec_id": "CICD-001",
+      "spec_file": ".moai/specs/SPEC-CICD-001/spec.md",
+      "status": "draft",
+      "version": "0.0.1",
+      "tags": [
+        {
+          "type": "SPEC",
+          "id": "CICD-001",
+          "count": 1,
+          "references": [
+            ".moai/specs/SPEC-CICD-001/spec.md:13"
+          ]
+        },
+        {
+          "type": "PLAN",
+          "id": "CICD-001",
+          "count": 1,
+          "references": [
+            ".moai/specs/SPEC-CICD-001/plan.md:3"
+          ]
+        },
+        {
+          "type": "ACCEPTANCE",
+          "id": "CICD-001",
+          "count": 1,
+          "references": [
+            ".moai/specs/SPEC-CICD-001/acceptance.md:3"
+          ]
+        },
+        {
+          "type": "CODE",
+          "id": "CICD-001",
+          "count": 1,
+          "references": [
+            ".github/workflows/import-validation.yml:1"
+          ]
+        },
+        {
+          "type": "DOC",
+          "id": "CICD-001",
+          "count": 3,
+          "references": [
+            ".moai/specs/SPEC-CICD-001/phase1-implementation-summary.md:3",
+            ".moai/specs/SPEC-CICD-001/manual-testing-guide.md:3",
+            ".moai/specs/SPEC-CICD-001/quick-start.md:3"
+          ]
+        }
+      ],
+      "test_files": [],
+      "code_files": [
+        ".github/workflows/import-validation.yml"
+      ],
+      "summary": {
+        "phase": "Phase 1 (GitHub Actions Workflow)",
+        "deliverables": {
+          "workflow": "3-stage validation (compileall → alembic → API import)",
+          "documentation": "Manual testing guide, implementation summary, quick start"
+        },
+        "status": "Phase 1 complete, awaiting PR merge",
+        "next_phases": "Phase 2 (Pre-commit Hook), Phase 3 (Pytest Fixture)"
+      }
     }
   ],
   "tag_statistics": {
-    "total_specs": 1,
-    "total_references": 29,
+    "total_specs": 2,
+    "total_references": 36,
     "by_type": {
-      "SPEC": 2,
+      "SPEC": 3,
+      "PLAN": 1,
+      "ACCEPTANCE": 1,
       "TEST": 24,
-      "CODE": 3
+      "CODE": 4,
+      "DOC": 3
     },
     "orphan_tags": 0,
     "broken_links": 0
@@ -100,7 +166,7 @@
     "integrity_check": "PASSED",
     "link_validation": "PASSED",
     "duplicate_detection": "PASSED",
-    "last_verified": "2025-10-23T14:32:00Z",
+    "last_verified": "2025-10-24T00:00:00Z",
     "verified_by": "doc-syncer"
   }
 }

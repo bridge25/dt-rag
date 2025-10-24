@@ -386,7 +386,7 @@ def get_api_config() -> APIConfig:
     # Apply security configuration
     config.docs_url = "/docs" if security_config["enable_docs"] else None
     config.redoc_url = "/redoc" if security_config["enable_docs"] else None
-    config.debug = security_config["debug"]
+    # Note: config.debug already set from env_manager.config.debug at line 266
 
     # Apply feature flags
     config.enable_swagger_ui = feature_flags["enable_swagger_ui"]

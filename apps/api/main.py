@@ -39,6 +39,10 @@ from .routers.orchestration_router import orchestration_router
 from .routers.agent_factory_router import agent_factory_router
 # from .routers.monitoring_router import monitoring_router
 
+# Import Phase 3 routers (SPEC-TEST-002/003)
+from .routers.reflection_router import router as reflection_router
+from .routers.consolidation_router import router as consolidation_router
+
 # Import evaluation router
 try:
     from .routers.evaluation import router as evaluation_router
@@ -355,11 +359,12 @@ async def redoc_html():
     )
 
 # Include existing routers (Bridge Pack compatibility)
-app.include_router(health.router, tags=["Health"])
-app.include_router(classify.router, tags=["Classification"])
-app.include_router(search.router, tags=["Search"])
-app.include_router(taxonomy.router, tags=["Taxonomy"])
-app.include_router(ingestion.router, tags=["Document Ingestion"])
+# NOTE: These legacy routers are replaced by new comprehensive API routers above
+# app.include_router(health.router, tags=["Health"])
+# app.include_router(classify.router, tags=["Classification"])
+# app.include_router(search.router, tags=["Search"])
+# app.include_router(taxonomy.router, tags=["Taxonomy"])
+# app.include_router(ingestion.router, tags=["Document Ingestion"])
 
 # Include new comprehensive API routers
 app.include_router(
@@ -400,10 +405,22 @@ if MONITORING_AVAILABLE:
         tags=["Monitoring"]
     )
 
+# NOTE: monitoring_router is not imported (commented out), so this is also commented out
+# app.include_router(
+#     monitoring_router,
+#     prefix="/api/v1",
+#     tags=["Monitoring"]
+# )
+
+# Include Phase 3 routers (SPEC-TEST-002/003)
 app.include_router(
-    monitoring_router,
-    prefix="/api/v1",
-    tags=["Monitoring"]
+    reflection_router,
+    tags=["Reflection", "Phase 3"]
+)
+
+app.include_router(
+    consolidation_router,
+    tags=["Consolidation", "Phase 3"]
 )
 
 # Include evaluation router if available
