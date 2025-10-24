@@ -62,8 +62,8 @@ jobs:
           # Critical errors only (first pass)
           flake8 apps/ --count --select=E9,F63,F7,F82 --show-source --statistics
 
-          # Full lint with complexity check (second pass)
-          flake8 apps/ --count --max-complexity=10 --max-line-length=88 --statistics
+          # Full lint (uses .flake8 config file)
+          flake8 apps/ --count --statistics
 
       - name: Type check with mypy
         run: |
