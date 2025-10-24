@@ -4,7 +4,7 @@
     "@SPEC:PROJECT-CONFIG-001": "@SPEC:MOAI-CONFIG-001"
   },
   "moai": {
-    "version": "0.4.5"
+    "version": "0.5.0"
   },
   "constitution": {
     "enforce_tdd": true,
@@ -62,31 +62,8 @@
     "locale": "ko",
     "mode": "personal",
     "name": "dt-rag",
-    "moai_adk_version": "0.4.5",
-    "optimized": true,
-    "conversation_language": "ko",
-    "conversation_language_name": "Korean",
-    "codebase_language": "hybrid"
-  },
-  "tech_stack": {
-    "projectType": "fullstack",
-    "projectLanguage": "hybrid",
-    "languages": {
-      "backend": "python",
-      "frontend": "typescript"
-    },
-    "frameworks": {
-      "backend": "fastapi",
-      "frontend": "nextjs"
-    },
-    "testFramework": {
-      "backend": "pytest",
-      "frontend": "vitest"
-    },
-    "linter": {
-      "backend": "black",
-      "frontend": "eslint"
-    }
+    "moai_adk_version": "0.5.0",
+    "optimized": true
   },
   "tags": {
     "auto_sync": true,
