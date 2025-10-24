@@ -5,9 +5,10 @@ Tool Registry for MCP Tools
 Manages tool registration, retrieval, and whitelist validation.
 """
 
-import os
 import logging
-from typing import Dict, Any, List, Optional, Callable
+import os
+from typing import Any, Callable, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)

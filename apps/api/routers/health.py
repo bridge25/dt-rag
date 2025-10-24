@@ -6,9 +6,11 @@ Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 """
 
 from fastapi import APIRouter, Depends
-from ..deps import verify_api_key, get_current_timestamp, get_taxonomy_version
+
+from ..deps import get_current_timestamp, get_taxonomy_version, verify_api_key
 
 router = APIRouter()
+
 
 @router.get("/healthz")
 def health_check(api_key: str = Depends(verify_api_key)):
@@ -27,5 +29,5 @@ def health_check(api_key: str = Depends(verify_api_key)):
         "version": get_taxonomy_version(),
         "team": "A",
         "service": "taxonomy-api",
-        "spec": "OpenAPI v1.8.1"
+        "spec": "OpenAPI v1.8.1",
     }

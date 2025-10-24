@@ -6,10 +6,10 @@ MetricsCollector를 래핑하여 검색 특화 인터페이스를 제공합니�
 """
 
 import logging
-from typing import Dict, Any, Optional
 from collections import defaultdict
+from typing import Any, Dict, Optional
 
-from .metrics import get_metrics_collector, MetricsCollector
+from .metrics import MetricsCollector, get_metrics_collector
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +29,7 @@ class SearchMetrics:
         logger.info("SearchMetrics initialized")
 
     def record_search(
-        self,
-        search_type: str,
-        latency_seconds: float,
-        error: bool = False
+        self, search_type: str, latency_seconds: float, error: bool = False
     ) -> None:
         """검색 메트릭 기록
 
@@ -43,16 +40,12 @@ class SearchMetrics:
         """
         # 지연 시간을 밀리초로 변환하여 기록
         latency_ms = latency_seconds * 1000
-        self.metrics_collector.record_latency(
-            f"search_{search_type}",
-            latency_ms
-        )
+        self.metrics_collector.record_latency(f"search_{search_type}", latency_ms)
 
         # 성공/실패 카운터 증가
         status = "error" if error else "success"
         self.metrics_collector.increment_counter(
-            f"search_{status}",
-            {"search_type": search_type}
+            f"search_{status}", {"search_type": search_type}
         )
 
         # 내부 통계 업데이트
@@ -75,7 +68,7 @@ class SearchMetrics:
         # 검색 특화 통계 추가
         search_stats = {
             "search_counts": dict(self._search_counts),
-            "search_types": list(self._search_counts.keys())
+            "search_types": list(self._search_counts.keys()),
         }
 
         # 평균 지연 시간 계산

@@ -1,3 +1,3 @@
-from .intelligent_chunker import IntelligentChunker, Chunk, ChunkingError
+from .intelligent_chunker import Chunk, ChunkingError, IntelligentChunker
 
 __all__ = ["IntelligentChunker", "Chunk", "ChunkingError"]

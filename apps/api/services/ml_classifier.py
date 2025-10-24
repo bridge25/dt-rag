@@ -2,9 +2,11 @@
 ML 기반 텍스트 분류 서비스
 BERT/RoBERTa를 사용한 의미론적 유사도 기반 분류
 """
+
 import logging
-from typing import List, Dict, Any, Optional
 from functools import lru_cache
+from typing import Any, Dict, List, Optional
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -55,9 +57,7 @@ class MLClassifier:
         logger.info("Precomputing taxonomy embeddings...")
         for path, definition in self.taxonomy_definitions.items():
             self.taxonomy_embeddings[path] = self.model.encode(
-                definition,
-                convert_to_numpy=True,
-                show_progress_bar=False
+                definition, convert_to_numpy=True, show_progress_bar=False
             )
         logger.info(f"Precomputed {len(self.taxonomy_embeddings)} taxonomy embeddings")
 
@@ -65,7 +65,7 @@ class MLClassifier:
         self,
         text: str,
         hint_paths: Optional[List[List[str]]] = None,
-        confidence_threshold: float = 0.5
+        confidence_threshold: float = 0.5,
     ) -> Dict[str, Any]:
         """
         텍스트를 의미론적 유사도 기반으로 분류
@@ -83,16 +83,13 @@ class MLClassifier:
 
         try:
             text_embedding = self.model.encode(
-                text,
-                convert_to_numpy=True,
-                show_progress_bar=False
+                text, convert_to_numpy=True, show_progress_bar=False
             )
 
             similarities = {}
             for path, tax_embedding in self.taxonomy_embeddings.items():
                 similarity = cosine_similarity(
-                    text_embedding.reshape(1, -1),
-                    tax_embedding.reshape(1, -1)
+                    text_embedding.reshape(1, -1), tax_embedding.reshape(1, -1)
                 )[0][0]
                 similarities[path] = float(similarity)
 
@@ -108,7 +105,9 @@ class MLClassifier:
                         hint_similarity = similarities[hint_path]
                         if hint_similarity > best_score * 0.8:
                             best_path = hint_path
-                            confidence = min(0.98, (best_score + hint_similarity) / 2 + 0.1)
+                            confidence = min(
+                                0.98, (best_score + hint_similarity) / 2 + 0.1
+                            )
                             break
 
             canonical = best_path.split("/")
@@ -117,7 +116,7 @@ class MLClassifier:
             reasoning = [
                 f"Semantic similarity score: {best_score:.3f}",
                 f"Best match: {best_path}",
-                f"Model: {self.model_name}"
+                f"Model: {self.model_name}",
             ]
 
             if confidence < confidence_threshold:
@@ -139,7 +138,7 @@ class MLClassifier:
                 "reasoning": reasoning,
                 "node_id": f"ml_{canonical[-1].lower()}_{hash(text) % 1000:03d}",
                 "version": "1.8.1",
-                "similarities": similarities
+                "similarities": similarities,
             }
 
         except Exception as e:
@@ -150,7 +149,7 @@ class MLClassifier:
                 "confidence": 0.5,
                 "reasoning": [f"ML classification error: {str(e)}"],
                 "node_id": f"fallback_{hash(text) % 1000:03d}",
-                "version": "1.8.1"
+                "version": "1.8.1",
             }
 
 

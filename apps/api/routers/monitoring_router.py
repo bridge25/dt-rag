@@ -1,33 +1,40 @@
 """Monitoring router with Langfuse LLM cost tracking"""
-from fastapi import APIRouter
-import time
-import psutil
+
 import os
+import time
 from datetime import datetime
+
+import psutil
+from fastapi import APIRouter
 
 # Import API key authentication
 try:
     from ..deps import verify_api_key
     from ..security import api_key_storage  # noqa: F401
+
     AUTH_AVAILABLE = True
 except ImportError:
     AUTH_AVAILABLE = False
+
     def verify_api_key():
         return None
+
 
 # Import Langfuse client
 try:
     from ..monitoring.langfuse_client import (
+        MODEL_COSTS,
+        calculate_cost,
         get_langfuse_client,
         get_langfuse_status,
-        calculate_cost,
-        MODEL_COSTS
     )
+
     LANGFUSE_AVAILABLE = True
 except ImportError:
     LANGFUSE_AVAILABLE = False
 
 router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
+
 
 @router.get("/health")
 async def get_system_health():
@@ -35,7 +42,7 @@ async def get_system_health():
     try:
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
 
         return {
             "status": "healthy",
@@ -45,13 +52,13 @@ async def get_system_health():
                 "memory_percent": memory.percent,
                 "memory_available_gb": round(memory.available / (1024**3), 2),
                 "disk_percent": disk.percent,
-                "disk_free_gb": round(disk.free / (1024**3), 2)
+                "disk_free_gb": round(disk.free / (1024**3), 2),
             },
             "services": {
                 "api": "running",
                 "database": "fallback_mode",
-                "cache": "memory_only"
-            }
+                "cache": "memory_only",
+            },
         }
     except Exception as e:
         return {
@@ -61,9 +68,9 @@ async def get_system_health():
             "services": {
                 "api": "running",
                 "database": "fallback_mode",
-                "cache": "memory_only"
+                "cache": "memory_only",
             },
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -87,8 +94,8 @@ async def get_llm_costs():
                 "1": "Install langfuse: pip install langfuse>=3.6.0",
                 "2": "Set LANGFUSE_PUBLIC_KEY in .env.local",
                 "3": "Set LANGFUSE_SECRET_KEY in .env.local",
-                "4": "Set LANGFUSE_ENABLED=true in .env.local"
-            }
+                "4": "Set LANGFUSE_ENABLED=true in .env.local",
+            },
         }
 
     # Check Langfuse status
@@ -97,14 +104,14 @@ async def get_llm_costs():
         return {
             "status": "disabled",
             "message": "Langfuse is disabled. Set LANGFUSE_ENABLED=true",
-            "langfuse_status": langfuse_status
+            "langfuse_status": langfuse_status,
         }
 
     if not langfuse_status.get("configured"):
         return {
             "status": "not_configured",
             "message": "Langfuse credentials not configured",
-            "langfuse_status": langfuse_status
+            "langfuse_status": langfuse_status,
         }
 
     try:
@@ -134,14 +141,18 @@ async def get_llm_costs():
             output_tokens = getattr(trace, "output_tokens", 0)
 
             if "gemini" in model_name:
-                cost_info = calculate_cost("gemini-2.5-flash-latest", input_tokens, output_tokens)
+                cost_info = calculate_cost(
+                    "gemini-2.5-flash-latest", input_tokens, output_tokens
+                )
                 gemini_cost_usd += cost_info["cost_usd"]
             elif "embedding" in model_name:
                 cost_info = calculate_cost("text-embedding-3-large", input_tokens, 0)
                 embedding_cost_usd += cost_info["cost_usd"]
 
         total_cost_usd = gemini_cost_usd + embedding_cost_usd
-        avg_cost_per_query_usd = (total_cost_usd / total_queries) if total_queries > 0 else 0
+        avg_cost_per_query_usd = (
+            (total_cost_usd / total_queries) if total_queries > 0 else 0
+        )
         avg_cost_per_query_krw = avg_cost_per_query_usd * exchange_rate
 
         # Target budget (₩10/query)
@@ -157,26 +168,32 @@ async def get_llm_costs():
                 "total_krw": round(total_cost_usd * exchange_rate, 2),
                 "breakdown_krw": {
                     "gemini_2.5_flash": round(gemini_cost_usd * exchange_rate, 2),
-                    "openai_embedding_3_large": round(embedding_cost_usd * exchange_rate, 2)
-                }
+                    "openai_embedding_3_large": round(
+                        embedding_cost_usd * exchange_rate, 2
+                    ),
+                },
             },
             "per_query": {
                 "avg_cost_usd": round(avg_cost_per_query_usd, 6),
                 "avg_cost_krw": round(avg_cost_per_query_krw, 2),
                 "target_krw": target_cost_krw,
                 "is_within_budget": is_within_budget,
-                "budget_utilization_percent": round((avg_cost_per_query_krw / target_cost_krw) * 100, 2) if target_cost_krw > 0 else 0
+                "budget_utilization_percent": (
+                    round((avg_cost_per_query_krw / target_cost_krw) * 100, 2)
+                    if target_cost_krw > 0
+                    else 0
+                ),
             },
             "pricing_info": MODEL_COSTS,
             "exchange_rate": exchange_rate,
-            "langfuse_status": langfuse_status
+            "langfuse_status": langfuse_status,
         }
 
     except Exception as e:
         return {
             "status": "error",
             "message": str(e),
-            "langfuse_status": langfuse_status if 'langfuse_status' in locals() else {}
+            "langfuse_status": langfuse_status if "langfuse_status" in locals() else {},
         }
 
 
@@ -184,10 +201,7 @@ async def get_llm_costs():
 async def get_langfuse_integration_status():
     """Get Langfuse integration status and configuration"""
     if not LANGFUSE_AVAILABLE:
-        return {
-            "available": False,
-            "message": "Langfuse package not installed"
-        }
+        return {"available": False, "message": "Langfuse package not installed"}
 
     status = get_langfuse_status()
     return status

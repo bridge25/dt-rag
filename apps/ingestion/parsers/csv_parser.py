@@ -1,9 +1,11 @@
 import io
 from typing import Optional
+
 from .base import BaseParser, ParserError
 
 try:
     import pandas as pd
+
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False

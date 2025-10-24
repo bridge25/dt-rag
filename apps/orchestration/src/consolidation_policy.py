@@ -2,14 +2,15 @@
 # @CODE:TEST-003 | SPEC: SPEC-TEST-003.md | TEST: tests/performance/
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Any, Optional
-from sqlalchemy import select, func, update
-from sqlalchemy.ext.asyncio import AsyncSession
-import numpy as np
-
-import sys
 import os
+import sys
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+from sqlalchemy import func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from apps.api.database import CaseBank, CaseBankArchive
 
@@ -69,15 +70,17 @@ class ConsolidationPolicy:
             "details": {
                 "removed": low_performance_cases,
                 "merged": duplicate_cases,
-                "archived": inactive_cases
+                "archived": inactive_cases,
             },
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         logger.info(f"✅ Consolidation policy execution completed: {result}")
         return result
 
-    async def remove_low_performance_cases(self, threshold: float = 30.0, min_usage: int = 10) -> List[str]:
+    async def remove_low_performance_cases(
+        self, threshold: float = 30.0, min_usage: int = 10
+    ) -> List[str]:
         """
         Remove cases with consistently low success rates.
 
@@ -89,8 +92,7 @@ class ConsolidationPolicy:
             List of removed case IDs
         """
         stmt = select(CaseBank).where(
-            CaseBank.success_rate < threshold,
-            CaseBank.usage_count > min_usage
+            CaseBank.success_rate < threshold, CaseBank.usage_count > min_usage
         )
         result = await self.db.execute(stmt)
         cases = result.scalars().all()
@@ -103,11 +105,15 @@ class ConsolidationPolicy:
                 await self.db.commit()
 
             removed_ids.append(case.case_id)
-            logger.debug(f"  Removed low performance case: {case.case_id} (success_rate={case.success_rate:.1f}%)")
+            logger.debug(
+                f"  Removed low performance case: {case.case_id} (success_rate={case.success_rate:.1f}%)"
+            )
 
         return removed_ids
 
-    async def merge_duplicate_cases(self, similarity_threshold: float = 0.95) -> List[Dict[str, Any]]:
+    async def merge_duplicate_cases(
+        self, similarity_threshold: float = 0.95
+    ) -> List[Dict[str, Any]]:
         """
         Merge duplicate cases based on vector similarity.
 
@@ -117,9 +123,7 @@ class ConsolidationPolicy:
         Returns:
             List of merged case pairs
         """
-        stmt = select(CaseBank).where(
-            CaseBank.query_vector.isnot(None)
-        )
+        stmt = select(CaseBank).where(CaseBank.query_vector.isnot(None))
         result = await self.db.execute(stmt)
         cases = list(result.scalars().all())
 
@@ -130,33 +134,41 @@ class ConsolidationPolicy:
             if case1.case_id in processed:
                 continue
 
-            for case2 in cases[i + 1:]:
+            for case2 in cases[i + 1 :]:
                 if case2.case_id in processed:
                     continue
 
                 # Calculate cosine similarity
-                similarity = self._calculate_similarity(case1.query_vector, case2.query_vector)
+                similarity = self._calculate_similarity(
+                    case1.query_vector, case2.query_vector
+                )
 
                 if similarity > similarity_threshold:
                     # Keep case with higher usage count
                     keeper, remover = (
-                        (case1, case2) if case1.usage_count >= case2.usage_count else (case2, case1)
+                        (case1, case2)
+                        if case1.usage_count >= case2.usage_count
+                        else (case2, case1)
                     )
 
                     if not self.dry_run:
                         # Merge metadata
                         keeper.usage_count += remover.usage_count
-                        keeper.success_rate = (keeper.success_rate + remover.success_rate) / 2
+                        keeper.success_rate = (
+                            keeper.success_rate + remover.success_rate
+                        ) / 2
 
                         # Archive removed case
                         await self._archive_case(remover, reason="duplicate")
                         await self.db.commit()
 
-                    merged_pairs.append({
-                        "keeper": keeper.case_id,
-                        "removed": remover.case_id,
-                        "similarity": float(similarity)
-                    })
+                    merged_pairs.append(
+                        {
+                            "keeper": keeper.case_id,
+                            "removed": remover.case_id,
+                            "similarity": float(similarity),
+                        }
+                    )
                     processed.add(remover.case_id)
 
                     logger.debug(
@@ -166,7 +178,9 @@ class ConsolidationPolicy:
 
         return merged_pairs
 
-    async def archive_inactive_cases(self, days: int = 90, max_usage: int = 100) -> List[str]:
+    async def archive_inactive_cases(
+        self, days: int = 90, max_usage: int = 100
+    ) -> List[str]:
         """
         Archive cases that haven't been used for a long time.
 
@@ -182,7 +196,7 @@ class ConsolidationPolicy:
         stmt = select(CaseBank).where(
             CaseBank.last_used_at.isnot(None),
             CaseBank.last_used_at < cutoff_date,
-            CaseBank.usage_count < max_usage
+            CaseBank.usage_count < max_usage,
         )
         result = await self.db.execute(stmt)
         cases = result.scalars().all()
@@ -219,7 +233,7 @@ class ConsolidationPolicy:
             success_rate=case.success_rate,
             archived_reason=reason,
             original_created_at=case.created_at,
-            original_updated_at=case.last_used_at
+            original_updated_at=case.last_used_at,
         )
 
         self.db.add(archive_entry)
@@ -255,19 +269,24 @@ class ConsolidationPolicy:
             Summary of potential consolidation candidates
         """
         # Count low performance cases
-        low_perf_stmt = select(func.count()).select_from(CaseBank).where(
-            CaseBank.success_rate < 30.0,
-            CaseBank.usage_count > 10
+        low_perf_stmt = (
+            select(func.count())
+            .select_from(CaseBank)
+            .where(CaseBank.success_rate < 30.0, CaseBank.usage_count > 10)
         )
         low_perf_result = await self.db.execute(low_perf_stmt)
         low_perf_count = low_perf_result.scalar()
 
         # Count inactive cases
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=90)
-        inactive_stmt = select(func.count()).select_from(CaseBank).where(
-            CaseBank.last_used_at.isnot(None),
-            CaseBank.last_used_at < cutoff_date,
-            CaseBank.usage_count < 100
+        inactive_stmt = (
+            select(func.count())
+            .select_from(CaseBank)
+            .where(
+                CaseBank.last_used_at.isnot(None),
+                CaseBank.last_used_at < cutoff_date,
+                CaseBank.usage_count < 100,
+            )
         )
         inactive_result = await self.db.execute(inactive_stmt)
         inactive_count = inactive_result.scalar()
@@ -282,5 +301,5 @@ class ConsolidationPolicy:
             "low_performance_candidates": low_perf_count,
             "inactive_candidates": inactive_count,
             "potential_savings": low_perf_count + inactive_count,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }

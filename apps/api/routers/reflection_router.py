@@ -5,25 +5,27 @@ Reflection API Router - 케이스 성능 분석 및 개선 제안
 """
 
 import logging
-from typing import Dict, Any, Optional
-from datetime import datetime
+import os
 
-from fastapi import APIRouter, HTTPException, Depends, status
+# Import ReflectionEngine
+import sys
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+
+# Import database session
+from ..database import db_manager
 
 # Import API Key authentication
 from ..deps import verify_api_key
 from ..security.api_key_storage import APIKeyInfo
 
-# Import database session
-from ..database import db_manager
-
-# Import ReflectionEngine
-import sys
-import os
-
 # Add orchestration to path
-orchestration_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../apps/orchestration/src"))
+orchestration_src = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../../apps/orchestration/src")
+)
 if orchestration_src not in sys.path:
     sys.path.insert(0, orchestration_src)
 
@@ -38,12 +40,14 @@ router = APIRouter(prefix="/reflection", tags=["reflection"])
 # Pydantic Models
 class ReflectionAnalysisRequest(BaseModel):
     """케이스 성능 분석 요청"""
+
     case_id: str = Field(..., description="분석할 케이스 ID")
     limit: int = Field(default=100, description="분석할 최근 로그 개수", ge=1, le=1000)
 
 
 class ReflectionAnalysisResponse(BaseModel):
     """케이스 성능 분석 응답"""
+
     case_id: str
     total_executions: int
     successful_executions: int
@@ -56,6 +60,7 @@ class ReflectionAnalysisResponse(BaseModel):
 
 class ReflectionBatchResponse(BaseModel):
     """배치 Reflection 응답"""
+
     analyzed_cases: int
     low_performance_cases: int
     suggestions: list[Dict[str, Any]]
@@ -64,11 +69,13 @@ class ReflectionBatchResponse(BaseModel):
 
 class ImprovementSuggestionsRequest(BaseModel):
     """개선 제안 생성 요청"""
+
     case_id: str = Field(..., description="케이스 ID")
 
 
 class ImprovementSuggestionsResponse(BaseModel):
     """개선 제안 응답"""
+
     case_id: str
     suggestions: list[str]
     confidence: float
@@ -86,8 +93,7 @@ async def get_reflection_engine():
 # API Endpoints
 @router.post("/analyze", response_model=ReflectionAnalysisResponse)
 async def analyze_case_performance(
-    request: ReflectionAnalysisRequest,
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    request: ReflectionAnalysisRequest, api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     단일 케이스 성능 분석
@@ -101,8 +107,7 @@ async def analyze_case_performance(
         async with db_manager.get_session() as session:
             engine = ReflectionEngine(db_session=session)
             performance = await engine.analyze_case_performance(
-                case_id=request.case_id,
-                limit=request.limit
+                case_id=request.case_id, limit=request.limit
             )
 
         return ReflectionAnalysisResponse(**performance)
@@ -111,14 +116,12 @@ async def analyze_case_performance(
         logger.error(f"케이스 성능 분석 실패: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"케이스 성능 분석 중 오류 발생: {str(e)}"
+            detail=f"케이스 성능 분석 중 오류 발생: {str(e)}",
         )
 
 
 @router.post("/batch", response_model=ReflectionBatchResponse)
-async def run_reflection_batch(
-    api_key: APIKeyInfo = Depends(verify_api_key)
-):
+async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)):
     """
     배치 Reflection 실행
 
@@ -138,14 +141,14 @@ async def run_reflection_batch(
         logger.error(f"배치 Reflection 실패: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"배치 Reflection 중 오류 발생: {str(e)}"
+            detail=f"배치 Reflection 중 오류 발생: {str(e)}",
         )
 
 
 @router.post("/suggestions", response_model=ImprovementSuggestionsResponse)
 async def generate_improvement_suggestions(
     request: ImprovementSuggestionsRequest,
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     개선 제안 생성 (LLM 기반)
@@ -163,16 +166,14 @@ async def generate_improvement_suggestions(
         confidence = 0.8 if len(suggestions) > 0 else 0.0
 
         return ImprovementSuggestionsResponse(
-            case_id=request.case_id,
-            suggestions=suggestions,
-            confidence=confidence
+            case_id=request.case_id, suggestions=suggestions, confidence=confidence
         )
 
     except Exception as e:
         logger.error(f"개선 제안 생성 실패: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"개선 제안 생성 중 오류 발생: {str(e)}"
+            detail=f"개선 제안 생성 중 오류 발생: {str(e)}",
         )
 
 
@@ -182,5 +183,5 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "reflection",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }

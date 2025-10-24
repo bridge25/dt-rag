@@ -1,11 +1,11 @@
 from .signals import (
-    DocumentFormatV1,
-    ProcessingStatusV1,
-    DocumentUploadCommandV1,
     ChunkV1,
+    DocumentFormatV1,
     DocumentProcessedEventV1,
+    DocumentUploadCommandV1,
     JobStatusQueryV1,
     JobStatusResponseV1,
+    ProcessingStatusV1,
 )
 
 __all__ = [

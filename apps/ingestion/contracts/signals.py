@@ -1,8 +1,9 @@
-from typing import Optional, Dict, Any, List, Literal
+import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Literal, Optional
+
 from pydantic import BaseModel, Field, validator
-import uuid
 
 
 class DocumentFormatV1(str, Enum):

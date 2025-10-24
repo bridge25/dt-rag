@@ -5,14 +5,15 @@ Generates natural language answers from search results using Google's Gemini 2.0
 Supports multilingual question answering, summarization, and key point extraction.
 """
 
-import os
 import logging
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass
+import os
 import time
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 try:
     import google.generativeai as genai
+
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AnswerResult:
     """Generated answer with metadata"""
+
     answer: str
     source_count: int
     generation_time: float
@@ -41,10 +43,14 @@ class GeminiLLMService:
     - Source attribution
     """
 
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"):
+    def __init__(
+        self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"
+    ):
         """Initialize Gemini LLM service"""
         if not GEMINI_AVAILABLE:
-            raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai")
+            raise ImportError(
+                "google-generativeai package not installed. Run: pip install google-generativeai"
+            )
 
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
@@ -61,7 +67,7 @@ class GeminiLLMService:
     def _detect_language(self, question: str) -> str:
         """Detect question language (Korean or English)"""
         # Simple heuristic: check for Korean characters
-        korean_chars = sum(1 for c in question if '\uac00' <= c <= '\ud7a3')
+        korean_chars = sum(1 for c in question if "\uac00" <= c <= "\ud7a3")
         return "ko" if korean_chars > 0 else "en"
 
     def _build_rag_prompt(
@@ -69,7 +75,7 @@ class GeminiLLMService:
         question: str,
         search_results: List[Dict[str, Any]],
         language: str,
-        mode: str = "answer"
+        mode: str = "answer",
     ) -> str:
         """Build RAG prompt for Gemini"""
 
@@ -156,10 +162,7 @@ Keep each point concise (one line)."""
         return full_prompt
 
     async def generate_answer(
-        self,
-        question: str,
-        search_results: List[Dict[str, Any]],
-        mode: str = "answer"
+        self, question: str, search_results: List[Dict[str, Any]], mode: str = "answer"
     ) -> AnswerResult:
         """
         Generate answer from search results
@@ -176,12 +179,15 @@ Keep each point concise (one line)."""
 
         if not search_results:
             return AnswerResult(
-                answer="검색 결과가 없어 답변을 생성할 수 없습니다." if self._detect_language(question) == "ko"
-                       else "No search results found to generate an answer.",
+                answer=(
+                    "검색 결과가 없어 답변을 생성할 수 없습니다."
+                    if self._detect_language(question) == "ko"
+                    else "No search results found to generate an answer."
+                ),
                 source_count=0,
                 generation_time=0.0,
                 model=self.model_name,
-                language_detected=self._detect_language(question)
+                language_detected=self._detect_language(question),
             )
 
         # Detect language
@@ -207,7 +213,7 @@ Keep each point concise (one line)."""
                 source_count=len(search_results),
                 generation_time=generation_time,
                 model=self.model_name,
-                language_detected=language
+                language_detected=language,
             )
 
         except Exception as e:

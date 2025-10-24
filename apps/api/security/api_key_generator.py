@@ -5,30 +5,34 @@ This module provides production-ready API key generation with cryptographic secu
 proper entropy, and compliance with security best practices.
 """
 
-import secrets
 import base64
-import string
 import hashlib
-from typing import List, Optional, Tuple
+import logging
+import secrets
+import string
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import logging
+from typing import List, Optional, Tuple
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class APIKeyConfig:
     """Configuration for API key generation"""
+
     length: int = 32
     format_type: str = "base64"  # base64, hex, alphanumeric, mixed
     include_special_chars: bool = False
     prefix: Optional[str] = None
     checksum: bool = True
 
+
 @dataclass
 class GeneratedAPIKey:
     """Generated API key with metadata"""
+
     key: str
     key_hash: str
     created_at: datetime
@@ -36,6 +40,7 @@ class GeneratedAPIKey:
     entropy_bits: float
     prefix: Optional[str] = None
     checksum: Optional[str] = None
+
 
 class SecureAPIKeyGenerator:
     """
@@ -51,21 +56,23 @@ class SecureAPIKeyGenerator:
     """
 
     # Character sets for different formats
-    CHARSET_BASE64 = string.ascii_letters + string.digits + '+/'
+    CHARSET_BASE64 = string.ascii_letters + string.digits + "+/"
     CHARSET_HEX = string.hexdigits.lower()
     CHARSET_ALPHANUMERIC = string.ascii_letters + string.digits
-    CHARSET_SPECIAL = '!@#$%^&*()_+-=[]{}|;:,.<>?'
-    CHARSET_MIXED = string.ascii_letters + string.digits + '_-.'
+    CHARSET_SPECIAL = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    CHARSET_MIXED = string.ascii_letters + string.digits + "_-."
 
     @classmethod
     def generate_base64_key(cls, length: int = 32) -> str:
         """Generate a base64-encoded API key"""
         # Generate random bytes and encode as base64
-        random_bytes = secrets.token_bytes(length * 3 // 4)  # Adjust for base64 encoding
-        key = base64.urlsafe_b64encode(random_bytes).decode('ascii')
+        random_bytes = secrets.token_bytes(
+            length * 3 // 4
+        )  # Adjust for base64 encoding
+        key = base64.urlsafe_b64encode(random_bytes).decode("ascii")
 
         # Trim to exact length and remove padding
-        return key[:length].rstrip('=')
+        return key[:length].rstrip("=")
 
     @classmethod
     def generate_hex_key(cls, length: int = 32) -> str:
@@ -75,7 +82,7 @@ class SecureAPIKeyGenerator:
     @classmethod
     def generate_alphanumeric_key(cls, length: int = 32) -> str:
         """Generate an alphanumeric API key"""
-        return ''.join(secrets.choice(cls.CHARSET_ALPHANUMERIC) for _ in range(length))
+        return "".join(secrets.choice(cls.CHARSET_ALPHANUMERIC) for _ in range(length))
 
     @classmethod
     def generate_mixed_key(cls, length: int = 32, include_special: bool = False) -> str:
@@ -84,7 +91,7 @@ class SecureAPIKeyGenerator:
         if include_special:
             charset += cls.CHARSET_SPECIAL[:5]  # Add limited special chars
 
-        return ''.join(secrets.choice(charset) for _ in range(length))
+        return "".join(secrets.choice(charset) for _ in range(length))
 
     @classmethod
     def calculate_entropy(cls, key: str) -> float:
@@ -99,6 +106,7 @@ class SecureAPIKeyGenerator:
 
         # Calculate Shannon entropy
         import math
+
         entropy = 0.0
         length = len(key)
 
@@ -122,15 +130,17 @@ class SecureAPIKeyGenerator:
             salt = secrets.token_hex(16)
 
         # Use PBKDF2 for secure hashing
-        key_hash = hashlib.pbkdf2_hmac('sha256', key.encode(), salt.encode(), 100000)
+        key_hash = hashlib.pbkdf2_hmac("sha256", key.encode(), salt.encode(), 100000)
         return f"{salt}:{key_hash.hex()}"
 
     @classmethod
     def verify_key_hash(cls, key: str, stored_hash: str) -> bool:
         """Verify an API key against its stored hash"""
         try:
-            salt, key_hash = stored_hash.split(':', 1)
-            computed_hash = hashlib.pbkdf2_hmac('sha256', key.encode(), salt.encode(), 100000)
+            salt, key_hash = stored_hash.split(":", 1)
+            computed_hash = hashlib.pbkdf2_hmac(
+                "sha256", key.encode(), salt.encode(), 100000
+            )
             return computed_hash.hex() == key_hash
         except (ValueError, IndexError):
             return False
@@ -193,11 +203,13 @@ class SecureAPIKeyGenerator:
             format_type=config.format_type,
             entropy_bits=entropy,
             prefix=config.prefix,
-            checksum=checksum
+            checksum=checksum,
         )
 
     @classmethod
-    def generate_multiple_keys(cls, count: int, config: APIKeyConfig) -> List[GeneratedAPIKey]:
+    def generate_multiple_keys(
+        cls, count: int, config: APIKeyConfig
+    ) -> List[GeneratedAPIKey]:
         """Generate multiple API keys with the same configuration"""
         if count <= 0 or count > 100:
             raise ValueError("Key count must be between 1 and 100")
@@ -209,17 +221,23 @@ class SecureAPIKeyGenerator:
         return keys
 
     @classmethod
-    def validate_generated_key_strength(cls, generated_key: GeneratedAPIKey) -> Tuple[bool, List[str]]:
+    def validate_generated_key_strength(
+        cls, generated_key: GeneratedAPIKey
+    ) -> Tuple[bool, List[str]]:
         """Validate the strength of a generated API key"""
         errors = []
 
         # Check minimum entropy
         if generated_key.entropy_bits < 96:
-            errors.append(f"Low entropy: {generated_key.entropy_bits:.1f} bits (minimum: 96)")
+            errors.append(
+                f"Low entropy: {generated_key.entropy_bits:.1f} bits (minimum: 96)"
+            )
 
         # Check length
         if len(generated_key.key) < 32:
-            errors.append(f"Short length: {len(generated_key.key)} characters (minimum: 32)")
+            errors.append(
+                f"Short length: {len(generated_key.key)} characters (minimum: 32)"
+            )
 
         # Check for repeated patterns
         key = generated_key.key
@@ -228,13 +246,14 @@ class SecureAPIKeyGenerator:
 
         return len(errors) == 0, errors
 
+
 # Predefined configurations for common use cases
 PRODUCTION_CONFIG = APIKeyConfig(
     length=40,
     format_type="base64",
     include_special_chars=False,
     prefix="prod",
-    checksum=True
+    checksum=True,
 )
 
 DEVELOPMENT_CONFIG = APIKeyConfig(
@@ -242,7 +261,7 @@ DEVELOPMENT_CONFIG = APIKeyConfig(
     format_type="mixed",
     include_special_chars=False,
     prefix="dev",
-    checksum=False
+    checksum=False,
 )
 
 ADMIN_CONFIG = APIKeyConfig(
@@ -250,28 +269,32 @@ ADMIN_CONFIG = APIKeyConfig(
     format_type="base64",
     include_special_chars=True,
     prefix="admin",
-    checksum=True
+    checksum=True,
 )
+
 
 # Convenience functions
 def generate_production_key() -> GeneratedAPIKey:
     """Generate a production-ready API key"""
     return SecureAPIKeyGenerator.generate_api_key(PRODUCTION_CONFIG)
 
+
 def generate_development_key() -> GeneratedAPIKey:
     """Generate a development API key"""
     return SecureAPIKeyGenerator.generate_api_key(DEVELOPMENT_CONFIG)
 
+
 def generate_admin_key() -> GeneratedAPIKey:
     """Generate an admin API key"""
     return SecureAPIKeyGenerator.generate_api_key(ADMIN_CONFIG)
+
 
 def generate_custom_key(
     length: int = 32,
     format_type: str = "base64",
     prefix: Optional[str] = None,
     include_special: bool = False,
-    checksum: bool = True
+    checksum: bool = True,
 ) -> GeneratedAPIKey:
     """Generate a custom API key with specified parameters"""
     config = APIKeyConfig(
@@ -279,9 +302,10 @@ def generate_custom_key(
         format_type=format_type,
         include_special_chars=include_special,
         prefix=prefix,
-        checksum=checksum
+        checksum=checksum,
     )
     return SecureAPIKeyGenerator.generate_api_key(config)
+
 
 # CLI utility function
 def main():
@@ -289,12 +313,20 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Generate secure API keys")
-    parser.add_argument("--count", type=int, default=1, help="Number of keys to generate")
+    parser.add_argument(
+        "--count", type=int, default=1, help="Number of keys to generate"
+    )
     parser.add_argument("--length", type=int, default=32, help="Key length")
-    parser.add_argument("--format", choices=["base64", "hex", "alphanumeric", "mixed"],
-                       default="base64", help="Key format")
+    parser.add_argument(
+        "--format",
+        choices=["base64", "hex", "alphanumeric", "mixed"],
+        default="base64",
+        help="Key format",
+    )
     parser.add_argument("--prefix", type=str, help="Key prefix")
-    parser.add_argument("--special", action="store_true", help="Include special characters")
+    parser.add_argument(
+        "--special", action="store_true", help="Include special characters"
+    )
     parser.add_argument("--no-checksum", action="store_true", help="Disable checksum")
 
     args = parser.parse_args()
@@ -304,7 +336,7 @@ def main():
         format_type=args.format,
         include_special_chars=args.special,
         prefix=args.prefix,
-        checksum=not args.no_checksum
+        checksum=not args.no_checksum,
     )
 
     print(f"Generating {args.count} API key(s) with configuration:")
@@ -324,11 +356,14 @@ def main():
         print(f"  Entropy: {key_data.entropy_bits:.1f} bits")
         print(f"  Created: {key_data.created_at.isoformat()}")
 
-        is_strong, issues = SecureAPIKeyGenerator.validate_generated_key_strength(key_data)
+        is_strong, issues = SecureAPIKeyGenerator.validate_generated_key_strength(
+            key_data
+        )
         print(f"  Strong: {is_strong}")
         if issues:
             print(f"  Issues: {', '.join(issues)}")
         print()
+
 
 if __name__ == "__main__":
     main()

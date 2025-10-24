@@ -1,7 +1,7 @@
 import re
-from typing import List, Tuple, Dict
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, List, Tuple
 
 
 class PIIType(str, Enum):
@@ -122,14 +122,18 @@ class PIIDetector:
                     start_pos = match.start()
                     end_pos = match.end()
 
-                    if any(start_pos < r_end and end_pos > r_start
-                           for r_start, r_end in matched_ranges):
+                    if any(
+                        start_pos < r_end and end_pos > r_start
+                        for r_start, r_end in matched_ranges
+                    ):
                         continue
 
                     confidence = 1.0
 
                     if pii_type == PIIType.RESIDENT_REGISTRATION_NUMBER:
-                        if not self.validate_resident_registration_number(original_text):
+                        if not self.validate_resident_registration_number(
+                            original_text
+                        ):
                             continue
                     elif pii_type == PIIType.CREDIT_CARD:
                         if not self.validate_luhn(original_text):

@@ -7,19 +7,21 @@ A팀 API 공통 의존성
 @CODE:TEST-004-001:AUTH | SPEC: SPEC-TEST-004.md | TEST: tests/security/test_authentication.py
 """
 
-from fastapi import Header, HTTPException, Request, Depends
-from uuid import uuid4
+import os
 from datetime import datetime, timezone
 from typing import Optional
-import os
+from uuid import uuid4
+
+from fastapi import Depends, Header, HTTPException, Request
+
+from .database import db_manager
 
 # Import API Key security components
 from .security.api_key_storage import APIKeyInfo, APIKeyManager
-from .database import db_manager
+
 
 async def verify_api_key(
-    request: Request,
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key")
+    request: Request, x_api_key: Optional[str] = Header(None, alias="X-API-Key")
 ) -> APIKeyInfo:
     """
     Verify API key authentication
@@ -41,17 +43,11 @@ async def verify_api_key(
     """
     # Check if API key is provided
     if not x_api_key:
-        raise HTTPException(
-            status_code=401,
-            detail="API key is required"
-        )
+        raise HTTPException(status_code=401, detail="API key is required")
 
     # Basic format validation (minimum length)
     if len(x_api_key) < 3:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid API key format"
-        )
+        raise HTTPException(status_code=401, detail="Invalid API key format")
 
     # For testing environment, allow test API key
     test_api_key = os.getenv("DT_RAG_API_KEY", "test_api_key_for_testing")
@@ -70,7 +66,7 @@ async def verify_api_key(
             created_at=datetime.now(timezone.utc),
             last_used_at=datetime.now(timezone.utc),
             total_requests=0,
-            failed_requests=0
+            failed_requests=0,
         )
 
     # For production, verify with database
@@ -90,21 +86,18 @@ async def verify_api_key(
                 plaintext_key=x_api_key,
                 client_ip=client_ip,
                 endpoint=endpoint,
-                method=method
+                method=method,
             )
 
             if not api_key_info:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid API key"
-                )
+                raise HTTPException(status_code=401, detail="Invalid API key")
 
             # Additional expiration check (handled in manager, but double-check)
-            if api_key_info.expires_at and datetime.now(timezone.utc) > api_key_info.expires_at:
-                raise HTTPException(
-                    status_code=401,
-                    detail="API key expired"
-                )
+            if (
+                api_key_info.expires_at
+                and datetime.now(timezone.utc) > api_key_info.expires_at
+            ):
+                raise HTTPException(status_code=401, detail="API key expired")
 
             return api_key_info
 
@@ -113,19 +106,20 @@ async def verify_api_key(
     except Exception as e:
         # Log error but don't expose internals
         import logging
+
         logging.error(f"API key verification failed: {e}")
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid API key"
-        )
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
 
 def generate_request_id() -> str:
     """요청 ID 생성 (Bridge Pack 스펙 준수)"""
     return str(uuid4())
 
+
 def get_current_timestamp() -> str:
     """ISO 8601 타임스탬프 생성"""
     return datetime.now(timezone.utc).isoformat()
+
 
 def get_taxonomy_version() -> str:
     """현재 taxonomy 버전 (Bridge Pack 스펙)"""

@@ -19,20 +19,20 @@ __version__ = "1.8.1"
 # Export main components
 try:
     from .hybrid_search_engine import (
-        HybridSearchEngine,
-        SearchResult,
-        SearchMetrics,
-        ScoreNormalizer,
-        HybridScoreFusion,
         CrossEncoderReranker,
+        HybridScoreFusion,
+        HybridSearchEngine,
         ResultCache,
+        ScoreNormalizer,
+        SearchMetrics,
+        SearchResult,
+        clear_search_cache,
+        get_search_engine_config,
+        get_search_statistics,
         hybrid_search,
         keyword_search,
-        vector_search,
-        get_search_engine_config,
         update_search_engine_config,
-        clear_search_cache,
-        get_search_statistics
+        vector_search,
     )
 
     __all__ = [
@@ -49,12 +49,15 @@ try:
         "get_search_engine_config",
         "update_search_engine_config",
         "clear_search_cache",
-        "get_search_statistics"
+        "get_search_statistics",
     ]
 
 except ImportError as e:
     # Graceful degradation if dependencies not available
     import logging
-    logging.getLogger(__name__).warning(f"Hybrid search engine components not available: {e}")
+
+    logging.getLogger(__name__).warning(
+        f"Hybrid search engine components not available: {e}"
+    )
 
     __all__ = []

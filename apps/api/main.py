@@ -19,33 +19,36 @@ Features:
 import logging
 import time
 from contextlib import asynccontextmanager
-from typing import Dict, Any
+from typing import Any, Dict
 
-from fastapi import FastAPI, Request, HTTPException, Depends, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
 
 # Import existing routers
 from .routers import search, taxonomy
-
-# Import new comprehensive routers
-from .routers.taxonomy_router import taxonomy_router
-from .routers.search_router import search_router
-from .routers.classification_router import classification_router
-from .routers.orchestration_router import orchestration_router
 from .routers.agent_factory_router import agent_factory_router
-# from .routers.monitoring_router import monitoring_router
+from .routers.classification_router import classification_router
+from .routers.consolidation_router import router as consolidation_router
+from .routers.orchestration_router import orchestration_router
 
 # Import Phase 3 routers (SPEC-TEST-002/003)
 from .routers.reflection_router import router as reflection_router
-from .routers.consolidation_router import router as consolidation_router
+from .routers.search_router import search_router
+
+# Import new comprehensive routers
+from .routers.taxonomy_router import taxonomy_router
+
+# from .routers.monitoring_router import monitoring_router
+
 
 # Import evaluation router
 try:
     from .routers.evaluation import router as evaluation_router
+
     EVALUATION_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Evaluation router not available: {e}")
@@ -54,6 +57,7 @@ except ImportError as e:
 # Import optimization routers
 try:
     from .routers.batch_search import router as batch_search_router
+
     BATCH_SEARCH_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Batch search router not available: {e}")
@@ -61,10 +65,12 @@ except ImportError as e:
 
 # Import monitoring components
 try:
-    from .routers.monitoring import router as monitoring_api_router
-    from monitoring.metrics import initialize_metrics_collector, get_metrics_collector
-    from monitoring.health_check import initialize_health_checker
     from cache.redis_manager import initialize_redis_manager
+    from monitoring.health_check import initialize_health_checker
+    from monitoring.metrics import get_metrics_collector, initialize_metrics_collector
+
+    from .routers.monitoring import router as monitoring_api_router
+
     MONITORING_AVAILABLE = True
 except ImportError as e:
     logging.warning(f"Monitoring components not available: {e}")
@@ -72,18 +78,18 @@ except ImportError as e:
 
 # Import configuration and database
 from .config import get_config
-from .openapi_spec import generate_openapi_spec
 from .database import init_database, test_database_connection
+from .openapi_spec import generate_openapi_spec
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 # Global config
 config = get_config()
+
 
 # Application lifespan context manager
 @asynccontextmanager
@@ -149,11 +155,13 @@ async def lifespan(app: FastAPI):
     if MONITORING_AVAILABLE:
         try:
             from cache.redis_manager import get_redis_manager
+
             redis_manager = await get_redis_manager()
             await redis_manager.close()
             logger.info("✅ Redis connections closed")
         except Exception as e:
             logger.warning(f"⚠️ Redis cleanup failed: {e}")
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -192,7 +200,7 @@ app = FastAPI(
     openapi_url="/api/v1/openapi.json",
     docs_url=None,  # We'll create custom docs
     redoc_url=None,  # We'll create custom redoc
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware
@@ -203,15 +211,15 @@ app.add_middleware(
     allow_methods=config.cors.allow_methods,
     allow_headers=config.cors.allow_headers,
     expose_headers=config.cors.expose_headers,
-    max_age=config.cors.max_age
+    max_age=config.cors.max_age,
 )
 
 # Trusted host middleware for security
 if config.security.trusted_hosts:
     app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=config.security.trusted_hosts
+        TrustedHostMiddleware, allowed_hosts=config.security.trusted_hosts
     )
+
 
 # Request logging and monitoring middleware
 @app.middleware("http")
@@ -237,6 +245,7 @@ async def log_requests_and_track_metrics(request: Request, call_next):
         if MONITORING_AVAILABLE:
             try:
                 from .routers.monitoring import track_request_metrics
+
                 await track_request_metrics(request, response_time_ms, status_code)
             except Exception as e:
                 logger.warning(f"Failed to track request metrics: {e}")
@@ -248,17 +257,21 @@ async def log_requests_and_track_metrics(request: Request, call_next):
         response_time_ms = (time.time() - start_time) * 1000
 
         # Log error
-        logger.error(f"Request failed: {request.method} {request.url} - {str(e)} ({response_time_ms:.2f}ms)")
+        logger.error(
+            f"Request failed: {request.method} {request.url} - {str(e)} ({response_time_ms:.2f}ms)"
+        )
 
         # Track error metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
                 from .routers.monitoring import track_request_metrics
+
                 await track_request_metrics(request, response_time_ms, 500)
             except Exception as metric_e:
                 logger.warning(f"Failed to track error metrics: {metric_e}")
 
         raise
+
 
 # Global exception handler
 @app.exception_handler(HTTPException)
@@ -272,10 +285,11 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "status": exc.status_code,
             "detail": exc.detail,
             "instance": str(request.url),
-            "timestamp": time.time()
+            "timestamp": time.time(),
         },
-        headers=exc.headers
+        headers=exc.headers,
     )
+
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
@@ -290,9 +304,10 @@ async def general_exception_handler(request: Request, exc: Exception):
             "status": 500,
             "detail": "An unexpected error occurred",
             "instance": str(request.url),
-            "timestamp": time.time()
-        }
+            "timestamp": time.time(),
+        },
     )
+
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
@@ -302,8 +317,9 @@ async def health_check():
         "status": "healthy",
         "timestamp": time.time(),
         "version": "1.8.1",
-        "environment": config.environment
+        "environment": config.environment,
     }
+
 
 # Custom OpenAPI schema generation
 def custom_openapi():
@@ -325,7 +341,9 @@ def custom_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
+
 app.openapi = custom_openapi
+
 
 # Custom documentation endpoints
 @app.get("/docs", include_in_schema=False)
@@ -345,9 +363,10 @@ async def custom_swagger_ui_html():
             "filter": True,
             "showExtensions": True,
             "showCommonExtensions": True,
-            "tryItOutEnabled": True
-        }
+            "tryItOutEnabled": True,
+        },
     )
+
 
 @app.get("/redoc", include_in_schema=False)
 async def redoc_html():
@@ -358,6 +377,7 @@ async def redoc_html():
         redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@2.1.3/bundles/redoc.standalone.js",
     )
 
+
 # Include existing routers (Bridge Pack compatibility)
 # NOTE: These legacy routers are replaced by new comprehensive API routers above
 # app.include_router(health.router, tags=["Health"])
@@ -367,43 +387,19 @@ async def redoc_html():
 # app.include_router(ingestion.router, tags=["Document Ingestion"])
 
 # Include new comprehensive API routers
-app.include_router(
-    taxonomy_router,
-    prefix="/api/v1",
-    tags=["Taxonomy Management"]
-)
+app.include_router(taxonomy_router, prefix="/api/v1", tags=["Taxonomy Management"])
 
-app.include_router(
-    search_router,
-    prefix="/api/v1",
-    tags=["Search"]
-)
+app.include_router(search_router, prefix="/api/v1", tags=["Search"])
 
-app.include_router(
-    classification_router,
-    prefix="/api/v1",
-    tags=["Classification"]
-)
+app.include_router(classification_router, prefix="/api/v1", tags=["Classification"])
 
-app.include_router(
-    orchestration_router,
-    prefix="/api/v1",
-    tags=["Orchestration"]
-)
+app.include_router(orchestration_router, prefix="/api/v1", tags=["Orchestration"])
 
-app.include_router(
-    agent_factory_router,
-    prefix="/api/v1",
-    tags=["Agent Factory"]
-)
+app.include_router(agent_factory_router, prefix="/api/v1", tags=["Agent Factory"])
 
 # Include monitoring router if available
 if MONITORING_AVAILABLE:
-    app.include_router(
-        monitoring_api_router,
-        prefix="/api/v1",
-        tags=["Monitoring"]
-    )
+    app.include_router(monitoring_api_router, prefix="/api/v1", tags=["Monitoring"])
 
 # NOTE: monitoring_router is not imported (commented out), so this is also commented out
 # app.include_router(
@@ -413,22 +409,16 @@ if MONITORING_AVAILABLE:
 # )
 
 # Include Phase 3 routers (SPEC-TEST-002/003)
-app.include_router(
-    reflection_router,
-    tags=["Reflection", "Phase 3"]
-)
+app.include_router(reflection_router, tags=["Reflection", "Phase 3"])
 
-app.include_router(
-    consolidation_router,
-    tags=["Consolidation", "Phase 3"]
-)
+app.include_router(consolidation_router, tags=["Consolidation", "Phase 3"])
 
 # Include evaluation router if available
 if EVALUATION_AVAILABLE:
     app.include_router(
         evaluation_router,
         prefix="/api/v1",
-        tags=["Evaluation", "RAGAS", "Quality Assurance"]
+        tags=["Evaluation", "RAGAS", "Quality Assurance"],
     )
 
 # Include optimization routers if available
@@ -436,8 +426,9 @@ if BATCH_SEARCH_AVAILABLE:
     app.include_router(
         batch_search_router,
         prefix="/api/v1",
-        tags=["Batch Processing", "Search Optimization"]
+        tags=["Batch Processing", "Search Optimization"],
     )
+
 
 # API versioning support
 @app.get("/api/versions", tags=["Versioning"])
@@ -456,14 +447,15 @@ async def list_api_versions():
                     "Classification Pipeline",
                     "RAG Orchestration",
                     "Agent Factory",
-                    "Monitoring & Observability"
-                ]
+                    "Monitoring & Observability",
+                ],
             }
         ],
         "current": "v1",
         "deprecated": [],
-        "sunset_policy": "https://docs.example.com/api-sunset-policy"
+        "sunset_policy": "https://docs.example.com/api-sunset-policy",
     }
+
 
 # Rate limiting info endpoint
 @app.get("/api/v1/rate-limits", tags=["Rate Limiting"])
@@ -475,25 +467,22 @@ async def get_rate_limit_info():
             "requests_per_minute": 100,
             "requests_per_hour": 5000,
             "requests_per_day": 50000,
-            "concurrent_requests": 10
+            "concurrent_requests": 10,
         },
         "current_usage": {
             "requests_this_minute": 15,
             "requests_this_hour": 234,
             "requests_today": 1567,
-            "concurrent_requests": 3
+            "concurrent_requests": 3,
         },
-        "reset_times": {
-            "minute_reset": 45,
-            "hour_reset": 2847,
-            "day_reset": 76847
-        },
+        "reset_times": {"minute_reset": 45, "hour_reset": 2847, "day_reset": 76847},
         "upgrade_info": {
             "current_tier": "standard",
             "available_tiers": ["premium", "enterprise"],
-            "upgrade_url": "https://example.com/upgrade"
-        }
+            "upgrade_url": "https://example.com/upgrade",
+        },
     }
+
 
 @app.get("/", tags=["Root"])
 async def root():
@@ -513,7 +502,7 @@ async def root():
         "documentation": {
             "swagger_ui": "/docs",
             "redoc": "/redoc",
-            "openapi_spec": "/api/v1/openapi.json"
+            "openapi_spec": "/api/v1/openapi.json",
         },
         "features": {
             "classification": "ML-based with HITL support",
@@ -522,13 +511,13 @@ async def root():
             "orchestration": "LangGraph 7-step RAG pipeline",
             "agent_factory": "Dynamic agent creation",
             "monitoring": "Real-time observability",
-            "simulation": "Removed - 100% real data"
+            "simulation": "Removed - 100% real data",
         },
         "api_endpoints": {
             "health": "/health",
             "monitoring": "/api/v1/monitoring/health",
             "versions": "/api/v1/versions",
-            "rate_limits": "/api/v1/rate-limits"
+            "rate_limits": "/api/v1/rate-limits",
         },
         "bridge_pack_endpoints": [
             "GET /healthz",
@@ -537,7 +526,7 @@ async def root():
             "POST /search",
             "POST /ingestion/upload",
             "POST /ingestion/urls",
-            "GET /ingestion/status/{job_id}"
+            "GET /ingestion/status/{job_id}",
         ],
         "comprehensive_endpoints": [
             "GET /api/v1/taxonomy/versions",
@@ -546,11 +535,12 @@ async def root():
             "POST /api/v1/classify",
             "POST /api/v1/pipeline/execute",
             "POST /api/v1/agents/from-category",
-            "GET /api/v1/monitoring/health"
+            "GET /api/v1/monitoring/health",
         ],
         "environment": config.environment,
-        "timestamp": time.time()
+        "timestamp": time.time(),
     }
+
 
 if __name__ == "__main__":
     import uvicorn
@@ -592,5 +582,5 @@ if __name__ == "__main__":
         port=8000,
         reload=config.debug,
         log_level="info" if not config.debug else "debug",
-        access_log=True
+        access_log=True,
     )

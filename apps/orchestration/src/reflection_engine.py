@@ -2,12 +2,13 @@
 # @CODE:TEST-003 | SPEC: SPEC-TEST-003.md | TEST: tests/performance/
 
 import logging
-from typing import List, Dict, Any, Optional
-from sqlalchemy import select, func, update
-from sqlalchemy.ext.asyncio import AsyncSession
 import os
-
 import sys
+from typing import Any, Dict, List, Optional
+
+from sqlalchemy import func, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from apps.api.database import CaseBank, ExecutionLog
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from openai import AsyncOpenAI
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -162,9 +164,7 @@ class ReflectionEngine:
         patterns.sort(key=lambda x: x["count"], reverse=True)
         return patterns
 
-    async def generate_improvement_suggestions(
-        self, case_id: str
-    ) -> List[str]:
+    async def generate_improvement_suggestions(self, case_id: str) -> List[str]:
         """
         Generate LLM-based improvement suggestions for low-performance cases.
 
@@ -213,9 +213,7 @@ Format: One suggestion per line, numbered 1-3."""
             )
 
             content = response.choices[0].message.content.strip()
-            suggestions = [
-                line.strip() for line in content.split("\n") if line.strip()
-            ]
+            suggestions = [line.strip() for line in content.split("\n") if line.strip()]
 
             logger.info(
                 f"Generated {len(suggestions)} LLM suggestions for case {case_id}"
@@ -226,9 +224,7 @@ Format: One suggestion per line, numbered 1-3."""
             logger.error(f"LLM suggestion generation failed for {case_id}: {e}")
             return self._generate_fallback_suggestions(performance)
 
-    def _generate_fallback_suggestions(
-        self, performance: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_fallback_suggestions(self, performance: Dict[str, Any]) -> List[str]:
         """
         Generate basic suggestions without LLM.
 
@@ -261,9 +257,7 @@ Format: One suggestion per line, numbered 1-3."""
 
         return suggestions
 
-    async def update_case_success_rate(
-        self, case_id: str, success_rate: float
-    ) -> None:
+    async def update_case_success_rate(self, case_id: str, success_rate: float) -> None:
         """
         Update CaseBank.success_rate field.
 
@@ -280,9 +274,7 @@ Format: One suggestion per line, numbered 1-3."""
         await self.db.commit()
         logger.debug(f"Updated success_rate for {case_id}: {success_rate}")
 
-    async def run_reflection_batch(
-        self, min_logs: int = 10
-    ) -> Dict[str, Any]:
+    async def run_reflection_batch(self, min_logs: int = 10) -> Dict[str, Any]:
         """
         Run batch reflection analysis on all active cases.
 

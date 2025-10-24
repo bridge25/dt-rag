@@ -1,9 +1,11 @@
 import io
 from typing import Optional
+
 from .base import BaseParser, ParserError
 
 try:
     from docx import Document
+
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False

@@ -1,0 +1,61 @@
+[flake8]
+max-line-length = 88
+# TODO: Gradually reduce complexity to 10 by refactoring complex functions
+max-complexity = 26
+
+# Ignore rules
+ignore =
+    # Whitespace before ':' (black formatting)
+    E203,
+    # Missing whitespace around operator (will fix gradually)
+    E226,
+    # Expected 2 blank lines (minor formatting)
+    E302,E305,
+    # Module level import not at top (intentional lazy imports)
+    E402,
+    # Line too long (will be gradually fixed)
+    E501,
+    # Do not use bare except (legacy code, will be fixed)
+    E722,
+    # Imported but unused (will be cleaned up gradually)
+    F401,
+    # Import shadowed by loop variable (will be refactored)
+    F402,
+    # Format string error (legacy code)
+    F521,
+    # F-string missing placeholders (minor issue)
+    F541,
+    # Redefinition of unused (will be cleaned up)
+    F811,
+    # Local variable assigned but never used (will be cleaned up)
+    F841,
+    # Trailing whitespace (black should handle this)
+    W291,
+    # No newline at end of file (minor issue)
+    W292,
+    # Line break before binary operator (black style preference)
+    W503
+
+# Exclude directories
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .eggs,
+    *.egg,
+    dist,
+    build,
+    .moai,
+    .moai-backups,
+    alembic/versions
+
+# Per-file ignores
+per-file-ignores =
+    # __init__.py files can have unused imports (they export symbols)
+    */__init__.py:F401,F403
+    # Test files can have complexity and long lines
+    tests/*:C901,E501
+    # Migration files can be complex
+    alembic/versions/*:E501,F401,C901

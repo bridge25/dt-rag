@@ -9,8 +9,10 @@ This migration adds comprehensive API key management tables with security featur
 Run with: python -m alembic revision --autogenerate -m "Add API key security tables"
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
+
 
 def upgrade():
     """Add API key security tables"""
@@ -114,6 +116,7 @@ def migrate_existing_api_keys():
 def validate_migration():
     """Validate that the migration was successful"""
     from sqlalchemy import create_engine, text
+
     from ...config import get_api_config
 
     config = get_api_config()

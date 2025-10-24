@@ -12,8 +12,8 @@ PRD Reference: Line 131-132
 # @CODE:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md | TEST: tests/e2e/test_complete_workflow.py
 
 import logging
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class HybridClassifier:
         embedding_service,
         taxonomy_dao,
         llm_service,
-        confidence_threshold: float = 0.70
+        confidence_threshold: float = 0.70,
     ):
         """
         Initialize hybrid classifier
@@ -41,14 +41,16 @@ class HybridClassifier:
         self.taxonomy_dao = taxonomy_dao
         self.llm_service = llm_service
         self.confidence_threshold = confidence_threshold
-        logger.info(f"HybridClassifier initialized with threshold={confidence_threshold}")
+        logger.info(
+            f"HybridClassifier initialized with threshold={confidence_threshold}"
+        )
 
     async def classify(
         self,
         chunk_id: str,
         text: str,
         taxonomy_version: str = "1.0.0",
-        correlation_id: Optional[str] = None
+        correlation_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Execute 3-stage classification pipeline
@@ -63,6 +65,7 @@ class HybridClassifier:
             Classification result with canonical path, candidates, confidence, hitl_required
         """
         import time
+
         start_time = time.time()
 
         # Stage 1: Rule-based classification
@@ -70,7 +73,9 @@ class HybridClassifier:
 
         if rule_result and rule_result["confidence"] >= 0.90:
             # High-confidence rule match, skip LLM
-            logger.info(f"Rule-based classification succeeded with conf={rule_result['confidence']}")
+            logger.info(
+                f"Rule-based classification succeeded with conf={rule_result['confidence']}"
+            )
             return self._build_response(
                 chunk_id=chunk_id,
                 canonical=rule_result["canonical_path"],
@@ -78,11 +83,13 @@ class HybridClassifier:
                 confidence=rule_result["confidence"],
                 hitl_required=False,
                 method="rule_based",
-                processing_time_ms=(time.time() - start_time) * 1000
+                processing_time_ms=(time.time() - start_time) * 1000,
             )
 
         # Stage 2: LLM classification
-        llm_result = await self._stage2_llm_classification(text, taxonomy_version, correlation_id)
+        llm_result = await self._stage2_llm_classification(
+            text, taxonomy_version, correlation_id
+        )
 
         # Stage 3: Cross-validation and confidence calculation
         final_result = await self._stage3_cross_validation(
@@ -90,24 +97,21 @@ class HybridClassifier:
             text=text,
             rule_result=rule_result,
             llm_result=llm_result,
-            taxonomy_version=taxonomy_version
+            taxonomy_version=taxonomy_version,
         )
 
         # Calculate processing time
         final_result["processing_time_ms"] = (time.time() - start_time) * 1000
 
         # Determine HITL requirement
-        final_result["hitl_required"] = (
-            final_result["confidence"] < self.confidence_threshold or
-            self._detect_drift(rule_result, llm_result)
-        )
+        final_result["hitl_required"] = final_result[
+            "confidence"
+        ] < self.confidence_threshold or self._detect_drift(rule_result, llm_result)
 
         return final_result
 
     async def _stage1_rule_based(
-        self,
-        text: str,
-        taxonomy_version: str
+        self, text: str, taxonomy_version: str
     ) -> Optional[Dict[str, Any]]:
         """
         Stage 1: Rule-based classification
@@ -123,12 +127,14 @@ class HybridClassifier:
         text_lower = text.lower()
 
         # Sensitivity rules
-        if any(keyword in text_lower for keyword in ["confidential", "secret", "private"]):
+        if any(
+            keyword in text_lower for keyword in ["confidential", "secret", "private"]
+        ):
             return {
                 "canonical_path": ["Security", "Confidential"],
                 "candidates": [["Security", "Confidential"]],
                 "confidence": 0.95,
-                "method": "sensitivity_rule"
+                "method": "sensitivity_rule",
             }
 
         # Technical domain rules
@@ -137,7 +143,7 @@ class HybridClassifier:
                 "canonical_path": ["AI", "ML"],
                 "candidates": [["AI", "ML"], ["AI", "Deep Learning"]],
                 "confidence": 0.85,
-                "method": "keyword_rule"
+                "method": "keyword_rule",
             }
 
         if "taxonomy" in text_lower and "classification" in text_lower:
@@ -145,17 +151,14 @@ class HybridClassifier:
                 "canonical_path": ["AI", "Taxonomy"],
                 "candidates": [["AI", "Taxonomy"]],
                 "confidence": 0.80,
-                "method": "keyword_rule"
+                "method": "keyword_rule",
             }
 
         # No rule matched
         return None
 
     async def _stage2_llm_classification(
-        self,
-        text: str,
-        taxonomy_version: str,
-        correlation_id: Optional[str]
+        self, text: str, taxonomy_version: str, correlation_id: Optional[str]
     ) -> Dict[str, Any]:
         """
         Stage 2: LLM-based classification
@@ -196,14 +199,12 @@ Respond in JSON format:
 
             # Call LLM service
             llm_response = await self.llm_service.generate(
-                prompt=prompt,
-                temperature=0.3,
-                max_tokens=500,
-                response_format="json"
+                prompt=prompt, temperature=0.3, max_tokens=500, response_format="json"
             )
 
             # Parse LLM response
             import json
+
             result = json.loads(llm_response)
 
             return {
@@ -211,7 +212,7 @@ Respond in JSON format:
                 "candidates": result.get("candidates", []),
                 "reasoning": result.get("reasoning", []),
                 "confidence": result.get("confidence", 0.5),
-                "method": "llm"
+                "method": "llm",
             }
 
         except Exception as e:
@@ -228,9 +229,7 @@ Respond in JSON format:
         return "\n".join(paths)
 
     async def _fallback_semantic_classification(
-        self,
-        text: str,
-        taxonomy_version: str
+        self, text: str, taxonomy_version: str
     ) -> Dict[str, Any]:
         """Fallback semantic similarity classification when LLM fails"""
         try:
@@ -242,7 +241,7 @@ Respond in JSON format:
                     "canonical_path": ["General"],
                     "candidates": [],
                     "confidence": 0.3,
-                    "method": "fallback"
+                    "method": "fallback",
                 }
 
             # Simple cosine similarity (placeholder)
@@ -250,9 +249,11 @@ Respond in JSON format:
 
             return {
                 "canonical_path": best_match.get("canonical_path", ["General"]),
-                "candidates": [node.get("canonical_path", []) for node in taxonomy_nodes[:3]],
+                "candidates": [
+                    node.get("canonical_path", []) for node in taxonomy_nodes[:3]
+                ],
                 "confidence": 0.5,
-                "method": "semantic_fallback"
+                "method": "semantic_fallback",
             }
 
         except Exception as e:
@@ -261,7 +262,7 @@ Respond in JSON format:
                 "canonical_path": ["General"],
                 "candidates": [],
                 "confidence": 0.3,
-                "method": "error_fallback"
+                "method": "error_fallback",
             }
 
     async def _stage3_cross_validation(
@@ -270,7 +271,7 @@ Respond in JSON format:
         text: str,
         rule_result: Optional[Dict[str, Any]],
         llm_result: Dict[str, Any],
-        taxonomy_version: str
+        taxonomy_version: str,
     ) -> Dict[str, Any]:
         """
         Stage 3: Cross-validation and confidence calculation
@@ -282,17 +283,21 @@ Respond in JSON format:
             Final classification result
         """
         # If both rule and LLM agree, boost confidence
-        if rule_result and rule_result["canonical_path"] == llm_result["canonical_path"]:
+        if (
+            rule_result
+            and rule_result["canonical_path"] == llm_result["canonical_path"]
+        ):
             confidence = min(
-                (rule_result["confidence"] + llm_result["confidence"]) / 2 * 1.1,
-                1.0
+                (rule_result["confidence"] + llm_result["confidence"]) / 2 * 1.1, 1.0
             )
             canonical = rule_result["canonical_path"]
             method = "cross_validated"
 
         # LLM only
         elif not rule_result:
-            confidence = llm_result["confidence"] * 0.8  # Apply discount for single method
+            confidence = (
+                llm_result["confidence"] * 0.8
+            )  # Apply discount for single method
             canonical = llm_result["canonical_path"]
             method = "llm_only"
 
@@ -324,13 +329,11 @@ Respond in JSON format:
             confidence=confidence,
             hitl_required=False,  # Will be set by caller
             method=method,
-            processing_time_ms=0  # Will be set by caller
+            processing_time_ms=0,  # Will be set by caller
         )
 
     def _detect_drift(
-        self,
-        rule_result: Optional[Dict[str, Any]],
-        llm_result: Dict[str, Any]
+        self, rule_result: Optional[Dict[str, Any]], llm_result: Dict[str, Any]
     ) -> bool:
         """
         Detect classification drift
@@ -363,7 +366,7 @@ Respond in JSON format:
         confidence: float,
         hitl_required: bool,
         method: str,
-        processing_time_ms: float
+        processing_time_ms: float,
     ) -> Dict[str, Any]:
         """Build standardized classification response"""
         return {
@@ -375,6 +378,6 @@ Respond in JSON format:
             "metadata": {
                 "method": method,
                 "timestamp": datetime.utcnow().isoformat(),
-                "processing_time_ms": round(processing_time_ms, 2)
-            }
+                "processing_time_ms": round(processing_time_ms, 2),
+            },
         }

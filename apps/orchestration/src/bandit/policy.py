@@ -3,7 +3,7 @@
 import logging
 import math
 import random
-from typing import List, Dict
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 

@@ -20,12 +20,17 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from apps.evaluation.ragas_engine import RAGASEvaluator
-from apps.evaluation.quality_monitor import QualityMonitor
-from apps.evaluation.experiment_tracker import ExperimentTracker
-from apps.evaluation.sample_data import SampleDataGenerator
-from apps.evaluation.models import EvaluationRequest, QualityThresholds, ExperimentConfig
 from apps.api.database import init_database
+from apps.evaluation.experiment_tracker import ExperimentTracker
+from apps.evaluation.models import (
+    EvaluationRequest,
+    ExperimentConfig,
+    QualityThresholds,
+)
+from apps.evaluation.quality_monitor import QualityMonitor
+from apps.evaluation.ragas_engine import RAGASEvaluator
+from apps.evaluation.sample_data import SampleDataGenerator
+
 
 class RAGASSystemTester:
     """Comprehensive RAGAS system tester"""
@@ -47,7 +52,7 @@ class RAGASSystemTester:
         contexts = [
             "RAG is a technique that combines information retrieval with text generation to provide more accurate responses.",
             "RAG systems use a retriever to find relevant documents and a generator to create responses based on the retrieved context.",
-            "The main advantage of RAG is that it allows language models to access external knowledge without fine-tuning."
+            "The main advantage of RAG is that it allows language models to access external knowledge without fine-tuning.",
         ]
 
         print(f"Query: {query}")
@@ -56,9 +61,7 @@ class RAGASSystemTester:
 
         # Perform evaluation
         result = await self.evaluator.evaluate_rag_response(
-            query=query,
-            response=response,
-            retrieved_contexts=contexts
+            query=query, response=response, retrieved_contexts=contexts
         )
 
         print(f"\nEvaluation Results:")
@@ -83,22 +86,36 @@ class RAGASSystemTester:
             result = await self.evaluator.evaluate_rag_response(
                 query=scenario_data["query"],
                 response=scenario_data["response"],
-                retrieved_contexts=scenario_data["contexts"]
+                retrieved_contexts=scenario_data["contexts"],
             )
 
             expected = scenario_data["expected_metrics"]
             actual = result.metrics
 
             print(f"Expected vs Actual metrics:")
-            print(f"- Faithfulness: {expected['faithfulness']:.2f} vs {actual.faithfulness:.2f}")
-            print(f"- Context Precision: {expected['context_precision']:.2f} vs {actual.context_precision:.2f}")
-            print(f"- Context Recall: {expected['context_recall']:.2f} vs {actual.context_recall:.2f}")
-            print(f"- Answer Relevancy: {expected['answer_relevancy']:.2f} vs {actual.answer_relevancy:.2f}")
+            print(
+                f"- Faithfulness: {expected['faithfulness']:.2f} vs {actual.faithfulness:.2f}"
+            )
+            print(
+                f"- Context Precision: {expected['context_precision']:.2f} vs {actual.context_precision:.2f}"
+            )
+            print(
+                f"- Context Recall: {expected['context_recall']:.2f} vs {actual.context_recall:.2f}"
+            )
+            print(
+                f"- Answer Relevancy: {expected['answer_relevancy']:.2f} vs {actual.answer_relevancy:.2f}"
+            )
 
             # Check if quality flags are appropriate
-            if scenario_name == "low_faithfulness" and "low_faithfulness" not in result.quality_flags:
+            if (
+                scenario_name == "low_faithfulness"
+                and "low_faithfulness" not in result.quality_flags
+            ):
                 print("⚠️  Warning: Low faithfulness not detected")
-            elif scenario_name == "low_precision" and "low_precision" not in result.quality_flags:
+            elif (
+                scenario_name == "low_precision"
+                and "low_precision" not in result.quality_flags
+            ):
                 print("⚠️  Warning: Low precision not detected")
 
     async def test_quality_monitoring(self):
@@ -114,7 +131,7 @@ class RAGASSystemTester:
             result = await self.evaluator.evaluate_rag_response(
                 query=request.query,
                 response=request.response,
-                retrieved_contexts=request.retrieved_contexts
+                retrieved_contexts=request.retrieved_contexts,
             )
 
             # Record for quality monitoring
@@ -126,16 +143,22 @@ class RAGASSystemTester:
         # Check quality status
         quality_status = await self.quality_monitor.get_quality_status()
         print(f"\nQuality Monitoring Status:")
-        print(f"- Current metrics available: {bool(quality_status.get('current_metrics'))}")
-        print(f"- Active alerts: {len(quality_status.get('alert_summary', {}).get('total_alerts', 0))}")
-        print(f"- Quality gates passing: {quality_status.get('quality_gates', {}).get('overall_passing', False)}")
+        print(
+            f"- Current metrics available: {bool(quality_status.get('current_metrics'))}"
+        )
+        print(
+            f"- Active alerts: {len(quality_status.get('alert_summary', {}).get('total_alerts', 0))}"
+        )
+        print(
+            f"- Quality gates passing: {quality_status.get('quality_gates', {}).get('overall_passing', False)}"
+        )
 
         # Test threshold updates
         new_thresholds = QualityThresholds(
             faithfulness_min=0.90,
             context_precision_min=0.80,
             context_recall_min=0.75,
-            answer_relevancy_min=0.85
+            answer_relevancy_min=0.85,
         )
 
         await self.quality_monitor.update_thresholds(new_thresholds)
@@ -154,7 +177,7 @@ class RAGASSystemTester:
             description="Testing BM25 vs hybrid search",
             control_config={"search_type": "bm25", "top_k": 5},
             treatment_config={"search_type": "hybrid", "top_k": 5, "rerank": True},
-            minimum_sample_size=20
+            minimum_sample_size=20,
         )
 
         experiment_id = await self.experiment_tracker.create_experiment(config)
@@ -168,7 +191,9 @@ class RAGASSystemTester:
         print("Simulating user interactions...")
 
         for user_id in [f"user_{i}" for i in range(50)]:
-            group = self.experiment_tracker.assign_user_to_experiment(user_id, experiment_id)
+            group = self.experiment_tracker.assign_user_to_experiment(
+                user_id, experiment_id
+            )
 
             # Generate evaluation based on group
             if group == "control":
@@ -179,21 +204,30 @@ class RAGASSystemTester:
                 metrics_modifier = 1.02
 
             # Create mock evaluation
-            from apps.evaluation.models import EvaluationResult, EvaluationMetrics
             import random
+
+            from apps.evaluation.models import EvaluationMetrics, EvaluationResult
 
             mock_result = EvaluationResult(
                 evaluation_id=f"mock_{user_id}",
                 query="test query",
                 metrics=EvaluationMetrics(
-                    faithfulness=min(0.99, 0.85 * metrics_modifier + random.uniform(-0.05, 0.05)),
-                    context_precision=min(0.99, 0.80 * metrics_modifier + random.uniform(-0.05, 0.05)),
-                    context_recall=min(0.99, 0.75 * metrics_modifier + random.uniform(-0.05, 0.05)),
-                    answer_relevancy=min(0.99, 0.82 * metrics_modifier + random.uniform(-0.05, 0.05))
+                    faithfulness=min(
+                        0.99, 0.85 * metrics_modifier + random.uniform(-0.05, 0.05)
+                    ),
+                    context_precision=min(
+                        0.99, 0.80 * metrics_modifier + random.uniform(-0.05, 0.05)
+                    ),
+                    context_recall=min(
+                        0.99, 0.75 * metrics_modifier + random.uniform(-0.05, 0.05)
+                    ),
+                    answer_relevancy=min(
+                        0.99, 0.82 * metrics_modifier + random.uniform(-0.05, 0.05)
+                    ),
                 ),
                 quality_flags=[],
                 recommendations=[],
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
             )
 
             await self.experiment_tracker.record_experiment_result(
@@ -201,22 +235,28 @@ class RAGASSystemTester:
             )
 
         # Analyze results
-        results = await self.experiment_tracker.analyze_experiment_results(experiment_id)
+        results = await self.experiment_tracker.analyze_experiment_results(
+            experiment_id
+        )
 
         if results:
             print(f"\nExperiment Results:")
             print(f"- Control samples: {results.control_samples}")
             print(f"- Treatment samples: {results.treatment_samples}")
-            print(f"- Statistically significant: {results.is_statistically_significant}")
+            print(
+                f"- Statistically significant: {results.is_statistically_significant}"
+            )
             print(f"- Recommendation: {results.recommendation}")
             print(f"- Summary: {results.summary}")
 
             # Print metric comparisons
             for metric, comparison in results.metric_comparisons.items():
                 if comparison:
-                    print(f"- {metric}: Control={comparison.get('control_mean', 0):.3f}, "
-                          f"Treatment={comparison.get('treatment_mean', 0):.3f}, "
-                          f"p-value={comparison.get('p_value', 1):.3f}")
+                    print(
+                        f"- {metric}: Control={comparison.get('control_mean', 0):.3f}, "
+                        f"Treatment={comparison.get('treatment_mean', 0):.3f}, "
+                        f"p-value={comparison.get('p_value', 1):.3f}"
+                    )
 
         # Stop experiment
         await self.experiment_tracker.stop_experiment(experiment_id, "test_complete")
@@ -231,7 +271,7 @@ class RAGASSystemTester:
         canary_config = {
             "model_version": "v1.9.0",
             "embedding_model": "new-embeddings",
-            "rerank_model": "cross-encoder-v2"
+            "rerank_model": "cross-encoder-v2",
         }
 
         print("Starting canary deployment monitoring...")
@@ -242,7 +282,7 @@ class RAGASSystemTester:
             "canary_id": "test_canary_001",
             "status": "monitoring_complete",
             "recommendation": "proceed_with_rollout",
-            "monitoring_duration": "simulated"
+            "monitoring_duration": "simulated",
         }
 
         print(f"Canary monitoring result: {monitoring_result['recommendation']}")
@@ -260,6 +300,7 @@ class RAGASSystemTester:
 
         # Test dataset validation
         from apps.evaluation.evaluation_router import validate_dataset
+
         validation_result = await validate_dataset(golden_entries)
 
         print(f"Dataset validation:")
@@ -280,7 +321,9 @@ class RAGASSystemTester:
         try:
             # Test database initialization
             db_success = await init_database()
-            print(f"Database initialization: {'✅ Success' if db_success else '❌ Failed'}")
+            print(
+                f"Database initialization: {'✅ Success' if db_success else '❌ Failed'}"
+            )
 
             if not db_success:
                 print("Skipping database-dependent tests")
@@ -293,12 +336,18 @@ class RAGASSystemTester:
             result = await evaluation_integration.evaluate_search_interaction(
                 query="What is machine learning?",
                 search_results=[
-                    {"text": "Machine learning is a subset of AI that learns from data"},
-                    {"text": "ML algorithms can make predictions without explicit programming"},
-                    {"text": "Common ML techniques include supervised and unsupervised learning"}
+                    {
+                        "text": "Machine learning is a subset of AI that learns from data"
+                    },
+                    {
+                        "text": "ML algorithms can make predictions without explicit programming"
+                    },
+                    {
+                        "text": "Common ML techniques include supervised and unsupervised learning"
+                    },
                 ],
                 user_id="test_user",
-                session_id="test_session"
+                session_id="test_session",
             )
 
             print(f"Integration evaluation completed:")
@@ -333,7 +382,7 @@ class RAGASSystemTester:
             result = await self.evaluator.evaluate_rag_response(
                 query=request.query,
                 response=request.response,
-                retrieved_contexts=request.retrieved_contexts
+                retrieved_contexts=request.retrieved_contexts,
             )
             results.append(result)
 
@@ -342,11 +391,15 @@ class RAGASSystemTester:
 
         print(f"Performance Results:")
         print(f"- Evaluated {len(requests)} requests in {total_time:.2f} seconds")
-        print(f"- Average time per evaluation: {total_time / len(requests):.2f} seconds")
+        print(
+            f"- Average time per evaluation: {total_time / len(requests):.2f} seconds"
+        )
         print(f"- Evaluations per second: {len(requests) / total_time:.1f}")
 
         # Check if any evaluations failed
-        successful_evaluations = len([r for r in results if r.metrics.faithfulness is not None])
+        successful_evaluations = len(
+            [r for r in results if r.metrics.faithfulness is not None]
+        )
         print(f"- Successful evaluations: {successful_evaluations}/{len(requests)}")
 
         return total_time / len(requests)
@@ -356,27 +409,31 @@ class RAGASSystemTester:
         print("\n=== Generating Dashboard Test Data ===")
 
         # Generate realistic evaluation data over time
-        evaluation_data = self.sample_generator.generate_realistic_evaluation_data(days=7)
+        evaluation_data = self.sample_generator.generate_realistic_evaluation_data(
+            days=7
+        )
 
         print(f"Generated {len(evaluation_data)} historical evaluations")
 
         # Simulate recording these evaluations
-        for data in evaluation_data[-50:]:  # Only process recent 50 to avoid overwhelming
-            from apps.evaluation.models import EvaluationResult, EvaluationMetrics
+        for data in evaluation_data[
+            -50:
+        ]:  # Only process recent 50 to avoid overwhelming
+            from apps.evaluation.models import EvaluationMetrics, EvaluationResult
 
             mock_result = EvaluationResult(
                 evaluation_id=f"hist_{hash(str(data['timestamp'])) % 10000}",
                 query="historical query",
                 metrics=EvaluationMetrics(
-                    faithfulness=data['faithfulness'],
-                    context_precision=data['context_precision'],
-                    context_recall=data['context_recall'],
-                    answer_relevancy=data['answer_relevancy'],
-                    response_time=data['response_time']
+                    faithfulness=data["faithfulness"],
+                    context_precision=data["context_precision"],
+                    context_recall=data["context_recall"],
+                    answer_relevancy=data["answer_relevancy"],
+                    response_time=data["response_time"],
                 ),
                 quality_flags=[],
                 recommendations=[],
-                timestamp=data['timestamp']
+                timestamp=data["timestamp"],
             )
 
             await self.quality_monitor.record_evaluation(mock_result)
@@ -392,20 +449,20 @@ class RAGASSystemTester:
 
         try:
             # Basic functionality tests
-            test_results['basic_evaluation'] = await self.test_basic_evaluation()
-            test_results['quality_scenarios'] = await self.test_quality_scenarios()
+            test_results["basic_evaluation"] = await self.test_basic_evaluation()
+            test_results["quality_scenarios"] = await self.test_quality_scenarios()
 
             # System component tests
-            test_results['quality_monitoring'] = await self.test_quality_monitoring()
-            test_results['ab_testing'] = await self.test_ab_testing()
-            test_results['canary_deployment'] = await self.test_canary_deployment()
+            test_results["quality_monitoring"] = await self.test_quality_monitoring()
+            test_results["ab_testing"] = await self.test_ab_testing()
+            test_results["canary_deployment"] = await self.test_canary_deployment()
 
             # Data and integration tests
-            test_results['golden_dataset'] = await self.test_golden_dataset()
-            test_results['integration_test'] = await self.run_integration_test()
+            test_results["golden_dataset"] = await self.test_golden_dataset()
+            test_results["integration_test"] = await self.run_integration_test()
 
             # Performance tests
-            test_results['performance'] = await self.run_performance_test()
+            test_results["performance"] = await self.run_performance_test()
 
             # Dashboard data generation
             await self.generate_dashboard_test_data()
@@ -419,23 +476,31 @@ class RAGASSystemTester:
             print(f"- A/B testing: ✅")
             print(f"- Canary deployment: ✅")
             print(f"- Golden dataset: ✅")
-            print(f"- Integration test: {'✅' if test_results.get('integration_test') else '❌'}")
-            print(f"- Performance test: ✅ ({test_results.get('performance', 0):.2f}s avg)")
+            print(
+                f"- Integration test: {'✅' if test_results.get('integration_test') else '❌'}"
+            )
+            print(
+                f"- Performance test: ✅ ({test_results.get('performance', 0):.2f}s avg)"
+            )
 
             return test_results
 
         except Exception as e:
             print(f"\n❌ Test suite failed with error: {e}")
             import traceback
+
             traceback.print_exc()
             return {"error": str(e)}
+
 
 async def main():
     """Main test function"""
     # Check if Gemini API key is available
     gemini_key = os.getenv("GEMINI_API_KEY")
     if not gemini_key:
-        print("⚠️  Warning: GEMINI_API_KEY not found. LLM-based evaluation will use fallbacks.")
+        print(
+            "⚠️  Warning: GEMINI_API_KEY not found. LLM-based evaluation will use fallbacks."
+        )
 
     # Run tests
     tester = RAGASSystemTester()
@@ -443,13 +508,18 @@ async def main():
 
     # Save results to file
     with open("ragas_test_results.json", "w") as f:
-        json.dump({
-            "timestamp": datetime.now().isoformat(),
-            "gemini_available": bool(gemini_key),
-            "results": str(results)  # Convert to string for JSON serialization
-        }, f, indent=2)
+        json.dump(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "gemini_available": bool(gemini_key),
+                "results": str(results),  # Convert to string for JSON serialization
+            },
+            f,
+            indent=2,
+        )
 
     print(f"\n📊 Test results saved to ragas_test_results.json")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

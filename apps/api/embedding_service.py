@@ -3,16 +3,18 @@ Sentence Transformers 기반 실제 벡터 임베딩 서비스
 PostgreSQL pgvector와 통합된 768차원 벡터 생성 시스템
 """
 
-import os
 import asyncio
-import logging
 import hashlib
-from typing import List, Optional, Dict, Any, Tuple
+import logging
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
 try:
     from sentence_transformers import SentenceTransformer
+
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
@@ -28,18 +30,18 @@ class EmbeddingService:
         "all-MiniLM-L6-v2": {
             "name": "sentence-transformers/all-MiniLM-L6-v2",
             "dimensions": 384,  # 실제 차원
-            "description": "Fast and efficient multilingual model"
+            "description": "Fast and efficient multilingual model",
         },
         "all-mpnet-base-v2": {
             "name": "sentence-transformers/all-mpnet-base-v2",
             "dimensions": 768,
-            "description": "High quality all-round model"
+            "description": "High quality all-round model",
         },
         "paraphrase-multilingual-MiniLM-L12-v2": {
             "name": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
             "dimensions": 384,
-            "description": "Multilingual paraphrase model"
-        }
+            "description": "Multilingual paraphrase model",
+        },
     }
 
     TARGET_DIMENSIONS = 768  # PostgreSQL 벡터 차원
@@ -56,7 +58,9 @@ class EmbeddingService:
             self.model_name = "all-mpnet-base-v2"
             self.model_config = self.SUPPORTED_MODELS[self.model_name]
 
-        logger.info(f"임베딩 서비스 초기화: {self.model_name} ({self.model_config['dimensions']}차원)")
+        logger.info(
+            f"임베딩 서비스 초기화: {self.model_name} ({self.model_config['dimensions']}차원)"
+        )
 
     def _load_model(self) -> Optional[SentenceTransformer]:
         """Sentence Transformer 모델 로드"""
@@ -92,9 +96,11 @@ class EmbeddingService:
             return padded.tolist()
         else:
             # 트런케이트
-            return vector[:self.TARGET_DIMENSIONS].tolist()
+            return vector[: self.TARGET_DIMENSIONS].tolist()
 
-    async def generate_embedding(self, text: str, use_cache: bool = True) -> List[float]:
+    async def generate_embedding(
+        self, text: str, use_cache: bool = True
+    ) -> List[float]:
         """텍스트를 768차원 벡터로 변환"""
         if not text or not text.strip():
             return self._generate_zero_vector()
@@ -119,8 +125,7 @@ class EmbeddingService:
             # 임베딩 생성 (비동기 처리)
             loop = asyncio.get_event_loop()
             embedding = await loop.run_in_executor(
-                None,
-                lambda: model.encode([processed_text], convert_to_numpy=True)[0]
+                None, lambda: model.encode([processed_text], convert_to_numpy=True)[0]
             )
 
             # 768차원으로 조정
@@ -138,7 +143,9 @@ class EmbeddingService:
                     oldest_key = next(iter(self.embedding_cache))
                     del self.embedding_cache[oldest_key]
 
-            logger.info(f"임베딩 생성 완료 - 텍스트: {len(text)}자, 벡터: {len(final_embedding)}차원")
+            logger.info(
+                f"임베딩 생성 완료 - 텍스트: {len(text)}자, 벡터: {len(final_embedding)}차원"
+            )
             return final_embedding
 
         except Exception as e:
@@ -146,10 +153,7 @@ class EmbeddingService:
             return await self._generate_dummy_embedding(text)
 
     async def batch_generate_embeddings(
-        self,
-        texts: List[str],
-        batch_size: int = 32,
-        show_progress: bool = True
+        self, texts: List[str], batch_size: int = 32, show_progress: bool = True
     ) -> List[List[float]]:
         """배치로 임베딩 생성 (메모리 효율적)"""
         if not texts:
@@ -159,7 +163,7 @@ class EmbeddingService:
         total_batches = (len(texts) + batch_size - 1) // batch_size
 
         for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i:i + batch_size]
+            batch_texts = texts[i : i + batch_size]
             batch_num = i // batch_size + 1
 
             if show_progress:
@@ -183,8 +187,7 @@ class EmbeddingService:
                 # 배치 임베딩 생성
                 loop = asyncio.get_event_loop()
                 batch_embeddings = await loop.run_in_executor(
-                    None,
-                    lambda: model.encode(processed_texts, convert_to_numpy=True)
+                    None, lambda: model.encode(processed_texts, convert_to_numpy=True)
                 )
 
                 # 768차원으로 조정 및 정규화
@@ -209,7 +212,9 @@ class EmbeddingService:
         logger.info(f"배치 임베딩 생성 완료: {len(texts)}개 텍스트")
         return embeddings
 
-    def calculate_similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
+    def calculate_similarity(
+        self, embedding1: List[float], embedding2: List[float]
+    ) -> float:
         """코사인 유사도 계산"""
         try:
             vec1 = np.array(embedding1)
@@ -252,7 +257,7 @@ class EmbeddingService:
 
     def _get_cache_key(self, text: str) -> str:
         """캐시 키 생성"""
-        return hashlib.md5(text.encode('utf-8')).hexdigest()
+        return hashlib.md5(text.encode("utf-8")).hexdigest()
 
     def _normalize_vector(self, vector: List[float]) -> List[float]:
         """L2 정규화"""
@@ -274,7 +279,7 @@ class EmbeddingService:
         logger.debug(f"더미 임베딩 생성: {text[:30]}...")
 
         # 텍스트 기반 시드 생성
-        seed = int(hashlib.md5(text.encode('utf-8')).hexdigest()[:8], 16)
+        seed = int(hashlib.md5(text.encode("utf-8")).hexdigest()[:8], 16)
         np.random.seed(seed)
 
         # 정규분포에서 벡터 생성
@@ -295,7 +300,7 @@ class EmbeddingService:
             "target_dimensions": self.TARGET_DIMENSIONS,
             "model_loaded": self._model_loaded,
             "cache_size": len(self.embedding_cache),
-            "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE
+            "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE,
         }
 
     def health_check(self) -> Dict[str, Any]:
@@ -315,7 +320,7 @@ class EmbeddingService:
                     "test_embedding_shape": test_embedding.shape,
                     "target_dimensions": self.TARGET_DIMENSIONS,
                     "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE,
-                    "cache_size": len(self.embedding_cache)
+                    "cache_size": len(self.embedding_cache),
                 }
             else:
                 return {
@@ -323,7 +328,7 @@ class EmbeddingService:
                     "model_loaded": False,
                     "fallback_mode": True,
                     "sentence_transformers_available": SENTENCE_TRANSFORMERS_AVAILABLE,
-                    "error": "모델 로딩 실패"
+                    "error": "모델 로딩 실패",
                 }
 
         except Exception as e:
@@ -331,7 +336,7 @@ class EmbeddingService:
                 "status": "unhealthy",
                 "error": str(e),
                 "model_loaded": False,
-                "fallback_mode": True
+                "fallback_mode": True,
             }
 
     def clear_cache(self) -> int:
@@ -350,12 +355,10 @@ class DocumentEmbeddingService:
         self.embedding_service = embedding_service
 
     async def update_document_embeddings(
-        self,
-        document_ids: Optional[List[str]] = None,
-        batch_size: int = 10
+        self, document_ids: Optional[List[str]] = None, batch_size: int = 10
     ) -> Dict[str, Any]:
         """문서들의 임베딩 업데이트"""
-        from .database import db_manager, DocumentChunk, Embedding, text
+        from .database import DocumentChunk, Embedding, db_manager, text
 
         try:
             async with db_manager.async_session() as session:
@@ -363,22 +366,26 @@ class DocumentEmbeddingService:
                 if document_ids:
                     # 특정 문서들의 청크
                     doc_ids_str = "', '".join(document_ids)
-                    query = text(f"""
+                    query = text(
+                        f"""
                         SELECT c.chunk_id, c.text, c.doc_id
                         FROM chunks c
                         LEFT JOIN embeddings e ON c.chunk_id = e.chunk_id
                         WHERE c.doc_id IN ('{doc_ids_str}') AND e.chunk_id IS NULL
                         ORDER BY c.chunk_id
-                    """)
+                    """
+                    )
                 else:
                     # 모든 임베딩 없는 청크
-                    query = text("""
+                    query = text(
+                        """
                         SELECT c.chunk_id, c.text, c.doc_id
                         FROM chunks c
                         LEFT JOIN embeddings e ON c.chunk_id = e.chunk_id
                         WHERE e.chunk_id IS NULL
                         ORDER BY c.chunk_id
-                    """)
+                    """
+                    )
 
                 result = await session.execute(query)
                 chunks = result.fetchall()
@@ -388,7 +395,7 @@ class DocumentEmbeddingService:
                         "success": True,
                         "message": "모든 청크에 임베딩이 이미 존재합니다",
                         "updated_count": 0,
-                        "total_chunks": 0
+                        "total_chunks": 0,
                     }
 
                 logger.info(f"임베딩 업데이트 대상: {len(chunks)}개 청크")
@@ -398,7 +405,7 @@ class DocumentEmbeddingService:
                 total_chunks = len(chunks)
 
                 for i in range(0, len(chunks), batch_size):
-                    batch_chunks = chunks[i:i + batch_size]
+                    batch_chunks = chunks[i : i + batch_size]
                     batch_texts = [chunk[1] for chunk in batch_chunks]  # text 컬럼
 
                     # 배치 임베딩 생성
@@ -412,20 +419,25 @@ class DocumentEmbeddingService:
                             embedding = embeddings[j]
 
                             # 임베딩 테이블에 삽입
-                            insert_query = text("""
+                            insert_query = text(
+                                """
                                 INSERT INTO embeddings (chunk_id, vec, model_name)
                                 VALUES (:chunk_id, :vec, :model_name)
                                 ON CONFLICT (chunk_id) DO UPDATE SET
                                     vec = EXCLUDED.vec,
                                     model_name = EXCLUDED.model_name,
                                     created_at = NOW()
-                            """)
+                            """
+                            )
 
-                            await session.execute(insert_query, {
-                                "chunk_id": chunk_id,
-                                "vec": embedding,
-                                "model_name": self.embedding_service.model_name
-                            })
+                            await session.execute(
+                                insert_query,
+                                {
+                                    "chunk_id": chunk_id,
+                                    "vec": embedding,
+                                    "model_name": self.embedding_service.model_name,
+                                },
+                            )
 
                             updated_count += 1
 
@@ -441,16 +453,12 @@ class DocumentEmbeddingService:
                     "message": f"임베딩 업데이트 완료",
                     "updated_count": updated_count,
                     "total_chunks": total_chunks,
-                    "model_name": self.embedding_service.model_name
+                    "model_name": self.embedding_service.model_name,
                 }
 
         except Exception as e:
             logger.error(f"문서 임베딩 업데이트 실패: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "updated_count": 0
-            }
+            return {"success": False, "error": str(e), "updated_count": 0}
 
     async def get_embedding_status(self) -> Dict[str, Any]:
         """임베딩 상태 조회"""
@@ -466,7 +474,7 @@ class DocumentEmbeddingService:
                         SELECT COUNT(*) FROM chunks c
                         LEFT JOIN embeddings e ON c.chunk_id = e.chunk_id
                         WHERE e.chunk_id IS NULL
-                    """
+                    """,
                 }
 
                 stats = {}
@@ -475,22 +483,24 @@ class DocumentEmbeddingService:
                     stats[stat_name] = result.scalar() or 0
 
                 # 모델별 임베딩 분포
-                model_query = text("""
+                model_query = text(
+                    """
                     SELECT model_name, COUNT(*) as count
                     FROM embeddings
                     GROUP BY model_name
                     ORDER BY count DESC
-                """)
+                """
+                )
 
                 model_result = await session.execute(model_query)
-                model_distribution = {
-                    row[0]: row[1] for row in model_result.fetchall()
-                }
+                model_distribution = {row[0]: row[1] for row in model_result.fetchall()}
 
                 # 커버리지 계산
                 coverage_pct = 0.0
                 if stats["total_chunks"] > 0:
-                    coverage_pct = (stats["embedded_chunks"] / stats["total_chunks"]) * 100
+                    coverage_pct = (
+                        stats["embedded_chunks"] / stats["total_chunks"]
+                    ) * 100
 
                 return {
                     "statistics": stats,
@@ -498,7 +508,7 @@ class DocumentEmbeddingService:
                     "embedding_coverage_percent": coverage_pct,
                     "current_model": self.embedding_service.model_name,
                     "target_dimensions": self.embedding_service.TARGET_DIMENSIONS,
-                    "service_status": self.embedding_service.health_check()
+                    "service_status": self.embedding_service.health_check(),
                 }
 
         except Exception as e:
@@ -507,7 +517,7 @@ class DocumentEmbeddingService:
                 "error": str(e),
                 "statistics": {},
                 "model_distribution": {},
-                "embedding_coverage_percent": 0.0
+                "embedding_coverage_percent": 0.0,
             }
 
 
@@ -515,33 +525,45 @@ class DocumentEmbeddingService:
 embedding_service = EmbeddingService()
 document_embedding_service = DocumentEmbeddingService(embedding_service)
 
+
 # 편의 함수들
 async def generate_embedding(text: str, use_cache: bool = True) -> List[float]:
     """전역 임베딩 생성 함수"""
     return await embedding_service.generate_embedding(text, use_cache=use_cache)
 
-async def generate_embeddings(texts: List[str], batch_size: int = 32) -> List[List[float]]:
+
+async def generate_embeddings(
+    texts: List[str], batch_size: int = 32
+) -> List[List[float]]:
     """전역 배치 임베딩 생성 함수"""
-    return await embedding_service.batch_generate_embeddings(texts, batch_size=batch_size)
+    return await embedding_service.batch_generate_embeddings(
+        texts, batch_size=batch_size
+    )
+
 
 def calculate_similarity(emb1: List[float], emb2: List[float]) -> float:
     """전역 유사도 계산 함수"""
     return embedding_service.calculate_similarity(emb1, emb2)
 
+
 async def update_document_embeddings(
-    document_ids: Optional[List[str]] = None,
-    batch_size: int = 10
+    document_ids: Optional[List[str]] = None, batch_size: int = 10
 ) -> Dict[str, Any]:
     """문서 임베딩 업데이트 함수"""
-    return await document_embedding_service.update_document_embeddings(document_ids, batch_size)
+    return await document_embedding_service.update_document_embeddings(
+        document_ids, batch_size
+    )
+
 
 async def get_embedding_status() -> Dict[str, Any]:
     """임베딩 상태 조회 함수"""
     return await document_embedding_service.get_embedding_status()
 
+
 def get_service_info() -> Dict[str, Any]:
     """서비스 정보 조회 함수"""
     return embedding_service.get_model_info()
+
 
 def health_check() -> Dict[str, Any]:
     """서비스 헬스체크 함수"""

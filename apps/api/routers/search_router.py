@@ -9,17 +9,18 @@ Provides REST endpoints for hybrid search operations including:
 """
 
 import logging
-from typing import List, Dict, Any, Optional
-from datetime import datetime
-import uuid
-
-from fastapi import APIRouter, HTTPException, Query, Depends, status
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 
 # Import common schemas
 import sys
+import uuid
+from datetime import datetime
 from pathlib import Path as PathLib
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
 # from packages.common_schemas.common_schemas.models import (
@@ -27,7 +28,8 @@ sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 # )
 
 # Import from local common models
-from ..models.common_models import SearchRequest, SearchResponse, SearchHit, SourceMeta
+from ..models.common_models import SearchHit, SearchRequest, SearchResponse, SourceMeta
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -36,29 +38,37 @@ search_router = APIRouter(prefix="/search", tags=["Search"])
 
 # Additional models for search operations
 
+
 class SearchAnalytics(BaseModel):
     """Search analytics and statistics"""
+
     total_searches: int
     avg_latency_ms: float
     avg_results_count: float
     top_queries: List[Dict[str, Any]]
     search_patterns: Dict[str, int]
 
+
 class SearchConfig(BaseModel):
     """Search configuration"""
+
     bm25_weight: float = Field(0.5, ge=0.0, le=1.0)
     vector_weight: float = Field(0.5, ge=0.0, le=1.0)
     rerank_threshold: float = Field(0.7, ge=0.0, le=1.0)
     max_candidates: int = Field(100, ge=10, le=500)
     embedding_model: str = "text-embedding-ada-002"
 
+
 class ReindexRequest(BaseModel):
     """Request to reindex search corpus"""
+
     taxonomy_version: Optional[str] = None
     incremental: bool = False
     force: bool = False
 
+
 # Mock search service
+
 
 class SearchService:
     """Mock search service"""
@@ -74,9 +84,9 @@ class SearchService:
                 source=SourceMeta(
                     url="https://example.com/ml-guide",
                     title="Machine Learning Guide",
-                    date="2024-01-15"
+                    date="2024-01-15",
                 ),
-                taxonomy_path=["Technology", "AI", "Machine Learning"]
+                taxonomy_path=["Technology", "AI", "Machine Learning"],
             ),
             SearchHit(
                 chunk_id="doc789_chunk012",
@@ -85,10 +95,15 @@ class SearchService:
                 source=SourceMeta(
                     url="https://example.com/svm-tutorial",
                     title="SVM Tutorial",
-                    date="2024-01-10"
+                    date="2024-01-10",
                 ),
-                taxonomy_path=["Technology", "AI", "Machine Learning", "Supervised Learning"]
-            )
+                taxonomy_path=[
+                    "Technology",
+                    "AI",
+                    "Machine Learning",
+                    "Supervised Learning",
+                ],
+            ),
         ]
 
         return SearchResponse(
@@ -97,7 +112,7 @@ class SearchService:
             request_id=str(uuid.uuid4()),
             total_candidates=50,
             sources_count=12,
-            taxonomy_version="1.8.1"
+            taxonomy_version="1.8.1",
         )
 
     async def get_analytics(self) -> SearchAnalytics:
@@ -109,13 +124,9 @@ class SearchService:
             top_queries=[
                 {"query": "machine learning algorithms", "count": 234},
                 {"query": "deep learning neural networks", "count": 198},
-                {"query": "natural language processing", "count": 156}
+                {"query": "natural language processing", "count": 156},
             ],
-            search_patterns={
-                "Technology": 45,
-                "Science": 32,
-                "Business": 23
-            }
+            search_patterns={"Technology": 45, "Science": 32, "Business": 23},
         )
 
     async def get_config(self) -> SearchConfig:
@@ -132,20 +143,22 @@ class SearchService:
             "job_id": str(uuid.uuid4()),
             "status": "started",
             "estimated_duration_minutes": 15,
-            "incremental": request.incremental
+            "incremental": request.incremental,
         }
+
 
 # Dependency injection
 async def get_search_service() -> SearchService:
     """Get search service instance"""
     return SearchService()
 
+
 # API Endpoints
+
 
 @search_router.post("/", response_model=SearchResponse)
 async def search_documents(
-    request: SearchRequest,
-    service: SearchService = Depends(get_search_service)
+    request: SearchRequest, service: SearchService = Depends(get_search_service)
 ):
     """
     Perform hybrid search using BM25 and vector search with reranking
@@ -161,13 +174,13 @@ async def search_documents(
         if not request.q.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Search query cannot be empty"
+                detail="Search query cannot be empty",
             )
 
         if request.max_results > 100:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Maximum results limit is 100"
+                detail="Maximum results limit is 100",
             )
 
         # Perform search
@@ -177,13 +190,10 @@ async def search_documents(
         headers = {
             "X-Search-Latency": str(result.latency),
             "X-Request-ID": result.request_id,
-            "X-Total-Candidates": str(result.total_candidates or 0)
+            "X-Total-Candidates": str(result.total_candidates or 0),
         }
 
-        return JSONResponse(
-            content=result.dict(),
-            headers=headers
-        )
+        return JSONResponse(content=result.dict(), headers=headers)
 
     except HTTPException:
         raise
@@ -191,13 +201,12 @@ async def search_documents(
         logger.error(f"Search failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Search operation failed"
+            detail="Search operation failed",
         )
 
+
 @search_router.get("/analytics", response_model=SearchAnalytics)
-async def get_search_analytics(
-    service: SearchService = Depends(get_search_service)
-):
+async def get_search_analytics(service: SearchService = Depends(get_search_service)):
     """
     Get search analytics and performance metrics
 
@@ -215,13 +224,12 @@ async def get_search_analytics(
         logger.error(f"Failed to get search analytics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search analytics"
+            detail="Failed to retrieve search analytics",
         )
 
+
 @search_router.get("/config", response_model=SearchConfig)
-async def get_search_config(
-    service: SearchService = Depends(get_search_service)
-):
+async def get_search_config(service: SearchService = Depends(get_search_service)):
     """
     Get current search configuration
 
@@ -238,13 +246,13 @@ async def get_search_config(
         logger.error(f"Failed to get search configuration: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search configuration"
+            detail="Failed to retrieve search configuration",
         )
+
 
 @search_router.put("/config", response_model=SearchConfig)
 async def update_search_config(
-    config: SearchConfig,
-    service: SearchService = Depends(get_search_service)
+    config: SearchConfig, service: SearchService = Depends(get_search_service)
 ):
     """
     Update search configuration
@@ -259,7 +267,7 @@ async def update_search_config(
         if abs(config.bm25_weight + config.vector_weight - 1.0) > 0.01:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="BM25 and vector weights must sum to 1.0"
+                detail="BM25 and vector weights must sum to 1.0",
             )
 
         updated_config = await service.update_config(config)
@@ -271,13 +279,13 @@ async def update_search_config(
         logger.error(f"Failed to update search configuration: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update search configuration"
+            detail="Failed to update search configuration",
         )
+
 
 @search_router.post("/reindex")
 async def reindex_search_corpus(
-    request: ReindexRequest,
-    service: SearchService = Depends(get_search_service)
+    request: ReindexRequest, service: SearchService = Depends(get_search_service)
 ):
     """
     Trigger search index rebuild
@@ -295,8 +303,9 @@ async def reindex_search_corpus(
         logger.error(f"Reindexing failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to start reindexing operation"
+            detail="Failed to start reindexing operation",
         )
+
 
 @search_router.get("/status")
 async def get_search_status():
@@ -316,20 +325,20 @@ async def get_search_status():
                 "total_documents": 125847,
                 "total_chunks": 1567234,
                 "last_updated": "2025-01-14T10:30:00Z",
-                "index_size_mb": 2456.7
+                "index_size_mb": 2456.7,
             },
             "performance": {
                 "avg_search_latency_ms": 45.2,
                 "p95_search_latency_ms": 89.5,
                 "searches_per_minute": 237,
-                "cache_hit_rate": 0.73
+                "cache_hit_rate": 0.73,
             },
             "health_checks": {
                 "bm25_index": "healthy",
                 "vector_index": "healthy",
                 "reranker": "healthy",
-                "cache": "healthy"
-            }
+                "cache": "healthy",
+            },
         }
 
         return status_info
@@ -338,14 +347,15 @@ async def get_search_status():
         logger.error(f"Failed to get search status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search status"
+            detail="Failed to retrieve search status",
         )
+
 
 @search_router.post("/suggest")
 async def search_suggestions(
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
     limit: int = Query(5, ge=1, le=20, description="Maximum suggestions"),
-    service: SearchService = Depends(get_search_service)
+    service: SearchService = Depends(get_search_service),
 ):
     """
     Get search query suggestions and autocompletion
@@ -362,21 +372,18 @@ async def search_suggestions(
             f"{query} tutorial",
             f"{query} examples",
             f"{query} best practices",
-            f"{query} applications"
+            f"{query} applications",
         ][:limit]
 
-        return {
-            "query": query,
-            "suggestions": suggestions,
-            "total": len(suggestions)
-        }
+        return {"query": query, "suggestions": suggestions, "total": len(suggestions)}
 
     except Exception as e:
         logger.error(f"Failed to get search suggestions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search suggestions"
+            detail="Failed to retrieve search suggestions",
         )
+
 
 # Export router
 __all__ = ["search_router"]

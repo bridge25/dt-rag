@@ -5,14 +5,16 @@ Data access object for coverage_history table.
 Provides time-series coverage tracking for agents.
 """
 
-from typing import List, Optional
-from uuid import UUID
+import logging
 import uuid
 from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
+from uuid import UUID
+
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from apps.api.database import CoverageHistory
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ class CoverageHistoryDAO:
         overall_coverage: float,
         total_documents: int,
         total_chunks: int,
-        version: str = "1.0.0"
+        version: str = "1.0.0",
     ) -> UUID:
         """
         Insert coverage history record
@@ -56,7 +58,7 @@ class CoverageHistoryDAO:
             overall_coverage=overall_coverage,
             total_documents=total_documents,
             total_chunks=total_chunks,
-            version=version
+            version=version,
         )
 
         session.add(history)
@@ -75,7 +77,7 @@ class CoverageHistoryDAO:
         agent_id: UUID,
         from_date: Optional[datetime] = None,
         to_date: Optional[datetime] = None,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
     ) -> List[CoverageHistory]:
         """
         Query coverage history for agent

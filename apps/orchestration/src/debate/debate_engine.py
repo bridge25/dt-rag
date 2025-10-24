@@ -16,8 +16,8 @@ Architecture:
 import asyncio
 import logging
 import time
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from apps.orchestration.src.debate.agent_prompts import (
     AFFIRMATIVE_PROMPT_R1,
@@ -110,9 +110,7 @@ class DebateAgent:
 
         if opponent_answer is None:
             if self.role == "affirmative":
-                prompt = AFFIRMATIVE_PROMPT_R1.format(
-                    query=query, context=context_text
-                )
+                prompt = AFFIRMATIVE_PROMPT_R1.format(query=query, context=context_text)
             else:
                 prompt = CRITICAL_PROMPT_R1.format(query=query, context=context_text)
         else:
@@ -165,7 +163,9 @@ class DebateEngine:
         affirmative_task = self.affirmative_agent.generate_answer(
             query=query, context=context
         )
-        critical_task = self.critical_agent.generate_answer(query=query, context=context)
+        critical_task = self.critical_agent.generate_answer(
+            query=query, context=context
+        )
 
         affirmative_answer, critical_answer = await asyncio.gather(
             affirmative_task, critical_task
@@ -222,9 +222,7 @@ class DebateEngine:
 
         return affirmative_answer_r2, critical_answer_r2
 
-    async def _synthesize(
-        self, affirmative_answer: str, critical_answer: str
-    ) -> str:
+    async def _synthesize(self, affirmative_answer: str, critical_answer: str) -> str:
         """
         Synthesize final answer from both perspectives
 
@@ -264,7 +262,9 @@ class DebateEngine:
             return final_answer
 
         except Exception as e:
-            logger.error(f"Synthesis failed after {time.time() - synth_start:.2f}s: {e}")
+            logger.error(
+                f"Synthesis failed after {time.time() - synth_start:.2f}s: {e}"
+            )
             raise
 
     async def run_debate(

@@ -1,9 +1,10 @@
 import re
-from typing import List
 from dataclasses import dataclass
+from typing import List
 
 try:
     import tiktoken
+
     TIKTOKEN_AVAILABLE = True
 except ImportError:
     TIKTOKEN_AVAILABLE = False
@@ -162,9 +163,13 @@ class IntelligentChunker:
 
         return chunks
 
-    def calculate_sentence_boundary_preservation_rate(self, chunks: List[Chunk]) -> float:
+    def calculate_sentence_boundary_preservation_rate(
+        self, chunks: List[Chunk]
+    ) -> float:
         if not chunks:
             return 0.0
 
-        preserved_count = sum(1 for chunk in chunks if chunk.sentence_boundary_preserved)
+        preserved_count = sum(
+            1 for chunk in chunks if chunk.sentence_boundary_preserved
+        )
         return preserved_count / len(chunks)

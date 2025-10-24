@@ -1,7 +1,7 @@
 # @CODE:SOFTQ-001:0.1 | SPEC: SPEC-SOFTQ-001.md | TEST: tests/unit/test_state_encoder.py
 
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 

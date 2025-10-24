@@ -2,10 +2,10 @@
 """
 Experience Replay Buffer for Soft Q-learning Bandit (SPEC-REPLAY-001)
 """
-from collections import deque
 import asyncio
-import random
 import logging
+import random
+from collections import deque
 from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
@@ -77,9 +77,7 @@ class ReplayBuffer:
             else:
                 logger.debug(f"Experience added (buffer_size={len(self.buffer)})")
 
-    async def sample(
-        self, batch_size: int = 32
-    ) -> List[Tuple[str, int, float, str]]:
+    async def sample(self, batch_size: int = 32) -> List[Tuple[str, int, float, str]]:
         """
         Sample random batch from buffer.
 

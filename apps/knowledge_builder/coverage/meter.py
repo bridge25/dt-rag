@@ -1,5 +1,6 @@
 # @CODE:AGENT-GROWTH-001:DOMAIN
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from .models import CoverageMetrics, CoverageResult, Gap
 
 
@@ -26,9 +27,11 @@ class CoverageMeterService:
             from apps.core.db_session import async_session
             self._session_factory = async_session
 
-        from sqlalchemy import select, func
-        from apps.api.database import DocTaxonomy, TaxonomyNode, DocumentChunk
         import uuid
+
+        from sqlalchemy import func, select
+
+        from apps.api.database import DocTaxonomy, DocumentChunk, TaxonomyNode
 
         async with self._session_factory() as session:
             total_nodes_result = await session.execute(
@@ -96,8 +99,9 @@ class CoverageMeterService:
         root_node_ids: List[str],
         version: str
     ) -> List[str]:
-        from apps.api.taxonomy_dag import taxonomy_dag_manager
         import networkx as nx
+
+        from apps.api.taxonomy_dag import taxonomy_dag_manager
 
         graph = await taxonomy_dag_manager._build_networkx_graph(version)
 

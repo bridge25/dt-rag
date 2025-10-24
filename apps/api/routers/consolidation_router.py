@@ -4,25 +4,27 @@ Consolidation API Router - 메모리 정리 및 최적화
 """
 
 import logging
-from typing import Dict, Any, Optional
-from datetime import datetime
+import os
 
-from fastapi import APIRouter, HTTPException, Depends, status
+# Import ConsolidationPolicy
+import sys
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+
+# Import database session
+from ..database import db_manager
 
 # Import API Key authentication
 from ..deps import verify_api_key
 from ..security.api_key_storage import APIKeyInfo
 
-# Import database session
-from ..database import db_manager
-
-# Import ConsolidationPolicy
-import sys
-import os
-
 # Add orchestration to path
-orchestration_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../apps/orchestration/src"))
+orchestration_src = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../../apps/orchestration/src")
+)
 if orchestration_src not in sys.path:
     sys.path.insert(0, orchestration_src)
 
@@ -37,14 +39,20 @@ router = APIRouter(prefix="/consolidation", tags=["consolidation"])
 # Pydantic Models
 class ConsolidationRequest(BaseModel):
     """Consolidation 실행 요청"""
+
     dry_run: bool = Field(default=False, description="시뮬레이션 모드 (실제 변경 없음)")
-    threshold: float = Field(default=30.0, description="성공률 임계값 (%)", ge=0, le=100)
-    similarity_threshold: float = Field(default=0.95, description="유사도 임계값", ge=0, le=1.0)
+    threshold: float = Field(
+        default=30.0, description="성공률 임계값 (%)", ge=0, le=100
+    )
+    similarity_threshold: float = Field(
+        default=0.95, description="유사도 임계값", ge=0, le=1.0
+    )
     inactive_days: int = Field(default=90, description="비활성 케이스 기준 (일)", ge=1)
 
 
 class ConsolidationResponse(BaseModel):
     """Consolidation 실행 응답"""
+
     removed_cases: int
     merged_cases: int
     archived_cases: int
@@ -55,6 +63,7 @@ class ConsolidationResponse(BaseModel):
 
 class ConsolidationSummaryResponse(BaseModel):
     """Consolidation 후보 요약"""
+
     total_active_cases: int
     low_performance_candidates: int
     inactive_candidates: int
@@ -65,8 +74,7 @@ class ConsolidationSummaryResponse(BaseModel):
 # API Endpoints
 @router.post("/run", response_model=ConsolidationResponse)
 async def run_consolidation(
-    request: ConsolidationRequest,
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    request: ConsolidationRequest, api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     메모리 Consolidation 실행
@@ -94,14 +102,12 @@ async def run_consolidation(
         logger.error(f"Consolidation 실행 실패: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Consolidation 실행 중 오류 발생: {str(e)}"
+            detail=f"Consolidation 실행 중 오류 발생: {str(e)}",
         )
 
 
 @router.post("/dry-run", response_model=ConsolidationResponse)
-async def dry_run_consolidation(
-    api_key: APIKeyInfo = Depends(verify_api_key)
-):
+async def dry_run_consolidation(api_key: APIKeyInfo = Depends(verify_api_key)):
     """
     Consolidation 시뮬레이션 (변경 없음)
 
@@ -119,14 +125,12 @@ async def dry_run_consolidation(
         logger.error(f"Consolidation dry-run 실패: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Consolidation dry-run 중 오류 발생: {str(e)}"
+            detail=f"Consolidation dry-run 중 오류 발생: {str(e)}",
         )
 
 
 @router.get("/summary", response_model=ConsolidationSummaryResponse)
-async def get_consolidation_summary(
-    api_key: APIKeyInfo = Depends(verify_api_key)
-):
+async def get_consolidation_summary(api_key: APIKeyInfo = Depends(verify_api_key)):
     """
     Consolidation 후보 요약 조회
 
@@ -143,7 +147,7 @@ async def get_consolidation_summary(
         logger.error(f"Consolidation 요약 조회 실패: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Consolidation 요약 조회 중 오류 발생: {str(e)}"
+            detail=f"Consolidation 요약 조회 중 오류 발생: {str(e)}",
         )
 
 
@@ -153,5 +157,5 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "consolidation",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
