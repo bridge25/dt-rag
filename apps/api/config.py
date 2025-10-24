@@ -215,7 +215,7 @@ class APIConfig:
     testing: bool = False
 
     # Server
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # nosec B104 - intentional for container deployment
     port: int = 8000
     title: str = "Dynamic Taxonomy RAG API"
     version: str = "1.8.1"

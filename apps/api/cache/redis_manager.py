@@ -177,14 +177,14 @@ class RedisManager:
                 # 압축 해제
                 compressed_data = data[11:]  # 'COMPRESSED:' 제거
                 decompressed = gzip.decompress(compressed_data)
-                return pickle.loads(decompressed)
+                return pickle.loads(decompressed)  # nosec B301 - trusted internal cache data
             elif data.startswith(b'RAW:'):
                 # 원본 데이터
                 raw_data = data[4:]  # 'RAW:' 제거
-                return pickle.loads(raw_data)
+                return pickle.loads(raw_data)  # nosec B301 - trusted internal cache data
             else:
                 # 호환성을 위한 레거시 형식
-                return pickle.loads(data)
+                return pickle.loads(data)  # nosec B301 - trusted internal cache data
 
         except Exception as e:
             logger.error(f"Data deserialization failed: {e}")

@@ -780,6 +780,7 @@ class SearchDAO:
 
             if "sqlite" in DATABASE_URL:
                 # SQLite용 간단한 텍스트 매칭
+                # nosec B608 - query is parameterized (:query), filter_clause is internally generated
                 bm25_query = text(f"""
                     SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
                            CASE

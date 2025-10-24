@@ -239,7 +239,7 @@ class HybridSearchCache:
         """캐시 키 생성"""
         # 정렬된 파라미터로 일관된 키 생성
         key_data = json.dumps(kwargs, sort_keys=True, ensure_ascii=False)
-        key_hash = hashlib.md5(key_data.encode()).hexdigest()
+        key_hash = hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
         return f"{prefix}{key_hash}"
 
     async def get_search_results(
