@@ -1,9 +1,12 @@
 ---
 id: TEST-004
-version: 0.0.1
-status: draft
+version: 1.0.0
+status: completed
 created: 2025-10-23
+updated: 2025-10-24
+completed: 2025-10-24
 author: @Alfred
+implementer: @tdd-implementer
 priority: low
 category: testing
 labels: [security, authorization, validation, vulnerability]
@@ -16,18 +19,29 @@ scope:
   packages:
     - apps/api
   files:
-    - apps/api/dependencies/auth.py
+    - apps/api/deps.py
+    - apps/api/security/api_key_storage.py
     - apps/api/routers/*.py
   tests:
     - tests/security/test_authentication.py
     - tests/security/test_input_validation.py
-    - tests/security/test_sql_injection.py
+    - tests/security/test_sql_injection_prevention.py
+    - tests/security/test_xss_prevention.py
     - tests/security/test_rate_limiting.py
+  scripts:
+    - scripts/security_scan.sh
 ---
 
 # @SPEC:TEST-004 보안 및 인증 테스트
 
 ## HISTORY
+
+### v1.0.0 (2025-10-24)
+- **COMPLETED**: 보안 및 인증 테스트 구현 완료
+- **IMPLEMENTATION**: TDD로 6개 TAG 완료 (TEST-004-001 ~ TEST-004-006)
+- **TESTS**: 29개 보안 테스트 통과 (authentication: 5, input validation: 6, SQL injection: 6, XSS: 6, rate limiting: 6)
+- **SECURITY TOOLS**: bandit, safety를 requirements.txt에 추가, security_scan.sh 스크립트 생성
+- **COVERAGE**: API 키 인증, 입력 검증, SQL Injection 방어, XSS 방어, Rate Limiting 검증 완료
 
 ### v0.0.1 (2025-10-23)
 - **INITIAL**: 보안 및 인증 테스트 SPEC 초안 작성
