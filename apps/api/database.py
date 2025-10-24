@@ -8,8 +8,8 @@ from typing import List, Dict, Any, Optional, Tuple
 import asyncpg
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON, text
+from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
+from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, INT4RANGE
 from sqlalchemy.types import TypeDecorator, TEXT
 import json
@@ -218,6 +218,41 @@ class CaseBank(Base):
     success_rate: Mapped[float] = mapped_column(Float, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+
+class ExecutionLog(Base):
+    __tablename__ = "execution_log"
+
+    log_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    case_id: Mapped[str] = mapped_column(Text, ForeignKey("case_bank.case_id"), nullable=False)
+    success: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    error_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    execution_time_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    context: Mapped[Optional[Dict[str, Any]]] = mapped_column(get_json_type(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=text('CURRENT_TIMESTAMP'),
+        nullable=False
+    )
+
+    case = relationship("CaseBank", backref="execution_logs")
+
+class CaseBankArchive(Base):
+    __tablename__ = "case_bank_archive"
+
+    archive_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    case_id: Mapped[str] = mapped_column(String, nullable=False)
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+    response_text: Mapped[str] = mapped_column(Text, nullable=False)
+    category_path: Mapped[List[str]] = mapped_column(get_array_type(String), nullable=False)
+    query_vector: Mapped[List[float]] = mapped_column(get_array_type(Float), nullable=False)
+    quality_score: Mapped[float] = mapped_column(Float, default=0.0)
+    usage_count: Mapped[int] = mapped_column(Integer, default=0)
+    success_rate: Mapped[float] = mapped_column(Float, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    archived_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    archive_reason: Mapped[str] = mapped_column(String(50), nullable=False)
 
 # 데이터베이스 연결 클래스
 class DatabaseManager:
