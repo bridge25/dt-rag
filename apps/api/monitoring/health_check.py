@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH5
 """
 시스템 헬스 체크 및 의존성 모니터링
 """
@@ -5,13 +6,13 @@
 import asyncio
 import logging
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 
 import aiohttp
-import psutil
+import psutil  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class ComponentHealth:
     response_time_ms: Optional[float] = None
     last_check: Optional[datetime] = None
     error_message: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         result = asdict(self)
@@ -161,7 +162,7 @@ class HealthChecker:
                 async with db_manager.async_session() as session:
                     # 간단한 쿼리 실행
                     result = await session.execute(text("SELECT 1"))
-                    await result.fetchone()
+                    result.fetchone()
 
                 response_time = (time.time() - start_time) * 1000
 
@@ -341,11 +342,14 @@ class HealthChecker:
             )
 
         try:
-            result = await asyncio.wait_for(
-                self.health_checks[name](), timeout=self.timeout
+            check_result = cast(
+                ComponentHealth,
+                await asyncio.wait_for(
+                    self.health_checks[name](), timeout=self.timeout
+                ),
             )
-            self.last_results[name] = result
-            return result
+            self.last_results[name] = check_result
+            return check_result
 
         except asyncio.TimeoutError:
             logger.warning(f"Health check for {name} timed out")
@@ -389,7 +393,7 @@ class HealthChecker:
                         error_message=str(result),
                     )
                 )
-            else:
+            elif isinstance(result, ComponentHealth):
                 component_results.append(result)
 
         return component_results
@@ -417,8 +421,8 @@ class HealthChecker:
             "storage": 0.8,  # 중요하지만 필수는 아님
         }
 
-        total_weight = 0
-        weighted_score = 0
+        total_weight = 0.0
+        weighted_score = 0.0
 
         for component in components:
             importance = component_importance.get(component.name, 0.5)

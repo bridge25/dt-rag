@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH5
 """
 Comprehensive Performance Monitoring System
 Real-time monitoring for PostgreSQL + pgvector + RAG system
@@ -11,7 +12,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-import psutil
+import psutil  # type: ignore[import-untyped]
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -80,7 +81,7 @@ class RAGPerformanceMonitor:
         }
 
         self.running = False
-        self._monitor_task = None
+        self._monitor_task: Optional[asyncio.Task[None]] = None
 
     async def start_monitoring(self, session_factory: Any) -> None:
         """Start continuous performance monitoring"""
@@ -99,7 +100,7 @@ class RAGPerformanceMonitor:
             try:
                 await self._monitor_task
             except asyncio.CancelledError:
-                pass
+                pass  # Expected when task is cancelled
         logger.info("Performance monitoring stopped")
 
     async def _monitoring_loop(self, session_factory: Any) -> None:
@@ -168,9 +169,9 @@ class RAGPerformanceMonitor:
 
             for row in conn_stats:
                 if row.state == "active":
-                    metrics.db_connections_active = row.count
+                    metrics.db_connections_active = int(row[1])  # count column
                 elif row.state == "idle":
-                    metrics.db_connections_idle = row.count
+                    metrics.db_connections_idle = int(row[1])  # count column
 
             # Query performance
             query_stats = await session.execute(
@@ -186,10 +187,10 @@ class RAGPerformanceMonitor:
                 )
             )
 
-            row = query_stats.fetchone()
-            if row:
+            row_result = query_stats.fetchone()
+            if row_result:
                 metrics.db_query_avg_time = (
-                    float(row.avg_time) / 1000
+                    float(row_result.avg_time) / 1000
                 )  # Convert to seconds
 
             # Slow queries (>1 second)
@@ -212,8 +213,8 @@ class RAGPerformanceMonitor:
         """Collect search engine metrics"""
         try:
             # Import here to avoid circular imports
-            from ..search.optimization import get_performance_monitor
-            from ..search.optimized_hybrid_engine import get_hybrid_engine
+            from ..search.optimization import get_performance_monitor  # type: ignore[import-not-found]
+            from ..search.optimized_hybrid_engine import get_hybrid_engine  # type: ignore[import-not-found]
 
             # Get performance monitor
             try:

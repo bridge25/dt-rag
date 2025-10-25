@@ -475,5 +475,3 @@ def calculate_overall_score(metrics):
         if value is not None:
             scores.append(value)
     return sum(scores) / len(scores) if scores else 0.0
-
-)
