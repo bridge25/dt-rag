@@ -21,7 +21,7 @@ class ReplayBuffer:
     - Random batch sampling for experience replay
     """
 
-    def __init__(self, max_size: int = 10000):
+    def __init__(self, max_size: int = 10000) -> None:
         """
         Initialize replay buffer.
 

@@ -223,7 +223,7 @@ if config.security.trusted_hosts:
 
 # Request logging and monitoring middleware
 @app.middleware("http")
-async def log_requests_and_track_metrics(request: Request, call_next) -> None:
+async def log_requests_and_track_metrics(request: Request, call_next: Any) -> None:
     """Log all HTTP requests and track performance metrics"""
     start_time = time.time()
 

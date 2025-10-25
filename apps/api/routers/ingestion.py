@@ -50,7 +50,7 @@ async def upload_document(
     priority: int = Form(5),
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
     http_request: Request = None,
-):
+) -> None:
     try:
         correlation_id = (
             http_request.headers.get("X-Correlation-ID")
@@ -153,7 +153,7 @@ async def upload_document(
 async def get_job_status(
     job_id: str,
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-):
+) -> None:
     try:
         status_data = await orchestrator.get_job_status(job_id)
 

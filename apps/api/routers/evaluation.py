@@ -73,7 +73,7 @@ async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
     api_key: str = Depends(verify_api_key),
-):
+) -> None:
     """
     Evaluate a single RAG response using RAGAS metrics
 
@@ -133,7 +133,7 @@ async def evaluate_batch(
     request: BatchEvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
     api_key: str = Depends(verify_api_key),
-):
+) -> None:
     """
     Evaluate multiple RAG responses in batch
 
@@ -235,7 +235,7 @@ async def get_quality_thresholds(api_key: str = Depends(verify_api_key)) -> None
 @evaluation_router.put("/thresholds", response_model=QualityThresholds)
 async def update_quality_thresholds(
     thresholds: QualityThresholds, api_key: str = Depends(verify_api_key)
-):
+) -> None:
     """
     Update quality thresholds for monitoring
 

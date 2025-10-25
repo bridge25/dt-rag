@@ -15,7 +15,7 @@ class JobQueue:
     IDEMPOTENCY_KEY_PREFIX = "ingestion:idempotency"
     PRIORITY_QUEUES = ["high", "medium", "low"]
 
-    def __init__(self, redis_manager: Optional[RedisManager] = None):
+    def __init__(self, redis_manager: Optional[RedisManager] = None) -> None:
         self.redis_manager = redis_manager
         self._redis_initialized = False
 

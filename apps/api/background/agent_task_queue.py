@@ -29,7 +29,7 @@ class AgentTaskQueue:
 
     QUEUE_KEY_PREFIX = "agent:queue"
 
-    def __init__(self, job_queue: Optional[JobQueue] = None):
+    def __init__(self, job_queue: Optional[JobQueue] = None) -> None:
         """
         Initialize AgentTaskQueue
 

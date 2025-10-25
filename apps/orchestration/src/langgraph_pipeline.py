@@ -126,7 +126,7 @@ class SimpleGraph:
 class LangGraphPipeline:
     """B-O3 7-Step 파이프라인 (A팀 API 연동, PRD 준수)"""
 
-    def __init__(self, a_team_base_url: str = "http://localhost:8001"):
+    def __init__(self, a_team_base_url: str = "http://localhost:8001") -> None:
         self.a_team_base_url = a_team_base_url
         self.client = httpx.AsyncClient()
         self.graph = self._build_graph()
@@ -297,7 +297,7 @@ class LangGraphPipeline:
             else:
                 return "general_answer"
 
-        async def generate_reasoning(strategy_type) -> None:
+        async def generate_reasoning(strategy_type: Any) -> None:
             """전략별 추론 생성"""
             if strategy_type == "search_results_summary":
                 return [

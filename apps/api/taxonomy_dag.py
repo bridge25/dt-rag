@@ -906,7 +906,7 @@ class TaxonomyDAGManager:
 
     async def _restore_from_rollback_data(
         self, session: AsyncSession, rollback_data: Dict[str, Any]
-    ):
+    ) -> None:
         """Restore entities from rollback data"""
 
         # Restore nodes

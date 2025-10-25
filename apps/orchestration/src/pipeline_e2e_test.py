@@ -244,7 +244,7 @@ class PipelineE2ETest:
         )
         return result
 
-    def _validate_response(self, response, expected: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_response(self, response: Any, expected: Dict[str, Any]) -> Dict[str, Any]:
         """응답 검증"""
         validation = {}
 
@@ -289,7 +289,7 @@ class PipelineE2ETest:
         # 병렬 실행 (최대 5개 동시)
         semaphore = asyncio.Semaphore(5)
 
-        async def run_with_semaphore(test_case) -> None:
+        async def run_with_semaphore(test_case: Any) -> None:
             async with semaphore:
                 return await self.run_single_test(test_case)
 

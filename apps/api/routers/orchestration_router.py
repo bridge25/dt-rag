@@ -222,7 +222,7 @@ async def get_pipeline_service() -> PipelineService:
 @orchestration_router.post("/execute", response_model=PipelineResponse)
 async def execute_pipeline(
     request: PipelineRequest, service: PipelineService = Depends(get_pipeline_service)
-):
+) -> None:
     """
     Execute the complete 7-step RAG pipeline
 
@@ -272,7 +272,7 @@ async def execute_pipeline_async(
     request: PipelineRequest,
     background_tasks: BackgroundTasks,
     service: PipelineService = Depends(get_pipeline_service),
-):
+) -> None:
     """
     Start asynchronous pipeline execution
 
@@ -303,7 +303,7 @@ async def execute_pipeline_async(
 @orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)
 async def get_pipeline_job(
     job_id: str, service: PipelineService = Depends(get_pipeline_service)
-):
+) -> None:
     """
     Get pipeline job status and results
 
@@ -358,7 +358,7 @@ async def get_pipeline_config(service: PipelineService = Depends(get_pipeline_se
 @orchestration_router.put("/config", response_model=PipelineConfig)
 async def update_pipeline_config(
     config: PipelineConfig, service: PipelineService = Depends(get_pipeline_service)
-):
+) -> None:
     """
     Update pipeline configuration
 
@@ -391,7 +391,7 @@ async def update_pipeline_config(
 @orchestration_router.get("/analytics", response_model=PipelineAnalytics)
 async def get_pipeline_analytics(
     service: PipelineService = Depends(get_pipeline_service),
-):
+) -> None:
     """
     Get pipeline analytics and performance metrics
 

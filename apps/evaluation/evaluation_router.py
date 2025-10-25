@@ -96,7 +96,7 @@ async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> None:
     """
     Evaluate RAG response using RAGAS metrics
 
@@ -141,7 +141,7 @@ async def evaluate_rag_response(
 async def evaluate_batch(
     request: EvaluationBatchRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
-):
+) -> None:
     """
     Batch evaluate multiple RAG responses
 
@@ -235,7 +235,7 @@ async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_mo
 async def get_quality_trends(
     hours: int = Query(24, ge=1, le=168, description="Hours of trend data to retrieve"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> None:
     """
     Get quality trends over specified time period
 
@@ -257,7 +257,7 @@ async def get_quality_trends(
 async def get_quality_alerts(
     active_only: bool = Query(True, description="Only return active alerts"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> None:
     """
     Get quality monitoring alerts
 
@@ -279,7 +279,7 @@ async def get_quality_alerts(
 async def update_quality_thresholds(
     thresholds: QualityThresholds,
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> None:
     """
     Update quality monitoring thresholds
 
@@ -309,7 +309,7 @@ async def update_quality_thresholds(
 async def create_experiment(
     config: ExperimentConfig,
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
-):
+) -> None:
     """
     Create new A/B testing experiment
 
@@ -339,7 +339,7 @@ async def create_experiment(
 @evaluation_router.post("/experiments/{experiment_id}/start")
 async def start_experiment(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
-):
+) -> None:
     """
     Start running an A/B testing experiment
 
@@ -376,7 +376,7 @@ async def stop_experiment(
     experiment_id: str,
     reason: str = Query("manual_stop", description="Reason for stopping experiment"),
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
-):
+) -> None:
     """
     Stop a running A/B testing experiment
 
@@ -412,7 +412,7 @@ async def stop_experiment(
 @evaluation_router.get("/experiments/{experiment_id}/status")
 async def get_experiment_status(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
-):
+) -> None:
     """
     Get current status of A/B testing experiment
 
@@ -443,7 +443,7 @@ async def get_experiment_status(
 )
 async def get_experiment_results(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
-):
+) -> None:
     """
     Get detailed results of A/B testing experiment
 
@@ -483,7 +483,7 @@ async def deploy_canary(
         60, ge=10, le=1440, description="Monitoring duration in minutes"
     ),
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
-):
+) -> None:
     """
     Deploy and monitor canary release
 
@@ -586,7 +586,7 @@ async def validate_dataset(entries: List[DatasetEntry]) -> DatasetValidationResu
 async def run_dataset_benchmark(
     dataset_id: str = Query(..., description="Golden dataset ID to benchmark against"),
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
-):
+) -> None:
     """
     Run benchmark evaluation against golden dataset
 
@@ -642,7 +642,7 @@ async def run_dataset_benchmark(
 @evaluation_router.get("/analytics/summary")
 async def get_evaluation_analytics(
     days: int = Query(7, ge=1, le=90, description="Days of analytics data")
-):
+) -> None:
     """
     Get comprehensive evaluation analytics
 
@@ -710,7 +710,7 @@ async def get_evaluation_analytics(
 
 async def _store_evaluation_result(
     request: EvaluationRequest, result: EvaluationResult
-):
+) -> None:
     """Store evaluation result in database"""
     try:
         async with db_manager.async_session() as session:
@@ -792,7 +792,7 @@ def _summarize_batch_results(results: List[EvaluationResult]) -> Dict[str, Any]:
     }
 
 
-def _identify_system_strengths(stats) -> List[str]:
+def _identify_system_strengths(stats: Any) -> List[str]:
     """Identify system strengths from statistics"""
     strengths = []
 
@@ -806,7 +806,7 @@ def _identify_system_strengths(stats) -> List[str]:
     return strengths
 
 
-def _identify_improvement_areas(stats) -> List[str]:
+def _identify_improvement_areas(stats: Any) -> List[str]:
     """Identify areas needing improvement from statistics"""
     improvements = []
 

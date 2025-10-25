@@ -196,7 +196,7 @@ class ExperimentTracker:
 
     async def record_experiment_result(
         self, experiment_id: str, user_id: str, evaluation: EvaluationResult
-    ):
+    ) -> None:
         """Record evaluation result for experiment analysis"""
         try:
             if experiment_id not in self.active_experiments:

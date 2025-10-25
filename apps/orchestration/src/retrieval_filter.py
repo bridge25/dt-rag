@@ -24,7 +24,7 @@ class FilterResult:
 class CategoryFilter:
     """카테고리 경로 기반 필터"""
 
-    def __init__(self, allowed_category_paths: List[List[str]]):
+    def __init__(self, allowed_category_paths: List[List[str]]) -> None:
         """
         Args:
             allowed_category_paths: 허용된 카테고리 경로 목록
@@ -203,7 +203,7 @@ class AuditLogger:
         result_count: int,
         blocked_count: int,
         request_id: Optional[str] = None,
-    ):
+    ) -> None:
         """
         접근 로그 기록
 

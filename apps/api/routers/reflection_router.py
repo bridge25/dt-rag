@@ -94,7 +94,7 @@ async def get_reflection_engine() -> None:
 @router.post("/analyze", response_model=ReflectionAnalysisResponse)
 async def analyze_case_performance(
     request: ReflectionAnalysisRequest, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> None:
     """
     단일 케이스 성능 분석
 
@@ -149,7 +149,7 @@ async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) ->
 async def generate_improvement_suggestions(
     request: ImprovementSuggestionsRequest,
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> None:
     """
     개선 제안 생성 (LLM 기반)
 

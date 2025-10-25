@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class MLClassifier:
     """Sentence-BERT 기반 의미론적 분류기"""
 
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2") -> None:
         """
         Args:
             model_name: Hugging Face 모델 이름

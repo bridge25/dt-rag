@@ -37,7 +37,7 @@ class AgentTaskWorker:
     - Webhook: sends completion notification if webhook_url present
     """
 
-    def __init__(self, worker_id: int, timeout: int = 300):
+    def __init__(self, worker_id: int, timeout: int = 300) -> None:
         """
         Initialize AgentTaskWorker
 
@@ -208,8 +208,8 @@ class AgentTaskWorker:
                 )
 
     async def _calculate_coverage(
-        self, session, task: BackgroundTask, job_data: Dict[str, Any]
-    ):
+        self, session: Any, task: BackgroundTask, job_data: Dict[str, Any]
+    ) -> Any:
         """
         Calculate coverage with cancellation checks
 
@@ -250,7 +250,7 @@ class AgentTaskWorker:
 
     async def _send_webhook(
         self, task: BackgroundTask, job_data: Dict[str, Any], webhook_url: str
-    ):
+    ) -> None:
         """
         Send webhook notification
 

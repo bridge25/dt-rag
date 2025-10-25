@@ -159,7 +159,7 @@ async def get_search_service() -> SearchService:
 @search_router.post("/", response_model=SearchResponse)
 async def search_documents(
     request: SearchRequest, service: SearchService = Depends(get_search_service)
-):
+) -> None:
     """
     Perform hybrid search using BM25 and vector search with reranking
 
@@ -253,7 +253,7 @@ async def get_search_config(service: SearchService = Depends(get_search_service)
 @search_router.put("/config", response_model=SearchConfig)
 async def update_search_config(
     config: SearchConfig, service: SearchService = Depends(get_search_service)
-):
+) -> None:
     """
     Update search configuration
 
@@ -286,7 +286,7 @@ async def update_search_config(
 @search_router.post("/reindex")
 async def reindex_search_corpus(
     request: ReindexRequest, service: SearchService = Depends(get_search_service)
-):
+) -> None:
     """
     Trigger search index rebuild
 
@@ -356,7 +356,7 @@ async def search_suggestions(
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
     limit: int = Query(5, ge=1, le=20, description="Maximum suggestions"),
     service: SearchService = Depends(get_search_service),
-):
+) -> None:
     """
     Get search query suggestions and autocompletion
 

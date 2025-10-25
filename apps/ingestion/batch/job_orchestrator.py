@@ -38,7 +38,7 @@ class JobOrchestrator:
         job_queue: Optional[JobQueue] = None,
         embedding_service: Optional[EmbeddingService] = None,
         max_workers: int = 10,
-    ):
+    ) -> None:
         self.job_queue = job_queue or JobQueue()
         self.embedding_service = embedding_service or EmbeddingService()
         self.max_workers = max_workers

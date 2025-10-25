@@ -22,7 +22,7 @@ logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 class ATaxonomyAPIClient:
     def __init__(
         self, base_url: str = "http://localhost:8001", api_key: Optional[str] = None
-    ):
+    ) -> None:
         self.base_url = base_url
         self.headers = {"Content-Type": "application/json"}
         if api_key:

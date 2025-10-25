@@ -75,7 +75,7 @@ class ConsolidationSummaryResponse(BaseModel):
 @router.post("/run", response_model=ConsolidationResponse)
 async def run_consolidation(
     request: ConsolidationRequest, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> None:
     """
     메모리 Consolidation 실행
 

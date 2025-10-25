@@ -41,7 +41,7 @@ class MemoryThreshold:
 class PipelineRetryHandler:
     """파이프라인 재시도 처리기"""
 
-    def __init__(self, config: Optional[RetryConfig] = None):
+    def __init__(self, config: Optional[RetryConfig] = None) -> None:
         self.config = config or RetryConfig()
 
     async def execute_with_retry(self, func: Callable, *args, **kwargs) -> Any:
@@ -93,7 +93,7 @@ class PipelineRetryHandler:
 class MemoryMonitor:
     """메모리 모니터링 시스템"""
 
-    def __init__(self, thresholds: Optional[MemoryThreshold] = None):
+    def __init__(self, thresholds: Optional[MemoryThreshold] = None) -> None:
         self.thresholds = thresholds or MemoryThreshold()
         self.process = psutil.Process(os.getpid())
         self.peak_memory = 0.0
@@ -249,7 +249,7 @@ class PipelineResilienceManager:
         self,
         retry_config: Optional[RetryConfig] = None,
         memory_thresholds: Optional[MemoryThreshold] = None,
-    ):
+    ) -> None:
         self.retry_handler = PipelineRetryHandler(retry_config)
         self.memory_monitor = MemoryMonitor(memory_thresholds)
         self.monitoring_task: Optional[asyncio.Task] = None
@@ -334,7 +334,7 @@ def get_resilience_manager() -> PipelineResilienceManager:
 def with_retry(retry_config: Optional[RetryConfig] = None) -> None:
     """재시도 데코레이터"""
 
-    def decorator(func) -> None:
+    def decorator(func: Any) -> None:
         handler = PipelineRetryHandler(retry_config)
 
         async def wrapper(*args, **kwargs) -> None:
@@ -348,7 +348,7 @@ def with_retry(retry_config: Optional[RetryConfig] = None) -> None:
 def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None) -> None:
     """메모리 모니터링 데코레이터"""
 
-    def decorator(func) -> None:
+    def decorator(func: Any) -> None:
         monitor = MemoryMonitor(thresholds)
 
         async def wrapper(*args, **kwargs) -> None:

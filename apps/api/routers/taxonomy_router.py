@@ -213,7 +213,7 @@ async def list_taxonomy_versions(
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-):
+) -> None:
     """
     List all available taxonomy versions with pagination
 
@@ -265,7 +265,7 @@ async def get_taxonomy_tree(
     ),
     filter_path: Optional[str] = Query(None, description="Filter by path prefix"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-):
+) -> None:
     """
     Retrieve complete taxonomy tree for specified version
 
@@ -309,7 +309,7 @@ async def get_taxonomy_tree(
 async def get_taxonomy_statistics(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-):
+) -> None:
     """
     Get comprehensive statistics for taxonomy version
 
@@ -345,7 +345,7 @@ async def get_taxonomy_statistics(
 async def validate_taxonomy(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-):
+) -> None:
     """
     Validate taxonomy structure and consistency
 
@@ -384,7 +384,7 @@ async def compare_taxonomy_versions(
     base_version: str = Path(..., description="Base version for comparison"),
     target_version: str = Path(..., description="Target version for comparison"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-):
+) -> None:
     """
     Compare two taxonomy versions and show differences
 
@@ -429,7 +429,7 @@ async def search_taxonomy_nodes(
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-):
+) -> None:
     """
     Search taxonomy nodes by name or metadata
 

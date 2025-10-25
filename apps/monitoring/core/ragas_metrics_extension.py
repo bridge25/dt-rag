@@ -58,7 +58,7 @@ class RAGASMetricsExtension:
     including faithfulness, relevancy, precision, recall, and quality gates.
     """
 
-    def __init__(self, registry=None) -> None:
+    def __init__(self, registry: Optional[Any]=None) -> None:
         self.registry = registry
         self.enabled = PROMETHEUS_AVAILABLE and registry is not None
 
@@ -205,7 +205,7 @@ class RAGASMetricsExtension:
         evaluation_type: str = "single",
         duration_seconds: Optional[float] = None,
         quality_gates_passed: bool = False,
-    ):
+    ) -> None:
         """
         Record RAGAS evaluation metrics
 
@@ -335,7 +335,7 @@ class RAGASMetricsExtension:
 
     def record_batch_evaluation_progress(
         self, batch_id: str, total_queries: int, completed_queries: int, status: str
-    ):
+    ) -> None:
         """
         Record batch evaluation progress
 
@@ -455,7 +455,7 @@ class RAGASMetricsExtension:
             return {"error": f"Failed to get summary: {e}"}
 
 
-def extend_metrics_collector(metrics_collector) -> None:
+def extend_metrics_collector(metrics_collector: Any) -> None:
     """
     Extend an existing MetricsCollector with RAGAS metrics
 

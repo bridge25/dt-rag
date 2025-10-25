@@ -64,7 +64,7 @@ class PerformanceMetrics:
 class RAGPerformanceMonitor:
     """Comprehensive RAG system performance monitor"""
 
-    def __init__(self, monitoring_interval: int = 30):
+    def __init__(self, monitoring_interval: int = 30) -> None:
         self.monitoring_interval = monitoring_interval
         self.metrics_history: List[PerformanceMetrics] = []
         self.alerts: List[Dict[str, Any]] = []
@@ -82,7 +82,7 @@ class RAGPerformanceMonitor:
         self.running = False
         self._monitor_task = None
 
-    async def start_monitoring(self, session_factory) -> None:
+    async def start_monitoring(self, session_factory: Any) -> None:
         """Start continuous performance monitoring"""
         if self.running:
             return
@@ -102,7 +102,7 @@ class RAGPerformanceMonitor:
                 pass
         logger.info("Performance monitoring stopped")
 
-    async def _monitoring_loop(self, session_factory) -> None:
+    async def _monitoring_loop(self, session_factory: Any) -> None:
         """Main monitoring loop"""
         while self.running:
             try:
@@ -149,7 +149,7 @@ class RAGPerformanceMonitor:
 
     async def _collect_db_metrics(
         self, session: AsyncSession, metrics: PerformanceMetrics
-    ):
+    ) -> None:
         """Collect database performance metrics"""
         try:
             # Connection statistics
@@ -271,7 +271,7 @@ class RAGPerformanceMonitor:
 
     async def _collect_data_metrics(
         self, session: AsyncSession, metrics: PerformanceMetrics
-    ):
+    ) -> None:
         """Collect data volume and coverage metrics"""
         try:
             # Document and chunk counts

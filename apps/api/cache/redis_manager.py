@@ -72,7 +72,7 @@ class RedisConfig:
 class RedisManager:
     """Redis 연결 및 작업 관리자"""
 
-    def __init__(self, config: RedisConfig = None):
+    def __init__(self, config: RedisConfig = None) -> None:
         self.config = config or RedisConfig()
         self.client: Optional[redis.Redis] = None
         self.connection_pool: Optional[redis.ConnectionPool] = None

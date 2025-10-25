@@ -27,7 +27,7 @@ class ConsolidationPolicy:
     - Inactive case archiving (90+ days unused)
     """
 
-    def __init__(self, db_session: AsyncSession, dry_run: bool = False):
+    def __init__(self, db_session: AsyncSession, dry_run: bool = False) -> None:
         """
         Initialize Consolidation Policy.
 

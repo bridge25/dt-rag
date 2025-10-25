@@ -29,7 +29,7 @@ class IntelligentChunker:
         chunk_size: int = 500,
         overlap_size: int = 128,
         encoding_name: str = "cl100k_base",
-    ):
+    ) -> None:
         if not TIKTOKEN_AVAILABLE:
             raise ChunkingError("tiktoken not installed")
 

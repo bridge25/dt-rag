@@ -119,7 +119,7 @@ def get_security_manager() -> SecurityManager:
 async def login(
     request: LoginRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Authenticate user and return access token
     """
@@ -156,7 +156,7 @@ async def login(
 async def register(
     request: RegisterRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Register new user account
     """
@@ -185,7 +185,7 @@ async def register(
 async def logout(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Logout user and revoke token
     """
@@ -205,7 +205,7 @@ async def change_password(
     request: ChangePasswordRequest,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Change user password
     """
@@ -245,7 +245,7 @@ async def change_password(
 async def detect_pii(
     request: PIIDetectionRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Detect PII in text
     """
@@ -286,7 +286,7 @@ async def detect_pii(
 async def mask_pii(
     request: PIIDetectionRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Mask PII in text
     """
@@ -331,7 +331,7 @@ async def mask_pii(
 async def submit_data_subject_request(
     request: DataSubjectRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Submit data subject request (GDPR/CCPA/PIPA)
     """
@@ -374,7 +374,7 @@ async def record_consent(
     request: ConsentRequest,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Record user consent
     """
@@ -421,7 +421,7 @@ async def record_consent(
 async def run_compliance_check(
     request: ComplianceCheckRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Run compliance check for specific regulation
     """
@@ -448,7 +448,7 @@ async def run_compliance_check(
 @security_router.get("/monitoring/dashboard")
 async def get_security_dashboard(
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Get security monitoring dashboard
     """
@@ -471,7 +471,7 @@ async def get_security_alerts(
     threat_level: Optional[ThreatLevel] = Query(None),
     limit: int = Query(100, ge=1, le=1000),
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Get active security alerts
     """
@@ -510,7 +510,7 @@ async def get_security_alerts(
 async def create_security_alert(
     request: SecurityAlertRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Create manual security alert
     """
@@ -538,7 +538,7 @@ async def acknowledge_alert(
     alert_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Acknowledge security alert
     """
@@ -580,7 +580,7 @@ async def acknowledge_alert(
 async def start_security_scan(
     request: SecurityScanRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Start security vulnerability scan
     """
@@ -609,7 +609,7 @@ async def start_security_scan(
 @security_router.get("/scanning/scan/{scan_id}")
 async def get_scan_result(
     scan_id: str, security_manager: SecurityManager = Depends(get_security_manager)
-):
+) -> None:
     """
     Get security scan result
     """
@@ -665,7 +665,7 @@ async def get_vulnerability_report(
     scan_id: str,
     include_false_positives: bool = Query(False),
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Get comprehensive vulnerability report
     """
@@ -690,7 +690,7 @@ async def get_vulnerability_report(
 @security_router.get("/metrics")
 async def get_security_metrics(
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Get comprehensive security metrics
     """
@@ -709,7 +709,7 @@ async def get_security_metrics(
 @security_router.get("/status")
 async def get_security_status(
     security_manager: SecurityManager = Depends(get_security_manager),
-):
+) -> None:
     """
     Get overall security system status
     """

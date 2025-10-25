@@ -46,7 +46,7 @@ class EmbeddingService:
 
     TARGET_DIMENSIONS = 768  # PostgreSQL 벡터 차원
 
-    def __init__(self, model_name: str = "all-mpnet-base-v2"):
+    def __init__(self, model_name: str = "all-mpnet-base-v2") -> None:
         self.model_name = model_name
         self.model_config = self.SUPPORTED_MODELS.get(model_name)
         self._model = None
@@ -351,7 +351,7 @@ class EmbeddingService:
 class DocumentEmbeddingService:
     """문서 임베딩 업데이트 및 관리 서비스"""
 
-    def __init__(self, embedding_service: EmbeddingService):
+    def __init__(self, embedding_service: EmbeddingService) -> None:
         self.embedding_service = embedding_service
 
     async def update_document_embeddings(

@@ -253,7 +253,7 @@ async def batch_search(
     http_request: Request,
     service: BatchSearchService = Depends(get_batch_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> None:
     """
     Execute multiple search queries in parallel or sequential mode
 
@@ -295,7 +295,7 @@ async def batch_search(
 # @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware
 async def get_batch_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> None:
     """
     Get batch search performance metrics and recommendations
 

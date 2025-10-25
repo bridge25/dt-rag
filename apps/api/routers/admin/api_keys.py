@@ -49,13 +49,13 @@ class CreateAPIKeyRequest(BaseModel):
     owner_id: Optional[str] = Field(None, description="Owner user ID")
 
     @validator("scope")
-    def validate_scope(cls, v) -> None:
+    def validate_scope(cls, v: Any) -> None:
         if v not in ["read", "write", "admin"]:
             raise ValueError("Scope must be read, write, or admin")
         return v
 
     @validator("allowed_ips")
-    def validate_ips(cls, v) -> None:
+    def validate_ips(cls, v: Any) -> None:
         if v is None:
             return v
 
@@ -136,7 +136,7 @@ async def create_api_key(
     http_request: Request,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     Create a new API key with comprehensive security validation
 
@@ -201,7 +201,7 @@ async def list_api_keys(
     offset: int = Query(0, ge=0, description="Number of keys to skip"),
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     List API keys with optional filtering
 
@@ -249,7 +249,7 @@ async def get_api_key(
     key_id: str,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     Get detailed information about a specific API key
 
@@ -291,7 +291,7 @@ async def update_api_key(
     http_request: Request,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     Update an existing API key
 
@@ -347,7 +347,7 @@ async def revoke_api_key(
     http_request: Request = None,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     Revoke an API key (mark as inactive)
 
@@ -384,7 +384,7 @@ async def get_api_key_usage(
     days: int = Query(7, ge=1, le=90, description="Number of days to analyze"),
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     Get usage statistics for an API key
 
@@ -413,7 +413,7 @@ async def generate_sample_keys(
     key_type: str = Query("production", description="Type of key to generate"),
     count: int = Query(1, ge=1, le=10, description="Number of keys to generate"),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     Generate sample API keys for testing
 
@@ -464,7 +464,7 @@ async def generate_sample_keys(
 async def validate_api_key_format(
     api_key: str = Body(..., description="API key to validate"),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> None:
     """
     Validate the format and strength of an API key
 

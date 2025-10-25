@@ -80,7 +80,7 @@ async def get_embeddings_status() -> None:
 async def generate_text_embedding(
     text: str = Body(..., description="임베딩을 생성할 텍스트", embed=True),
     use_cache: bool = Body(True, description="캐시 사용 여부", embed=True),
-):
+) -> None:
     """단일 텍스트의 임베딩 생성"""
     try:
         if not text or not text.strip():
@@ -106,7 +106,7 @@ async def generate_text_embedding(
 async def generate_batch_embeddings(
     texts: List[str] = Body(..., description="임베딩을 생성할 텍스트 목록"),
     batch_size: int = Body(32, description="배치 크기", ge=1, le=100),
-):
+) -> None:
     """여러 텍스트의 배치 임베딩 생성"""
     try:
         if not texts:
@@ -143,7 +143,7 @@ async def generate_batch_embeddings(
 async def calculate_embedding_similarity(
     embedding1: List[float] = Body(..., description="첫 번째 임베딩 벡터"),
     embedding2: List[float] = Body(..., description="두 번째 임베딩 벡터"),
-):
+) -> None:
     """두 임베딩 간의 코사인 유사도 계산"""
     try:
         if not embedding1 or not embedding2:
@@ -177,7 +177,7 @@ async def update_documents_embeddings(
     ),
     batch_size: int = Body(10, description="배치 크기", ge=1, le=50),
     run_in_background: bool = Body(False, description="백그라운드에서 실행할지 여부"),
-):
+) -> None:
     """문서들의 임베딩 업데이트"""
     try:
         if run_in_background:

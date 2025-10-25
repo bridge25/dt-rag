@@ -35,7 +35,7 @@ except ImportError:
     def observe(name: str = "", as_type: str = "span", **kwargs) -> None:
         """No-op decorator when Langfuse is not available"""
 
-        def decorator(func) -> None:
+        def decorator(func: Any) -> None:
             return func
 
         return decorator

@@ -27,14 +27,14 @@ logger = logging.getLogger(__name__)
 class RAGEvaluationMiddleware(BaseHTTPMiddleware):
     """Middleware to automatically evaluate RAG responses"""
 
-    def __init__(self, app, enable_evaluation: bool = True) -> None:
+    def __init__(self, app: Any, enable_evaluation: bool = True) -> None:
         super().__init__(app)
         self.enable_evaluation = enable_evaluation
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
 
-    async def dispatch(self, request: Request, call_next) -> None:
+    async def dispatch(self, request: Request, call_next: Any) -> None:
         response = await call_next(request)
 
         # Only evaluate search endpoints
@@ -268,7 +268,7 @@ class EvaluationIntegration:
         precision_threshold: float = 0.75,
         recall_threshold: float = 0.70,
         relevancy_threshold: float = 0.80,
-    ):
+    ) -> None:
         """Setup quality monitoring with custom thresholds"""
         from .models import QualityThresholds
 

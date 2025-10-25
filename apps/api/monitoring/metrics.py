@@ -81,7 +81,7 @@ class PerformanceSnapshot:
 class LatencyTracker:
     """지연시간 추적기"""
 
-    def __init__(self, max_samples: int = 10000):
+    def __init__(self, max_samples: int = 10000) -> None:
         self.max_samples = max_samples
         self.samples = deque(maxlen=max_samples)
         self.lock = threading.Lock()
@@ -111,7 +111,7 @@ class LatencyTracker:
 class MetricsCollector:
     """종합 메트릭 수집기"""
 
-    def __init__(self, enable_prometheus: bool = True):
+    def __init__(self, enable_prometheus: bool = True) -> None:
         self.enable_prometheus = enable_prometheus and PROMETHEUS_AVAILABLE
 
         # 내장 메트릭 저장소
@@ -207,7 +207,7 @@ class MetricsCollector:
 
     def record_latency(
         self, operation: str, latency_ms: float, labels: Dict[str, str] = None
-    ):
+    ) -> None:
         """지연시간 기록"""
         self.latency_tracker.add_sample(latency_ms)
 
@@ -223,7 +223,7 @@ class MetricsCollector:
 
     def increment_counter(
         self, counter_name: str, labels: Dict[str, str] = None, value: int = 1
-    ):
+    ) -> None:
         """카운터 증가"""
         self.counters[counter_name] += value
 
@@ -266,7 +266,7 @@ class MetricsCollector:
 
     def record_cache_operation(
         self, operation: str, result: str, labels: Dict[str, str] = None
-    ):
+    ) -> None:
         """캐시 작업 기록"""
         all_labels = {"operation": operation, "result": result}
         if labels:
@@ -423,7 +423,7 @@ def initialize_metrics_collector(enable_prometheus: bool = True) -> MetricsColle
 def track_performance(operation_name: str) -> None:
     """성능 추적 데코레이터"""
 
-    def decorator(func) -> None:
+    def decorator(func: Any) -> None:
         async def async_wrapper(*args, **kwargs) -> None:
             collector = get_metrics_collector()
             async with collector.track_operation(operation_name):

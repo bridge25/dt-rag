@@ -86,7 +86,7 @@ class AuthService:
     Authentication service with JWT tokens and secure session management
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         self.config = config or {}
 
         # JWT configuration
@@ -459,7 +459,7 @@ class RBACManager:
     Implements fine-grained permissions and access control
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         self.config = config or {}
 
         # Resource-based permissions

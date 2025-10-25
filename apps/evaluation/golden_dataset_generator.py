@@ -45,7 +45,7 @@ class GoldenSample:
 class GoldenDatasetGenerator:
     """Generate golden dataset for RAG evaluation using RAGAS"""
 
-    def __init__(self, output_dir: str = "golden_datasets"):
+    def __init__(self, output_dir: str = "golden_datasets") -> None:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
 

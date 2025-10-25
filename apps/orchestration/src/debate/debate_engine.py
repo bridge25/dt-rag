@@ -57,7 +57,7 @@ class DebateAgent:
         max_tokens: Maximum tokens for answer generation (default: 500)
     """
 
-    def __init__(self, role: str, max_tokens: int = 500):
+    def __init__(self, role: str, max_tokens: int = 500) -> None:
         self.role = role
         self.max_tokens = max_tokens
 

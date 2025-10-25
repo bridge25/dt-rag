@@ -204,7 +204,7 @@ async def get_classification_service() -> ClassificationService:
 async def classify_document_chunk(
     request: ClassifyRequest,
     service: ClassificationService = Depends(get_classification_service),
-):
+) -> None:
     """
     Classify a document chunk into taxonomy categories
 
@@ -255,7 +255,7 @@ async def classify_batch(
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
     service: ClassificationService = Depends(get_classification_service),
-):
+) -> None:
     """
     Classify multiple document chunks in batch
 
@@ -305,7 +305,7 @@ async def get_hitl_tasks(
     limit: int = Query(50, ge=1, le=100, description="Maximum tasks to return"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
     service: ClassificationService = Depends(get_classification_service),
-):
+) -> None:
     """
     Get pending human-in-the-loop classification tasks
 
@@ -335,7 +335,7 @@ async def get_hitl_tasks(
 async def submit_hitl_review(
     review: HITLReviewRequest,
     service: ClassificationService = Depends(get_classification_service),
-):
+) -> None:
     """
     Submit human review for classification task
 
@@ -368,7 +368,7 @@ async def submit_hitl_review(
 @classification_router.get("/analytics", response_model=ClassificationAnalytics)
 async def get_classification_analytics(
     service: ClassificationService = Depends(get_classification_service),
-):
+) -> None:
     """
     Get classification analytics and performance metrics
 
@@ -393,7 +393,7 @@ async def get_classification_analytics(
 @classification_router.get("/confidence/{chunk_id}")
 async def get_classification_confidence(
     chunk_id: str, service: ClassificationService = Depends(get_classification_service)
-):
+) -> None:
     """
     Get detailed confidence analysis for a classification
 

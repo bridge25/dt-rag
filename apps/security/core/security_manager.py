@@ -68,7 +68,7 @@ class SecurityManager:
     Central security manager that orchestrates all security components
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         self.config = config or {}
         self.policy = SecurityPolicy(**self.config.get("policy", {}))
 
@@ -616,7 +616,7 @@ class SecurityManager:
         details: Dict[str, Any],
         severity: SeverityLevel,
         request_id: str,
-    ):
+    ) -> None:
         """Log security event"""
         event = SecurityEvent(
             event_type=event_type,

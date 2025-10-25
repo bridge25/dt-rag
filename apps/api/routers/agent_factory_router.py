@@ -236,7 +236,7 @@ async def get_agent_factory_service() -> AgentFactoryService:
 async def create_agent_from_category(
     request: FromCategoryRequest,
     service: AgentFactoryService = Depends(get_agent_factory_service),
-):
+) -> None:
     """
     Create specialized agent from taxonomy categories
 
@@ -277,7 +277,7 @@ async def list_agents(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum agents to return"),
     service: AgentFactoryService = Depends(get_agent_factory_service),
-):
+) -> None:
     """
     List all agents with optional filtering
 
@@ -306,7 +306,7 @@ async def list_agents(
 @agent_factory_router.get("/{agent_id}", response_model=AgentStatus)
 async def get_agent(
     agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-):
+) -> None:
     """
     Get detailed information about specific agent
 
@@ -341,7 +341,7 @@ async def update_agent(
     agent_id: str,
     update: AgentUpdateRequest,
     service: AgentFactoryService = Depends(get_agent_factory_service),
-):
+) -> None:
     """
     Update agent configuration
 
@@ -375,7 +375,7 @@ async def update_agent(
 @agent_factory_router.delete("/{agent_id}")
 async def delete_agent(
     agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-):
+) -> None:
     """
     Delete agent
 
@@ -406,7 +406,7 @@ async def delete_agent(
 @agent_factory_router.get("/{agent_id}/metrics", response_model=AgentMetrics)
 async def get_agent_metrics(
     agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-):
+) -> None:
     """
     Get detailed performance metrics for agent
 
@@ -440,7 +440,7 @@ async def get_agent_metrics(
 @agent_factory_router.post("/{agent_id}/activate")
 async def activate_agent(
     agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-):
+) -> None:
     """
     Activate agent for use
 
@@ -481,7 +481,7 @@ async def activate_agent(
 @agent_factory_router.post("/{agent_id}/deactivate")
 async def deactivate_agent(
     agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-):
+) -> None:
     """
     Deactivate agent
 
@@ -522,7 +522,7 @@ async def deactivate_agent(
 @agent_factory_router.get("/factory/status")
 async def get_factory_status(
     service: AgentFactoryService = Depends(get_agent_factory_service),
-):
+) -> None:
     """
     Get agent factory system status
 
