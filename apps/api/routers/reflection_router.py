@@ -2,6 +2,8 @@
 @CODE:REFLECTION-001:API @CODE:TEST-003:REFLECTION-ROUTER | SPEC: SPEC-REFLECTION-001.md | TEST: tests/unit/test_reflection_engine.py
 @CODE:TEST-003 | SPEC: SPEC-TEST-003.md | TEST: tests/performance/
 Reflection API Router - 케이스 성능 분석 및 개선 제안
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import logging
@@ -10,7 +12,7 @@ import os
 # Import ReflectionEngine
 import sys
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -29,7 +31,10 @@ orchestration_src = os.path.abspath(
 if orchestration_src not in sys.path:
     sys.path.insert(0, orchestration_src)
 
-from reflection_engine import ReflectionEngine
+try:
+    from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]
+except ImportError:
+    ReflectionEngine = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -83,10 +88,18 @@ class ImprovementSuggestionsResponse(BaseModel):
 
 
 # Dependency: Get ReflectionEngine instance
-async def get_reflection_engine() -> None:
+async def get_reflection_engine() -> AsyncGenerator[Any, None]:
     """ReflectionEngine 인스턴스 생성"""
-    async with db_manager.get_session() as session:
-        engine = ReflectionEngine(db_session=session)
+    try:
+        from reflection_engine import ReflectionEngine as RE  # type: ignore[import-not-found]
+    except ImportError:
+        RE = None  # type: ignore[assignment]
+
+    async with db_manager.async_session() as session:
+        if RE:
+            engine = RE(db_session=session)
+        else:
+            engine = None
         yield engine
 
 
@@ -94,7 +107,7 @@ async def get_reflection_engine() -> None:
 @router.post("/analyze", response_model=ReflectionAnalysisResponse)
 async def analyze_case_performance(
     request: ReflectionAnalysisRequest, api_key: APIKeyInfo = Depends(verify_api_key)
-) -> None:
+) -> ReflectionAnalysisResponse:
     """
     단일 케이스 성능 분석
 
@@ -104,8 +117,16 @@ async def analyze_case_performance(
     - 공통 에러 패턴 추출
     """
     try:
-        async with db_manager.get_session() as session:
-            engine = ReflectionEngine(db_session=session)
+        async with db_manager.async_session() as session:
+            try:
+                from reflection_engine import ReflectionEngine as RE
+                engine = RE(db_session=session)
+            except ImportError:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="ReflectionEngine module not available"
+                )
+
             performance = await engine.analyze_case_performance(
                 case_id=request.case_id, limit=request.limit
             )
@@ -121,7 +142,7 @@ async def analyze_case_performance(
 
 
 @router.post("/batch", response_model=ReflectionBatchResponse)
-async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) -> None:
+async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) -> ReflectionBatchResponse:
     """
     배치 Reflection 실행
 
@@ -131,8 +152,16 @@ async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) ->
     - 개선 제안 생성
     """
     try:
-        async with db_manager.get_session() as session:
-            engine = ReflectionEngine(db_session=session)
+        async with db_manager.async_session() as session:
+            try:
+                from reflection_engine import ReflectionEngine as RE
+                engine = RE(db_session=session)
+            except ImportError:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="ReflectionEngine module not available"
+                )
+
             results = await engine.run_reflection_batch()
 
         return ReflectionBatchResponse(**results)
@@ -149,15 +178,23 @@ async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) ->
 async def generate_improvement_suggestions(
     request: ImprovementSuggestionsRequest,
     api_key: APIKeyInfo = Depends(verify_api_key),
-) -> None:
+) -> ImprovementSuggestionsResponse:
     """
     개선 제안 생성 (LLM 기반)
 
     케이스의 성능 데이터를 분석하여 LLM으로 개선 제안 생성
     """
     try:
-        async with db_manager.get_session() as session:
-            engine = ReflectionEngine(db_session=session)
+        async with db_manager.async_session() as session:
+            try:
+                from reflection_engine import ReflectionEngine as RE
+                engine = RE(db_session=session)
+            except ImportError:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="ReflectionEngine module not available"
+                )
+
             suggestions = await engine.generate_improvement_suggestions(
                 case_id=request.case_id
             )
@@ -178,7 +215,7 @@ async def generate_improvement_suggestions(
 
 
 @router.get("/health")
-async def health_check() -> None:
+async def health_check() -> Dict[str, str]:
     """Reflection 서비스 상태 확인"""
     return {
         "status": "healthy",

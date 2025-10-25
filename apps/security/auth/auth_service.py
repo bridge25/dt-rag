@@ -2,13 +2,15 @@
 Authentication and Authorization Service for DT-RAG v1.8.1
 Implements JWT-based authentication with RBAC
 OWASP A07:2021 – Identification and Authentication Failures compliance
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import asyncio
 import logging
 import secrets
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -60,11 +62,11 @@ class User:
     permissions: Set[Permission]
     clearance_level: str
     is_active: bool = True
-    created_at: datetime = None
-    last_login: datetime = None
+    created_at: Optional[datetime] = None
+    last_login: Optional[datetime] = None
     failed_login_attempts: int = 0
     locked_until: Optional[datetime] = None
-    metadata: Dict[str, Any] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -78,7 +80,7 @@ class Session:
     ip_address: str
     user_agent: str
     is_valid: bool = True
-    last_activity: datetime = None
+    last_activity: Optional[datetime] = None
 
 
 class AuthService:
@@ -86,7 +88,7 @@ class AuthService:
     Authentication service with JWT tokens and secure session management
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # JWT configuration
@@ -111,7 +113,7 @@ class AuthService:
         logger.info("AuthService initialized with secure defaults")
 
     async def register_user(
-        self, username: str, email: str, password: str, roles: List[Role] = None
+        self, username: str, email: str, password: str, roles: Optional[List[Role]] = None
     ) -> User:
         """Register a new user with secure password handling"""
 
@@ -163,8 +165,8 @@ class AuthService:
         self,
         username: str,
         password: str,
-        ip_address: str = None,
-        user_agent: str = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
     ) -> Tuple[str, User]:
         """Authenticate user and return JWT token"""
 
@@ -346,7 +348,7 @@ class AuthService:
         return jwt.encode(payload, self.jwt_secret, algorithm=self.jwt_algorithm)
 
     async def _create_session(
-        self, user: User, ip_address: str = None, user_agent: str = None
+        self, user: User, ip_address: Optional[str] = None, user_agent: Optional[str] = None
     ) -> Session:
         """Create a new user session"""
         session_id = str(uuid.uuid4())
@@ -459,7 +461,7 @@ class RBACManager:
     Implements fine-grained permissions and access control
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Resource-based permissions
@@ -481,13 +483,12 @@ class RBACManager:
         logger.info("RBACManager initialized")
 
     async def check_permission(
-        self, user_id: str, permission: str, resource: str = None, context: Any = None
+        self, user_id: str, permission: str, resource: Optional[str] = None, context: Any = None
     ) -> bool:
         """Check if user has permission for operation"""
         try:
-            # Convert string to enum if needed
-            if isinstance(permission, str):
-                permission = Permission(permission)
+            # Convert string to enum
+            perm_enum = Permission(permission)
 
             # Get user permissions from context or lookup
             user_permissions = (
@@ -497,7 +498,7 @@ class RBACManager:
             )
 
             # Check basic permission
-            if permission not in user_permissions:
+            if perm_enum not in user_permissions:
                 return False
 
             # Check resource-specific permissions
@@ -509,9 +510,9 @@ class RBACManager:
                     return False
 
             # Additional context-based checks
-            if context:
+            if context and resource:
                 return await self._check_context_permissions(
-                    permission, resource, context
+                    perm_enum, resource, context
                 )
 
             return True

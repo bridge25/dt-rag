@@ -1,6 +1,8 @@
 """
 B-O3: 재시도 로직 및 메모리 모니터링 시스템
 파이프라인 안정성과 복원력 강화
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import asyncio
@@ -11,11 +13,13 @@ import time
 import tracemalloc
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, TypeVar
 
-import psutil
+import psutil  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 
 @dataclass
@@ -44,7 +48,7 @@ class PipelineRetryHandler:
     def __init__(self, config: Optional[RetryConfig] = None) -> None:
         self.config = config or RetryConfig()
 
-    async def execute_with_retry(self, func: Callable, *args, **kwargs) -> Any:
+    async def execute_with_retry(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """재시도 로직으로 함수 실행"""
         last_exception = None
 
@@ -54,7 +58,7 @@ class PipelineRetryHandler:
 
                 # 함수 실행
                 if asyncio.iscoroutinefunction(func):
-                    result = await func(*args, **kwargs)
+                    result: T = await func(*args, **kwargs)
                 else:
                     result = func(*args, **kwargs)
 
@@ -87,7 +91,9 @@ class PipelineRetryHandler:
                 await asyncio.sleep(delay)
 
         # 모든 재시도 실패 시 마지막 예외 발생
-        raise last_exception
+        if last_exception:
+            raise last_exception
+        raise RuntimeError("All retry attempts failed with no exception recorded")
 
 
 class MemoryMonitor:
@@ -222,7 +228,7 @@ class MemoryMonitor:
                     await self.cleanup_memory()
 
                 elif health["status"] == "emergency":
-                    logger.emergency(
+                    logger.critical(
                         f"메모리 응급상황: {health['usage']['current_mb']:.1f}MB"
                     )
                     await self.cleanup_memory(force=True)
@@ -276,7 +282,7 @@ class PipelineResilienceManager:
             except asyncio.CancelledError:
                 pass
 
-    async def execute_with_resilience(self, func: Callable, *args, **kwargs) -> Any:
+    async def execute_with_resilience(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         """복원력 기능을 적용하여 함수 실행"""
 
         # 실행 전 메모리 상태 확인
@@ -331,34 +337,37 @@ def get_resilience_manager() -> PipelineResilienceManager:
 
 
 # 데코레이터 함수들
-def with_retry(retry_config: Optional[RetryConfig] = None) -> None:
+def with_retry(retry_config: Optional[RetryConfig] = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """재시도 데코레이터"""
 
-    def decorator(func: Any) -> None:
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
         handler = PipelineRetryHandler(retry_config)
 
-        async def wrapper(*args, **kwargs) -> None:
+        async def wrapper(*args: Any, **kwargs: Any) -> T:
             return await handler.execute_with_retry(func, *args, **kwargs)
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
 
-def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None) -> None:
+def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """메모리 모니터링 데코레이터"""
 
-    def decorator(func: Any) -> None:
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
         monitor = MemoryMonitor(thresholds)
 
-        async def wrapper(*args, **kwargs) -> None:
+        async def wrapper(*args: Any, **kwargs: Any) -> T:
             # 실행 전 메모리 체크
             health_before = monitor.check_memory_health()
             if health_before["status"] in ["critical", "emergency"]:
                 await monitor.cleanup_memory(force=True)
 
             try:
-                result = await func(*args, **kwargs)
+                if asyncio.iscoroutinefunction(func):
+                    result: T = await func(*args, **kwargs)
+                else:
+                    result = func(*args, **kwargs)
                 return result
             finally:
                 # 실행 후 메모리 정리
@@ -366,7 +375,7 @@ def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None) -> None
                 if health_after["status"] == "warning":
                     await monitor.cleanup_memory()
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
@@ -384,7 +393,7 @@ async def test_resilience_system() -> None:
         print(f"메모리 사용량: {health['memory']['usage']['current_mb']:.1f}MB")
 
         # 테스트 함수 실행
-        async def test_function() -> None:
+        async def test_function() -> str:
             await asyncio.sleep(1)
             return "테스트 성공"
 
