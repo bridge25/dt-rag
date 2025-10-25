@@ -7,6 +7,8 @@ Provides REST endpoints for hierarchical taxonomy operations including:
 - Node operations (CRUD)
 - Version comparison and rollback
 - Taxonomy validation and statistics
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import logging
@@ -126,33 +128,32 @@ class TaxonomyService:
 
     async def get_tree(
         self, version: str, expand_level: int = -1
-    ) -> List[Dict[str, Any]]:
+    ) -> Optional[List[TaxonomyNode]]:
         """Get taxonomy tree for a specific version"""
         # Mock implementation
         if version not in ["1.8.1", "1.8.0"]:
             return None
 
+        # Note: Mock data - in real implementation would query database
+        # Creating dict representations to match API contract
         return [
             TaxonomyNode(
-                node_id="root-tech",
-                label="Technology",
+                node_id=1,
+                node_name="Technology",
                 canonical_path=["Technology"],
-                version=version,
-                confidence=1.0,
+                version=1,
             ),
             TaxonomyNode(
-                node_id="tech-ai",
-                label="Artificial Intelligence",
+                node_id=2,
+                node_name="Artificial Intelligence",
                 canonical_path=["Technology", "AI"],
-                version=version,
-                confidence=0.95,
+                version=1,
             ),
             TaxonomyNode(
-                node_id="ai-ml",
-                label="Machine Learning",
+                node_id=3,
+                node_name="Machine Learning",
                 canonical_path=["Technology", "AI", "Machine Learning"],
-                version=version,
-                confidence=0.92,
+                version=1,
             ),
         ]
 
@@ -213,7 +214,7 @@ async def list_taxonomy_versions(
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-) -> None:
+) -> Dict[str, Any]:
     """
     List all available taxonomy versions with pagination
 
@@ -231,21 +232,23 @@ async def list_taxonomy_versions(
         has_next = offset + limit < total_count
         has_previous = page > 1
 
-        response = {
-            "versions": versions,
-            "pagination": {
-                "page": page,
-                "limit": limit,
-                "total": total_count,
-                "has_next": has_next,
-                "has_previous": has_previous,
-            },
+        pagination_data: Dict[str, Any] = {
+            "page": page,
+            "limit": limit,
+            "total": total_count,
+            "has_next": has_next,
+            "has_previous": has_previous,
         }
 
         if has_next:
-            response["pagination"]["next_page"] = page + 1
+            pagination_data["next_page"] = page + 1
         if has_previous:
-            response["pagination"]["previous_page"] = page - 1
+            pagination_data["previous_page"] = page - 1
+
+        response: Dict[str, Any] = {
+            "versions": versions,
+            "pagination": pagination_data,
+        }
 
         return response
 
@@ -265,7 +268,7 @@ async def get_taxonomy_tree(
     ),
     filter_path: Optional[str] = Query(None, description="Filter by path prefix"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-) -> None:
+) -> List[TaxonomyNode]:
     """
     Retrieve complete taxonomy tree for specified version
 
@@ -309,7 +312,7 @@ async def get_taxonomy_tree(
 async def get_taxonomy_statistics(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-) -> None:
+) -> TaxonomyStatistics:
     """
     Get comprehensive statistics for taxonomy version
 
@@ -345,7 +348,7 @@ async def get_taxonomy_statistics(
 async def validate_taxonomy(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-) -> None:
+) -> ValidationResult:
     """
     Validate taxonomy structure and consistency
 
@@ -384,7 +387,7 @@ async def compare_taxonomy_versions(
     base_version: str = Path(..., description="Base version for comparison"),
     target_version: str = Path(..., description="Target version for comparison"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-) -> None:
+) -> VersionComparison:
     """
     Compare two taxonomy versions and show differences
 
@@ -429,7 +432,7 @@ async def search_taxonomy_nodes(
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-) -> None:
+) -> List[TaxonomyNode]:
     """
     Search taxonomy nodes by name or metadata
 
@@ -452,7 +455,7 @@ async def search_taxonomy_nodes(
         matching_nodes = []
 
         for node in tree:
-            if query_lower in node.label.lower() or any(
+            if query_lower in node.node_name.lower() or any(
                 query_lower in path_part.lower() for path_part in node.canonical_path
             ):
                 matching_nodes.append(node)
