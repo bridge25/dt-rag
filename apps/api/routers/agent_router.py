@@ -1,7 +1,8 @@
 # @CODE:AGENT-GROWTH-002:API
 # @CODE:AGENT-GROWTH-003:API
 # @CODE:AGENT-GROWTH-004:API
-from typing import Any
+# @CODE:MYPY-001:PHASE2:BATCH4
+from typing import Any, AsyncGenerator, Dict
 import asyncio
 import json
 import logging
@@ -18,7 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.api.agent_dao import AgentDAO
 from apps.api.background.agent_task_queue import AgentTaskQueue
 from apps.api.background.coverage_history_dao import CoverageHistoryDAO
-from apps.api.database import BackgroundTask, SearchDAO, TaxonomyNode
+from apps.api.database import SearchDAO, TaxonomyNode
+from apps.api.models import BackgroundTask
 from apps.api.deps import verify_api_key
 from apps.api.schemas.agent_schemas import (
     AgentCreateRequest,
@@ -44,7 +46,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agents", tags=["agents"])
 
 
-async def get_session() -> None:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session
 
@@ -114,7 +116,7 @@ async def create_agent_from_taxonomy(
     description="Searches agents by name using case-insensitive pattern matching.",
 )
 async def search_agents(
-    q: str = None,
+    q: Optional[str] = None,
     max_results: int = 50,
     session: AsyncSession = Depends(get_session),
     api_key: Any=Depends(verify_api_key),
@@ -125,8 +127,8 @@ async def search_agents(
         if max_results > 100:
             raise HTTPException(status_code=422, detail="max_results must be <= 100")
 
-        agents = await AgentDAO.search_agents(
-            session=session, query=q, max_results=max_results
+        agents = await AgentDAO.list_agents(
+            session=session, max_results=max_results
         )
 
         return AgentListResponse(
@@ -200,7 +202,7 @@ async def list_agents(
             max_results=max_results,
         )
 
-        filters_applied = {}
+        filters_applied: Dict[str, Any] = {}
         if level is not None:
             filters_applied["level"] = level
         if min_coverage is not None:
@@ -253,13 +255,15 @@ async def get_agent_coverage(
             last_coverage_update=datetime.utcnow(),
         )
 
-        node_coverage = {}
-        document_counts = {}
-        target_counts = {}
+        node_coverage: Dict[str, float] = {}
+        document_counts: Dict[str, int] = {}
+        target_counts: Dict[str, int] = {}
 
         for node_id, coverage_data in coverage_result.node_coverage.items():
-            doc_count = coverage_data.get("document_count", 0)
-            chunk_count = coverage_data.get("chunk_count", 0)
+            doc_count_value = coverage_data.get("document_count", 0)
+            chunk_count_value = coverage_data.get("chunk_count", 0)
+            doc_count = int(doc_count_value) if isinstance(doc_count_value, (int, float)) else 0
+            chunk_count = int(chunk_count_value) if isinstance(chunk_count_value, (int, float)) else 0
             target_count = max(doc_count, 10)
 
             node_coverage[node_id] = (
@@ -769,7 +773,7 @@ async def query_agent_stream(
 ) -> Any:
     logger.info(f"Streaming query for agent: {agent_id}, query: {request.query}")
 
-    async def event_generator() -> None:
+    async def event_generator() -> AsyncGenerator[str, None]:
         try:
             agent = await AgentDAO.get_agent(session, agent_id)
 

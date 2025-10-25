@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH4
 import asyncio
 import json
 import logging
@@ -37,6 +38,10 @@ class JobQueue:
     async def check_idempotency_key(self, idempotency_key: str) -> Optional[str]:
         await self.initialize()
 
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return None
+
         try:
             key = self._get_idempotency_key(idempotency_key)
             existing_job_id = await self.redis_manager.get(key)
@@ -49,6 +54,10 @@ class JobQueue:
         self, idempotency_key: str, job_id: str, ttl: int = 3600
     ) -> bool:
         await self.initialize()
+
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return False
 
         try:
             key = self._get_idempotency_key(idempotency_key)
@@ -70,6 +79,10 @@ class JobQueue:
         idempotency_key: Optional[str] = None,
     ) -> bool:
         await self.initialize()
+
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return False
 
         try:
             if idempotency_key:
@@ -121,6 +134,10 @@ class JobQueue:
     async def dequeue_job(self, timeout: int = 5) -> Optional[Dict[str, Any]]:
         await self.initialize()
 
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return None
+
         try:
             for priority in self.PRIORITY_QUEUES:
                 queue_key = self._get_queue_key(priority)
@@ -129,12 +146,12 @@ class JobQueue:
 
                 if result:
                     _, job_payload_bytes = result
-                    job_payload = json.loads(job_payload_bytes.decode("utf-8"))
+                    job_payload_dict: Dict[str, Any] = json.loads(job_payload_bytes.decode("utf-8"))
 
                     logger.info(
-                        f"Dequeued job {job_payload['job_id']} from {priority} priority"
+                        f"Dequeued job {job_payload_dict['job_id']} from {priority} priority"
                     )
-                    return job_payload
+                    return job_payload_dict
 
             return None
 
@@ -161,6 +178,10 @@ class JobQueue:
         next_retry_at: Optional[str] = None,
     ) -> bool:
         await self.initialize()
+
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return False
 
         try:
             status_key = self._get_job_status_key(job_id)
@@ -197,6 +218,10 @@ class JobQueue:
     async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         await self.initialize()
 
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return None
+
         try:
             status_key = self._get_job_status_key(job_id)
             status_data = await self.redis_manager.get(status_key)
@@ -209,6 +234,10 @@ class JobQueue:
 
     async def get_queue_size(self, priority: Optional[str] = None) -> int:
         await self.initialize()
+
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return 0
 
         try:
             if priority:
@@ -227,6 +256,10 @@ class JobQueue:
 
     async def clear_queue(self, priority: Optional[str] = None) -> bool:
         await self.initialize()
+
+        if self.redis_manager is None:
+            logger.error("Redis manager not initialized")
+            return False
 
         try:
             if priority:
@@ -287,11 +320,20 @@ class JobQueue:
 
             idempotency_key = job_data.get("idempotency_key")
 
+            # Convert priority string to int
+            priority_int = 5  # default medium priority
+            if priority == "high":
+                priority_int = 1
+            elif priority == "medium":
+                priority_int = 5
+            elif priority == "low":
+                priority_int = 9
+
             await self.enqueue_job(
                 job_id=job_id,
                 command_id=command_id,
                 job_data=job_data,
-                priority=priority,
+                priority=priority_int,
                 idempotency_key=idempotency_key,
             )
 

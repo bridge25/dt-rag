@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH4
 """
 Quality monitoring system for RAG evaluation
 
@@ -33,11 +34,17 @@ class QualityMonitor:
     """Real-time quality monitoring and alerting system"""
 
     def __init__(self) -> None:
-        self.thresholds = QualityThresholds()
+        self.thresholds = QualityThresholds(
+            faithfulness_min=0.85,
+            context_precision_min=0.75,
+            context_recall_min=0.70,
+            answer_relevancy_min=0.80,
+            response_time_max=5.0,
+        )
 
         # In-memory metric buffers for real-time monitoring
         self.metric_buffer_size = 100
-        self.metric_buffers = {
+        self.metric_buffers: Dict[str, deque[float]] = {
             "faithfulness": deque(maxlen=self.metric_buffer_size),
             "context_precision": deque(maxlen=self.metric_buffer_size),
             "context_recall": deque(maxlen=self.metric_buffer_size),
@@ -46,14 +53,14 @@ class QualityMonitor:
         }
 
         # Alert state tracking
-        self.active_alerts = {}
+        self.active_alerts: Dict[str, QualityAlert] = {}
         self.alert_cooldown = timedelta(minutes=10)  # Prevent alert spam
 
         # Quality trend tracking
         self.trend_window_minutes = 60
-        self.quality_history = deque(maxlen=1440)  # 24 hours of minute-level data
+        self.quality_history: deque[Dict[str, Any]] = deque(maxlen=1440)  # 24 hours of minute-level data
 
-    async def record_evaluation(self, evaluation: EvaluationResult) -> None:
+    async def record_evaluation(self, evaluation: EvaluationResult) -> List[QualityAlert]:
         """Record new evaluation result and check for quality issues"""
         try:
             # Update metric buffers
@@ -252,7 +259,7 @@ class QualityMonitor:
         if not self.active_alerts:
             return {"total_alerts": 0, "severity_breakdown": {}}
 
-        severity_counts = defaultdict(int)
+        severity_counts: Dict[str, int] = defaultdict(int)
         for alert in self.active_alerts.values():
             severity_counts[alert.severity] += 1
 
@@ -269,52 +276,32 @@ class QualityMonitor:
 
     def _check_quality_gates(self, current_metrics: Dict[str, float]) -> Dict[str, Any]:
         """Check if quality gates are passing"""
-        gates = {}
+        gates: Dict[str, Any] = {}
 
-        # Define quality gates
-        quality_gates = {
-            "faithfulness_gate": {
-                "metric": "faithfulness",
-                "threshold": self.thresholds.faithfulness_min,
-                "operator": ">=",
-            },
-            "precision_gate": {
-                "metric": "context_precision",
-                "threshold": self.thresholds.context_precision_min,
-                "operator": ">=",
-            },
-            "recall_gate": {
-                "metric": "context_recall",
-                "threshold": self.thresholds.context_recall_min,
-                "operator": ">=",
-            },
-            "relevancy_gate": {
-                "metric": "answer_relevancy",
-                "threshold": self.thresholds.answer_relevancy_min,
-                "operator": ">=",
-            },
-            "performance_gate": {
-                "metric": "response_time",
-                "threshold": self.thresholds.response_time_max,
-                "operator": "<=",
-            },
-        }
+        # Define quality gates with explicit thresholds
+        gate_checks: List[Tuple[str, str, float, str]] = [
+            ("faithfulness_gate", "faithfulness", self.thresholds.faithfulness_min, ">="),
+            ("precision_gate", "context_precision", self.thresholds.context_precision_min, ">="),
+            ("recall_gate", "context_recall", self.thresholds.context_recall_min, ">="),
+            ("relevancy_gate", "answer_relevancy", self.thresholds.answer_relevancy_min, ">="),
+            ("performance_gate", "response_time", self.thresholds.response_time_max, "<="),
+        ]
 
         all_passing = True
-        for gate_name, gate_config in quality_gates.items():
-            metric_value = current_metrics.get(gate_config["metric"])
+        for gate_name, metric_key, threshold_value, operator in gate_checks:
+            metric_value = current_metrics.get(metric_key)
 
             if metric_value is not None:
-                if gate_config["operator"] == ">=":
-                    passing = metric_value >= gate_config["threshold"]
+                if operator == ">=":
+                    passing = metric_value >= threshold_value
                 else:  # '<='
-                    passing = metric_value <= gate_config["threshold"]
+                    passing = metric_value <= threshold_value
 
                 gates[gate_name] = {
                     "passing": passing,
                     "current_value": metric_value,
-                    "threshold": gate_config["threshold"],
-                    "margin": abs(metric_value - gate_config["threshold"]),
+                    "threshold": threshold_value,
+                    "margin": abs(metric_value - threshold_value),
                 }
 
                 if not passing:
@@ -323,7 +310,7 @@ class QualityMonitor:
                 gates[gate_name] = {
                     "passing": None,
                     "current_value": None,
-                    "threshold": gate_config["threshold"],
+                    "threshold": threshold_value,
                     "margin": None,
                     "status": "no_data",
                 }
