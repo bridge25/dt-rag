@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH5 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 import os
 from dataclasses import dataclass
 from enum import Enum
@@ -43,7 +44,7 @@ class EnvManager:
         value = os.environ.get(key, str(default)).lower()
         return value in ("true", "1", "yes", "on")
 
-    def get_list(self, key: str, default: List[str] = None) -> List[str]:
+    def get_list(self, key: str, default: Optional[List[str]] = None) -> List[str]:
         if default is None:
             default = []
         value = os.environ.get(key, "")

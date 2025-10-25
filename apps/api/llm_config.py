@@ -1,6 +1,7 @@
 """
 LLM Configuration Manager
 """
+# @CODE:MYPY-001:PHASE2:BATCH5 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -40,12 +41,15 @@ class LLMConfigManager:
     def get_available_models(self, service: Optional[str] = None) -> List[str]:
         """Get available models"""
         if service and service in self.services:
-            return self.services[service].get("models", [])
+            service_models = self.services[service].get("models", [])
+            return list(service_models) if service_models else []
 
-        models = []
+        models: List[str] = []
         for svc in self.services.values():
             if svc["status"] == "available":
-                models.extend(svc.get("models", []))
+                svc_models = svc.get("models", [])
+                if svc_models:
+                    models.extend(list(svc_models))
         return models
 
     def is_service_available(self, service: str) -> bool:
