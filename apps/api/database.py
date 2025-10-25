@@ -10,14 +10,14 @@ import os
 import re
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-import asyncpg
+import asyncpg  # type: ignore[import-untyped]
 import httpx
 import numpy as np
 import tiktoken
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore[import-untyped]
+from sklearn.metrics.pairwise import cosine_similarity  # type: ignore[import-untyped]
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -32,7 +32,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, INT4RANGE, UUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, declarative_base, mapped_column, relationship
 from sqlalchemy.types import TEXT, TypeDecorator
 
 # 로깅 설정
@@ -53,85 +53,88 @@ BM25_WEIGHT = 0.5
 VECTOR_WEIGHT = 0.5
 
 
+# @CODE:MYPY-001:PHASE2:BATCH1
 # SQLite 호환 타입 정의
-class JSONType(TypeDecorator):
+class JSONType(TypeDecorator[Any]):
     """SQLite 호환 JSON 타입"""
 
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value, dialect) -> None:
+    def process_bind_param(self, value: Any, dialect: Any) -> Optional[str]:
         if value is not None:
             return json.dumps(value)
         return value
 
-    def process_result_value(self, value, dialect) -> None:
+    def process_result_value(self, value: Any, dialect: Any) -> Any:
         if value is not None:
             return json.loads(value)
         return value
 
 
-class ArrayType(TypeDecorator):
+class ArrayType(TypeDecorator[Any]):
     """SQLite 호환 Array 타입"""
 
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value, dialect) -> None:
+    def process_bind_param(self, value: Any, dialect: Any) -> Optional[str]:
         if value is not None:
             return json.dumps(value)
         return value
 
-    def process_result_value(self, value, dialect) -> None:
+    def process_result_value(self, value: Any, dialect: Any) -> Any:
         if value is not None:
             return json.loads(value)
         return value
 
 
-class UUIDType(TypeDecorator):
+class UUIDType(TypeDecorator[Optional[uuid.UUID]]):
     """SQLite 호환 UUID 타입"""
 
     impl = String(36)
     cache_ok = True
 
-    def process_bind_param(self, value, dialect) -> None:
+    def process_bind_param(self, value: Any, dialect: Any) -> Optional[str]:
         if value is not None:
             return str(value)
         return value
 
-    def process_result_value(self, value, dialect) -> None:
+    def process_result_value(self, value: Any, dialect: Any) -> Optional[uuid.UUID]:
         if value is not None:
             return uuid.UUID(value)
         return value
 
 
 # 데이터베이스 타입 선택 함수
-def get_json_type() -> None:
+def get_json_type() -> Union[type[JSON], JSONType]:
     """현재 데이터베이스에 맞는 JSON 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return JSONType()
     return JSON
 
 
-def get_array_type(item_type=String) -> None:
+def get_array_type(item_type: Any = String) -> Any:
     """현재 데이터베이스에 맞는 Array 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return ArrayType()
     return ARRAY(item_type)
 
 
-def get_uuid_type() -> None:
+def get_uuid_type() -> Union[UUIDType, UUID]:
     """현재 데이터베이스에 맞는 UUID 타입 반환"""
     if "sqlite" in DATABASE_URL:
         return UUIDType()
     return UUID(as_uuid=True)
 
 
-# SQLAlchemy Base
-Base = declarative_base()
-
-# 데이터베이스 URL 설정
+# 데이터베이스 URL 설정 (Base 선언 전에 필요)
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./dt_rag_test.db")
+
+# SQLAlchemy Base
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base class"""
+    pass
 
 # SQLite와 PostgreSQL 호환성을 위한 엔진 설정
 if "sqlite" in DATABASE_URL:
@@ -328,7 +331,7 @@ class DatabaseManager:
         self.engine = engine
         self.async_session = async_session
 
-    async def init_database(self) -> None:
+    async def init_database(self) -> bool:
         """데이터베이스 초기화 및 테이블 생성"""
         try:
             async with self.engine.begin() as conn:
@@ -352,7 +355,7 @@ class DatabaseManager:
             logger.error(f"데이터베이스 초기화 실패: {e}")
             return False
 
-    async def get_session(self) -> None:
+    async def get_session(self) -> AsyncSession:
         """데이터베이스 세션 반환"""
         return self.async_session()
 
@@ -380,6 +383,9 @@ class TaxonomyDAO:
         """분류체계 트리 조회 - 실제 데이터베이스에서"""
         async with db_manager.async_session() as session:
             try:
+                # version을 int로 변환
+                version_int = int(version) if isinstance(version, str) else version
+
                 # 실제 쿼리로 교체 - SQLAlchemy 2.0 방식
                 query = text(
                     """
@@ -389,13 +395,13 @@ class TaxonomyDAO:
                     ORDER BY canonical_path
                 """
                 )
-                result = await session.execute(query, {"version": version})
+                result = await session.execute(query, {"version": version_int})
                 rows = result.fetchall()
 
                 if not rows:
                     # 기본 데이터 삽입
-                    await TaxonomyDAO._insert_default_taxonomy(session, version)
-                    result = await session.execute(query, {"version": version})
+                    await TaxonomyDAO._insert_default_taxonomy(session, version_int)
+                    result = await session.execute(query, {"version": version_int})
                     rows = result.fetchall()
 
                 # 트리 구조로 변환
@@ -415,10 +421,11 @@ class TaxonomyDAO:
             except Exception as e:
                 logger.error(f"분류체계 조회 실패: {e}")
                 # 폴백 데이터
-                return await TaxonomyDAO._get_fallback_tree(version)
+                version_int = int(version) if isinstance(version, str) else version
+                return await TaxonomyDAO._get_fallback_tree(version_int)
 
     @staticmethod
-    async def _insert_default_taxonomy(session, version: int) -> None:
+    async def _insert_default_taxonomy(session: AsyncSession, version: int) -> None:
         """기본 분류체계 데이터 삽입"""
         default_nodes = [
             ("AI", ["AI"], version),
@@ -474,7 +481,7 @@ class TaxonomyDAO:
 
 # 임베딩 서비스 클래스 (최적화된 캐싱 버전 사용)
 try:
-    from ..search.embedding_service import EmbeddingService as OptimizedEmbeddingService
+    from ..search.embedding_service import EmbeddingService as OptimizedEmbeddingService  # type: ignore[import-not-found]
 
     OPTIMIZED_EMBEDDING_AVAILABLE = True
 except ImportError:
@@ -490,7 +497,8 @@ class EmbeddingService:
         # 최적화된 캐싱 버전 사용 (70% 성능 향상)
         if OPTIMIZED_EMBEDDING_AVAILABLE:
             try:
-                return await OptimizedEmbeddingService.generate_embedding(text, model)
+                result: List[float] = await OptimizedEmbeddingService.generate_embedding(text, model)
+                return result
             except Exception as e:
                 logger.warning(
                     f"Optimized embedding with caching failed, using fallback: {e}"
@@ -520,8 +528,9 @@ class EmbeddingService:
                     logger.error(f"OpenAI API 오류: {response.status_code}")
                     return EmbeddingService._get_dummy_embedding(text)
 
-                result = response.json()
-                return result["data"][0]["embedding"]
+                result_data: Dict[str, Any] = response.json()
+                embedding: List[float] = result_data["data"][0]["embedding"]
+                return embedding
 
         except Exception as e:
             logger.error(f"임베딩 생성 실패: {e}")
@@ -529,50 +538,27 @@ class EmbeddingService:
 
     @staticmethod
     async def generate_batch_embeddings(
-        texts: List[str], model: str = "openai"
+        texts: List[str], model: str = "openai", batch_size: int = 100
     ) -> List[List[float]]:
         """배치 임베딩 생성 (캐싱 최적화)"""
         if OPTIMIZED_EMBEDDING_AVAILABLE:
             try:
-                return await OptimizedEmbeddingService.generate_batch_embeddings(
+                result: List[List[float]] = await OptimizedEmbeddingService.generate_batch_embeddings(
                     texts, model
                 )
+                return result
             except Exception as e:
                 logger.warning(f"Optimized batch embedding failed, using fallback: {e}")
 
-        # 폴백: 개별 처리
-        results = []
-        for text in texts:
-            embedding = await EmbeddingService.generate_embedding(text, model)
-            results.append(embedding)
-        return results
-
-    @staticmethod
-    def _get_dummy_embedding(text: str) -> List[float]:
-        """더미 임베딩 생성 (개발/테스트용)"""
-        # 텍스트 해시 기반 일관된 더미 벡터
-        seed = hash(text) % (2**32)
-        np.random.seed(seed)
-        embedding = np.random.normal(0, 1, EMBEDDING_DIMENSIONS)
-        # L2 정규화
-        norm = np.linalg.norm(embedding)
-        if norm > 0:
-            embedding = embedding / norm
-        return embedding.tolist()
-
-    @staticmethod
-    async def generate_batch_embeddings(
-        texts: List[str], batch_size: int = 100
-    ) -> List[List[float]]:
-        """배치로 임베딩 생성"""
-        embeddings = []
+        # 폴백: 개별 처리 with batching
+        embeddings: List[List[float]] = []
 
         for i in range(0, len(texts), batch_size):
             batch_texts = texts[i : i + batch_size]
-            batch_embeddings = []
+            batch_embeddings: List[List[float]] = []
 
             for text in batch_texts:
-                embedding = await EmbeddingService.generate_embedding(text)
+                embedding = await EmbeddingService.generate_embedding(text, model)
                 batch_embeddings.append(embedding)
 
             embeddings.extend(batch_embeddings)
@@ -582,6 +568,20 @@ class EmbeddingService:
                 await asyncio.sleep(0.1)
 
         return embeddings
+
+    @staticmethod
+    def _get_dummy_embedding(text: str) -> List[float]:
+        """더미 임베딩 생성 (개발/테스트용)"""
+        # 텍스트 해시 기반 일관된 더미 벡터
+        seed = hash(text) % (2**32)
+        np.random.seed(seed)
+        embedding_array: np.ndarray[Any, Any] = np.random.normal(0, 1, EMBEDDING_DIMENSIONS)
+        # L2 정규화
+        norm = np.linalg.norm(embedding_array)
+        if norm > 0:
+            embedding_array = embedding_array / norm
+        embedding_list: List[float] = embedding_array.tolist()
+        return embedding_list
 
 
 # BM25 스코어링 클래스
@@ -733,7 +733,7 @@ class SearchDAO:
     @staticmethod
     async def hybrid_search(
         query: str,
-        filters: Dict = None,
+        filters: Optional[Dict[str, Any]] = None,
         topk: int = 5,
         bm25_topk: int = 12,
         vector_topk: int = 12,
@@ -742,9 +742,9 @@ class SearchDAO:
         """최적화된 하이브리드 검색 (BM25 + Vector 병렬 처리)"""
         # 비동기 최적화 엔진 사용
         try:
-            from .optimization.async_executor import get_async_optimizer
-            from .optimization.concurrency_control import get_concurrency_controller
-            from .optimization.memory_optimizer import get_gc_optimizer
+            from .optimization.async_executor import get_async_optimizer  # type: ignore[import-not-found]
+            from .optimization.concurrency_control import get_concurrency_controller  # type: ignore[import-not-found]
+            from .optimization.memory_optimizer import get_gc_optimizer  # type: ignore[import-not-found]
 
             optimizer = await get_async_optimizer()
             gc_optimizer = get_gc_optimizer()
@@ -775,12 +775,12 @@ class SearchDAO:
     @staticmethod
     async def _execute_optimized_hybrid_search(
         query: str,
-        filters: Dict,
+        filters: Optional[Dict[str, Any]],
         topk: int,
         bm25_topk: int,
         vector_topk: int,
         rerank_candidates: int,
-        optimizer,
+        optimizer: Any,
     ) -> List[Dict[str, Any]]:
         """최적화된 하이브리드 검색 실행"""
         async with db_manager.async_session() as session:
@@ -815,9 +815,10 @@ class SearchDAO:
                 )
 
                 # 4. Cross-encoder 재랭킹 (CPU 집약적)
-                final_results = await optimizer.execute_cpu_intensive_task(
+                final_results_raw: List[Dict[str, Any]] = await optimizer.execute_cpu_intensive_task(
                     CrossEncoderReranker.rerank_results, query, combined_results, topk
                 )
+                final_results: List[Dict[str, Any]] = final_results_raw
 
                 # 5. 성능 메트릭 추가
                 for result in final_results:
@@ -842,7 +843,7 @@ class SearchDAO:
     @staticmethod
     async def _execute_legacy_hybrid_search(
         query: str,
-        filters: Dict,
+        filters: Optional[Dict[str, Any]],
         topk: int,
         bm25_topk: int,
         vector_topk: int,
@@ -888,7 +889,7 @@ class SearchDAO:
 
     @staticmethod
     async def _perform_bm25_search(
-        session: AsyncSession, query: str, topk: int, filters: Dict = None
+        session: AsyncSession, query: str, topk: int, filters: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
         """BM25 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -964,7 +965,7 @@ class SearchDAO:
         session: AsyncSession,
         query_embedding: List[float],
         topk: int,
-        filters: Dict = None,
+        filters: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, Any]]:
         """Vector 유사도 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -1066,7 +1067,7 @@ class SearchDAO:
             return []
 
     @staticmethod
-    def _build_filter_clause(filters: Dict = None) -> str:
+    def _build_filter_clause(filters: Optional[Dict[str, Any]] = None) -> str:
         """필터 조건 SQL 절 생성 (SQLite/PostgreSQL 호환)"""
         if not filters:
             return ""
@@ -1146,7 +1147,7 @@ class SearchDAO:
         return sorted_results[:max_candidates]
 
     @staticmethod
-    async def _insert_sample_chunks(session) -> None:
+    async def _insert_sample_chunks(session: AsyncSession) -> None:
         """샘플 청크 데이터 삽입"""
         # 문서 먼저 삽입
         sample_docs = [
@@ -1206,7 +1207,7 @@ class SearchDAO:
         await session.commit()
 
     @staticmethod
-    async def optimize_search_indices(session) -> Dict[str, Any]:
+    async def optimize_search_indices(session: AsyncSession) -> Dict[str, Any]:
         """검색 인덱스 최적화 (SQLite/PostgreSQL 호환)"""
         try:
             if "sqlite" in DATABASE_URL:
@@ -1265,7 +1266,7 @@ class SearchDAO:
             return {"success": False, "error": str(e), "indices_created": []}
 
     @staticmethod
-    async def get_search_analytics(session) -> Dict[str, Any]:
+    async def get_search_analytics(session: AsyncSession) -> Dict[str, Any]:
         """검색 시스템 분석 정보 조회"""
         try:
             # 기본 통계 쿼리
@@ -1355,7 +1356,7 @@ class ClassifyDAO:
 
     @staticmethod
     async def classify_text(
-        text: str, hint_paths: List[List[str]] = None
+        text: str, hint_paths: Optional[List[List[str]]] = None
     ) -> Dict[str, Any]:
         """실제 분류 로직 - ML 모델 기반 (키워드 기반 제거)"""
         try:
@@ -1476,19 +1477,19 @@ class ClassifyDAO:
 
 
 # 초기화 함수
-async def init_database() -> None:
+async def init_database() -> bool:
     """데이터베이스 초기화"""
     return await db_manager.init_database()
 
 
 # 연결 테스트 함수
-async def test_database_connection() -> None:
+async def test_database_connection() -> bool:
     """데이터베이스 연결 테스트"""
     return await db_manager.test_connection()
 
 
 # 유틸리티 함수들
-async def setup_search_system() -> None:
+async def setup_search_system() -> bool:
     """검색 시스템 초기 설정"""
     try:
         async with db_manager.async_session() as session:
@@ -1576,10 +1577,10 @@ class SearchMetrics:
     """검색 성능 지표 수집"""
 
     def __init__(self) -> None:
-        self.search_latencies = []
-        self.search_counts = {"bm25": 0, "vector": 0, "hybrid": 0}
-        self.error_counts = 0
-        self.last_reset = datetime.utcnow()
+        self.search_latencies: List[float] = []
+        self.search_counts: Dict[str, int] = {"bm25": 0, "vector": 0, "hybrid": 0}
+        self.error_counts: int = 0
+        self.last_reset: datetime = datetime.utcnow()
 
     def record_search(self, search_type: str, latency: float, error: bool = False) -> None:
         """검색 메트릭 기록"""

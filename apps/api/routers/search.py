@@ -18,11 +18,12 @@ from ..deps import generate_request_id, get_taxonomy_version, verify_api_key
 # Configure logger
 logger = logging.getLogger(__name__)
 
+# @CODE:MYPY-001:PHASE2:BATCH1
 # 최적화 모듈들 import
 try:
-    from ..optimization.async_executor import get_async_optimizer
-    from ..optimization.concurrency_control import get_concurrency_controller
-    from ..optimization.memory_optimizer import get_memory_monitor
+    from ..optimization.async_executor import get_async_optimizer  # type: ignore[import-not-found]
+    from ..optimization.concurrency_control import get_concurrency_controller  # type: ignore[import-not-found]
+    from ..optimization.memory_optimizer import get_memory_monitor  # type: ignore[import-not-found]
 
     OPTIMIZATION_AVAILABLE = True
 except ImportError as e:
@@ -32,7 +33,7 @@ except ImportError as e:
 # 하이브리드 검색 엔진 import
 try:
     from ..cache.search_cache import get_search_cache
-    from ..search.hybrid_search_engine import (
+    from ..search.hybrid_search_engine import (  # type: ignore[import-not-found]
         HybridSearchEngine,
         SearchConfig,
         SearchEngineFactory,
@@ -48,7 +49,7 @@ except ImportError as e:
 try:
     from ..monitoring.metrics import get_metrics_collector
     from ..monitoring.search_metrics import get_search_metrics
-    from ..routers.monitoring import track_cache_metrics, track_search_metrics
+    from ..routers.monitoring import track_cache_metrics, track_search_metrics  # type: ignore[import-not-found]
 
     MONITORING_AVAILABLE = True
 except ImportError as e:
