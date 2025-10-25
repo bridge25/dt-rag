@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 Dynamic Taxonomy DAG Management System v1.8.1
 Implements DAG-based taxonomy with versioning, migration, and rollback capabilities.
@@ -16,9 +17,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, DefaultDict, Dict, List, Optional, Sequence, Tuple
 
-import networkx as nx
+import networkx as nx  # type: ignore[import-untyped]
 from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -85,7 +86,7 @@ class TaxonomyDAGManager:
 
     def __init__(self) -> None:
         self.current_version = 1
-        self._graph_cache = {}
+        self._graph_cache: Dict[str, Dict[str, Any]] = {}
         self._lock = asyncio.Lock()
 
     async def initialize(self) -> bool:
@@ -342,7 +343,8 @@ class TaxonomyDAGManager:
             # Check cache first
             cache_key = f"tree_{version}"
             if cache_key in self._graph_cache:
-                return self._graph_cache[cache_key]
+                cached_tree: Dict[str, Any] = self._graph_cache[cache_key]
+                return cached_tree
 
             async with async_session() as session:
                 # Get all nodes for version
@@ -358,7 +360,7 @@ class TaxonomyDAGManager:
                 edges = edges_result.scalars().all()
 
                 # Build tree structure
-                tree = self._build_tree_structure(nodes, edges)
+                tree = self._build_tree_structure(list(nodes), list(edges))
 
                 # Cache result
                 self._graph_cache[cache_key] = tree
@@ -412,7 +414,7 @@ class TaxonomyDAGManager:
                     )
                     node_id = result.scalar()
 
-                return True, node_id, "Node added successfully"
+                return True, node_id or -1, "Node added successfully"
             else:
                 return False, -1, message
 
@@ -508,7 +510,7 @@ class TaxonomyDAGManager:
 
                 # Get node details for each node in path
                 async with async_session() as session:
-                    ancestry = []
+                    ancestry: List[Dict[str, Any]] = []
                     for node in path:
                         result = await session.execute(
                             select(TaxonomyNode).where(
@@ -608,7 +610,7 @@ class TaxonomyDAGManager:
                 paths = [row[0] for row in result.fetchall()]
 
                 # Check for duplicates
-                path_count = defaultdict(int)
+                path_count: DefaultDict[str, int] = defaultdict(int)
                 for path in paths:
                     if path:
                         path_str = " -> ".join(path)
@@ -645,7 +647,7 @@ class TaxonomyDAGManager:
     ) -> Dict[str, Any]:
         """Create rollback data for migration"""
 
-        rollback_data = {
+        rollback_data: Dict[str, Any] = {
             "snapshot_timestamp": datetime.utcnow().isoformat(),
             "affected_nodes": [],
             "affected_edges": [],
@@ -664,15 +666,22 @@ class TaxonomyDAGManager:
                 )
                 node = result.scalar()
                 if node:
-                    rollback_data["affected_nodes"].append(
-                        {
-                            "node_id": node.node_id,
-                            "node_name": node.node_name,
-                            "canonical_path": node.canonical_path,
-                            "description": node.description,
-                            "metadata": node.metadata,
-                        }
-                    )
+                    # Convert canonical_path to list
+                    node_canonical_path: List[str] = []
+                    if node.canonical_path:
+                        try:
+                            node_canonical_path = list(node.canonical_path)
+                        except (TypeError, ValueError):
+                            node_canonical_path = []
+
+                    node_data: Dict[str, Any] = {
+                        "node_id": node.node_id,
+                        "node_name": node.node_name,
+                        "canonical_path": node_canonical_path,
+                        "description": node.description,
+                        "metadata": node.metadata,
+                    }
+                    rollback_data["affected_nodes"].append(node_data)
 
         return rollback_data
 
@@ -863,11 +872,11 @@ class TaxonomyDAGManager:
     def _estimate_rollback_duration(self, rollback_plan: Dict[str, Any]) -> float:
         """Estimate rollback duration in seconds"""
 
-        base_time = 30  # Base overhead
-        operation_count = rollback_plan.get("estimated_operations", 0)
-        time_per_operation = 0.5
+        base_time: float = 30.0  # Base overhead
+        operation_count: int = rollback_plan.get("estimated_operations", 0)
+        time_per_operation: float = 0.5
 
-        estimated = base_time + (operation_count * time_per_operation)
+        estimated: float = base_time + (operation_count * time_per_operation)
 
         if rollback_plan.get("requires_full_rebuild"):
             estimated *= 2  # Double time for complex rollbacks
@@ -938,7 +947,7 @@ class TaxonomyDAGManager:
         """Build hierarchical tree structure from nodes and edges"""
 
         # Create node lookup
-        node_lookup = {
+        node_lookup: Dict[int, Dict[str, Any]] = {
             node.node_id: {
                 "node_id": node.node_id,
                 "node_name": node.node_name,
@@ -953,9 +962,10 @@ class TaxonomyDAGManager:
         # Build parent-child relationships
         for edge in edges:
             if edge.parent_node_id in node_lookup and edge.child_node_id in node_lookup:
-                node_lookup[edge.parent_node_id]["children"].append(
-                    node_lookup[edge.child_node_id]
-                )
+                child_node: Dict[str, Any] = node_lookup[edge.child_node_id]
+                parent_node: Dict[str, Any] = node_lookup[edge.parent_node_id]
+                parent_children_list: List[Dict[str, Any]] = parent_node["children"]
+                parent_children_list.append(child_node)
 
         # Find root nodes
         child_ids = {edge.child_node_id for edge in edges}
