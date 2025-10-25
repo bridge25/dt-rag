@@ -1,17 +1,22 @@
 """
 Database models for RAGAS evaluation system
 """
+# @CODE:MYPY-001:PHASE2:BATCH5
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase
+    Base = DeclarativeBase
+else:
+    from sqlalchemy.ext.declarative import declarative_base
+    Base = declarative_base()
 
 
 class SearchLog(Base):

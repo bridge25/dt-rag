@@ -8,6 +8,7 @@ Provides:
 - Canary deployment monitoring
 - Automated rollback based on quality degradation
 """
+# @CODE:MYPY-001:PHASE2:BATCH5
 
 import asyncio
 import json
@@ -20,7 +21,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from scipy import stats
+from scipy import stats  # type: ignore[import-untyped]  # scipy stubs not available
 
 from ..api.database import db_manager
 from .models import (
@@ -48,9 +49,9 @@ class ExperimentTracker:
     """A/B testing and canary deployment tracker"""
 
     def __init__(self) -> None:
-        self.active_experiments = {}  # experiment_id -> ExperimentConfig
-        self.user_assignments = {}  # user_id -> ExperimentAssignment
-        self.experiment_data = {}  # experiment_id -> {'control': [], 'treatment': []}
+        self.active_experiments: Dict[str, ExperimentConfig] = {}  # experiment_id -> ExperimentConfig
+        self.user_assignments: Dict[str, ExperimentAssignment] = {}  # user_id -> ExperimentAssignment
+        self.experiment_data: Dict[str, Dict[str, List[Dict[str, Any]]]] = {}  # experiment_id -> {'control': [], 'treatment': []}
 
         # Statistical parameters
         self.min_sample_size = 50
@@ -177,7 +178,7 @@ class ExperimentTracker:
         if user_id in self.user_assignments:
             assignment = self.user_assignments[user_id]
             if assignment.experiment_id == experiment_id:
-                return assignment.group
+                return str(assignment.group)
 
         # Deterministic assignment based on user_id hash
         user_hash = hash(f"{user_id}_{experiment_id}")
@@ -360,6 +361,7 @@ class ExperimentTracker:
                 treatment_config=canary_config,
                 significance_threshold=0.1,  # More sensitive for canary
                 minimum_sample_size=30,  # Smaller sample size for faster detection
+                power_threshold=0.8,  # Default statistical power threshold
             )
 
             await self.create_experiment(config)

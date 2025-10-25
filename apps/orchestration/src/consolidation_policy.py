@@ -1,5 +1,6 @@
 # @CODE:CONSOLIDATION-001:ENGINE @CODE:TEST-003:CONSOLIDATION-POLICY | SPEC: SPEC-CONSOLIDATION-001.md | TEST: tests/unit/test_consolidation.py
 # @CODE:TEST-003 | SPEC: SPEC-TEST-003.md | TEST: tests/performance/
+# @CODE:MYPY-001:PHASE2:BATCH5
 
 import logging
 import os
@@ -37,9 +38,9 @@ class ConsolidationPolicy:
         """
         self.db = db_session
         self.dry_run = dry_run
-        self.removed_cases = []
-        self.merged_cases = []
-        self.archived_cases = []
+        self.removed_cases: List[str] = []
+        self.merged_cases: List[Dict[str, Any]] = []
+        self.archived_cases: List[str] = []
 
     async def run_consolidation(self) -> Dict[str, Any]:
         """
@@ -300,6 +301,6 @@ class ConsolidationPolicy:
             "total_active_cases": total_count,
             "low_performance_candidates": low_perf_count,
             "inactive_candidates": inactive_count,
-            "potential_savings": low_perf_count + inactive_count,
+            "potential_savings": (low_perf_count or 0) + (inactive_count or 0),
             "timestamp": datetime.utcnow().isoformat(),
         }
