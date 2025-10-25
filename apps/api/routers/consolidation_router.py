@@ -1,5 +1,6 @@
 """
 @CODE:CONSOLIDATION-001:API | SPEC: SPEC-CONSOLIDATION-001.md | TEST: tests/unit/test_consolidation.py
+@CODE:MYPY-001:PHASE2:BATCH4 | SPEC: SPEC-MYPY-001.md | TEST: N/A
 Consolidation API Router - 메모리 정리 및 최적화
 """
 
@@ -28,7 +29,7 @@ orchestration_src = os.path.abspath(
 if orchestration_src not in sys.path:
     sys.path.insert(0, orchestration_src)
 
-from consolidation_policy import ConsolidationPolicy
+from consolidation_policy import ConsolidationPolicy  # type: ignore[import-not-found]
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ class ConsolidationSummaryResponse(BaseModel):
 @router.post("/run", response_model=ConsolidationResponse)
 async def run_consolidation(
     request: ConsolidationRequest, api_key: APIKeyInfo = Depends(verify_api_key)
-) -> None:
+) -> ConsolidationResponse:
     """
     메모리 Consolidation 실행
 
@@ -85,7 +86,7 @@ async def run_consolidation(
     3. 비활성 케이스 아카이빙 (inactive_days 초과)
     """
     try:
-        async with db_manager.get_session() as session:
+        async with await db_manager.get_session() as session:
             policy = ConsolidationPolicy(db_session=session, dry_run=request.dry_run)
             results = await policy.run_consolidation()
 
@@ -107,14 +108,16 @@ async def run_consolidation(
 
 
 @router.post("/dry-run", response_model=ConsolidationResponse)
-async def dry_run_consolidation(api_key: APIKeyInfo = Depends(verify_api_key)) -> None:
+async def dry_run_consolidation(
+    api_key: APIKeyInfo = Depends(verify_api_key),
+) -> ConsolidationResponse:
     """
     Consolidation 시뮬레이션 (변경 없음)
 
     실제 변경 없이 Consolidation 결과를 미리 확인합니다.
     """
     try:
-        async with db_manager.get_session() as session:
+        async with await db_manager.get_session() as session:
             policy = ConsolidationPolicy(db_session=session, dry_run=True)
             results = await policy.run_consolidation()
 
@@ -130,14 +133,16 @@ async def dry_run_consolidation(api_key: APIKeyInfo = Depends(verify_api_key)) -
 
 
 @router.get("/summary", response_model=ConsolidationSummaryResponse)
-async def get_consolidation_summary(api_key: APIKeyInfo = Depends(verify_api_key)) -> None:
+async def get_consolidation_summary(
+    api_key: APIKeyInfo = Depends(verify_api_key),
+) -> ConsolidationSummaryResponse:
     """
     Consolidation 후보 요약 조회
 
     현재 Consolidation 대상이 될 수 있는 케이스 통계를 반환합니다.
     """
     try:
-        async with db_manager.get_session() as session:
+        async with await db_manager.get_session() as session:
             policy = ConsolidationPolicy(db_session=session)
             summary = await policy.get_consolidation_summary()
 
@@ -152,7 +157,7 @@ async def get_consolidation_summary(api_key: APIKeyInfo = Depends(verify_api_key
 
 
 @router.get("/health")
-async def health_check() -> None:
+async def health_check() -> Dict[str, Any]:
     """Consolidation 서비스 상태 확인"""
     return {
         "status": "healthy",

@@ -1,5 +1,6 @@
 """
 실시간 모니터링 대시보드
+@CODE:MYPY-001:PHASE2:BATCH4 | SPEC: SPEC-MYPY-001.md | TEST: N/A
 """
 
 import asyncio
@@ -90,7 +91,7 @@ class MonitoringDashboard:
 
     async def _get_active_alerts(self) -> List[Dict[str, Any]]:
         """활성 알람 조회"""
-        alerts = []
+        alerts: List[Dict[str, Any]] = []
 
         # 시스템 헬스 기반 알람
         health = await self.health_checker.get_system_health()
@@ -247,12 +248,11 @@ class MonitoringDashboard:
         # JSON 형식으로 익스포트
         dashboard_data = await self.get_dashboard_data()
 
-        def json_serializer(obj: Any) -> None:
+        def json_serializer(obj: Any) -> str:
             """JSON 직렬화를 위한 커스텀 직렬화 함수"""
             if hasattr(obj, "isoformat"):  # datetime 객체
-                return obj.isoformat()
-            elif hasattr(obj, "__dict__"):  # 일반 객체
-                return str(obj)
+                result: str = obj.isoformat()
+                return result
             else:
                 return str(obj)
 

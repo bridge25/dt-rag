@@ -1,10 +1,13 @@
-"""Monitoring router with Langfuse LLM cost tracking"""
+"""Monitoring router with Langfuse LLM cost tracking
+@CODE:MYPY-001:PHASE2:BATCH4 | SPEC: SPEC-MYPY-001.md | TEST: N/A
+"""
 
 import os
 import time
 from datetime import datetime
+from typing import Any, Dict
 
-import psutil
+import psutil  # type: ignore[import-untyped]
 from fastapi import APIRouter
 
 # Import API key authentication
@@ -16,9 +19,8 @@ try:
 except ImportError:
     AUTH_AVAILABLE = False
 
-    def verify_api_key() -> None:
-        return None
-
+    # Note: verify_api_key is imported from deps when available
+    # This fallback is not used in practice
 
 # Import Langfuse client
 try:
@@ -37,7 +39,7 @@ router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 
 
 @router.get("/health")
-async def get_system_health() -> None:
+async def get_system_health() -> Dict[str, Any]:
     """Get comprehensive system health status"""
     try:
         cpu_percent = psutil.cpu_percent(interval=1)
@@ -75,7 +77,7 @@ async def get_system_health() -> None:
 
 
 @router.get("/llm-costs")
-async def get_llm_costs() -> None:
+async def get_llm_costs() -> Dict[str, Any]:
     """
     Get LLM cost tracking dashboard (Gemini 2.5 Flash + OpenAI Embedding)
 
@@ -124,7 +126,7 @@ async def get_llm_costs() -> None:
         # This is a placeholder for the structure
 
         # Simulated data structure (replace with actual client.get_traces())
-        traces = []  # client.get_traces(limit=1000)
+        traces: list[Any] = []  # client.get_traces(limit=1000)
 
         # Calculate costs by model
         gemini_cost_usd = 0.0
@@ -198,7 +200,7 @@ async def get_llm_costs() -> None:
 
 
 @router.get("/langfuse-status")
-async def get_langfuse_integration_status() -> None:
+async def get_langfuse_integration_status() -> Dict[str, Any]:
     """Get Langfuse integration status and configuration"""
     if not LANGFUSE_AVAILABLE:
         return {"available": False, "message": "Langfuse package not installed"}
