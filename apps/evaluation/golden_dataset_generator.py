@@ -12,6 +12,8 @@ Key Features:
 - Automatic answer generation from documents
 - Quality filtering with critique agents
 - Context tracking for retrieval metrics
+
+@CODE:MYPY-001:PHASE2:BATCH4
 """
 
 import asyncio
@@ -36,7 +38,7 @@ class GoldenSample:
     source_doc_ids: List[str]
     query_type: str  # simple, reasoning, multi_context
     taxonomy_path: Optional[List[str]] = None
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -257,7 +259,7 @@ Format as JSON:
         logger.info(f"Generated {len(samples)} samples with fallback method")
         return samples
 
-    def save_dataset(self, samples: List[GoldenSample], name: str = None) -> None:
+    def save_dataset(self, samples: List[GoldenSample], name: Optional[str] = None) -> str:
         """Save golden dataset to JSON file"""
         if name is None:
             name = f"golden_dataset_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -278,7 +280,7 @@ Format as JSON:
             json.dump(dataset, f, indent=2, ensure_ascii=False)
 
         logger.info(f"Saved {len(samples)} samples to {output_path}")
-        return output_path
+        return str(output_path)
 
     def load_dataset(self, file_path: str) -> List[GoldenSample]:
         """Load golden dataset from JSON file"""
@@ -294,7 +296,7 @@ Format as JSON:
 
     def _count_query_types(self, samples: List[GoldenSample]) -> Dict[str, int]:
         """Count samples by query type"""
-        counts = {}
+        counts: Dict[str, int] = {}
         for sample in samples:
             query_type = sample.query_type
             counts[query_type] = counts.get(query_type, 0) + 1

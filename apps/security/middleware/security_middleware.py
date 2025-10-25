@@ -2,13 +2,15 @@
 Security Middleware for DT-RAG v1.8.1
 FastAPI middleware that implements comprehensive security controls
 Integrates with the security framework for request/response processing
+
+@CODE:MYPY-001:PHASE2:BATCH4
 """
 
 import json
 import logging
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 from fastapi import HTTPException, Request, Response, status
 from fastapi.middleware.base import BaseHTTPMiddleware
@@ -70,7 +72,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-        self, app: Any, security_manager: SecurityManager, config: Dict[str, Any] = None
+        self, app: Any, security_manager: SecurityManager, config: Optional[Dict[str, Any]] = None
     ) -> None:
         super().__init__(app)
         self.security_manager = security_manager
@@ -429,7 +431,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             return real_ip
 
         # Fall back to direct connection
-        if hasattr(request.client, "host"):
+        if request.client is not None and hasattr(request.client, "host"):
             return request.client.host
 
         return "unknown"
@@ -619,12 +621,12 @@ class SecurityDependency:
         self.security_manager = security_manager
 
     async def __call__(
-        self, request: Request, required_permission: str = None, resource: str = None
+        self, request: Request, required_permission: Optional[str] = None, resource: Optional[str] = None
     ) -> SecurityContext:
         """Security dependency for endpoints"""
 
         # Get security context from middleware
-        security_context = getattr(request.state, "security_context", None)
+        security_context = cast(Optional[SecurityContext], getattr(request.state, "security_context", None))
         if not security_context:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -660,12 +662,12 @@ class CSRFProtection:
     def __init__(self, secret_key: str) -> None:
         self.secret_key = secret_key
 
-    async def __call__(self, request: Request, call_next: Any) -> None:
+    async def __call__(self, request: Request, call_next: Any) -> Response:
         """CSRF protection middleware"""
 
         # Skip CSRF for GET, HEAD, OPTIONS
         if request.method in ["GET", "HEAD", "OPTIONS"]:
-            return await call_next(request)
+            return cast(Response, await call_next(request))
 
         # Check CSRF token for state-changing operations
         csrf_token = request.headers.get("X-CSRF-Token")
@@ -682,7 +684,7 @@ class CSRFProtection:
                 content={"error": "Invalid CSRF token"},
             )
 
-        return await call_next(request)
+        return cast(Response, await call_next(request))
 
     def _validate_csrf_token(self, token: str) -> bool:
         """Validate CSRF token"""
@@ -698,7 +700,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.security_manager = security_manager
 
-    async def dispatch(self, request: Request, call_next: Any) -> None:
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Log all requests for security monitoring"""
 
         start_time = time.time()
@@ -715,7 +717,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             }
         )
 
-        response = await call_next(request)
+        response = cast(Response, await call_next(request))
 
         duration = time.time() - start_time
 

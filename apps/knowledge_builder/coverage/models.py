@@ -9,7 +9,7 @@ class CoverageMetrics:
     total_documents: int
     total_chunks: int
     coverage_percent: float
-    node_coverage: Dict[str, int]
+    node_coverage: Dict[str, Dict[str, int]]
 
 
 @dataclass
