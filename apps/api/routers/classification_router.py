@@ -37,7 +37,7 @@ classification_router = APIRouter(prefix="/classify", tags=["Classification"])
 class BatchClassifyRequest(BaseModel):
     """Request for batch classification"""
 
-    items: List[ClassifyRequest] = Field(..., min_items=1, max_items=100)
+    items: List[ClassifyRequest] = Field(..., min_length=1, max_length=100)
     taxonomy_version: Optional[str] = None
 
 
@@ -91,38 +91,35 @@ class ClassificationService:
     async def classify_single(self, request: ClassifyRequest) -> ClassifyResponse:
         """Classify a single document chunk"""
         # Mock classification logic
+        from ..models.common_models import ClassificationResult
+
         confidence = 0.85 if "machine learning" in request.text.lower() else 0.72
-        canonical_path = ["Technology", "AI", "Machine Learning"]
 
-        # Determine if HITL is needed
-        hitl_needed = confidence < 0.70
-
-        candidates = [
-            TaxonomyNode(
-                node_id="tech-ai-ml",
-                label="Machine Learning",
-                canonical_path=canonical_path,
-                version="1.8.1",
+        predictions = [
+            ClassificationResult(
+                label="Technology/AI/Machine Learning",
                 confidence=confidence,
+                metadata={},
             ),
-            TaxonomyNode(
-                node_id="tech-ai-nlp",
-                label="Natural Language Processing",
-                canonical_path=["Technology", "AI", "NLP"],
-                version="1.8.1",
+            ClassificationResult(
+                label="Technology/AI/NLP",
                 confidence=0.65,
+                metadata={},
             ),
         ]
 
         return ClassifyResponse(
-            canonical=canonical_path,
-            candidates=candidates,
-            hitl=hitl_needed,
-            confidence=confidence,
-            reasoning=[
-                "Text contains machine learning terminology",
-                "Technical context suggests AI/ML classification",
-            ],
+            text=request.text,
+            predictions=predictions,
+            model_name=request.model_name or "default-classifier",
+            processing_time_ms=45.0,
+            metadata={
+                "hitl_needed": confidence < 0.70,
+                "reasoning": [
+                    "Text contains machine learning terminology",
+                    "Technical context suggests AI/ML classification",
+                ],
+            },
         )
 
     async def classify_batch(
@@ -136,11 +133,26 @@ class ClassificationService:
             result = await self.classify_single(item)
             results.append(result)
 
+        # Calculate average confidence from predictions
+        total_confidence = sum(
+            max((p.confidence for p in r.predictions), default=0.0) for r in results
+        )
+        avg_confidence = total_confidence / len(results) if results else 0.0
+
         summary = {
             "total_items": len(request.items),
-            "hitl_required": sum(1 for r in results if r.hitl),
-            "avg_confidence": sum(r.confidence for r in results) / len(results),
-            "categories": list(set(tuple(r.canonical) for r in results)),
+            "hitl_required": sum(
+                1 for r in results if r.metadata.get("hitl_needed", False)
+            ),
+            "avg_confidence": avg_confidence,
+            "categories": list(
+                set(
+                    p.label
+                    for r in results
+                    for p in r.predictions
+                    if p.confidence > 0.5
+                )
+            ),
         }
 
         return BatchClassifyResponse(
@@ -204,7 +216,7 @@ async def get_classification_service() -> ClassificationService:
 async def classify_document_chunk(
     request: ClassifyRequest,
     service: ClassificationService = Depends(get_classification_service),
-) -> None:
+) -> ClassifyResponse:
     """
     Classify a document chunk into taxonomy categories
 
@@ -231,14 +243,7 @@ async def classify_document_chunk(
         # Perform classification
         result = await service.classify_single(request)
 
-        # Add response headers
-        headers = {
-            "X-Classification-Confidence": str(result.confidence),
-            "X-HITL-Required": str(result.hitl).lower(),
-            "X-Candidates-Count": str(len(result.candidates)),
-        }
-
-        return JSONResponse(content=result.dict(), headers=headers)
+        return result
 
     except HTTPException:
         raise
@@ -255,7 +260,7 @@ async def classify_batch(
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
     service: ClassificationService = Depends(get_classification_service),
-) -> None:
+) -> Any:
     """
     Classify multiple document chunks in batch
 
@@ -305,7 +310,7 @@ async def get_hitl_tasks(
     limit: int = Query(50, ge=1, le=100, description="Maximum tasks to return"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
     service: ClassificationService = Depends(get_classification_service),
-) -> None:
+) -> List[HITLTask]:
     """
     Get pending human-in-the-loop classification tasks
 
@@ -335,7 +340,7 @@ async def get_hitl_tasks(
 async def submit_hitl_review(
     review: HITLReviewRequest,
     service: ClassificationService = Depends(get_classification_service),
-) -> None:
+) -> Dict[str, Any]:
     """
     Submit human review for classification task
 
@@ -368,7 +373,7 @@ async def submit_hitl_review(
 @classification_router.get("/analytics", response_model=ClassificationAnalytics)
 async def get_classification_analytics(
     service: ClassificationService = Depends(get_classification_service),
-) -> None:
+) -> ClassificationAnalytics:
     """
     Get classification analytics and performance metrics
 
@@ -393,7 +398,7 @@ async def get_classification_analytics(
 @classification_router.get("/confidence/{chunk_id}")
 async def get_classification_confidence(
     chunk_id: str, service: ClassificationService = Depends(get_classification_service)
-) -> None:
+) -> Dict[str, Any]:
     """
     Get detailed confidence analysis for a classification
 
@@ -434,7 +439,7 @@ async def get_classification_confidence(
 
 
 @classification_router.get("/status")
-async def get_classification_status() -> None:
+async def get_classification_status() -> Dict[str, Any]:
     """
     Get classification system status and health
 
