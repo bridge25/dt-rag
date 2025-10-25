@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 RAGAS Evaluation API Router for DT-RAG v1.8.1
 
@@ -10,18 +11,22 @@ Provides REST endpoints for RAG system evaluation including:
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+
+from apps.security.models import APIKeyInfo  # type: ignore[import-not-found]
 
 try:
     from ..deps import verify_api_key
 except ImportError:
 
-    def verify_api_key() -> None:
-        return None
+    async def verify_api_key(  # type: ignore[misc]
+        request: Request, x_api_key: Optional[str] = None
+    ) -> APIKeyInfo:
+        return APIKeyInfo(key_id="mock", user_id="mock", scopes=[])
 
 
 from apps.evaluation.models import (
@@ -40,7 +45,7 @@ evaluation_router = APIRouter(prefix="/evaluation", tags=["Evaluation"])
 class BatchEvaluationRequest(BaseModel):
     """Request for batch evaluation"""
 
-    evaluations: List[EvaluationRequest] = Field(..., min_items=1, max_items=50)
+    evaluations: List[EvaluationRequest] = Field(..., min_length=1, max_length=50)
 
 
 class BatchEvaluationResponse(BaseModel):
@@ -72,8 +77,8 @@ async def get_evaluator() -> RAGASEvaluator:
 async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
-    api_key: str = Depends(verify_api_key),
-) -> None:
+    api_key: APIKeyInfo = Depends(verify_api_key),
+) -> JSONResponse:
     """
     Evaluate a single RAG response using RAGAS metrics
 
@@ -110,9 +115,23 @@ async def evaluate_rag_response(
             ground_truth=request.ground_truth,
         )
 
+        # Calculate overall score from metrics
+        overall_score = 0.0
+        metric_count = 0
+        for metric_value in [
+            result.metrics.context_precision,
+            result.metrics.context_recall,
+            result.metrics.faithfulness,
+            result.metrics.answer_relevancy,
+        ]:
+            if metric_value is not None:
+                overall_score += metric_value
+                metric_count += 1
+        overall_score = overall_score / metric_count if metric_count > 0 else 0.0
+
         headers = {
             "X-Evaluation-ID": result.evaluation_id,
-            "X-Overall-Score": str(result.overall_score),
+            "X-Overall-Score": str(overall_score),
             "X-Has-Quality-Issues": str(len(result.quality_flags) > 0).lower(),
         }
 
@@ -132,8 +151,8 @@ async def evaluate_rag_response(
 async def evaluate_batch(
     request: BatchEvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
-    api_key: str = Depends(verify_api_key),
-) -> None:
+    api_key: APIKeyInfo = Depends(verify_api_key),
+) -> BatchEvaluationResponse:
     """
     Evaluate multiple RAG responses in batch
 
@@ -180,7 +199,18 @@ async def evaluate_batch(
         avg_relevancy = sum(r.metrics.answer_relevancy or 0.0 for r in results) / len(
             results
         )
-        avg_overall = sum(r.overall_score for r in results) / len(results)
+        # Calculate overall score for each result
+        overall_scores = []
+        for r in results:
+            scores = [
+                r.metrics.context_precision or 0.0,
+                r.metrics.context_recall or 0.0,
+                r.metrics.faithfulness or 0.0,
+                r.metrics.answer_relevancy or 0.0,
+            ]
+            non_zero = [s for s in scores if s > 0]
+            overall_scores.append(sum(non_zero) / len(non_zero) if non_zero else 0.0)
+        avg_overall = sum(overall_scores) / len(overall_scores) if overall_scores else 0.0
 
         summary = {
             "total_evaluations": len(results),
@@ -214,14 +244,20 @@ async def evaluate_batch(
 
 
 @evaluation_router.get("/thresholds", response_model=QualityThresholds)
-async def get_quality_thresholds(api_key: str = Depends(verify_api_key)) -> None:
+async def get_quality_thresholds(api_key: APIKeyInfo = Depends(verify_api_key)) -> QualityThresholds:
     """
     Get current quality thresholds for monitoring
 
     Thresholds are used to trigger quality alerts and recommendations.
     """
     try:
-        thresholds = QualityThresholds()
+        thresholds = QualityThresholds(
+            faithfulness_min=0.85,
+            context_precision_min=0.75,
+            context_recall_min=0.70,
+            answer_relevancy_min=0.80,
+            response_time_max=5.0,
+        )
         return thresholds
 
     except Exception as e:
@@ -234,8 +270,8 @@ async def get_quality_thresholds(api_key: str = Depends(verify_api_key)) -> None
 
 @evaluation_router.put("/thresholds", response_model=QualityThresholds)
 async def update_quality_thresholds(
-    thresholds: QualityThresholds, api_key: str = Depends(verify_api_key)
-) -> None:
+    thresholds: QualityThresholds, api_key: APIKeyInfo = Depends(verify_api_key)
+) -> QualityThresholds:
     """
     Update quality thresholds for monitoring
 
@@ -254,7 +290,7 @@ async def update_quality_thresholds(
 
 
 @evaluation_router.get("/status")
-async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)) -> None:
+async def get_evaluation_system_status(api_key: APIKeyInfo = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get evaluation system status and health
 
@@ -296,7 +332,13 @@ async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)) -
             },
             "configuration": {
                 "max_batch_size": 50,
-                "default_thresholds": QualityThresholds().dict(),
+                "default_thresholds": QualityThresholds(
+                    faithfulness_min=0.85,
+                    context_precision_min=0.75,
+                    context_recall_min=0.70,
+                    answer_relevancy_min=0.80,
+                    response_time_max=5.0,
+                ).dict(),
             },
         }
 
