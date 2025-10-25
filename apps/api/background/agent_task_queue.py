@@ -1,5 +1,6 @@
 """
 @CODE:AGENT-GROWTH-004:QUEUE - AgentTaskQueue
+@CODE:MYPY-001:PHASE2:BATCH6
 
 Agent task queue manager with separate namespace from ingestion queue.
 Wraps JobQueue for coverage refresh tasks with priority management.
@@ -136,6 +137,10 @@ class AgentTaskQueue:
             queue_key = self._get_queue_key(priority)
 
             try:
+                if not self.job_queue.redis_manager:
+                    logger.warning("Redis manager not available")
+                    continue
+
                 items = await self.job_queue.redis_manager.lrange(queue_key, 0, -1)
 
                 if not items:
@@ -151,6 +156,10 @@ class AgentTaskQueue:
                         job_payload = json.loads(item_str)
 
                         if job_payload.get("job_id") == task_id:
+                            if not self.job_queue.redis_manager:
+                                logger.warning("Redis manager not available for lrem")
+                                continue
+
                             removed_count = await self.job_queue.redis_manager.lrem(
                                 queue_key,
                                 1,
