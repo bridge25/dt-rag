@@ -36,7 +36,7 @@ class RedisConfig:
     max_connections: int = 50
     retry_on_timeout: bool = True
     socket_keepalive: bool = True
-    socket_keepalive_options: Dict = None
+    socket_keepalive_options: Optional[Dict[Any, Any]] = None
     health_check_interval: int = 30
 
     # 타임아웃 설정
@@ -50,7 +50,7 @@ class RedisConfig:
 
     # TTL 설정
     default_ttl: int = 3600  # 1시간
-    ttl_configs: Dict[str, int] = None
+    ttl_configs: Optional[Dict[str, int]] = None
 
     def __post_init__(self) -> None:
         if self.socket_keepalive_options is None:
@@ -72,7 +72,7 @@ class RedisConfig:
 class RedisManager:
     """Redis 연결 및 작업 관리자"""
 
-    def __init__(self, config: RedisConfig = None) -> None:
+    def __init__(self, config: Optional[RedisConfig] = None) -> None:
         self.config = config or RedisConfig()
         self.client: Optional[redis.Redis] = None
         self.connection_pool: Optional[redis.ConnectionPool] = None
@@ -206,14 +206,18 @@ class RedisManager:
 
     def _get_ttl_for_key(self, key: str) -> int:
         """키에 따른 TTL 결정"""
-        for prefix, ttl in self.config.ttl_configs.items():
-            if key.startswith(prefix):
-                return ttl
+        if self.config.ttl_configs is not None:
+            for prefix, ttl in self.config.ttl_configs.items():
+                if key.startswith(prefix):
+                    return ttl
         return self.config.default_ttl
 
     async def get(self, key: str) -> Optional[Any]:
         """값 조회"""
         if not await self.ensure_connection():
+            return None
+
+        if self.client is None:
             return None
 
         try:
@@ -235,6 +239,9 @@ class RedisManager:
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
         """값 저장"""
         if not await self.ensure_connection():
+            return False
+
+        if self.client is None:
             return False
 
         try:
@@ -263,9 +270,12 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        if self.client is None:
+            return False
+
         try:
             self.stats["operations_total"] += 1
-            result = await self.client.delete(key)
+            result: int = await self.client.delete(key)
             self.stats["operations_success"] += 1
             return result > 0
 
@@ -279,6 +289,9 @@ class RedisManager:
         if not await self.ensure_connection():
             return 0
 
+        if self.client is None:
+            return 0
+
         try:
             self.stats["operations_total"] += 1
 
@@ -288,7 +301,7 @@ class RedisManager:
                 return 0
 
             # 키 삭제
-            deleted_count = await self.client.delete(*keys)
+            deleted_count: int = await self.client.delete(*keys)
             self.stats["operations_success"] += 1
             return deleted_count
 
@@ -302,8 +315,11 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        if self.client is None:
+            return False
+
         try:
-            result = await self.client.exists(key)
+            result: int = await self.client.exists(key)
             return result > 0
         except Exception as e:
             logger.warning(f"Redis EXISTS failed for key {key}: {e}")
@@ -314,8 +330,11 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        if self.client is None:
+            return False
+
         try:
-            result = await self.client.expire(key, ttl)
+            result: bool = await self.client.expire(key, ttl)
             return result
         except Exception as e:
             logger.warning(f"Redis EXPIRE failed for key {key}: {e}")
@@ -326,8 +345,12 @@ class RedisManager:
         if not await self.ensure_connection():
             return -1
 
+        if self.client is None:
+            return -1
+
         try:
-            return await self.client.ttl(key)
+            result: int = await self.client.ttl(key)
+            return result
         except Exception as e:
             logger.warning(f"Redis TTL failed for key {key}: {e}")
             return -1
@@ -335,6 +358,9 @@ class RedisManager:
     async def keys(self, pattern: str = "*") -> List[str]:
         """키 목록 조회"""
         if not await self.ensure_connection():
+            return []
+
+        if self.client is None:
             return []
 
         try:
@@ -349,6 +375,9 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        if self.client is None:
+            return False
+
         try:
             await self.client.flushdb()
             return True
@@ -359,6 +388,9 @@ class RedisManager:
     async def info(self) -> Dict[str, Any]:
         """Redis 서버 정보"""
         if not await self.ensure_connection():
+            return {}
+
+        if self.client is None:
             return {}
 
         try:
@@ -373,8 +405,12 @@ class RedisManager:
         if not await self.ensure_connection():
             return None
 
+        if self.client is None:
+            return None
+
         try:
-            return await self.client.memory_usage(key)
+            result: Optional[int] = await self.client.memory_usage(key)
+            return result
         except Exception as e:
             logger.warning(f"Redis MEMORY USAGE failed for key {key}: {e}")
             return None
@@ -384,9 +420,12 @@ class RedisManager:
         if not await self.ensure_connection():
             return None
 
+        if self.client is None:
+            return None
+
         try:
             self.stats["operations_total"] += 1
-            result = await self.client.lpush(key, *values)
+            result: int = await self.client.lpush(key, *values)  # type: ignore[misc]
             self.stats["operations_success"] += 1
             return result
         except Exception as e:
@@ -394,16 +433,21 @@ class RedisManager:
             self.stats["operations_failed"] += 1
             return None
 
-    async def brpop(self, *keys: str, timeout: int = 0) -> Optional[tuple]:
+    async def brpop(self, *keys: str, timeout: int = 0) -> Optional[tuple[Any, ...]]:
         """List 오른쪽에서 값 블로킹 팝"""
         if not await self.ensure_connection():
             return None
 
+        if self.client is None:
+            return None
+
         try:
             self.stats["operations_total"] += 1
-            result = await self.client.brpop(*keys, timeout=timeout)
+            result_list = await self.client.brpop(list(keys), timeout=timeout)  # type: ignore[misc]
             self.stats["operations_success"] += 1
-            return result
+            if result_list is None:
+                return None
+            return tuple(result_list)
         except Exception as e:
             logger.warning(f"Redis BRPOP failed: {e}")
             self.stats["operations_failed"] += 1
@@ -414,9 +458,12 @@ class RedisManager:
         if not await self.ensure_connection():
             return 0
 
+        if self.client is None:
+            return 0
+
         try:
             self.stats["operations_total"] += 1
-            result = await self.client.llen(key)
+            result: int = await self.client.llen(key)  # type: ignore[misc]
             self.stats["operations_success"] += 1
             return result
         except Exception as e:
@@ -469,7 +516,8 @@ class RedisManager:
                 }
 
             # PING 테스트
-            await self.client.ping()
+            if self.client is not None:
+                await self.client.ping()
 
             # 간단한 SET/GET 테스트
             test_key = f"health_check:{datetime.now().timestamp()}"
@@ -536,7 +584,7 @@ async def get_redis_manager() -> RedisManager:
     return _redis_manager
 
 
-async def initialize_redis_manager(config: RedisConfig = None) -> RedisManager:
+async def initialize_redis_manager(config: Optional[RedisConfig] = None) -> RedisManager:
     """Redis 매니저 초기화"""
     global _redis_manager
     _redis_manager = RedisManager(config)

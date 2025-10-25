@@ -4,7 +4,7 @@ import os
 import random
 import sys
 import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -73,7 +73,9 @@ class ATaxonomyAPIClient:
             limits=limits, timeout=timeout, headers=self.headers
         )
 
-    async def _request_with_retry(self, method: str, url: str, **kwargs) -> dict:
+    async def _request_with_retry(
+        self, method: str, url: str, **kwargs: Any
+    ) -> Dict[str, Any]:
         """지수 백오프를 사용한 재시도 로직"""
         max_retries = int(os.getenv("MAX_RETRIES", os.getenv("ORCH_RETRY_MAX", "3")))
         backoff_factor = float(os.getenv("ORCH_RETRY_BACKOFF", "1.0"))
@@ -88,7 +90,8 @@ class ATaxonomyAPIClient:
 
                 response.raise_for_status()
                 try:
-                    return response.json()
+                    json_data: Dict[str, Any] = response.json()
+                    return json_data
                 except ValueError:
                     logging.error("Invalid JSON from A-team API response")
                     return {}
@@ -125,19 +128,22 @@ class ATaxonomyAPIClient:
                     status_code=500, detail=f"A팀 API 연결 실패: {str(e)}"
                 )
 
-    async def classify(self, request: dict) -> dict:
+        # 모든 재시도 실패 시 빈 dict 반환
+        return {}
+
+    async def classify(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """A팀 /classify API 호출 (재시도 로직 적용)"""
         return await self._request_with_retry(
             "POST", f"{self.base_url}/classify", json=request
         )
 
-    async def search(self, request: dict) -> dict:
+    async def search(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """A팀 /search API 호출 (재시도 로직 적용)"""
         return await self._request_with_retry(
             "POST", f"{self.base_url}/search", json=request
         )
 
-    async def get_taxonomy_tree(self, version: str) -> dict:
+    async def get_taxonomy_tree(self, version: str) -> Dict[str, Any]:
         """A팀 /taxonomy/{version}/tree API 호출 (재시도 로직 적용)"""
         return await self._request_with_retry(
             "GET", f"{self.base_url}/taxonomy/{version}/tree"
@@ -165,41 +171,41 @@ except ImportError:
     # Fallback for local development
     from pydantic import BaseModel
 
-    class TaxonomyNode(BaseModel):
+    class TaxonomyNode(BaseModel):  # type: ignore[no-redef]
         node_id: str
         label: str
         canonical_path: List[str]
         version: str
         confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
-    class ClassifyRequest(BaseModel):
+    class ClassifyRequest(BaseModel):  # type: ignore[no-redef]
         chunk_id: str
         text: str
         hint_paths: Optional[List[List[str]]] = None
 
-    class ClassifyResponse(BaseModel):
+    class ClassifyResponse(BaseModel):  # type: ignore[no-redef]
         canonical: List[str]
         candidates: List[TaxonomyNode]
         hitl: bool = False
         confidence: float = Field(ge=0.0, le=1.0)
         reasoning: List[str]
 
-    class SearchRequest(BaseModel):
+    class SearchRequest(BaseModel):  # type: ignore[no-redef]
         query: str
         taxonomy_filters: Optional[List[str]] = None
         limit: int = Field(default=10, ge=1, le=100)
 
-    class SearchResponse(BaseModel):
+    class SearchResponse(BaseModel):  # type: ignore[no-redef]
         results: List[Dict]
         total: int
         query: str
 
-    class FromCategoryRequest(BaseModel):
+    class FromCategoryRequest(BaseModel):  # type: ignore[no-redef]
         version: str
         node_paths: List[List[str]]
         options: Optional[Dict] = Field(default_factory=dict)
 
-    class RetrievalConfig(BaseModel):
+    class RetrievalConfig(BaseModel):  # type: ignore[no-redef]
         bm25_topk: int = 12
         vector_topk: int = 12
         rerank: Dict = Field(
@@ -207,12 +213,12 @@ except ImportError:
         )
         filter: Dict = Field(default_factory=lambda: {"canonical_in": True})
 
-    class FeaturesConfig(BaseModel):
+    class FeaturesConfig(BaseModel):  # type: ignore[no-redef]
         debate: bool = False
         hitl_below_conf: float = Field(default=0.70, ge=0.0, le=1.0)
         cost_guard: bool = True
 
-    class AgentManifest(BaseModel):
+    class AgentManifest(BaseModel):  # type: ignore[no-redef]
         name: str
         taxonomy_version: str
         allowed_category_paths: List[List[str]]
@@ -220,7 +226,7 @@ except ImportError:
         features: FeaturesConfig
         mcp_tools_allowlist: List[str] = Field(default_factory=list)
 
-    class CaseMetadata(BaseModel):
+    class CaseMetadata(BaseModel):  # type: ignore[no-redef]
         case_id: str
         category_path: List[str]
         quality_score: float = Field(ge=0.0, le=1.0)
@@ -229,20 +235,20 @@ except ImportError:
         created_at: str
         last_used_at: Optional[str] = None
 
-    class CBRCase(BaseModel):
+    class CBRCase(BaseModel):  # type: ignore[no-redef]
         case_id: str
         query_vector: List[float]
         response_text: str
         metadata: CaseMetadata
         similarity_score: Optional[float] = None
 
-    class CBRSuggestRequest(BaseModel):
+    class CBRSuggestRequest(BaseModel):  # type: ignore[no-redef]
         query: str
         category_path: Optional[List[str]] = None
         k: int = Field(default=5, ge=1, le=20)
         similarity_threshold: float = Field(default=0.7, ge=0.0, le=1.0)
 
-    class CBRSuggestResponse(BaseModel):
+    class CBRSuggestResponse(BaseModel):  # type: ignore[no-redef]
         cases: List[CBRCase]
         query: str
         total_candidates: int
@@ -250,7 +256,7 @@ except ImportError:
         request_id: str
         latency: float = Field(ge=0.0)
 
-    class CBRFeedback(BaseModel):
+    class CBRFeedback(BaseModel):  # type: ignore[no-redef]
         request_id: str
         selected_case_ids: List[str]
         user_rating: int = Field(ge=1, le=5)
@@ -274,7 +280,7 @@ async def shutdown_event() -> None:
 
 
 @app.get("/health")
-async def health() -> None:
+async def health() -> Dict[str, str]:
     return {"status": "healthy", "service": "orchestration"}
 
 
@@ -282,7 +288,7 @@ async def health() -> None:
 
 
 @app.post("/api/classify", response_model=ClassifyResponse)
-async def api_classify(request: ClassifyRequest) -> None:
+async def api_classify(request: ClassifyRequest) -> ClassifyResponse:
     # Reuse B-team classify logic against A-team API with hardening
     try:
         a_team_request = {
@@ -309,7 +315,7 @@ async def api_classify(request: ClassifyRequest) -> None:
 
 
 @app.post("/api/search", response_model=SearchResponse)
-async def api_search(request: SearchRequest) -> None:
+async def api_search(request: SearchRequest) -> SearchResponse:
     try:
         a_team_request = {
             "q": request.q,
@@ -341,7 +347,7 @@ async def api_search(request: SearchRequest) -> None:
 
 
 @app.get("/api/taxonomy/tree/{version}")
-async def api_taxonomy_tree(version: str) -> None:
+async def api_taxonomy_tree(version: str) -> Dict[str, Any]:
     try:
         return await a_team_client.get_taxonomy_tree(version)
     except Exception as e:
@@ -353,7 +359,7 @@ async def api_taxonomy_tree(version: str) -> None:
 
 
 @app.post("/classify", response_model=ClassifyResponse)
-async def classify(request: ClassifyRequest) -> None:
+async def classify(request: ClassifyRequest) -> ClassifyResponse:
     """
     B팀 오케스트레이션: A팀 분류 API를 호출하여 결과 반환 (PRD 준수)
     """
@@ -390,7 +396,7 @@ async def classify(request: ClassifyRequest) -> None:
 
 
 @app.post("/chat/run")
-async def run_chat_pipeline(request: dict) -> None:
+async def run_chat_pipeline(request: Dict[str, Any]) -> Dict[str, Any]:
     """
     B-O3: 7-Step LangGraph 파이프라인 실행
     intent→retrieve→plan→(tools/debate)→compose→cite→respond
@@ -439,7 +445,7 @@ async def run_chat_pipeline(request: dict) -> None:
 
 
 @app.post("/search", response_model=SearchResponse)
-async def search(request: SearchRequest) -> None:
+async def search(request: SearchRequest) -> SearchResponse:
     """
     B팀 오케스트레이션: A팀 검색 API를 호출하여 결과 반환 (PRD 준수)
     """
@@ -480,7 +486,7 @@ async def search(request: SearchRequest) -> None:
 
 
 @app.post("/agents/from-category", response_model=AgentManifest)
-async def create_agent_from_category(request: FromCategoryRequest) -> None:
+async def create_agent_from_category(request: FromCategoryRequest) -> AgentManifest:
     """
     B-O1: Agent Manifest Builder
     노드 경로 입력 → AgentManifest 생성 (필터 canonical 강제)
@@ -523,7 +529,7 @@ async def create_agent_from_category(request: FromCategoryRequest) -> None:
 
 
 @app.post("/cbr/suggest", response_model=CBRSuggestResponse)
-async def suggest_cbr_cases(request: CBRSuggestRequest) -> None:
+async def suggest_cbr_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
     """
     B-O4: CBR 조회/로그 수집 (Neural Selector 데이터)
     k-NN 조회 엔드포인트 + 유사도 계산 + 성과 로깅
@@ -606,7 +612,7 @@ async def suggest_cbr_cases(request: CBRSuggestRequest) -> None:
 
 
 @app.post("/cbr/feedback")
-async def submit_cbr_feedback(feedback: CBRFeedback) -> None:
+async def submit_cbr_feedback(feedback: CBRFeedback) -> Dict[str, Any]:
     """
     B-O4: CBR 피드백 수집
     사용자 피드백 수집 (thumbs up/down + 성공 여부)
@@ -632,7 +638,7 @@ async def submit_cbr_feedback(feedback: CBRFeedback) -> None:
 
 
 @app.get("/taxonomy/{version}/tree")
-async def get_taxonomy_tree(version: str) -> None:
+async def get_taxonomy_tree(version: str) -> Dict[str, Any]:
     """
     B팀 오케스트레이션: A팀 택소노미 트리 API 호출 (PRD 준수)
     """
