@@ -398,7 +398,7 @@ DASHBOARD_HTML = """
 
 
 @dashboard_router.get("/", response_class=HTMLResponse)
-async def get_dashboard(request: Request) -> None:
+async def get_dashboard(request: Request) -> HTMLResponse:
     """Get the evaluation dashboard HTML page"""
     return HTMLResponse(content=DASHBOARD_HTML)
 
@@ -484,6 +484,14 @@ async def get_system_statistics() -> Dict[str, Any]:
             result = await session.execute(query)
             stats = result.fetchone()
 
+            if stats is None:
+                return {
+                    "evaluations_24h": 0,
+                    "high_quality_rate": 0,
+                    "avg_response_time": 0,
+                    "error_rate": 0,
+                }
+
             return {
                 "evaluations_24h": int(stats[0]) if stats[0] else 0,
                 "high_quality_rate": (
@@ -504,13 +512,13 @@ async def get_system_statistics() -> Dict[str, Any]:
 
 
 @dashboard_router.get("/api/metrics")
-async def get_dashboard_metrics() -> None:
+async def get_dashboard_metrics() -> Dict[str, Any]:
     """API endpoint to get current dashboard metrics"""
     return await get_dashboard_data()
 
 
 @dashboard_router.post("/api/simulate-evaluation")
-async def simulate_evaluation() -> None:
+async def simulate_evaluation() -> Dict[str, Any]:
     """Simulate an evaluation for dashboard testing"""
     import random
 
@@ -518,11 +526,13 @@ async def simulate_evaluation() -> None:
     from .ragas_engine import RAGASEvaluator
 
     # Create simulated evaluation result
+    # @CODE:MYPY-001:PHASE2:BATCH6
     simulated_metrics = EvaluationMetrics(
         faithfulness=random.uniform(0.75, 0.95),
         context_precision=random.uniform(0.70, 0.90),
         context_recall=random.uniform(0.65, 0.85),
         answer_relevancy=random.uniform(0.80, 0.95),
+        retrieval_score=random.uniform(0.70, 0.90),
         response_time=random.uniform(0.5, 3.0),
     )
 

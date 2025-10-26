@@ -36,6 +36,7 @@ async def get_job_orchestrator() -> JobOrchestrator:
     return _job_orchestrator
 
 
+# @CODE:MYPY-001:PHASE2:BATCH6
 @router.post(
     "/upload",
     status_code=status.HTTP_202_ACCEPTED,
@@ -49,8 +50,8 @@ async def upload_document(
     language: str = Form("ko"),
     priority: int = Form(5),
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-    http_request: Request = None,
-) -> None:
+    http_request: Optional[Request] = None,
+) -> JSONResponse:
     try:
         correlation_id = (
             http_request.headers.get("X-Correlation-ID")
@@ -63,6 +64,12 @@ async def upload_document(
         idempotency_key = (
             http_request.headers.get("X-Idempotency-Key") if http_request else None
         )
+
+        if not file.filename:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File name is required",
+            )
 
         file_extension = file.filename.split(".")[-1].lower()
 
@@ -153,7 +160,7 @@ async def upload_document(
 async def get_job_status(
     job_id: str,
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-) -> None:
+) -> JobStatusResponseV1:
     try:
         status_data = await orchestrator.get_job_status(job_id)
 
