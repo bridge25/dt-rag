@@ -10,15 +10,13 @@ Features:
 """
 
 # @CODE:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md | TEST: tests/e2e/test_complete_workflow.py
-# @CODE:MYPY-001:PHASE2:BATCH5 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 
 import logging
-import uuid
+from typing import List, Dict, Any, Optional
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+import uuid
 
-from sqlalchemy import text as sql_text
-
+from sqlalchemy import text
 from apps.api.database import db_manager
 
 logger = logging.getLogger(__name__)
@@ -27,7 +25,7 @@ logger = logging.getLogger(__name__)
 class HITLQueue:
     """Human-in-the-loop queue manager"""
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize HITL queue manager"""
         logger.info("HITLQueue initialized")
 
@@ -39,7 +37,7 @@ class HITLQueue:
         confidence: float,
         alternatives: List[List[str]],
         priority: str = "normal",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Add classification task to HITL queue
@@ -61,8 +59,7 @@ class HITLQueue:
         try:
             async with db_manager.async_session() as session:
                 # Insert into doc_taxonomy with hitl_required=true
-                query = sql_text(
-                    """
+                query = text("""
                     UPDATE doc_taxonomy
                     SET hitl_required = true,
                         confidence = :confidence,
@@ -70,23 +67,17 @@ class HITLQueue:
                     WHERE doc_id = (
                         SELECT doc_id FROM chunks WHERE chunk_id = :chunk_id
                     )
-                """
-                )
+                """)
 
-                await session.execute(
-                    query,
-                    {
-                        "chunk_id": chunk_id,
-                        "confidence": confidence,
-                        "path": str(suggested_classification),
-                    },
-                )
+                await session.execute(query, {
+                    "chunk_id": chunk_id,
+                    "confidence": confidence,
+                    "path": suggested_classification
+                })
 
                 await session.commit()
 
-                logger.info(
-                    f"Added HITL task {task_id} for chunk {chunk_id} (conf={confidence})"
-                )
+                logger.info(f"Added HITL task {task_id} for chunk {chunk_id} (conf={confidence})")
 
                 return task_id
 
@@ -99,7 +90,7 @@ class HITLQueue:
         limit: int = 50,
         priority: Optional[str] = None,
         min_confidence: Optional[float] = None,
-        max_confidence: Optional[float] = None,
+        max_confidence: Optional[float] = None
     ) -> List[Dict[str, Any]]:
         """
         Get pending HITL tasks
@@ -115,8 +106,7 @@ class HITLQueue:
         """
         try:
             async with db_manager.async_session() as session:
-                query = sql_text(
-                    """
+                query = text("""
                     SELECT
                         dt.doc_id,
                         dt.path as suggested_classification,
@@ -129,31 +119,24 @@ class HITLQueue:
                     WHERE dt.hitl_required = true
                     ORDER BY dt.confidence ASC, c.created_at ASC
                     LIMIT :limit
-                """
-                )
+                """)
 
                 result = await session.execute(query, {"limit": limit})
                 rows = result.fetchall()
 
                 tasks = []
                 for row in rows:
-                    tasks.append(
-                        {
-                            "task_id": str(uuid.uuid4()),  # Generate task ID
-                            "chunk_id": str(row[3]),
-                            "text": row[4][:500],  # Limit text length
-                            "suggested_classification": row[1],
-                            "confidence": float(row[2]) if row[2] else 0.0,
-                            "alternatives": [],  # TODO: Fetch from candidates table
-                            "created_at": (
-                                row[5].isoformat()
-                                if row[5]
-                                else datetime.utcnow().isoformat()
-                            ),
-                            "priority": "normal",
-                            "status": "pending",
-                        }
-                    )
+                    tasks.append({
+                        "task_id": str(uuid.uuid4()),  # Generate task ID
+                        "chunk_id": str(row[3]),
+                        "text": row[4][:500],  # Limit text length
+                        "suggested_classification": row[1],
+                        "confidence": float(row[2]) if row[2] else 0.0,
+                        "alternatives": [],  # TODO: Fetch from candidates table
+                        "created_at": row[5].isoformat() if row[5] else datetime.utcnow().isoformat(),
+                        "priority": "normal",
+                        "status": "pending"
+                    })
 
                 logger.info(f"Retrieved {len(tasks)} pending HITL tasks")
                 return tasks
@@ -169,7 +152,7 @@ class HITLQueue:
         approved_path: List[str],
         confidence_override: Optional[float] = None,
         reviewer_notes: Optional[str] = None,
-        reviewer_id: Optional[str] = None,
+        reviewer_id: Optional[str] = None
     ) -> bool:
         """
         Mark HITL task as completed
@@ -188,8 +171,7 @@ class HITLQueue:
         try:
             async with db_manager.async_session() as session:
                 # Update doc_taxonomy with approved classification
-                query = sql_text(
-                    """
+                query = text("""
                     UPDATE doc_taxonomy
                     SET path = :approved_path,
                         confidence = :confidence,
@@ -197,21 +179,13 @@ class HITLQueue:
                     WHERE doc_id = (
                         SELECT doc_id FROM chunks WHERE chunk_id = :chunk_id
                     )
-                """
-                )
+                """)
 
-                await session.execute(
-                    query,
-                    {
-                        "chunk_id": chunk_id,
-                        "approved_path": approved_path,
-                        "confidence": (
-                            confidence_override
-                            if confidence_override is not None
-                            else 1.0
-                        ),
-                    },
-                )
+                await session.execute(query, {
+                    "chunk_id": chunk_id,
+                    "approved_path": approved_path,
+                    "confidence": confidence_override if confidence_override is not None else 1.0
+                })
 
                 await session.commit()
 
@@ -231,8 +205,7 @@ class HITLQueue:
         """
         try:
             async with db_manager.async_session() as session:
-                query = sql_text(
-                    """
+                query = text("""
                     SELECT
                         COUNT(*) as total_pending,
                         AVG(confidence) as avg_confidence,
@@ -240,27 +213,17 @@ class HITLQueue:
                         MAX(confidence) as max_confidence
                     FROM doc_taxonomy
                     WHERE hitl_required = true
-                """
-                )
+                """)
 
                 result = await session.execute(query)
                 row = result.fetchone()
-
-                if row is None:
-                    return {
-                        "total_pending": 0,
-                        "avg_confidence": 0.0,
-                        "min_confidence": 0.0,
-                        "max_confidence": 0.0,
-                        "timestamp": datetime.utcnow().isoformat(),
-                    }
 
                 return {
                     "total_pending": int(row[0]) if row[0] else 0,
                     "avg_confidence": float(row[1]) if row[1] else 0.0,
                     "min_confidence": float(row[2]) if row[2] else 0.0,
                     "max_confidence": float(row[3]) if row[3] else 0.0,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.utcnow().isoformat()
                 }
 
         except Exception as e:
@@ -270,7 +233,7 @@ class HITLQueue:
                 "avg_confidence": 0.0,
                 "min_confidence": 0.0,
                 "max_confidence": 0.0,
-                "error": str(e),
+                "error": str(e)
             }
 
     async def cancel_task(self, task_id: str, chunk_id: str, reason: str) -> bool:
@@ -288,15 +251,13 @@ class HITLQueue:
         try:
             async with db_manager.async_session() as session:
                 # Simply remove HITL flag
-                query = sql_text(
-                    """
+                query = text("""
                     UPDATE doc_taxonomy
                     SET hitl_required = false
                     WHERE doc_id = (
                         SELECT doc_id FROM chunks WHERE chunk_id = :chunk_id
                     )
-                """
-                )
+                """)
 
                 await session.execute(query, {"chunk_id": chunk_id})
                 await session.commit()

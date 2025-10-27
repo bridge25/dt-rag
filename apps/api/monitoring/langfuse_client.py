@@ -12,32 +12,28 @@ Usage:
     async def my_llm_function():
         pass
 """
-
-import logging
 import os
-from typing import Any, Callable, Dict, Optional
+import logging
+from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
 # Lazy import to avoid startup errors
-_langfuse_client: Optional[Any] = None
-_langfuse_available: bool = False
+_langfuse_client = None
+_langfuse_available = False
 
 try:
     from langfuse import Langfuse
     from langfuse.decorators import observe
-
     _langfuse_available = True
 except ImportError:
     logger.warning("langfuse package not installed. Run: pip install langfuse>=3.6.0")
 
     # Fallback: no-op decorator
-    def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Callable[[Any], Any]:
+    def observe(name: str = "", as_type: str = "span", **kwargs):
         """No-op decorator when Langfuse is not available"""
-
-        def decorator(func: Any) -> Any:
+        def decorator(func):
             return func
-
         return decorator
 
 
@@ -67,9 +63,7 @@ def get_langfuse_client() -> Optional[Any]:
     secret_key = os.getenv("LANGFUSE_SECRET_KEY")
 
     if not public_key or not secret_key:
-        logger.warning(
-            "Langfuse credentials not found (LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY)"
-        )
+        logger.warning("Langfuse credentials not found (LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY)")
         return None
 
     try:
@@ -77,7 +71,7 @@ def get_langfuse_client() -> Optional[Any]:
             public_key=public_key,
             secret_key=secret_key,
             host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
-            enabled=True,
+            enabled=True
         )
 
         logger.info(f"Langfuse client initialized: {_langfuse_client.base_url}")
@@ -95,11 +89,11 @@ def get_langfuse_status() -> Dict[str, Any]:
     Returns:
         Status dictionary with availability, configuration, and health info
     """
-    status: Dict[str, Any] = {
+    status = {
         "available": _langfuse_available,
         "enabled": os.getenv("LANGFUSE_ENABLED", "false").lower() == "true",
         "configured": False,
-        "client_initialized": _langfuse_client is not None,
+        "client_initialized": _langfuse_client is not None
     }
 
     if _langfuse_available:
@@ -122,30 +116,33 @@ def get_langfuse_status() -> Dict[str, Any]:
 # Reference: https://ai.google.dev/pricing, https://openai.com/pricing
 MODEL_COSTS = {
     "gemini-2.5-flash-latest": {
-        "input_per_1k_tokens": 0.000075,  # $0.075 / 1M tokens
-        "output_per_1k_tokens": 0.0003,  # $0.30 / 1M tokens
-        "context_window": 128000,  # 128K tokens
+        "input_per_1k_tokens": 0.000075,   # $0.075 / 1M tokens
+        "output_per_1k_tokens": 0.0003,    # $0.30 / 1M tokens
+        "context_window": 128000           # 128K tokens
     },
     "gemini-2.0-flash-exp": {
-        "input_per_1k_tokens": 0.0,  # Free tier (experimental)
+        "input_per_1k_tokens": 0.0,        # Free tier (experimental)
         "output_per_1k_tokens": 0.0,
-        "context_window": 128000,
+        "context_window": 128000
     },
     "text-embedding-3-large": {
-        "input_per_1k_tokens": 0.00013,  # $0.13 / 1M tokens
-        "output_per_1k_tokens": 0.0,  # Embeddings have no output
-        "dimensions": 1536,
+        "input_per_1k_tokens": 0.00013,    # $0.13 / 1M tokens
+        "output_per_1k_tokens": 0.0,       # Embeddings have no output
+        "dimensions": 1536
     },
     "text-embedding-ada-002": {
-        "input_per_1k_tokens": 0.0001,  # $0.10 / 1M tokens
+        "input_per_1k_tokens": 0.0001,     # $0.10 / 1M tokens
         "output_per_1k_tokens": 0.0,
-        "dimensions": 1536,
-    },
+        "dimensions": 1536
+    }
 }
 
 
 def calculate_cost(
-    model: str, input_tokens: int, output_tokens: int = 0, exchange_rate: float = 1300.0
+    model: str,
+    input_tokens: int,
+    output_tokens: int = 0,
+    exchange_rate: float = 1300.0
 ) -> Dict[str, float]:
     """
     Calculate LLM cost for a specific model
@@ -177,7 +174,7 @@ def calculate_cost(
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
         "input_cost_usd": input_cost,
-        "output_cost_usd": output_cost,
+        "output_cost_usd": output_cost
     }
 
 
@@ -187,5 +184,5 @@ __all__ = [
     "get_langfuse_client",
     "get_langfuse_status",
     "calculate_cost",
-    "MODEL_COSTS",
+    "MODEL_COSTS"
 ]

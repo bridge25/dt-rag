@@ -9,14 +9,13 @@ Implements tiered rate limiting with Redis backend:
 Uses Fixed Window algorithm with Redis for distributed rate limiting.
 """
 
-import logging
 import os
 import time
-from typing import Callable, Optional, cast
-
-import redis.asyncio as aioredis
-from fastapi import HTTPException, Request, Response
+import logging
+from typing import Callable, Optional
+from fastapi import Request, Response, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
+import redis.asyncio as aioredis
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +26,7 @@ RATE_LIMIT_ADMIN = int(os.getenv("RATE_LIMIT_ADMIN", "200"))
 RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
 
 # Redis configuration for rate limiting
-REDIS_RATE_LIMIT_ENABLED = (
-    os.getenv("REDIS_RATE_LIMIT_ENABLED", "true").lower() == "true"
-)
+REDIS_RATE_LIMIT_ENABLED = os.getenv("REDIS_RATE_LIMIT_ENABLED", "true").lower() == "true"
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_DB = int(os.getenv("REDIS_DB_RATE_LIMIT", "1"))
@@ -40,11 +37,11 @@ class RedisRateLimiter:
     Redis-based rate limiter using Fixed Window algorithm
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.redis_client: Optional[aioredis.Redis] = None
         self.enabled = REDIS_RATE_LIMIT_ENABLED
 
-    async def initialize(self) -> None:
+    async def initialize(self):
         """Initialize Redis connection"""
         if not self.enabled:
             logger.info("Rate limiting disabled (REDIS_RATE_LIMIT_ENABLED=false)")
@@ -54,23 +51,24 @@ class RedisRateLimiter:
             self.redis_client = await aioredis.from_url(
                 f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
                 encoding="utf-8",
-                decode_responses=True,
+                decode_responses=True
             )
             await self.redis_client.ping()
-            logger.info(
-                f"Rate limiter initialized with Redis at {REDIS_HOST}:{REDIS_PORT}"
-            )
+            logger.info(f"Rate limiter initialized with Redis at {REDIS_HOST}:{REDIS_PORT}")
         except Exception as e:
             logger.error(f"Failed to connect to Redis for rate limiting: {e}")
             self.enabled = False
 
-    async def close(self) -> None:
+    async def close(self):
         """Close Redis connection"""
         if self.redis_client:
             await self.redis_client.close()
 
     async def check_rate_limit(
-        self, identifier: str, limit: int, window: int = RATE_LIMIT_WINDOW
+        self,
+        identifier: str,
+        limit: int,
+        window: int = RATE_LIMIT_WINDOW
     ) -> tuple[bool, int, int]:
         """
         Check if request is within rate limit
@@ -150,7 +148,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Apply rate limiting based on HTTP method"""
         # Skip rate limiting for health check
         if request.url.path == "/health":
-            return cast(Response, await call_next(request))
+            return await call_next(request)
 
         # Get client identifier
         identifier = get_client_identifier(request)
@@ -176,12 +174,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     "limit": limit,
                     "window": RATE_LIMIT_WINDOW,
                     "current": current,
-                    "retry_after": RATE_LIMIT_WINDOW,
-                },
+                    "retry_after": RATE_LIMIT_WINDOW
+                }
             )
 
         # Process request
-        response = cast(Response, await call_next(request))
+        response = await call_next(request)
 
         # Add rate limit headers
         response.headers["X-RateLimit-Limit"] = str(limit)

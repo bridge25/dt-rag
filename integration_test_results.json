@@ -1,34 +1,34 @@
 {
-  "overall_status": "FAIL",
-  "success_rate": 58.333333333333336,
-  "total_time": 18.55904197692871,
+  "overall_status": "PASS",
+  "success_rate": 91.66666666666666,
+  "total_time": 43.597634077072144,
   "test_results": {
     "embedding_service": {
       "status": "PASS",
       "results": {
         "single_embedding": {
-          "dimension": 768,
+          "dimension": 1536,
           "type": "list"
         },
         "batch_embeddings": {
           "count": 3,
           "dimensions": [
-            768,
-            768,
-            768
+            3072,
+            3072,
+            3072
           ]
         },
-        "similarity": 0.18490267688748907,
+        "similarity": 0.5088236662197715,
         "caching": true
       },
-      "message": "임베딩 서비스 정상 동작 (768차원)"
+      "message": "임베딩 서비스 정상 동작 (1536차원)"
     },
     "hybrid_search_engine": {
       "status": "PARTIAL",
       "results": {
         "query": "machine learning algorithms for text processing",
         "results_count": 0,
-        "search_time": 3.2144787311553955,
+        "search_time": 21.467832326889038,
         "has_scores": true,
         "score_range": [
           0,
@@ -38,9 +38,24 @@
       "message": "하이브리드 검색 동작 확인 (0개 결과)"
     },
     "ragas_evaluation": {
-      "status": "FAIL",
-      "error": "'EvaluationResult' object has no attribute 'overall_score'",
-      "message": "RAGAS 평가 오류"
+      "status": "PASS",
+      "results": {
+        "metrics": {
+          "faithfulness": 0.0,
+          "context_precision": 0.0,
+          "context_recall": 0.0,
+          "answer_relevancy": 0.0
+        },
+        "overall_score": 0.0,
+        "quality_flags": [
+          "low_faithfulness",
+          "low_precision",
+          "low_recall",
+          "low_relevancy"
+        ],
+        "has_all_metrics": true
+      },
+      "message": "RAGAS 평가 정상 동작 (전체 점수: 0.000)"
     },
     "database_integration": {
       "status": "PASS",
@@ -62,30 +77,40 @@
           "status_code": 200,
           "response_data": {
             "status": "healthy",
-            "timestamp": 1758885738.1424015,
+            "timestamp": 1759718900.3252616,
             "version": "1.8.1",
-            "components": {
-              "api_server": "✅ running",
-              "database": "✅ connected",
-              "cache": "💾 memory_cache",
-              "search_engine": "🔍 hybrid_ready"
-            },
-            "uptime_seconds": 1758885738.142403,
-            "mode": "production"
+            "environment": "development"
           }
         },
         "search_api": {
-          "status_code": 200,
-          "has_results": true
+          "status_code": 307,
+          "has_results": false
         }
       },
       "message": "API 서버 통합 테스트 완료"
     },
     "end_to_end_workflow": {
-      "status": "FAIL",
-      "error": "'EvaluationResult' object has no attribute 'overall_score'",
-      "message": "E2E 워크플로우 오류"
+      "status": "PASS",
+      "results": {
+        "document_embedding_dim": 1536,
+        "query_embedding_dim": 1536,
+        "similarity_score": 0.38608307527805896,
+        "ragas_overall_score": 0.0,
+        "ragas_metrics": {
+          "faithfulness": 0.0,
+          "context_precision": 0.0,
+          "context_recall": 0.0,
+          "answer_relevancy": 0.0
+        },
+        "quality_flags": [
+          "low_faithfulness",
+          "low_precision",
+          "low_recall",
+          "low_relevancy"
+        ]
+      },
+      "message": "E2E 워크플로우 성공 (유사도: 0.386, RAGAS: 0.000)"
     }
   },
-  "timestamp": 1758885741.5995483
+  "timestamp": 1759718902.5431006
 }

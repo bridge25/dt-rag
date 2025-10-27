@@ -1,12 +1,11 @@
 from typing import Dict, Type
-
 from .base import BaseParser, ParserError
-from .csv_parser import CSVParser
+from .pdf_parser import PDFParser
 from .docx_parser import DOCXParser
 from .html_parser import HTMLParser
-from .markdown_parser import MarkdownParser
-from .pdf_parser import PDFParser
+from .csv_parser import CSVParser
 from .txt_parser import TXTParser
+from .markdown_parser import MarkdownParser
 
 
 class ParserFactory:
@@ -36,9 +35,7 @@ class ParserFactory:
         try:
             return parser_class()
         except Exception as e:
-            raise ParserError(
-                f"Failed to initialize parser for {file_format}: {str(e)}"
-            )
+            raise ParserError(f"Failed to initialize parser for {file_format}: {str(e)}")
 
     @classmethod
     def supports_format(cls, file_format: str) -> bool:

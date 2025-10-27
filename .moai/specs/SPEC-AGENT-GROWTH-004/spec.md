@@ -1,9 +1,9 @@
 ---
 id: AGENT-GROWTH-004
-version: 1.0.0
-status: completed
+version: 0.1.0
+status: draft
 created: 2025-10-12
-updated: 2025-10-23
+updated: 2025-10-12
 author: @sonheungmin
 priority: high
 category: feature

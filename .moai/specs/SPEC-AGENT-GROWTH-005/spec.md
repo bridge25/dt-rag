@@ -1,9 +1,9 @@
 ---
 id: AGENT-GROWTH-005
-version: 1.0.0
+version: 0.1.0
 status: completed
 created: 2025-10-13
-updated: 2025-10-23
+updated: 2025-10-14
 author: @sonheungmin
 priority: high
 category: feature
@@ -28,6 +28,17 @@ depends_on:
 # @SPEC:AGENT-GROWTH-005: Agent XP/Leveling System Phase 2
 
 ## HISTORY
+
+### v0.1.0 (2025-10-14)
+- **COMPLETED**: TDD 구현 완료
+  - LevelingService 클래스 구현 (calculate_xp, check_level_up, unlock_features)
+  - AgentDAO.update_xp_and_level() 메서드 추가
+  - agent_router.py XP 계산 훅 통합 (fire-and-forget)
+  - Unit 테스트 25개 작성 및 통과 (100%)
+  - Integration 테스트 5개 작성 (환경 의존 SKIP)
+  - @TAG 체계 완성 (SPEC → TEST → CODE 추적성 확보)
+- **AUTHOR**: @sonheungmin
+- **TEST COVERAGE**: Unit 100% (25/25), Integration 환경 의존
 
 ### v0.1.0 (2025-10-13)
 - **INITIAL**: Agent XP/Leveling System Phase 2 명세 최초 작성

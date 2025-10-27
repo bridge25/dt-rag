@@ -1,23 +1,25 @@
 {
-  "extends": ["next/core-web-vitals"],
+  "extends": "next/core-web-vitals",
   "rules": {
-    "indent": "off",
+    "quotes": ["error", "double"],
+    "react/react-in-jsx-scope": "off",
     "linebreak-style": "off",
     "semi": "off",
-    "quotes": "off",
-    "@next/next/no-img-element": "warn",
-    "react/no-unescaped-entities": "warn",
-    "react-hooks/exhaustive-deps": "warn"
+    "indent": "off",
+    "no-unused-vars": ["error", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_"
+    }]
   },
   "overrides": [
     {
-      "files": ["**/__tests__/**/*", "**/*.test.*", "**/*.spec.*"],
+      "files": ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
       "env": {
         "jest": true
-      },
-      "rules": {
-        "@typescript-eslint/no-explicit-any": "off"
       }
     }
-  ]
+  ],
+  "globals": {
+    "NodeJS": "readonly"
+  }
 }

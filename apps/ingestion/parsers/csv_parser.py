@@ -1,18 +1,16 @@
 import io
-from typing import Optional, cast
-
+from typing import Optional
 from .base import BaseParser, ParserError
 
 try:
     import pandas as pd
-
     PANDAS_AVAILABLE = True
 except ImportError:
     PANDAS_AVAILABLE = False
 
 
 class CSVParser(BaseParser):
-    def __init__(self) -> None:
+    def __init__(self):
         if not PANDAS_AVAILABLE:
             raise ParserError("pandas not installed")
 
@@ -26,7 +24,7 @@ class CSVParser(BaseParser):
 
             markdown_table = df.to_markdown(index=False)
 
-            return cast(str, markdown_table)
+            return markdown_table
         except Exception as e:
             raise ParserError(f"CSV parsing failed: {str(e)}")
 

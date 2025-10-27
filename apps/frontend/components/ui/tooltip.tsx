@@ -14,7 +14,7 @@ export function Tooltip({ content, children, position = "top", delay = 200 }: To
   const [isVisible, setIsVisible] = useState(false)
   const [coords, setCoords] = useState({ x: 0, y: 0 })
   const triggerRef = useRef<HTMLElement>(null)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const timeoutRef = useRef<NodeJS.Timeout>()
 
   const handleMouseEnter = () => {
     timeoutRef.current = setTimeout(() => {

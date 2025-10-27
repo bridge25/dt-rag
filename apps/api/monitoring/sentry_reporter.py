@@ -13,16 +13,15 @@ Provides structured error reporting with 5-field format for all critical failure
 """
 
 import logging
-from dataclasses import dataclass, field
+from typing import Dict, Any, List, Optional
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, field
 
 try:
     import sentry_sdk
-    from sentry_sdk.integrations.asyncio import AsyncioIntegration
     from sentry_sdk.integrations.fastapi import FastApiIntegration
     from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-
+    from sentry_sdk.integrations.asyncio import AsyncioIntegration
     SENTRY_AVAILABLE = True
 except ImportError:
     SENTRY_AVAILABLE = False
@@ -56,13 +55,11 @@ class SentryReport:
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
-def init_sentry(
-    dsn: Optional[str] = None,
-    environment: str = "production",
-    release: str = "1.8.1",
-    traces_sample_rate: float = 0.1,
-    profiles_sample_rate: float = 0.1,
-) -> bool:
+def init_sentry(dsn: Optional[str] = None,
+                environment: str = "production",
+                release: str = "1.8.1",
+                traces_sample_rate: float = 0.1,
+                profiles_sample_rate: float = 0.1) -> bool:
     """
     Initialize Sentry monitoring with FastAPI integration.
 
@@ -77,11 +74,15 @@ def init_sentry(
         True if initialization successful, False otherwise
     """
     if not SENTRY_AVAILABLE:
-        logger.warning("Sentry SDK not available. Install with: pip install sentry-sdk")
+        logger.warning(
+            "Sentry SDK not available. Install with: pip install sentry-sdk"
+        )
         return False
 
     if not dsn:
-        logger.warning("Sentry DSN not provided. Set SENTRY_DSN environment variable.")
+        logger.warning(
+            "Sentry DSN not provided. Set SENTRY_DSN environment variable."
+        )
         return False
 
     try:
@@ -94,7 +95,7 @@ def init_sentry(
             integrations=[
                 FastApiIntegration(transaction_style="endpoint"),
                 SqlalchemyIntegration(),
-                AsyncioIntegration(),
+                AsyncioIntegration()
             ],
             # Enable breadcrumbs for better context
             max_breadcrumbs=100,
@@ -107,7 +108,7 @@ def init_sentry(
             # Performance monitoring
             _experiments={
                 "profiles_sample_rate": profiles_sample_rate,
-            },
+            }
         )
 
         logger.info(
@@ -121,18 +122,16 @@ def init_sentry(
         return False
 
 
-def _before_send_hook(
-    event: Dict[str, Any], hint: Dict[str, Any]
-) -> Optional[Dict[str, Any]]:
+def _before_send_hook(event: Dict[str, Any], hint: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """
     Hook to filter or modify events before sending to Sentry.
     Can be used to add custom tags, filter sensitive data, or skip certain errors.
     """
     # Example: Skip certain error types
-    if "exc_info" in hint:
-        exc_type, exc_value, tb = hint["exc_info"]
+    if 'exc_info' in hint:
+        exc_type, exc_value, tb = hint['exc_info']
         # Skip expected errors (e.g., validation errors)
-        if exc_type.__name__ in ["ValidationError", "HTTPException"]:
+        if exc_type.__name__ in ['ValidationError', 'HTTPException']:
             return None
 
     return event
@@ -144,7 +143,7 @@ def report_search_failure(
     filters: Optional[Dict[str, Any]] = None,
     metrics: Optional[Dict[str, Any]] = None,
     search_type: str = "hybrid",
-    error_boundary: str = "search_engine",
+    error_boundary: str = "search_engine"
 ) -> None:
     """
     Report search failure to Sentry with comprehensive 바이브코딩 format.
@@ -165,13 +164,16 @@ def report_search_failure(
                 "query": query,
                 "filters": filters,
                 "metrics": metrics,
-                "search_type": search_type,
-            },
+                "search_type": search_type
+            }
         )
         return
 
     # Create structured report
-    report = SentryReport(error_boundary=error_boundary, search_type=search_type)
+    report = SentryReport(
+        error_boundary=error_boundary,
+        search_type=search_type
+    )
 
     # Field 1: Reproduction steps
     report.reproduction_steps = {
@@ -180,7 +182,7 @@ def report_search_failure(
         "search_type": search_type,
         "timestamp": datetime.utcnow().isoformat(),
         "error_type": type(error).__name__,
-        "error_message": str(error),
+        "error_message": str(error)
     }
 
     # Field 2: Expected vs Actual
@@ -198,7 +200,9 @@ def report_search_failure(
             "Expected successful vector similarity search with pgvector"
         )
 
-    report.actual_behavior = f"Search failed with {type(error).__name__}: {str(error)}"
+    report.actual_behavior = (
+        f"Search failed with {type(error).__name__}: {str(error)}"
+    )
 
     # Field 3: Logs/Metrics
     if metrics:
@@ -212,7 +216,7 @@ def report_search_failure(
             "bm25_candidates": metrics.get("bm25_candidates", 0),
             "vector_candidates": metrics.get("vector_candidates", 0),
             "final_results": metrics.get("final_results", 0),
-            "cache_hit": metrics.get("cache_hit", False),
+            "cache_hit": metrics.get("cache_hit", False)
         }
 
     # Field 4: Hypothesis (possible causes)
@@ -231,20 +235,24 @@ def report_search_failure(
 
         # Set contexts for all 5 fields
         scope.set_context("reproduction_steps", report.reproduction_steps)
-        scope.set_context(
-            "expected_vs_actual",
-            {"expected": report.expected_behavior, "actual": report.actual_behavior},
-        )
+        scope.set_context("expected_vs_actual", {
+            "expected": report.expected_behavior,
+            "actual": report.actual_behavior
+        })
         scope.set_context("metrics", report.metrics)
-        scope.set_context("hypothesis", {"possible_causes": report.possible_causes})
-        scope.set_context("next_steps", {"actions": report.next_steps})
+        scope.set_context("hypothesis", {
+            "possible_causes": report.possible_causes
+        })
+        scope.set_context("next_steps", {
+            "actions": report.next_steps
+        })
 
         # Add breadcrumbs for better debugging
         sentry_sdk.add_breadcrumb(
             category="search",
             message=f"Search initiated: {search_type}",
             level="info",
-            data={"query_length": len(query)},
+            data={"query_length": len(query)}
         )
 
         # Capture exception with full context
@@ -255,8 +263,8 @@ def report_search_failure(
         extra={
             "search_type": search_type,
             "query_preview": query[:50],
-            "error_boundary": error_boundary,
-        },
+            "error_boundary": error_boundary
+        }
     )
 
 
@@ -264,7 +272,7 @@ def report_score_normalization_error(
     error: Exception,
     scores: List[float],
     normalization_method: str,
-    context: Dict[str, Any],
+    context: Dict[str, Any]
 ) -> None:
     """
     Report score normalization errors to Sentry.
@@ -283,41 +291,38 @@ def report_score_normalization_error(
         scope.set_tag("error_boundary", "score_normalizer")
         scope.set_tag("normalization_method", normalization_method)
 
-        scope.set_context(
-            "score_normalization",
-            {
-                "scores_count": len(scores),
-                "scores_preview": scores[:10] if scores else [],
-                "normalization_method": normalization_method,
-                "min_score": min(scores) if scores else None,
-                "max_score": max(scores) if scores else None,
-                "has_zero_variance": len(set(scores)) == 1 if scores else None,
-            },
-        )
+        scope.set_context("score_normalization", {
+            "scores_count": len(scores),
+            "scores_preview": scores[:10] if scores else [],
+            "normalization_method": normalization_method,
+            "min_score": min(scores) if scores else None,
+            "max_score": max(scores) if scores else None,
+            "has_zero_variance": len(set(scores)) == 1 if scores else None
+        })
 
-        scope.set_context(
-            "hypothesis",
-            {
-                "possible_causes": [
-                    "Empty score list provided",
-                    "All scores are identical (zero variance)",
-                    "Scores contain NaN or Inf values",
-                    "Invalid normalization method specified",
-                    "Numerical overflow/underflow in calculations",
-                ]
-            },
-        )
+        scope.set_context("hypothesis", {
+            "possible_causes": [
+                "Empty score list provided",
+                "All scores are identical (zero variance)",
+                "Scores contain NaN or Inf values",
+                "Invalid normalization method specified",
+                "Numerical overflow/underflow in calculations"
+            ]
+        })
 
         sentry_sdk.capture_exception(error)
 
     logger.error(
         f"Score normalization error reported: {type(error).__name__}",
-        extra={"method": normalization_method},
+        extra={"method": normalization_method}
     )
 
 
 def report_reranker_error(
-    error: Exception, query: str, results_count: int, rerank_config: Dict[str, Any]
+    error: Exception,
+    query: str,
+    results_count: int,
+    rerank_config: Dict[str, Any]
 ) -> None:
     """
     Report cross-encoder reranking errors to Sentry.
@@ -336,52 +341,45 @@ def report_reranker_error(
         scope.set_tag("error_boundary", "cross_encoder_reranker")
         scope.set_tag("results_count", str(results_count))
 
-        scope.set_context(
-            "reranking",
-            {
-                "query_length": len(query),
-                "results_count": results_count,
-                "model_name": rerank_config.get("model_name", "unknown"),
-                "top_k": rerank_config.get("top_k", 5),
-            },
-        )
+        scope.set_context("reranking", {
+            "query_length": len(query),
+            "results_count": results_count,
+            "model_name": rerank_config.get("model_name", "unknown"),
+            "top_k": rerank_config.get("top_k", 5)
+        })
 
-        scope.set_context(
-            "hypothesis",
-            {
-                "possible_causes": [
-                    "Model failed to load or initialize",
-                    "Input format incompatible with model",
-                    "Memory exhausted during reranking",
-                    "Model inference timeout",
-                    "Results contain invalid text data",
-                ]
-            },
-        )
+        scope.set_context("hypothesis", {
+            "possible_causes": [
+                "Model failed to load or initialize",
+                "Input format incompatible with model",
+                "Memory exhausted during reranking",
+                "Model inference timeout",
+                "Results contain invalid text data"
+            ]
+        })
 
-        scope.set_context(
-            "next_steps",
-            {
-                "actions": [
-                    "Check model availability and version",
-                    "Verify input text encoding and format",
-                    "Review memory usage and limits",
-                    "Test with smaller result sets",
-                    "Enable fallback to hybrid score sorting",
-                ]
-            },
-        )
+        scope.set_context("next_steps", {
+            "actions": [
+                "Check model availability and version",
+                "Verify input text encoding and format",
+                "Review memory usage and limits",
+                "Test with smaller result sets",
+                "Enable fallback to hybrid score sorting"
+            ]
+        })
 
         sentry_sdk.capture_exception(error)
 
     logger.error(
         f"Reranker error reported: {type(error).__name__}",
-        extra={"results_count": results_count},
+        extra={"results_count": results_count}
     )
 
 
 def _generate_hypothesis(
-    error: Exception, search_type: str, metrics: Optional[Dict[str, Any]]
+    error: Exception,
+    search_type: str,
+    metrics: Optional[Dict[str, Any]]
 ) -> List[str]:
     """Generate hypothesis about error causes based on error type and metrics."""
     hypotheses = []
@@ -389,37 +387,31 @@ def _generate_hypothesis(
 
     # Common database-related errors
     if error_name in ["DatabaseError", "OperationalError", "InterfaceError"]:
-        hypotheses.extend(
-            [
-                "Database connection lost or unavailable",
-                "PostgreSQL service not running",
-                "Connection pool exhausted",
-                "Query timeout exceeded",
-                "Invalid SQL syntax or schema mismatch",
-            ]
-        )
+        hypotheses.extend([
+            "Database connection lost or unavailable",
+            "PostgreSQL service not running",
+            "Connection pool exhausted",
+            "Query timeout exceeded",
+            "Invalid SQL syntax or schema mismatch"
+        ])
 
     # Vector search specific errors
     if search_type in ["vector", "hybrid"] and "vector" in str(error).lower():
-        hypotheses.extend(
-            [
-                "pgvector extension not installed or enabled",
-                "Embedding dimension mismatch",
-                "Embeddings table missing or empty",
-                "Vector similarity operator not supported",
-            ]
-        )
+        hypotheses.extend([
+            "pgvector extension not installed or enabled",
+            "Embedding dimension mismatch",
+            "Embeddings table missing or empty",
+            "Vector similarity operator not supported"
+        ])
 
     # BM25 search specific errors
     if search_type in ["bm25", "hybrid"] and "fts" in str(error).lower():
-        hypotheses.extend(
-            [
-                "Full-text search index not created",
-                "Text search configuration missing",
-                "Query syntax invalid for PostgreSQL FTS",
-                "FTS column not properly indexed",
-            ]
-        )
+        hypotheses.extend([
+            "Full-text search index not created",
+            "Text search configuration missing",
+            "Query syntax invalid for PostgreSQL FTS",
+            "FTS column not properly indexed"
+        ])
 
     # Performance-related issues
     if metrics:
@@ -427,28 +419,25 @@ def _generate_hypothesis(
         if total_time > 5.0:
             hypotheses.append("Search timeout due to slow database queries")
 
-        if (
-            metrics.get("bm25_candidates", 0) == 0
-            and metrics.get("vector_candidates", 0) == 0
-        ):
+        if metrics.get("bm25_candidates", 0) == 0 and metrics.get("vector_candidates", 0) == 0:
             hypotheses.append("No results found - possible data indexing issue")
 
     # Generic fallback
     if not hypotheses:
-        hypotheses.extend(
-            [
-                "Unexpected error in search pipeline",
-                "System resource exhaustion",
-                "Invalid input parameters",
-                "Internal logic error",
-            ]
-        )
+        hypotheses.extend([
+            "Unexpected error in search pipeline",
+            "System resource exhaustion",
+            "Invalid input parameters",
+            "Internal logic error"
+        ])
 
     return hypotheses
 
 
 def _generate_next_steps(
-    error: Exception, search_type: str, metrics: Optional[Dict[str, Any]]
+    error: Exception,
+    search_type: str,
+    metrics: Optional[Dict[str, Any]]
 ) -> List[str]:
     """Generate next steps for debugging based on error type and metrics."""
     steps = []
@@ -456,63 +445,53 @@ def _generate_next_steps(
 
     # Database connection issues
     if error_name in ["DatabaseError", "OperationalError", "InterfaceError"]:
-        steps.extend(
-            [
-                "Verify PostgreSQL service is running: pg_ctl status",
-                "Check database connection parameters in .env",
-                "Test connection with: psql -U <user> -d <database>",
-                "Review PostgreSQL logs for errors",
-                "Increase connection pool size if exhausted",
-            ]
-        )
+        steps.extend([
+            "Verify PostgreSQL service is running: pg_ctl status",
+            "Check database connection parameters in .env",
+            "Test connection with: psql -U <user> -d <database>",
+            "Review PostgreSQL logs for errors",
+            "Increase connection pool size if exhausted"
+        ])
 
     # Vector search issues
     if search_type in ["vector", "hybrid"]:
-        steps.extend(
-            [
-                "Verify pgvector extension: SELECT * FROM pg_extension WHERE extname='vector'",
-                "Check embeddings table exists: \\dt embeddings",
-                "Verify embedding dimensions match model output",
-                "Regenerate embeddings if corruption suspected",
-            ]
-        )
+        steps.extend([
+            "Verify pgvector extension: SELECT * FROM pg_extension WHERE extname='vector'",
+            "Check embeddings table exists: \\dt embeddings",
+            "Verify embedding dimensions match model output",
+            "Regenerate embeddings if corruption suspected"
+        ])
 
     # BM25 search issues
     if search_type in ["bm25", "hybrid"]:
-        steps.extend(
-            [
-                "Check FTS indexes: \\di chunks_text_idx",
-                "Verify text search configuration: \\dF+",
-                "Rebuild FTS index if corrupted",
-                "Test query syntax with simplified version",
-            ]
-        )
+        steps.extend([
+            "Check FTS indexes: \\di chunks_text_idx",
+            "Verify text search configuration: \\dF+",
+            "Rebuild FTS index if corrupted",
+            "Test query syntax with simplified version"
+        ])
 
     # Performance optimization
     if metrics and metrics.get("total_time", 0.0) > 3.0:
-        steps.extend(
-            [
-                "Review query execution plan: EXPLAIN ANALYZE",
-                "Check for missing indexes on filtered columns",
-                "Optimize candidate retrieval limits",
-                "Enable query result caching",
-            ]
-        )
+        steps.extend([
+            "Review query execution plan: EXPLAIN ANALYZE",
+            "Check for missing indexes on filtered columns",
+            "Optimize candidate retrieval limits",
+            "Enable query result caching"
+        ])
 
     # Generic debugging steps
-    steps.extend(
-        [
-            "Enable debug logging for detailed error context",
-            "Check system resource usage (CPU, memory, disk)",
-            "Review recent schema or configuration changes",
-            "Test with minimal query to isolate issue",
-        ]
-    )
+    steps.extend([
+        "Enable debug logging for detailed error context",
+        "Check system resource usage (CPU, memory, disk)",
+        "Review recent schema or configuration changes",
+        "Test with minimal query to isolate issue"
+    ])
 
     return steps
 
 
-def capture_message(message: str, level: str = "info", **kwargs: Any) -> None:
+def capture_message(message: str, level: str = "info", **kwargs) -> None:
     """
     Capture informational message to Sentry.
 
@@ -532,14 +511,16 @@ def capture_message(message: str, level: str = "info", **kwargs: Any) -> None:
         sentry_sdk.capture_message(message, level=level)
 
 
-def add_search_breadcrumb(
-    query: str, search_type: str, correlation_id: Optional[str] = None, **data: Any
-) -> None:
+def add_search_breadcrumb(query: str, search_type: str, correlation_id: Optional[str] = None, **data) -> None:
     """Add search operation breadcrumb for debugging context with correlation tracking."""
     if not SENTRY_AVAILABLE:
         return
 
-    breadcrumb_data = {"query_preview": query[:100], "search_type": search_type, **data}
+    breadcrumb_data = {
+        "query_preview": query[:100],
+        "search_type": search_type,
+        **data
+    }
 
     if correlation_id:
         breadcrumb_data["correlation_id"] = correlation_id
@@ -548,5 +529,5 @@ def add_search_breadcrumb(
         category="search",
         message=f"Search executed: {search_type}",
         level="info",
-        data=breadcrumb_data,
+        data=breadcrumb_data
     )

@@ -8,7 +8,7 @@ Supports timeout handling and fallback strategies.
 
 import asyncio
 import logging
-from typing import Any, Dict, cast
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ Provide only the JSON response, no additional text."""
         response_text = response_text[:-3]
     response_text = response_text.strip()
 
-    result = cast(Dict[str, Any], json.loads(response_text))
+    result = json.loads(response_text)
     return result
 
 

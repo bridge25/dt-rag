@@ -9,12 +9,10 @@ This migration adds comprehensive API key management tables with security featur
 Run with: python -m alembic revision --autogenerate -m "Add API key security tables"
 """
 
+from alembic import op
 import sqlalchemy as sa
 
-from alembic import op
-
-
-def upgrade() -> None:
+def upgrade():
     """Add API key security tables"""
 
     # Create api_keys table
@@ -91,7 +89,7 @@ def upgrade() -> None:
     op.create_index('idx_api_key_audit_performed_by', 'api_key_audit_log', ['performed_by', 'timestamp'])
     op.create_index('idx_api_key_audit_timestamp', 'api_key_audit_log', ['timestamp'])
 
-def downgrade() -> None:
+def downgrade():
     """Remove API key security tables"""
 
     # Drop tables in reverse order (due to potential foreign key constraints)
@@ -100,23 +98,22 @@ def downgrade() -> None:
     op.drop_table('api_keys')
 
 # Additional helper functions for data migration if needed
-def create_default_admin_key() -> None:
+def create_default_admin_key():
     """Create a default admin API key for initial setup"""
 
     # This would be called after the migration to create an initial admin key
     # Implementation would depend on your specific database setup
     pass
 
-def migrate_existing_api_keys() -> None:
+def migrate_existing_api_keys():
     """Migrate any existing API keys to the new secure format"""
     # If you have existing API keys in a different format, migrate them here
     pass
 
 # Security validation functions
-def validate_migration() -> None:
+def validate_migration():
     """Validate that the migration was successful"""
     from sqlalchemy import create_engine, text
-
     from ...config import get_api_config
 
     config = get_api_config()

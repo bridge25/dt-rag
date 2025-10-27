@@ -1,4 +1,5 @@
-# @CODE:MYPY-001:PHASE2:BATCH4
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 Quality monitoring system for RAG evaluation
 
@@ -10,82 +11,66 @@ Provides real-time quality monitoring, alerting, and trend analysis:
 - Automated quality gate enforcement
 """
 
-import asyncio
-import json
 import logging
-import statistics
-from collections import defaultdict, deque
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Any
+from collections import defaultdict, deque
+import statistics
 
-from ..api.database import db_manager
 from .models import (
-    EvaluationMetrics,
-    EvaluationResult,
-    QualityAlert,
-    QualityThresholds,
-    SearchLog,
+    EvaluationMetrics, QualityAlert, QualityThresholds,
+    EvaluationResult
 )
+from ..api.database import db_manager
 
 logger = logging.getLogger(__name__)
-
 
 class QualityMonitor:
     """Real-time quality monitoring and alerting system"""
 
-    def __init__(self) -> None:
-        self.thresholds = QualityThresholds(
-            faithfulness_min=0.85,
-            context_precision_min=0.75,
-            context_recall_min=0.70,
-            answer_relevancy_min=0.80,
-            response_time_max=5.0,
-        )
+    def __init__(self):
+        self.thresholds = QualityThresholds()
 
         # In-memory metric buffers for real-time monitoring
         self.metric_buffer_size = 100
-        self.metric_buffers: Dict[str, deque[float]] = {
-            "faithfulness": deque(maxlen=self.metric_buffer_size),
-            "context_precision": deque(maxlen=self.metric_buffer_size),
-            "context_recall": deque(maxlen=self.metric_buffer_size),
-            "answer_relevancy": deque(maxlen=self.metric_buffer_size),
-            "response_time": deque(maxlen=self.metric_buffer_size),
+        self.metric_buffers = {
+            'faithfulness': deque(maxlen=self.metric_buffer_size),
+            'context_precision': deque(maxlen=self.metric_buffer_size),
+            'context_recall': deque(maxlen=self.metric_buffer_size),
+            'answer_relevancy': deque(maxlen=self.metric_buffer_size),
+            'response_time': deque(maxlen=self.metric_buffer_size)
         }
 
         # Alert state tracking
-        self.active_alerts: Dict[str, QualityAlert] = {}
+        self.active_alerts = {}
         self.alert_cooldown = timedelta(minutes=10)  # Prevent alert spam
 
         # Quality trend tracking
         self.trend_window_minutes = 60
-        self.quality_history: deque[Dict[str, Any]] = deque(maxlen=1440)  # 24 hours of minute-level data
+        self.quality_history = deque(maxlen=1440)  # 24 hours of minute-level data
 
-    async def record_evaluation(self, evaluation: EvaluationResult) -> List[QualityAlert]:
+    async def record_evaluation(self, evaluation: EvaluationResult):
         """Record new evaluation result and check for quality issues"""
         try:
             # Update metric buffers
             metrics = evaluation.metrics
             if metrics.faithfulness is not None:
-                self.metric_buffers["faithfulness"].append(metrics.faithfulness)
+                self.metric_buffers['faithfulness'].append(metrics.faithfulness)
             if metrics.context_precision is not None:
-                self.metric_buffers["context_precision"].append(
-                    metrics.context_precision
-                )
+                self.metric_buffers['context_precision'].append(metrics.context_precision)
             if metrics.context_recall is not None:
-                self.metric_buffers["context_recall"].append(metrics.context_recall)
+                self.metric_buffers['context_recall'].append(metrics.context_recall)
             if metrics.answer_relevancy is not None:
-                self.metric_buffers["answer_relevancy"].append(metrics.answer_relevancy)
+                self.metric_buffers['answer_relevancy'].append(metrics.answer_relevancy)
             if metrics.response_time is not None:
-                self.metric_buffers["response_time"].append(metrics.response_time)
+                self.metric_buffers['response_time'].append(metrics.response_time)
 
             # Update quality history
-            self.quality_history.append(
-                {
-                    "timestamp": evaluation.timestamp,
-                    "metrics": metrics.dict(),
-                    "quality_flags": evaluation.quality_flags,
-                }
-            )
+            self.quality_history.append({
+                'timestamp': evaluation.timestamp,
+                'metrics': metrics.dict(),
+                'quality_flags': evaluation.quality_flags
+            })
 
             # Check for quality alerts
             alerts = await self._check_quality_thresholds(metrics, evaluation.timestamp)
@@ -108,19 +93,17 @@ class QualityMonitor:
             alert_summary = self._get_alert_summary()
 
             return {
-                "timestamp": datetime.utcnow().isoformat(),
-                "current_metrics": current_metrics,
-                "trend_analysis": trend_analysis,
-                "alert_summary": alert_summary,
-                "quality_gates": self._check_quality_gates(current_metrics),
-                "recommendations": self._generate_quality_recommendations(
-                    current_metrics, trend_analysis
-                ),
+                'timestamp': datetime.utcnow().isoformat(),
+                'current_metrics': current_metrics,
+                'trend_analysis': trend_analysis,
+                'alert_summary': alert_summary,
+                'quality_gates': self._check_quality_gates(current_metrics),
+                'recommendations': self._generate_quality_recommendations(current_metrics, trend_analysis)
             }
 
         except Exception as e:
             logger.error(f"Failed to get quality status: {e}")
-            return {"error": str(e)}
+            return {'error': str(e)}
 
     async def get_quality_trends(self, hours: int = 24) -> Dict[str, Any]:
         """Get quality trends over specified time period"""
@@ -130,9 +113,7 @@ class QualityMonitor:
             async with db_manager.async_session() as session:
                 # Query search logs for trend analysis
                 from sqlalchemy import text
-
-                query = text(
-                    """
+                query = text("""
                     SELECT
                         DATE_TRUNC('hour', created_at) as hour,
                         AVG(faithfulness) as avg_faithfulness,
@@ -146,36 +127,33 @@ class QualityMonitor:
                         AND is_valid_evaluation = true
                     GROUP BY DATE_TRUNC('hour', created_at)
                     ORDER BY hour
-                """
-                )
+                """)
 
-                result = await session.execute(query, {"cutoff_time": cutoff_time})
+                result = await session.execute(query, {'cutoff_time': cutoff_time})
                 rows = result.fetchall()
 
                 trend_data = []
                 for row in rows:
-                    trend_data.append(
-                        {
-                            "hour": row[0].isoformat() if row[0] else None,
-                            "faithfulness": float(row[1]) if row[1] else None,
-                            "context_precision": float(row[2]) if row[2] else None,
-                            "context_recall": float(row[3]) if row[3] else None,
-                            "answer_relevancy": float(row[4]) if row[4] else None,
-                            "response_time": float(row[5]) if row[5] else None,
-                            "evaluation_count": int(row[6]) if row[6] else 0,
-                        }
-                    )
+                    trend_data.append({
+                        'hour': row[0].isoformat() if row[0] else None,
+                        'faithfulness': float(row[1]) if row[1] else None,
+                        'context_precision': float(row[2]) if row[2] else None,
+                        'context_recall': float(row[3]) if row[3] else None,
+                        'answer_relevancy': float(row[4]) if row[4] else None,
+                        'response_time': float(row[5]) if row[5] else None,
+                        'evaluation_count': int(row[6]) if row[6] else 0
+                    })
 
                 return {
-                    "period_hours": hours,
-                    "data_points": len(trend_data),
-                    "trends": trend_data,
-                    "summary": self._summarize_trends(trend_data),
+                    'period_hours': hours,
+                    'data_points': len(trend_data),
+                    'trends': trend_data,
+                    'summary': self._summarize_trends(trend_data)
                 }
 
         except Exception as e:
             logger.error(f"Failed to get quality trends: {e}")
-            return {"error": str(e)}
+            return {'error': str(e)}
 
     async def get_quality_alerts(self, active_only: bool = True) -> List[QualityAlert]:
         """Get quality alerts"""
@@ -190,7 +168,7 @@ class QualityMonitor:
             logger.error(f"Failed to get quality alerts: {e}")
             return []
 
-    async def update_thresholds(self, thresholds: QualityThresholds) -> None:
+    async def update_thresholds(self, thresholds: QualityThresholds):
         """Update quality monitoring thresholds"""
         self.thresholds = thresholds
         logger.info(f"Quality thresholds updated: {thresholds.dict()}")
@@ -212,44 +190,27 @@ class QualityMonitor:
         for metric_name, buffer in self.metric_buffers.items():
             if buffer:
                 current_metrics[metric_name] = statistics.mean(buffer)
-                current_metrics[f"{metric_name}_p95"] = self._percentile(
-                    list(buffer), 95
-                )
-                current_metrics[f"{metric_name}_trend"] = self._calculate_trend(
-                    list(buffer)
-                )
+                current_metrics[f'{metric_name}_p95'] = self._percentile(list(buffer), 95)
+                current_metrics[f'{metric_name}_trend'] = self._calculate_trend(list(buffer))
 
         return current_metrics
 
     def _analyze_quality_trends(self) -> Dict[str, Any]:
         """Analyze quality trends from recent history"""
         if len(self.quality_history) < 10:
-            return {"insufficient_data": True}
+            return {'insufficient_data': True}
 
         recent_data = list(self.quality_history)[-60:]  # Last hour
 
         trends = {}
-        for metric in [
-            "faithfulness",
-            "context_precision",
-            "context_recall",
-            "answer_relevancy",
-        ]:
-            values = [
-                entry["metrics"].get(metric)
-                for entry in recent_data
-                if entry["metrics"].get(metric) is not None
-            ]
+        for metric in ['faithfulness', 'context_precision', 'context_recall', 'answer_relevancy']:
+            values = [entry['metrics'].get(metric) for entry in recent_data if entry['metrics'].get(metric) is not None]
 
             if len(values) >= 5:
                 trends[metric] = {
-                    "direction": self._calculate_trend(values),
-                    "volatility": statistics.stdev(values) if len(values) > 1 else 0.0,
-                    "recent_average": (
-                        statistics.mean(values[-10:])
-                        if len(values) >= 10
-                        else statistics.mean(values)
-                    ),
+                    'direction': self._calculate_trend(values),
+                    'volatility': statistics.stdev(values) if len(values) > 1 else 0.0,
+                    'recent_average': statistics.mean(values[-10:]) if len(values) >= 10 else statistics.mean(values)
                 }
 
         return trends
@@ -257,230 +218,176 @@ class QualityMonitor:
     def _get_alert_summary(self) -> Dict[str, Any]:
         """Get summary of current alerts"""
         if not self.active_alerts:
-            return {"total_alerts": 0, "severity_breakdown": {}}
+            return {'total_alerts': 0, 'severity_breakdown': {}}
 
-        severity_counts: Dict[str, int] = defaultdict(int)
+        severity_counts = defaultdict(int)
         for alert in self.active_alerts.values():
             severity_counts[alert.severity] += 1
 
         return {
-            "total_alerts": len(self.active_alerts),
-            "severity_breakdown": dict(severity_counts),
-            "oldest_alert": min(
-                alert.timestamp for alert in self.active_alerts.values()
-            ).isoformat(),
-            "newest_alert": max(
-                alert.timestamp for alert in self.active_alerts.values()
-            ).isoformat(),
+            'total_alerts': len(self.active_alerts),
+            'severity_breakdown': dict(severity_counts),
+            'oldest_alert': min(alert.timestamp for alert in self.active_alerts.values()).isoformat(),
+            'newest_alert': max(alert.timestamp for alert in self.active_alerts.values()).isoformat()
         }
 
     def _check_quality_gates(self, current_metrics: Dict[str, float]) -> Dict[str, Any]:
         """Check if quality gates are passing"""
-        gates: Dict[str, Any] = {}
+        gates = {}
 
-        # Define quality gates with explicit thresholds
-        gate_checks: List[Tuple[str, str, float, str]] = [
-            ("faithfulness_gate", "faithfulness", self.thresholds.faithfulness_min, ">="),
-            ("precision_gate", "context_precision", self.thresholds.context_precision_min, ">="),
-            ("recall_gate", "context_recall", self.thresholds.context_recall_min, ">="),
-            ("relevancy_gate", "answer_relevancy", self.thresholds.answer_relevancy_min, ">="),
-            ("performance_gate", "response_time", self.thresholds.response_time_max, "<="),
-        ]
+        # Define quality gates
+        quality_gates = {
+            'faithfulness_gate': {
+                'metric': 'faithfulness',
+                'threshold': self.thresholds.faithfulness_min,
+                'operator': '>='
+            },
+            'precision_gate': {
+                'metric': 'context_precision',
+                'threshold': self.thresholds.context_precision_min,
+                'operator': '>='
+            },
+            'recall_gate': {
+                'metric': 'context_recall',
+                'threshold': self.thresholds.context_recall_min,
+                'operator': '>='
+            },
+            'relevancy_gate': {
+                'metric': 'answer_relevancy',
+                'threshold': self.thresholds.answer_relevancy_min,
+                'operator': '>='
+            },
+            'performance_gate': {
+                'metric': 'response_time',
+                'threshold': self.thresholds.response_time_max,
+                'operator': '<='
+            }
+        }
 
         all_passing = True
-        for gate_name, metric_key, threshold_value, operator in gate_checks:
-            metric_value = current_metrics.get(metric_key)
+        for gate_name, gate_config in quality_gates.items():
+            metric_value = current_metrics.get(gate_config['metric'])
 
             if metric_value is not None:
-                if operator == ">=":
-                    passing = metric_value >= threshold_value
+                if gate_config['operator'] == '>=':
+                    passing = metric_value >= gate_config['threshold']
                 else:  # '<='
-                    passing = metric_value <= threshold_value
+                    passing = metric_value <= gate_config['threshold']
 
                 gates[gate_name] = {
-                    "passing": passing,
-                    "current_value": metric_value,
-                    "threshold": threshold_value,
-                    "margin": abs(metric_value - threshold_value),
+                    'passing': passing,
+                    'current_value': metric_value,
+                    'threshold': gate_config['threshold'],
+                    'margin': abs(metric_value - gate_config['threshold'])
                 }
 
                 if not passing:
                     all_passing = False
             else:
                 gates[gate_name] = {
-                    "passing": None,
-                    "current_value": None,
-                    "threshold": threshold_value,
-                    "margin": None,
-                    "status": "no_data",
+                    'passing': None,
+                    'current_value': None,
+                    'threshold': gate_config['threshold'],
+                    'margin': None,
+                    'status': 'no_data'
                 }
                 all_passing = False
 
-        return {"overall_passing": all_passing, "gates": gates}
+        return {
+            'overall_passing': all_passing,
+            'gates': gates
+        }
 
-    def _generate_quality_recommendations(
-        self, current_metrics: Dict[str, float], trend_analysis: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_quality_recommendations(self, current_metrics: Dict[str, float], trend_analysis: Dict[str, Any]) -> List[str]:
         """Generate quality improvement recommendations"""
         recommendations = []
 
         # Check individual metrics
-        if current_metrics.get("faithfulness", 1.0) < self.thresholds.faithfulness_min:
-            recommendations.append(
-                "Improve response grounding - consider stricter fact verification"
-            )
+        if current_metrics.get('faithfulness', 1.0) < self.thresholds.faithfulness_min:
+            recommendations.append("Improve response grounding - consider stricter fact verification")
 
-        if (
-            current_metrics.get("context_precision", 1.0)
-            < self.thresholds.context_precision_min
-        ):
-            recommendations.append(
-                "Optimize retrieval relevance - improve ranking algorithms"
-            )
+        if current_metrics.get('context_precision', 1.0) < self.thresholds.context_precision_min:
+            recommendations.append("Optimize retrieval relevance - improve ranking algorithms")
 
-        if (
-            current_metrics.get("context_recall", 1.0)
-            < self.thresholds.context_recall_min
-        ):
-            recommendations.append(
-                "Expand retrieval scope - increase number of retrieved contexts"
-            )
+        if current_metrics.get('context_recall', 1.0) < self.thresholds.context_recall_min:
+            recommendations.append("Expand retrieval scope - increase number of retrieved contexts")
 
-        if (
-            current_metrics.get("answer_relevancy", 1.0)
-            < self.thresholds.answer_relevancy_min
-        ):
-            recommendations.append(
-                "Improve response targeting - better query understanding"
-            )
+        if current_metrics.get('answer_relevancy', 1.0) < self.thresholds.answer_relevancy_min:
+            recommendations.append("Improve response targeting - better query understanding")
 
-        if (
-            current_metrics.get("response_time", 0.0)
-            > self.thresholds.response_time_max
-        ):
+        if current_metrics.get('response_time', 0.0) > self.thresholds.response_time_max:
             recommendations.append("Optimize performance - reduce response latency")
 
         # Check trends
         for metric, trend_info in trend_analysis.items():
-            if (
-                isinstance(trend_info, dict) and trend_info.get("direction", 0) < -0.05
-            ):  # Declining
-                recommendations.append(
-                    f"Address declining {metric} trend - investigate recent changes"
-                )
+            if isinstance(trend_info, dict) and trend_info.get('direction', 0) < -0.05:  # Declining
+                recommendations.append(f"Address declining {metric} trend - investigate recent changes")
 
         return recommendations
 
-    async def _check_quality_thresholds(
-        self, metrics: EvaluationMetrics, timestamp: datetime
-    ) -> List[QualityAlert]:
+    async def _check_quality_thresholds(self, metrics: EvaluationMetrics, timestamp: datetime) -> List[QualityAlert]:
         """Check metrics against thresholds and generate alerts"""
         alerts = []
 
         # Check faithfulness
-        if (
-            metrics.faithfulness is not None
-            and metrics.faithfulness < self.thresholds.faithfulness_min
-        ):
-            alerts.append(
-                self._create_alert(
-                    "faithfulness",
-                    metrics.faithfulness,
-                    self.thresholds.faithfulness_min,
-                    "high",
-                    f"Faithfulness score {metrics.faithfulness:.3f} is below threshold {self.thresholds.faithfulness_min:.3f}",
-                    timestamp,
-                    [
-                        "Review response grounding",
-                        "Check fact verification pipeline",
-                        "Audit knowledge base",
-                    ],
-                )
-            )
+        if metrics.faithfulness is not None and metrics.faithfulness < self.thresholds.faithfulness_min:
+            alerts.append(self._create_alert(
+                'faithfulness',
+                metrics.faithfulness,
+                self.thresholds.faithfulness_min,
+                'high',
+                f"Faithfulness score {metrics.faithfulness:.3f} is below threshold {self.thresholds.faithfulness_min:.3f}",
+                timestamp,
+                ["Review response grounding", "Check fact verification pipeline", "Audit knowledge base"]
+            ))
 
         # Check context precision
-        if (
-            metrics.context_precision is not None
-            and metrics.context_precision < self.thresholds.context_precision_min
-        ):
-            alerts.append(
-                self._create_alert(
-                    "context_precision",
-                    metrics.context_precision,
-                    self.thresholds.context_precision_min,
-                    "medium",
-                    f"Context precision {metrics.context_precision:.3f} is below threshold {self.thresholds.context_precision_min:.3f}",
-                    timestamp,
-                    [
-                        "Improve retrieval ranking",
-                        "Reduce retrieval count",
-                        "Optimize query processing",
-                    ],
-                )
-            )
+        if metrics.context_precision is not None and metrics.context_precision < self.thresholds.context_precision_min:
+            alerts.append(self._create_alert(
+                'context_precision',
+                metrics.context_precision,
+                self.thresholds.context_precision_min,
+                'medium',
+                f"Context precision {metrics.context_precision:.3f} is below threshold {self.thresholds.context_precision_min:.3f}",
+                timestamp,
+                ["Improve retrieval ranking", "Reduce retrieval count", "Optimize query processing"]
+            ))
 
         # Check context recall
-        if (
-            metrics.context_recall is not None
-            and metrics.context_recall < self.thresholds.context_recall_min
-        ):
-            alerts.append(
-                self._create_alert(
-                    "context_recall",
-                    metrics.context_recall,
-                    self.thresholds.context_recall_min,
-                    "medium",
-                    f"Context recall {metrics.context_recall:.3f} is below threshold {self.thresholds.context_recall_min:.3f}",
-                    timestamp,
-                    [
-                        "Increase retrieval scope",
-                        "Improve semantic search",
-                        "Expand knowledge base coverage",
-                    ],
-                )
-            )
+        if metrics.context_recall is not None and metrics.context_recall < self.thresholds.context_recall_min:
+            alerts.append(self._create_alert(
+                'context_recall',
+                metrics.context_recall,
+                self.thresholds.context_recall_min,
+                'medium',
+                f"Context recall {metrics.context_recall:.3f} is below threshold {self.thresholds.context_recall_min:.3f}",
+                timestamp,
+                ["Increase retrieval scope", "Improve semantic search", "Expand knowledge base coverage"]
+            ))
 
         # Check answer relevancy
-        if (
-            metrics.answer_relevancy is not None
-            and metrics.answer_relevancy < self.thresholds.answer_relevancy_min
-        ):
-            alerts.append(
-                self._create_alert(
-                    "answer_relevancy",
-                    metrics.answer_relevancy,
-                    self.thresholds.answer_relevancy_min,
-                    "medium",
-                    f"Answer relevancy {metrics.answer_relevancy:.3f} is below threshold {self.thresholds.answer_relevancy_min:.3f}",
-                    timestamp,
-                    [
-                        "Improve query understanding",
-                        "Optimize response generation",
-                        "Better intent classification",
-                    ],
-                )
-            )
+        if metrics.answer_relevancy is not None and metrics.answer_relevancy < self.thresholds.answer_relevancy_min:
+            alerts.append(self._create_alert(
+                'answer_relevancy',
+                metrics.answer_relevancy,
+                self.thresholds.answer_relevancy_min,
+                'medium',
+                f"Answer relevancy {metrics.answer_relevancy:.3f} is below threshold {self.thresholds.answer_relevancy_min:.3f}",
+                timestamp,
+                ["Improve query understanding", "Optimize response generation", "Better intent classification"]
+            ))
 
         # Check response time
-        if (
-            metrics.response_time is not None
-            and metrics.response_time > self.thresholds.response_time_max
-        ):
-            alerts.append(
-                self._create_alert(
-                    "response_time",
-                    metrics.response_time,
-                    self.thresholds.response_time_max,
-                    "low",
-                    f"Response time {metrics.response_time:.2f}s exceeds threshold {self.thresholds.response_time_max:.2f}s",
-                    timestamp,
-                    [
-                        "Optimize retrieval performance",
-                        "Cache frequent queries",
-                        "Scale infrastructure",
-                    ],
-                )
-            )
+        if metrics.response_time is not None and metrics.response_time > self.thresholds.response_time_max:
+            alerts.append(self._create_alert(
+                'response_time',
+                metrics.response_time,
+                self.thresholds.response_time_max,
+                'low',
+                f"Response time {metrics.response_time:.2f}s exceeds threshold {self.thresholds.response_time_max:.2f}s",
+                timestamp,
+                ["Optimize retrieval performance", "Cache frequent queries", "Scale infrastructure"]
+            ))
 
         return alerts
 
@@ -492,7 +399,7 @@ class QualityMonitor:
         severity: str,
         message: str,
         timestamp: datetime,
-        suggested_actions: List[str],
+        suggested_actions: List[str]
     ) -> QualityAlert:
         """Create a quality alert"""
         alert_id = f"{metric_name}_{timestamp.strftime('%Y%m%d_%H%M%S')}"
@@ -505,18 +412,15 @@ class QualityMonitor:
             severity=severity,
             message=message,
             timestamp=timestamp,
-            suggested_actions=suggested_actions,
+            suggested_actions=suggested_actions
         )
 
-    async def _process_alert(self, alert: QualityAlert) -> None:
+    async def _process_alert(self, alert: QualityAlert):
         """Process and store alert"""
         try:
             # Check if we're in cooldown for this metric
             last_alert_time = self.active_alerts.get(alert.metric_name)
-            if (
-                last_alert_time
-                and (alert.timestamp - last_alert_time.timestamp) < self.alert_cooldown
-            ):
+            if last_alert_time and (alert.timestamp - last_alert_time.timestamp) < self.alert_cooldown:
                 return  # Skip alert due to cooldown
 
             # Store alert
@@ -566,36 +470,26 @@ class QualityMonitor:
         if not trend_data:
             return {}
 
-        metrics = [
-            "faithfulness",
-            "context_precision",
-            "context_recall",
-            "answer_relevancy",
-            "response_time",
-        ]
+        metrics = ['faithfulness', 'context_precision', 'context_recall', 'answer_relevancy', 'response_time']
         summary = {}
 
         for metric in metrics:
-            values = [
-                entry[metric] for entry in trend_data if entry[metric] is not None
-            ]
+            values = [entry[metric] for entry in trend_data if entry[metric] is not None]
 
             if values:
                 summary[metric] = {
-                    "average": statistics.mean(values),
-                    "min": min(values),
-                    "max": max(values),
-                    "trend": self._calculate_trend(values),
-                    "data_points": len(values),
+                    'average': statistics.mean(values),
+                    'min': min(values),
+                    'max': max(values),
+                    'trend': self._calculate_trend(values),
+                    'data_points': len(values)
                 }
 
         # Calculate overall evaluation volume
-        total_evaluations = sum(entry["evaluation_count"] for entry in trend_data)
-        summary["evaluation_volume"] = {
-            "total": total_evaluations,
-            "average_per_hour": (
-                total_evaluations / len(trend_data) if trend_data else 0
-            ),
+        total_evaluations = sum(entry['evaluation_count'] for entry in trend_data)
+        summary['evaluation_volume'] = {
+            'total': total_evaluations,
+            'average_per_hour': total_evaluations / len(trend_data) if trend_data else 0
         }
 
         return summary

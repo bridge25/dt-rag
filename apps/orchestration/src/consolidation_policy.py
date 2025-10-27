@@ -1,99 +1,114 @@
-# @CODE:CONSOLIDATION-001:ENGINE @CODE:TEST-003:CONSOLIDATION-POLICY | SPEC: SPEC-CONSOLIDATION-001.md | TEST: tests/unit/test_consolidation.py
-# @CODE:TEST-003 | SPEC: SPEC-TEST-003.md | TEST: tests/performance/
-# @CODE:MYPY-001:PHASE2:BATCH5
+# @SPEC:CONSOLIDATION-001 @IMPL:CONSOLIDATION-001:0.1
 
 import logging
-import os
-import sys
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
-
-import numpy as np
-from sqlalchemy import func, select, update
+from typing import List, Dict, Any, Optional
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from apps.api.database import CaseBank, CaseBankArchive
+from datetime import datetime, timedelta, timezone
+import json
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
 class ConsolidationPolicy:
     """
-    Memory Consolidation Policy for optimizing case bank storage.
+    Memory Consolidation Policy for automatic CaseBank management.
 
     Implements:
-    - Low performance case removal (success_rate < 30%)
-    - Duplicate case merging (similarity > 95%)
-    - Inactive case archiving (90+ days unused)
+    - Low-performance case removal
+    - Duplicate case merging
+    - Inactive case archiving
+    - Dry-run mode
     """
 
-    def __init__(self, db_session: AsyncSession, dry_run: bool = False) -> None:
+    def __init__(self, db_session: AsyncSession, dry_run: bool = False):
         """
         Initialize Consolidation Policy.
 
         Args:
             db_session: Async database session
-            dry_run: If True, no actual changes are made (simulation mode)
+            dry_run: If True, simulate without actual changes
         """
         self.db = db_session
         self.dry_run = dry_run
-        self.removed_cases: List[str] = []
-        self.merged_cases: List[Dict[str, Any]] = []
-        self.archived_cases: List[str] = []
+        self.removed_cases = []
+        self.merged_cases = []
+        self.archived_cases = []
 
-    async def run_consolidation(self) -> Dict[str, Any]:
+    async def run_consolidation(
+        self,
+        low_perf_threshold: float = 30.0,
+        similarity_threshold: float = 0.95,
+        inactive_days: int = 90,
+    ) -> Dict[str, Any]:
         """
-        Execute full consolidation policy.
+        Run full consolidation policy.
+
+        Args:
+            low_perf_threshold: Success rate threshold for removal (default: 30%)
+            similarity_threshold: Vector similarity for duplicate detection (default: 0.95)
+            inactive_days: Days of inactivity for archiving (default: 90)
 
         Returns:
-            Summary of consolidation results
+            Consolidation results dict
         """
-        logger.info("🔄 Starting consolidation policy execution...")
+        logger.info(
+            f"Starting consolidation (dry_run={self.dry_run}): "
+            f"low_perf={low_perf_threshold}%, similarity={similarity_threshold}, "
+            f"inactive={inactive_days} days"
+        )
 
-        # 1. Remove low performance cases
-        low_performance_cases = await self.remove_low_performance_cases()
-        logger.info(f"  Removed {len(low_performance_cases)} low performance cases")
+        removed = await self.remove_low_performance_cases(low_perf_threshold)
+        merged = await self.merge_duplicate_cases(similarity_threshold)
+        archived = await self.archive_inactive_cases(inactive_days)
 
-        # 2. Merge duplicate cases
-        duplicate_cases = await self.merge_duplicate_cases()
-        logger.info(f"  Merged {len(duplicate_cases)} duplicate case pairs")
-
-        # 3. Archive inactive cases
-        inactive_cases = await self.archive_inactive_cases()
-        logger.info(f"  Archived {len(inactive_cases)} inactive cases")
-
-        result = {
-            "removed_cases": len(low_performance_cases),
-            "merged_cases": len(duplicate_cases),
-            "archived_cases": len(inactive_cases),
+        results = {
+            "removed_cases": len(removed),
+            "merged_cases": len(merged),
+            "archived_cases": len(archived),
             "dry_run": self.dry_run,
             "details": {
-                "removed": low_performance_cases,
-                "merged": duplicate_cases,
-                "archived": inactive_cases,
+                "removed": removed,
+                "merged": merged,
+                "archived": archived,
             },
-            "timestamp": datetime.utcnow().isoformat(),
         }
 
-        logger.info(f"✅ Consolidation policy execution completed: {result}")
-        return result
+        logger.info(
+            f"Consolidation complete: removed={len(removed)}, "
+            f"merged={len(merged)}, archived={len(archived)}"
+        )
+
+        return results
 
     async def remove_low_performance_cases(
-        self, threshold: float = 30.0, min_usage: int = 10
+        self, threshold: float = 30.0
     ) -> List[str]:
         """
-        Remove cases with consistently low success rates.
+        Remove (archive) low-performance cases.
+
+        Criteria:
+        - success_rate < threshold
+        - usage_count > 10 (has sufficient data)
+        - usage_count < 500 (not heavily used)
+        - status = 'active'
 
         Args:
             threshold: Success rate threshold (default: 30%)
-            min_usage: Minimum usage count to consider (default: 10)
 
         Returns:
-            List of removed case IDs
+            List of archived case IDs
         """
+        from apps.api.database import CaseBank
+
         stmt = select(CaseBank).where(
-            CaseBank.success_rate < threshold, CaseBank.usage_count > min_usage
+            and_(
+                CaseBank.status == "active",
+                CaseBank.success_rate < threshold,
+                CaseBank.usage_count > 10,
+                CaseBank.usage_count < 500,
+            )
         )
         result = await self.db.execute(stmt)
         cases = result.scalars().all()
@@ -101,14 +116,19 @@ class ConsolidationPolicy:
         removed_ids = []
         for case in cases:
             if not self.dry_run:
-                # Archive case before removing
-                await self._archive_case(case, reason="low_performance")
+                case.status = "archived"
                 await self.db.commit()
+                logger.info(
+                    f"Archived low-performance case: {case.case_id} "
+                    f"(success_rate={case.success_rate}%)"
+                )
+            else:
+                logger.info(
+                    f"[DRY-RUN] Would archive: {case.case_id} "
+                    f"(success_rate={case.success_rate}%)"
+                )
 
             removed_ids.append(case.case_id)
-            logger.debug(
-                f"  Removed low performance case: {case.case_id} (success_rate={case.success_rate:.1f}%)"
-            )
 
         return removed_ids
 
@@ -118,13 +138,25 @@ class ConsolidationPolicy:
         """
         Merge duplicate cases based on vector similarity.
 
+        Criteria:
+        - Vector similarity > threshold
+        - Keep case with higher usage_count
+        - Archive the duplicate
+
         Args:
             similarity_threshold: Cosine similarity threshold (default: 0.95)
 
         Returns:
-            List of merged case pairs
+            List of merge result dicts
         """
-        stmt = select(CaseBank).where(CaseBank.query_vector.isnot(None))
+        from apps.api.database import CaseBank
+
+        stmt = select(CaseBank).where(
+            and_(
+                CaseBank.status == "active",
+                CaseBank.query_vector.isnot(None),
+            )
+        )
         result = await self.db.execute(stmt)
         cases = list(result.scalars().all())
 
@@ -135,17 +167,21 @@ class ConsolidationPolicy:
             if case1.case_id in processed:
                 continue
 
+            vec1 = self._parse_vector(case1.query_vector)
+            if not vec1:
+                continue
+
             for case2 in cases[i + 1 :]:
                 if case2.case_id in processed:
                     continue
 
-                # Calculate cosine similarity
-                similarity = self._calculate_similarity(
-                    case1.query_vector, case2.query_vector
-                )
+                vec2 = self._parse_vector(case2.query_vector)
+                if not vec2:
+                    continue
+
+                similarity = self._calculate_similarity(vec1, vec2)
 
                 if similarity > similarity_threshold:
-                    # Keep case with higher usage count
                     keeper, remover = (
                         (case1, case2)
                         if case1.usage_count >= case2.usage_count
@@ -153,51 +189,60 @@ class ConsolidationPolicy:
                     )
 
                     if not self.dry_run:
-                        # Merge metadata
                         keeper.usage_count += remover.usage_count
                         keeper.success_rate = (
                             keeper.success_rate + remover.success_rate
                         ) / 2
-
-                        # Archive removed case
-                        await self._archive_case(remover, reason="duplicate")
+                        remover.status = "archived"
                         await self.db.commit()
+                        logger.info(
+                            f"Merged duplicate: kept={keeper.case_id}, "
+                            f"removed={remover.case_id}, similarity={similarity:.3f}"
+                        )
+                    else:
+                        logger.info(
+                            f"[DRY-RUN] Would merge: kept={keeper.case_id}, "
+                            f"removed={remover.case_id}, similarity={similarity:.3f}"
+                        )
 
                     merged_pairs.append(
                         {
                             "keeper": keeper.case_id,
                             "removed": remover.case_id,
-                            "similarity": float(similarity),
+                            "similarity": round(similarity, 3),
                         }
                     )
                     processed.add(remover.case_id)
-
-                    logger.debug(
-                        f"  Merged duplicate: {remover.case_id} → {keeper.case_id} "
-                        f"(similarity={similarity:.3f})"
-                    )
+                    break
 
         return merged_pairs
 
-    async def archive_inactive_cases(
-        self, days: int = 90, max_usage: int = 100
-    ) -> List[str]:
+    async def archive_inactive_cases(self, days: int = 90) -> List[str]:
         """
-        Archive cases that haven't been used for a long time.
+        Archive inactive cases (not accessed for X days).
+
+        Criteria:
+        - last_used_at < (now - days)
+        - usage_count < 100 (not frequently used)
+        - status = 'active'
 
         Args:
-            days: Inactivity threshold in days (default: 90)
-            max_usage: Exclude high-usage cases (default: 100)
+            days: Number of days of inactivity (default: 90)
 
         Returns:
             List of archived case IDs
         """
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        from apps.api.database import CaseBank
+
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
 
         stmt = select(CaseBank).where(
-            CaseBank.last_used_at.isnot(None),
-            CaseBank.last_used_at < cutoff_date,
-            CaseBank.usage_count < max_usage,
+            and_(
+                CaseBank.status == "active",
+                CaseBank.last_used_at.isnot(None),
+                CaseBank.last_used_at < cutoff_date,
+                CaseBank.usage_count < 100,
+            )
         )
         result = await self.db.execute(stmt)
         cases = result.scalars().all()
@@ -205,45 +250,48 @@ class ConsolidationPolicy:
         archived_ids = []
         for case in cases:
             if not self.dry_run:
-                await self._archive_case(case, reason="inactive")
+                case.status = "archived"
                 await self.db.commit()
+                logger.info(
+                    f"Archived inactive case: {case.case_id} "
+                    f"(last_used={case.last_used_at})"
+                )
+            else:
+                logger.info(
+                    f"[DRY-RUN] Would archive: {case.case_id} "
+                    f"(last_used={case.last_used_at})"
+                )
 
             archived_ids.append(case.case_id)
-            logger.debug(
-                f"  Archived inactive case: {case.case_id} "
-                f"(last_used={case.last_used_at.isoformat() if case.last_used_at else 'never'})"
-            )
 
         return archived_ids
 
-    async def _archive_case(self, case: CaseBank, reason: str) -> None:
+    def _parse_vector(self, vector_str: str) -> Optional[List[float]]:
         """
-        Archive a case to the archive table.
+        Parse vector from string format to list of floats.
 
         Args:
-            case: CaseBank instance to archive
-            reason: Reason for archiving
+            vector_str: Vector in JSON string format
+
+        Returns:
+            List of floats or None if parsing fails
         """
-        archive_entry = CaseBankArchive(
-            case_id=case.case_id,
-            query=case.query,
-            response_text=case.response_text,
-            category_path=case.category_path,
-            query_vector=case.query_vector,
-            usage_count=case.usage_count,
-            success_rate=case.success_rate,
-            archived_reason=reason,
-            original_created_at=case.created_at,
-            original_updated_at=case.last_used_at,
-        )
+        try:
+            if isinstance(vector_str, str):
+                vec = json.loads(vector_str)
+            elif isinstance(vector_str, list):
+                vec = vector_str
+            else:
+                return None
 
-        self.db.add(archive_entry)
+            return [float(v) for v in vec]
+        except (json.JSONDecodeError, ValueError, TypeError):
+            logger.warning(f"Failed to parse vector: {vector_str}")
+            return None
 
-        # Delete from active case_bank
-        await self.db.delete(case)
-
-    @staticmethod
-    def _calculate_similarity(vec1: List[float], vec2: List[float]) -> float:
+    def _calculate_similarity(
+        self, vec1: List[float], vec2: List[float]
+    ) -> float:
         """
         Calculate cosine similarity between two vectors.
 
@@ -252,55 +300,47 @@ class ConsolidationPolicy:
             vec2: Second vector
 
         Returns:
-            Cosine similarity score (0.0 to 1.0)
+            Cosine similarity (0.0 to 1.0)
         """
+        if not vec1 or not vec2:
+            return 0.0
+
         try:
             v1 = np.array(vec1)
             v2 = np.array(vec2)
-            return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+            dot_product = np.dot(v1, v2)
+            norm_v1 = np.linalg.norm(v1)
+            norm_v2 = np.linalg.norm(v2)
+
+            if norm_v1 == 0 or norm_v2 == 0:
+                return 0.0
+
+            return float(dot_product / (norm_v1 * norm_v2))
         except Exception as e:
             logger.error(f"Similarity calculation failed: {e}")
             return 0.0
 
-    async def get_consolidation_summary(self) -> Dict[str, Any]:
+    async def restore_archived_case(self, case_id: str) -> bool:
         """
-        Get summary statistics for consolidation policy.
+        Restore an archived case back to active status.
+
+        Args:
+            case_id: Case ID to restore
 
         Returns:
-            Summary of potential consolidation candidates
+            True if restored, False if not found or not archived
         """
-        # Count low performance cases
-        low_perf_stmt = (
-            select(func.count())
-            .select_from(CaseBank)
-            .where(CaseBank.success_rate < 30.0, CaseBank.usage_count > 10)
-        )
-        low_perf_result = await self.db.execute(low_perf_stmt)
-        low_perf_count = low_perf_result.scalar()
+        from apps.api.database import CaseBank
 
-        # Count inactive cases
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=90)
-        inactive_stmt = (
-            select(func.count())
-            .select_from(CaseBank)
-            .where(
-                CaseBank.last_used_at.isnot(None),
-                CaseBank.last_used_at < cutoff_date,
-                CaseBank.usage_count < 100,
+        case = await self.db.get(CaseBank, case_id)
+        if not case or case.status != "archived":
+            logger.warning(
+                f"Cannot restore case {case_id}: "
+                f"not found or not archived (status={case.status if case else 'N/A'})"
             )
-        )
-        inactive_result = await self.db.execute(inactive_stmt)
-        inactive_count = inactive_result.scalar()
+            return False
 
-        # Total active cases
-        total_stmt = select(func.count()).select_from(CaseBank)
-        total_result = await self.db.execute(total_stmt)
-        total_count = total_result.scalar()
-
-        return {
-            "total_active_cases": total_count,
-            "low_performance_candidates": low_perf_count,
-            "inactive_candidates": inactive_count,
-            "potential_savings": (low_perf_count or 0) + (inactive_count or 0),
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        case.status = "active"
+        await self.db.commit()
+        logger.info(f"Restored archived case: {case_id}")
+        return True

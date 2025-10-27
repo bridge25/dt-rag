@@ -1,15 +1,11 @@
-# @CODE:MYPY-001:PHASE2:BATCH6
-import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
-
-from sqlalchemy import delete as sql_delete
-from sqlalchemy import select
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from apps.api.database import Agent, TaxonomyNode  # type: ignore[attr-defined]
+from sqlalchemy import select, update, func
+from apps.api.database import Agent, TaxonomyNode
 from apps.knowledge_builder.coverage.meter import CoverageMeterService
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,29 +20,28 @@ class AgentDAO:
         taxonomy_version: str = "1.0.0",
         scope_description: Optional[str] = None,
         retrieval_config: Optional[Dict[str, Any]] = None,
-        features_config: Optional[Dict[str, Any]] = None,
+        features_config: Optional[Dict[str, Any]] = None
     ) -> Agent:
         node_ids_str = [str(nid) for nid in taxonomy_node_ids]
 
         query = select(TaxonomyNode.node_id).where(
             TaxonomyNode.node_id.in_(taxonomy_node_ids),
-            TaxonomyNode.version == taxonomy_version,
+            TaxonomyNode.version == taxonomy_version
         )
         result = await session.execute(query)
         existing_nodes = result.scalars().all()
 
         if len(existing_nodes) != len(taxonomy_node_ids):
-            raise ValueError(
-                f"Some taxonomy nodes do not exist for version {taxonomy_version}"
-            )
+            raise ValueError(f"Some taxonomy nodes do not exist for version {taxonomy_version}")
 
         coverage_service = CoverageMeterService(session_factory=lambda: session)
         metrics = await coverage_service.calculate_coverage(
-            taxonomy_version=taxonomy_version, node_ids=node_ids_str
+            taxonomy_version=taxonomy_version,
+            node_ids=node_ids_str
         )
 
         default_retrieval_config = {"top_k": 5, "strategy": "hybrid"}
-        default_features_config: Dict[str, Any] = {}
+        default_features_config = {}
 
         agent = Agent(
             name=name,
@@ -67,7 +62,7 @@ class AgentDAO:
             features_config=features_config or default_features_config,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
-            last_query_at=None,
+            last_query_at=None
         )
 
         session.add(agent)
@@ -89,7 +84,11 @@ class AgentDAO:
 
     # @IMPL:AGENT-GROWTH-001:0.3.3
     @staticmethod
-    async def update_agent(session: AsyncSession, agent_id: UUID, **kwargs: Any) -> Agent:
+    async def update_agent(
+        session: AsyncSession,
+        agent_id: UUID,
+        **kwargs
+    ) -> Agent:
         query = select(Agent).where(Agent.agent_id == agent_id)
         result = await session.execute(query)
         agent = result.scalar_one_or_none()
@@ -133,7 +132,7 @@ class AgentDAO:
         session: AsyncSession,
         level: Optional[int] = None,
         min_coverage: Optional[float] = None,
-        max_results: int = 50,
+        max_results: int = 50
     ) -> List[Agent]:
         query = select(Agent).order_by(Agent.created_at.desc())
 
@@ -149,3 +148,36 @@ class AgentDAO:
         agents = result.scalars().all()
 
         return list(agents)
+
+    # @CODE:AGENT-GROWTH-005:DATA | SPEC: SPEC-AGENT-GROWTH-005.md
+    @staticmethod
+    async def update_xp_and_level(
+        session: AsyncSession,
+        agent_id: UUID,
+        xp_delta: float,
+        level: Optional[int] = None
+    ) -> Optional[Agent]:
+        stmt = (
+            update(Agent)
+            .where(Agent.agent_id == agent_id)
+            .values(
+                current_xp=Agent.current_xp + xp_delta,
+                updated_at=func.now()
+            )
+        )
+
+        if level is not None:
+            stmt = stmt.values(level=level)
+
+        await session.execute(stmt)
+        await session.commit()
+
+        updated_agent = await AgentDAO.get_agent(session, agent_id)
+
+        if updated_agent:
+            logger.info(
+                f"Agent XP updated: {agent_id} - XP delta: {xp_delta}, "
+                f"New XP: {updated_agent.current_xp}, Level: {updated_agent.level}"
+            )
+
+        return updated_agent

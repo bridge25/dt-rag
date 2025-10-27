@@ -1,25 +1,15 @@
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, status, Request
+from fastapi.responses import JSONResponse
+from typing import Optional
 import logging
 import uuid
-from typing import Optional
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    File,
-    Form,
-    HTTPException,
-    Request,
-    UploadFile,
-    status,
-)
-from fastapi.responses import JSONResponse
-
-from apps.ingestion.batch import JobOrchestrator
 from apps.ingestion.contracts.signals import (
-    DocumentFormatV1,
     DocumentUploadCommandV1,
+    DocumentFormatV1,
     JobStatusResponseV1,
 )
+from apps.ingestion.batch import JobOrchestrator
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +26,6 @@ async def get_job_orchestrator() -> JobOrchestrator:
     return _job_orchestrator
 
 
-# @CODE:MYPY-001:PHASE2:BATCH6
 @router.post(
     "/upload",
     status_code=status.HTTP_202_ACCEPTED,
@@ -50,30 +39,16 @@ async def upload_document(
     language: str = Form("ko"),
     priority: int = Form(5),
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-    http_request: Optional[Request] = None,
-) -> JSONResponse:
+    http_request: Request = None,
+):
     try:
-        correlation_id = (
-            http_request.headers.get("X-Correlation-ID")
-            if http_request
-            else str(uuid.uuid4())
-        )
+        correlation_id = http_request.headers.get("X-Correlation-ID") if http_request else str(uuid.uuid4())
         if not correlation_id:
             correlation_id = str(uuid.uuid4())
 
-        idempotency_key = (
-            http_request.headers.get("X-Idempotency-Key") if http_request else None
-        )
+        idempotency_key = http_request.headers.get("X-Idempotency-Key") if http_request else None
 
-        if not file.filename:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File name is required",
-            )
-
-        # Type narrowing: file.filename is guaranteed to be str here
-        filename_str: str = file.filename
-        file_extension = filename_str.split(".")[-1].lower()
+        file_extension = file.filename.split(".")[-1].lower()
 
         try:
             file_format = DocumentFormatV1(file_extension)
@@ -105,7 +80,7 @@ async def upload_document(
         command = DocumentUploadCommandV1(
             correlationId=correlation_id,
             idempotencyKey=idempotency_key,
-            file_name=filename_str,
+            file_name=file.filename,
             file_content=file_content,
             file_format=file_format,
             taxonomy_path=taxonomy_path_list,
@@ -115,17 +90,22 @@ async def upload_document(
             priority=priority,
         )
 
-        job_id = await orchestrator.submit_job(command)
-
-        if not job_id:  # Handle duplicate idempotency key
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Duplicate request with idempotency key",
-            )
+        try:
+            job_id = await orchestrator.submit_job(command)
+        except ValueError as e:
+            if "Duplicate request with idempotency key" in str(e):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=str(e),
+                )
+            raise
 
         estimated_completion_minutes = max(1, len(file_content) // (1024 * 1024))
 
-        response_headers = {"X-Job-ID": job_id, "X-Correlation-ID": correlation_id}
+        response_headers = {
+            "X-Job-ID": job_id,
+            "X-Correlation-ID": correlation_id
+        }
 
         if idempotency_key:
             response_headers["X-Idempotency-Key"] = idempotency_key
@@ -160,7 +140,7 @@ async def upload_document(
 async def get_job_status(
     job_id: str,
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-) -> JobStatusResponseV1:
+):
     try:
         status_data = await orchestrator.get_job_status(job_id)
 
@@ -170,7 +150,9 @@ async def get_job_status(
                 detail="Job not found",
             )
 
-        return JobStatusResponseV1(**status_data)
+        response = JobStatusResponseV1(**status_data)
+
+        return response
 
     except HTTPException:
         raise
@@ -183,7 +165,7 @@ async def get_job_status(
 
 
 @router.on_event("shutdown")
-async def shutdown_event() -> None:
+async def shutdown_event():
     global _job_orchestrator
     if _job_orchestrator is not None:
         await _job_orchestrator.stop()

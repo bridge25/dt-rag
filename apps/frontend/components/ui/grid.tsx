@@ -2,13 +2,13 @@
 
 import React from "react"
 
-export interface GridProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface GridProps {
   children: React.ReactNode
   gap?: "xs" | "sm" | "md" | "lg" | "xl"
   className?: string
 }
 
-export function Grid({ children, gap = "md", className = "", ...props }: GridProps) {
+export function Grid({ children, gap = "md", className = "" }: GridProps) {
   const gapClasses = {
     xs: "gap-1",
     sm: "gap-2",
@@ -18,7 +18,7 @@ export function Grid({ children, gap = "md", className = "", ...props }: GridPro
   }
 
   return (
-    <div className={`grid grid-cols-12 ${gapClasses[gap]} ${className}`} {...props}>
+    <div className={`grid grid-cols-12 ${gapClasses[gap]} ${className}`}>
       {children}
     </div>
   )

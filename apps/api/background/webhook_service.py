@@ -10,8 +10,7 @@ import hashlib
 import hmac
 import json
 import logging
-from typing import Any, Dict, Optional
-
+from typing import Dict, Any, Optional
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -39,12 +38,13 @@ class WebhookService:
         """
         self.timeout = timeout
         self.max_retries = max_retries
-        logger.info(
-            f"WebhookService initialized: timeout={timeout}s, max_retries={max_retries}"
-        )
+        logger.info(f"WebhookService initialized: timeout={timeout}s, max_retries={max_retries}")
 
     async def send_webhook(
-        self, url: str, payload: Dict[str, Any], secret: Optional[str] = None
+        self,
+        url: str,
+        payload: Dict[str, Any],
+        secret: Optional[str] = None
     ) -> bool:
         """
         Send webhook POST request with retry logic
@@ -57,7 +57,9 @@ class WebhookService:
         Returns:
             True if delivery succeeded (200-299 status), False otherwise
         """
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json"
+        }
 
         if secret:
             signature = self._generate_signature(payload, secret)
@@ -127,14 +129,14 @@ class WebhookService:
         Returns:
             Signature string in format "sha256={hex_digest}"
         """
-        payload_bytes = json.dumps(payload, sort_keys=True).encode("utf-8")
-        secret_bytes = secret.encode("utf-8")
+        payload_bytes = json.dumps(payload, sort_keys=True).encode('utf-8')
+        secret_bytes = secret.encode('utf-8')
 
         signature = hmac.new(secret_bytes, payload_bytes, hashlib.sha256).hexdigest()
 
         return f"sha256={signature}"
 
-    async def _backoff(self, retry_count: int) -> None:
+    async def _backoff(self, retry_count: int):
         """
         Exponential backoff delay
 
@@ -143,6 +145,6 @@ class WebhookService:
 
         Delay formula: 2^retry_count seconds (1s, 2s, 4s, 8s, ...)
         """
-        delay = 2**retry_count
+        delay = 2 ** retry_count
         logger.debug(f"Webhook backoff: retry={retry_count}, delay={delay}s")
         await asyncio.sleep(delay)

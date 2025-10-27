@@ -2,7 +2,7 @@
 
 import React from "react"
 
-export interface StackProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface StackProps {
   children: React.ReactNode
   direction?: "vertical" | "horizontal"
   spacing?: "xs" | "sm" | "md" | "lg" | "xl"
@@ -17,8 +17,7 @@ export function Stack({
   spacing = "md",
   align,
   justify,
-  className = "",
-  ...props
+  className = ""
 }: StackProps) {
   const directionClasses = {
     vertical: "flex-col",
@@ -58,7 +57,6 @@ export function Stack({
         ${justify ? justifyClasses[justify] : ""}
         ${className}
       `}
-      {...props}
     >
       {children}
     </div>

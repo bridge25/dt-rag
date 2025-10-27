@@ -2,26 +2,22 @@
 Security Middleware for DT-RAG v1.8.1
 FastAPI middleware that implements comprehensive security controls
 Integrates with the security framework for request/response processing
-
-@CODE:MYPY-001:PHASE2:BATCH4
 """
 
 import json
 import logging
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
-
-from fastapi import HTTPException, Request, Response, status
+from typing import Dict, List, Optional, Any
+from fastapi import Request, Response, HTTPException, status
 from fastapi.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import JSONResponse
 
+from ..core.security_manager import SecurityManager, SecurityException, SecurityContext
 from ..audit.audit_logger import EventType, SeverityLevel
-from ..core.security_manager import SecurityContext, SecurityException, SecurityManager
 
 logger = logging.getLogger(__name__)
-
 
 class SecurityHeaders:
     """Security headers configuration"""
@@ -36,6 +32,7 @@ class SecurityHeaders:
             "X-XSS-Protection": "1; mode=block",
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             "Referrer-Policy": "strict-origin-when-cross-origin",
+
             # Content Security Policy
             "Content-Security-Policy": (
                 "default-src 'self'; "
@@ -48,6 +45,7 @@ class SecurityHeaders:
                 "base-uri 'self'; "
                 "form-action 'self'"
             ),
+
             # Feature Policy / Permissions Policy
             "Permissions-Policy": (
                 "geolocation=(), "
@@ -59,12 +57,12 @@ class SecurityHeaders:
                 "gyroscope=(), "
                 "speaker=()"
             ),
+
             # Cache control for sensitive endpoints
             "Cache-Control": "no-store, no-cache, must-revalidate, private",
             "Pragma": "no-cache",
-            "Expires": "0",
+            "Expires": "0"
         }
-
 
 class SecurityMiddleware(BaseHTTPMiddleware):
     """
@@ -72,51 +70,45 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-        self, app: Any, security_manager: SecurityManager, config: Optional[Dict[str, Any]] = None
-    ) -> None:
+        self,
+        app,
+        security_manager: SecurityManager,
+        config: Dict[str, Any] = None
+    ):
         super().__init__(app)
         self.security_manager = security_manager
         self.config = config or {}
 
         # Middleware configuration
-        self.enable_auth = self.config.get("enable_auth", True)
-        self.enable_rate_limiting = self.config.get("enable_rate_limiting", True)
-        self.enable_input_validation = self.config.get("enable_input_validation", True)
-        self.enable_output_sanitization = self.config.get(
-            "enable_output_sanitization", True
-        )
-        self.enable_security_headers = self.config.get("enable_security_headers", True)
+        self.enable_auth = self.config.get('enable_auth', True)
+        self.enable_rate_limiting = self.config.get('enable_rate_limiting', True)
+        self.enable_input_validation = self.config.get('enable_input_validation', True)
+        self.enable_output_sanitization = self.config.get('enable_output_sanitization', True)
+        self.enable_security_headers = self.config.get('enable_security_headers', True)
 
         # Exempt endpoints (no authentication required)
-        self.exempt_endpoints = set(
-            self.config.get(
-                "exempt_endpoints",
-                [
-                    "/",
-                    "/health",
-                    "/healthz",
-                    "/docs",
-                    "/redoc",
-                    "/openapi.json",
-                    "/auth/login",
-                    "/auth/register",
-                ],
-            )
-        )
+        self.exempt_endpoints = set(self.config.get('exempt_endpoints', [
+            "/",
+            "/health",
+            "/healthz",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/auth/login",
+            "/auth/register"
+        ]))
 
         # Rate limiting configuration
-        self.rate_limit_requests = self.config.get("rate_limit_requests", 100)
-        self.rate_limit_window = self.config.get("rate_limit_window", 3600)  # 1 hour
+        self.rate_limit_requests = self.config.get('rate_limit_requests', 100)
+        self.rate_limit_window = self.config.get('rate_limit_window', 3600)  # 1 hour
 
         # Request size limits
-        self.max_request_size = self.config.get(
-            "max_request_size", 10 * 1024 * 1024
-        )  # 10MB
-        self.max_json_fields = self.config.get("max_json_fields", 1000)
+        self.max_request_size = self.config.get('max_request_size', 10 * 1024 * 1024)  # 10MB
+        self.max_json_fields = self.config.get('max_json_fields', 1000)
 
         # IP filtering
-        self.blocked_ips = set(self.config.get("blocked_ips", []))
-        self.allowed_ips = set(self.config.get("allowed_ips", []))  # Empty = allow all
+        self.blocked_ips = set(self.config.get('blocked_ips', []))
+        self.allowed_ips = set(self.config.get('allowed_ips', []))  # Empty = allow all
 
         # Request tracking
         self._request_counts: Dict[str, List[float]] = {}
@@ -124,7 +116,9 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         logger.info("SecurityMiddleware initialized with comprehensive OWASP controls")
 
     async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
+        self,
+        request: Request,
+        call_next: RequestResponseEndpoint
     ) -> Response:
         """Main middleware dispatch method"""
 
@@ -146,26 +140,20 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             # 2. Authentication and authorization (if enabled)
             security_context = None
             if self.enable_auth and not self._is_exempt_endpoint(request.url.path):
-                security_context = await self._authenticate_request(
-                    request, client_ip, user_agent
-                )
+                security_context = await self._authenticate_request(request, client_ip, user_agent)
                 # Store security context on request state for downstream dependencies
                 request.state.security_context = security_context
 
             # 3. Input validation and sanitization
             if self.enable_input_validation:
-                await self._validate_and_sanitize_input(
-                    request, security_context, request_id
-                )
+                await self._validate_and_sanitize_input(request, security_context, request_id)
 
             # 4. Process request
             response = await call_next(request)
 
             # 5. Output sanitization
             if self.enable_output_sanitization and security_context:
-                response = await self._sanitize_response(
-                    response, security_context, request_id
-                )
+                response = await self._sanitize_response(response, security_context, request_id)
 
             # 6. Add security headers
             if self.enable_security_headers:
@@ -180,15 +168,23 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         except SecurityException as e:
             # Handle security-specific exceptions
-            await self._log_security_violation(request, str(e), client_ip, request_id)
+            await self._log_security_violation(
+                request, str(e), client_ip, request_id
+            )
             return self._create_error_response(
-                status.HTTP_403_FORBIDDEN, "Access denied", request_id
+                status.HTTP_403_FORBIDDEN,
+                "Access denied",
+                request_id
             )
 
         except HTTPException as e:
             # Handle HTTP exceptions
             await self._log_http_error(request, e, client_ip, request_id)
-            return self._create_error_response(e.status_code, e.detail, request_id)
+            return self._create_error_response(
+                e.status_code,
+                e.detail,
+                request_id
+            )
 
         except Exception as e:
             # Handle unexpected exceptions
@@ -196,84 +192,77 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             return self._create_error_response(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 "Internal server error",
-                request_id,
+                request_id
             )
 
     async def _pre_request_checks(
-        self, request: Request, client_ip: str, request_id: str
-    ) -> None:
+        self,
+        request: Request,
+        client_ip: str,
+        request_id: str
+    ):
         """Pre-request security checks"""
 
         # 1. IP filtering
         if self.blocked_ips and client_ip in self.blocked_ips:
-            await self.security_manager.audit_logger.log_event(
-                {
-                    "event_type": EventType.SECURITY_VIOLATION,
-                    "severity": SeverityLevel.HIGH,
-                    "details": {"reason": "blocked_ip", "ip": client_ip},
-                    "request_id": request_id,
-                }
-            )
+            await self.security_manager.audit_logger.log_event({
+                "event_type": EventType.SECURITY_VIOLATION,
+                "severity": SeverityLevel.HIGH,
+                "details": {"reason": "blocked_ip", "ip": client_ip},
+                "request_id": request_id
+            })
             raise SecurityException("IP address blocked")
 
         if self.allowed_ips and client_ip not in self.allowed_ips:
-            await self.security_manager.audit_logger.log_event(
-                {
-                    "event_type": EventType.SECURITY_VIOLATION,
-                    "severity": SeverityLevel.MEDIUM,
-                    "details": {"reason": "ip_not_allowed", "ip": client_ip},
-                    "request_id": request_id,
-                }
-            )
+            await self.security_manager.audit_logger.log_event({
+                "event_type": EventType.SECURITY_VIOLATION,
+                "severity": SeverityLevel.MEDIUM,
+                "details": {"reason": "ip_not_allowed", "ip": client_ip},
+                "request_id": request_id
+            })
             raise SecurityException("IP address not allowed")
 
         # 2. Rate limiting
         if self.enable_rate_limiting:
             if not await self._check_rate_limit(client_ip):
-                await self.security_manager.audit_logger.log_event(
-                    {
-                        "event_type": EventType.RATE_LIMIT_EXCEEDED,
-                        "severity": SeverityLevel.MEDIUM,
-                        "details": {"ip": client_ip},
-                        "request_id": request_id,
-                    }
-                )
+                await self.security_manager.audit_logger.log_event({
+                    "event_type": EventType.RATE_LIMIT_EXCEEDED,
+                    "severity": SeverityLevel.MEDIUM,
+                    "details": {"ip": client_ip},
+                    "request_id": request_id
+                })
                 raise SecurityException("Rate limit exceeded")
 
         # 3. Request size validation
         content_length = request.headers.get("content-length")
         if content_length and int(content_length) > self.max_request_size:
-            await self.security_manager.audit_logger.log_event(
-                {
-                    "event_type": EventType.SECURITY_VIOLATION,
-                    "severity": SeverityLevel.HIGH,
-                    "details": {
-                        "reason": "request_too_large",
-                        "size": content_length,
-                        "max_size": self.max_request_size,
-                    },
-                    "request_id": request_id,
-                }
-            )
+            await self.security_manager.audit_logger.log_event({
+                "event_type": EventType.SECURITY_VIOLATION,
+                "severity": SeverityLevel.HIGH,
+                "details": {
+                    "reason": "request_too_large",
+                    "size": content_length,
+                    "max_size": self.max_request_size
+                },
+                "request_id": request_id
+            })
             raise SecurityException("Request too large")
 
         # 4. Suspicious user agent detection
         user_agent = request.headers.get("user-agent", "")
         if self._is_suspicious_user_agent(user_agent):
-            await self.security_manager.audit_logger.log_event(
-                {
-                    "event_type": EventType.SECURITY_VIOLATION,
-                    "severity": SeverityLevel.LOW,
-                    "details": {
-                        "reason": "suspicious_user_agent",
-                        "user_agent": user_agent,
-                    },
-                    "request_id": request_id,
-                }
-            )
+            await self.security_manager.audit_logger.log_event({
+                "event_type": EventType.SECURITY_VIOLATION,
+                "severity": SeverityLevel.LOW,
+                "details": {"reason": "suspicious_user_agent", "user_agent": user_agent},
+                "request_id": request_id
+            })
 
     async def _authenticate_request(
-        self, request: Request, client_ip: str, user_agent: str
+        self,
+        request: Request,
+        client_ip: str,
+        user_agent: str
     ) -> SecurityContext:
         """Authenticate and authorize request"""
 
@@ -301,8 +290,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         self,
         request: Request,
         security_context: Optional[SecurityContext],
-        request_id: str,
-    ) -> None:
+        request_id: str
+    ):
         """Validate and sanitize request input"""
 
         try:
@@ -322,10 +311,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
                         # Sanitize JSON data
                         if security_context:
-                            sanitized_data = (
-                                await self.security_manager.sanitize_request_data(
-                                    json_data, security_context
-                                )
+                            sanitized_data = await self.security_manager.sanitize_request_data(
+                                json_data, security_context
                             )
                             # Store sanitized data for use by endpoint
                             request.state.sanitized_data = sanitized_data
@@ -348,7 +335,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             raise SecurityException("Input validation failed")
 
     async def _sanitize_response(
-        self, response: Response, security_context: SecurityContext, request_id: str
+        self,
+        response: Response,
+        security_context: SecurityContext,
+        request_id: str
     ) -> Response:
         """Sanitize response data"""
 
@@ -359,10 +349,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 if body:
                     try:
                         response_data = json.loads(body)
-                        sanitized_data = (
-                            await self.security_manager.sanitize_response_data(
-                                response_data, security_context
-                            )
+                        sanitized_data = await self.security_manager.sanitize_response_data(
+                            response_data, security_context
                         )
 
                         # Update response body
@@ -380,7 +368,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             logger.error(f"Response sanitization failed: {e}")
             return response
 
-    def _add_security_headers(self, response: Response) -> None:
+    def _add_security_headers(self, response: Response):
         """Add security headers to response"""
 
         security_headers = SecurityHeaders.get_default_headers()
@@ -404,8 +392,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         # Clean old requests
         self._request_counts[identifier] = [
-            req_time
-            for req_time in self._request_counts[identifier]
+            req_time for req_time in self._request_counts[identifier]
             if req_time > window_start
         ]
 
@@ -431,7 +418,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             return real_ip
 
         # Fall back to direct connection
-        if request.client is not None and hasattr(request.client, "host"):
+        if hasattr(request.client, "host"):
             return request.client.host
 
         return "unknown"
@@ -454,22 +441,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         """Check if user agent is suspicious"""
 
         suspicious_patterns = [
-            "sqlmap",
-            "nikto",
-            "nmap",
-            "masscan",
-            "zap",
-            "burp",
-            "w3af",
-            "acunetix",
-            "nessus",
-            "python-requests",
-            "curl",
-            "wget",
-            "bot",
-            "crawler",
-            "spider",
-            "scraper",
+            "sqlmap", "nikto", "nmap", "masscan", "zap",
+            "burp", "w3af", "acunetix", "nessus",
+            "python-requests", "curl", "wget",
+            "bot", "crawler", "spider", "scraper"
         ]
 
         user_agent_lower = user_agent.lower()
@@ -496,7 +471,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         return count
 
     def _create_error_response(
-        self, status_code: int, message: str, request_id: str
+        self,
+        status_code: int,
+        message: str,
+        request_id: str
     ) -> JSONResponse:
         """Create standardized error response"""
 
@@ -507,10 +485,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     "code": status_code,
                     "message": message,
                     "request_id": request_id,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.utcnow().isoformat()
                 }
             },
-            headers=SecurityHeaders.get_default_headers(),
+            headers=SecurityHeaders.get_default_headers()
         )
 
     # Logging methods
@@ -521,8 +499,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         security_context: Optional[SecurityContext],
         response: Response,
         start_time: float,
-        request_id: str,
-    ) -> None:
+        request_id: str
+    ):
         """Log successful request"""
 
         duration = time.time() - start_time
@@ -537,16 +515,20 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 "duration_ms": round(duration * 1000, 2),
                 "user_id": security_context.user_id if security_context else None,
                 "ip_address": self._get_client_ip(request),
-                "user_agent": request.headers.get("user-agent", ""),
+                "user_agent": request.headers.get("user-agent", "")
             },
-            "request_id": request_id,
+            "request_id": request_id
         }
 
         await self.security_manager.audit_logger.log_event(event_data)
 
     async def _log_security_violation(
-        self, request: Request, error_message: str, client_ip: str, request_id: str
-    ) -> None:
+        self,
+        request: Request,
+        error_message: str,
+        client_ip: str,
+        request_id: str
+    ):
         """Log security violation"""
 
         event_data = {
@@ -557,9 +539,9 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 "path": request.url.path,
                 "error": error_message,
                 "ip_address": client_ip,
-                "user_agent": request.headers.get("user-agent", ""),
+                "user_agent": request.headers.get("user-agent", "")
             },
-            "request_id": request_id,
+            "request_id": request_id
         }
 
         await self.security_manager.audit_logger.log_event(event_data)
@@ -569,13 +551,11 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         request: Request,
         exception: HTTPException,
         client_ip: str,
-        request_id: str,
-    ) -> None:
+        request_id: str
+    ):
         """Log HTTP error"""
 
-        severity = (
-            SeverityLevel.WARNING if exception.status_code < 500 else SeverityLevel.HIGH
-        )
+        severity = SeverityLevel.WARNING if exception.status_code < 500 else SeverityLevel.HIGH
 
         event_data = {
             "event_type": EventType.AUTHORIZATION_FAILED,
@@ -585,16 +565,20 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 "path": request.url.path,
                 "status_code": exception.status_code,
                 "error": exception.detail,
-                "ip_address": client_ip,
+                "ip_address": client_ip
             },
-            "request_id": request_id,
+            "request_id": request_id
         }
 
         await self.security_manager.audit_logger.log_event(event_data)
 
     async def _log_unexpected_error(
-        self, request: Request, error_message: str, client_ip: str, request_id: str
-    ) -> None:
+        self,
+        request: Request,
+        error_message: str,
+        client_ip: str,
+        request_id: str
+    ):
         """Log unexpected error"""
 
         event_data = {
@@ -604,33 +588,35 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 "method": request.method,
                 "path": request.url.path,
                 "error": error_message,
-                "ip_address": client_ip,
+                "ip_address": client_ip
             },
-            "request_id": request_id,
+            "request_id": request_id
         }
 
         await self.security_manager.audit_logger.log_event(event_data)
-
 
 class SecurityDependency:
     """
     FastAPI dependency for endpoint-level security
     """
 
-    def __init__(self, security_manager: SecurityManager) -> None:
+    def __init__(self, security_manager: SecurityManager):
         self.security_manager = security_manager
 
     async def __call__(
-        self, request: Request, required_permission: Optional[str] = None, resource: Optional[str] = None
+        self,
+        request: Request,
+        required_permission: str = None,
+        resource: str = None
     ) -> SecurityContext:
         """Security dependency for endpoints"""
 
         # Get security context from middleware
-        security_context = cast(Optional[SecurityContext], getattr(request.state, "security_context", None))
+        security_context = getattr(request.state, "security_context", None)
         if not security_context:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required",
+                detail="Authentication required"
             )
 
         # Check specific permission if required
@@ -639,52 +625,50 @@ class SecurityDependency:
                 security_context,
                 required_permission,
                 resource,
-                getattr(request.state, "sanitized_data", None),
+                getattr(request.state, "sanitized_data", None)
             )
 
             if not authorized:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Insufficient permissions",
+                    detail="Insufficient permissions"
                 )
 
         return security_context
-
 
 def create_security_dependency(security_manager: SecurityManager) -> SecurityDependency:
     """Create security dependency instance"""
     return SecurityDependency(security_manager)
 
-
 class CSRFProtection:
     """CSRF protection middleware"""
 
-    def __init__(self, secret_key: str) -> None:
+    def __init__(self, secret_key: str):
         self.secret_key = secret_key
 
-    async def __call__(self, request: Request, call_next: Any) -> Response:
+    async def __call__(self, request: Request, call_next):
         """CSRF protection middleware"""
 
         # Skip CSRF for GET, HEAD, OPTIONS
         if request.method in ["GET", "HEAD", "OPTIONS"]:
-            return cast(Response, await call_next(request))
+            return await call_next(request)
 
         # Check CSRF token for state-changing operations
         csrf_token = request.headers.get("X-CSRF-Token")
         if not csrf_token:
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                content={"error": "CSRF token missing"},
+                content={"error": "CSRF token missing"}
             )
 
         # Validate CSRF token (simplified)
         if not self._validate_csrf_token(csrf_token):
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
-                content={"error": "Invalid CSRF token"},
+                content={"error": "Invalid CSRF token"}
             )
 
-        return cast(Response, await call_next(request))
+        return await call_next(request)
 
     def _validate_csrf_token(self, token: str) -> bool:
         """Validate CSRF token"""
@@ -692,47 +676,42 @@ class CSRFProtection:
         # This is a simplified version
         return len(token) >= 32
 
-
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Request logging middleware for security monitoring"""
 
-    def __init__(self, app: Any, security_manager: SecurityManager) -> None:
+    def __init__(self, app, security_manager: SecurityManager):
         super().__init__(app)
         self.security_manager = security_manager
 
-    async def dispatch(self, request: Request, call_next: Any) -> Response:
+    async def dispatch(self, request: Request, call_next):
         """Log all requests for security monitoring"""
 
         start_time = time.time()
 
         # Log request start
-        await self.security_manager.security_monitor.process_security_event(
-            {
-                "type": "request_started",
-                "method": request.method,
-                "path": request.url.path,
-                "ip_address": self._get_client_ip(request),
-                "user_agent": request.headers.get("user-agent", ""),
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-        )
+        await self.security_manager.security_monitor.process_security_event({
+            "type": "request_started",
+            "method": request.method,
+            "path": request.url.path,
+            "ip_address": self._get_client_ip(request),
+            "user_agent": request.headers.get("user-agent", ""),
+            "timestamp": datetime.utcnow().isoformat()
+        })
 
-        response = cast(Response, await call_next(request))
+        response = await call_next(request)
 
         duration = time.time() - start_time
 
         # Log request completion
-        await self.security_manager.security_monitor.process_security_event(
-            {
-                "type": "request_completed",
-                "method": request.method,
-                "path": request.url.path,
-                "status_code": response.status_code,
-                "duration": duration,
-                "ip_address": self._get_client_ip(request),
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-        )
+        await self.security_manager.security_monitor.process_security_event({
+            "type": "request_completed",
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "duration": duration,
+            "ip_address": self._get_client_ip(request),
+            "timestamp": datetime.utcnow().isoformat()
+        })
 
         return response
 
@@ -743,8 +722,6 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             return forwarded_for.split(",")[0].strip()
         return getattr(request.client, "host", "unknown")
 
-
 class SecurityMiddlewareError(Exception):
     """Security middleware exception"""
-
     pass

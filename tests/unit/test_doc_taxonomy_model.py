@@ -4,10 +4,7 @@ DocTaxonomy 모델 스키마 정합성 테스트
 """
 import pytest
 from sqlalchemy import inspect
-
-pytestmark = pytest.mark.skip(reason="DocTaxonomy class removed - test needs update")
-
-# from apps.api.database import DocTaxonomy  # FIXME: DocTaxonomy class does not exist
+from apps.api.database import DocTaxonomy
 
 def test_doc_taxonomy_composite_pk():
     """Composite Primary Key (doc_id, node_id, version) 확인"""

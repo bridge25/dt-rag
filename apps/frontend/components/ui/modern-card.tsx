@@ -20,7 +20,7 @@ export function ModernCard({ variant = "default", className, children, ...props 
   return (
     <div
       className={cn(
-        "rounded-2xl shadow-soft p-6 transition-all duration-300 hover:shadow-lift-hover hover:-translate-y-1 hover:scale-[1.01]",
+        "rounded-2xl shadow-soft p-6 transition-all hover:shadow-soft-lg",
         variantClasses[variant],
         className
       )}

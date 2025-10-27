@@ -2,10 +2,7 @@
 
 import pytest
 import asyncio
-
-pytestmark = pytest.mark.skip(reason="QTableDAO class removed - test needs update")
-
-# from apps.api.database import QTableDAO  # FIXME: QTableDAO class does not exist
+from apps.api.database import QTableDAO
 
 
 @pytest.fixture

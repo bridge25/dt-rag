@@ -1,9 +1,9 @@
 ---
 id: SCHEMA-SYNC-001
-version: 0.2.0
-status: completed
+version: 0.1.0
+status: draft
 created: 2025-10-12
-updated: 2025-10-22
+updated: 2025-10-12
 author: @Claude
 priority: high
 category: bugfix
@@ -12,39 +12,21 @@ labels:
   - schema
   - sqlalchemy
   - postgresql
-  - alembic
-  - reverse-engineered
 depends_on: []
 blocks: []
 related_specs: []
 scope:
   packages:
     - apps/api
-    - alembic/versions
-    - migrations
+    - apps/ingestion/batch
   files:
-    - apps/api/database.py (DocTaxonomy 모델)
-    - alembic/versions/0001_initial_schema.py
-    - alembic/versions/0002_span_range_and_indexes.py
-    - alembic/versions/0003_audit_hitl_ivfflat_and_rollback_proc.py
-    - migrations/0001_initial_schema.sql
-    - migrations/0002_span_range_and_indexes.sql
-    - migrations/0003_audit_hitl_ivfflat_and_rollback_proc.sql
+    - apps/api/database.py
+    - apps/ingestion/batch/job_orchestrator.py
 ---
 
 # @SPEC:SCHEMA-SYNC-001 DocTaxonomy Schema Synchronization
 
 ## HISTORY
-
-### v0.2.0 (2025-10-22)
-- **REVERSE_ENGINEERING_COMPLETED**: Alembic migrations 구현 확인
-- **IMPLEMENTATION**:
-  - 3개 Alembic migration 파일 구현 완료
-  - SQLAlchemy 모델 composite PK 구현 완료 (커밋 7cb1dad)
-  - PostgreSQL 스키마 완전 동기화
-  - DocTaxonomy: (doc_id, node_id, version) composite primary key
-  - node_id 쿼리 로직 구현 (taxonomy_nodes 테이블 조인)
-- **STATUS_CHANGE**: draft → completed
 
 ### v0.1.0 (2025-10-12)
 - **INITIAL**: SQLAlchemy 모델과 PostgreSQL 스키마 불일치 해결

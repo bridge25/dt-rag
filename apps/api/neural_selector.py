@@ -13,10 +13,9 @@ Performance targets:
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List
-
-from sqlalchemy import text
+from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +70,7 @@ async def vector_similarity_search(
     start_time = time.time()
 
     # Build vector search query
-    vector_query = text(
-        """
+    vector_query = text("""
         SELECT
             case_id,
             query,
@@ -83,8 +81,7 @@ async def vector_similarity_search(
         WHERE query_vector IS NOT NULL
         ORDER BY query_vector <=> :query_vector::vector
         LIMIT :limit
-    """
-    )
+    """)
 
     # Convert Python list to pgvector string format
     vector_str = _format_vector_for_postgres(query_embedding)

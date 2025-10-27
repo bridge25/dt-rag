@@ -6,24 +6,18 @@ This service provides a thin wrapper to convert between API models and pipeline 
 """
 
 import logging
+from typing import List, Dict, Any, Optional
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 # Add orchestration module to path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from apps.orchestration.src.langgraph_pipeline import (
     LangGraphPipeline,
-)
-from apps.orchestration.src.langgraph_pipeline import (
     PipelineRequest as LangGraphRequest,
-)
-from apps.orchestration.src.langgraph_pipeline import (
     PipelineResponse as LangGraphResponse,
-)
-from apps.orchestration.src.langgraph_pipeline import (
-    get_pipeline,
+    get_pipeline
 )
 
 logger = logging.getLogger(__name__)
@@ -37,7 +31,7 @@ class LangGraphService:
     the standalone LangGraph pipeline implementation.
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize LangGraph service with pipeline instance"""
         self.pipeline: LangGraphPipeline = get_pipeline()
         logger.info("LangGraphService initialized with 7-step pipeline")
@@ -47,7 +41,7 @@ class LangGraphService:
         query: str,
         taxonomy_version: Optional[str] = None,
         canonical_filter: Optional[List[List[str]]] = None,
-        options: Optional[Dict[str, Any]] = None,
+        options: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Execute the 7-step RAG pipeline
@@ -67,12 +61,11 @@ class LangGraphService:
         """
         try:
             # Build pipeline request
-            filters = {"canonical_paths": canonical_filter} if canonical_filter else None
             pipeline_request = LangGraphRequest(
                 query=query,
                 taxonomy_version=taxonomy_version or "1.0.0",
-                filters=filters,
-                options=options or {},
+                canonical_filter=canonical_filter,
+                options=options or {}
             )
 
             # Execute pipeline
@@ -91,7 +84,7 @@ class LangGraphService:
                 "pipeline_metadata": {
                     "step_timings": result.step_timings,
                     "steps_executed": list(result.step_timings.keys()),
-                },
+                }
             }
 
             logger.info(

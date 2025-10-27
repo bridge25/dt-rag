@@ -1,0 +1,152 @@
+{
+  "total_unique_files": 1153,
+  "shared_files_count": 814,
+  "unique_files_count": 339,
+  "overlap_ratio": 0.7059843885516045,
+  "branches": [
+    {
+      "branch": "dt-rag-v1.8.1-implementation",
+      "total_files": 618,
+      "unique_files": 0,
+      "shared_files": 618,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-FOUNDATION-001",
+      "total_files": 627,
+      "unique_files": 0,
+      "shared_files": 627,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-ENV-VALIDATE-001",
+      "total_files": 771,
+      "unique_files": 0,
+      "shared_files": 771,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-REDIS-COMPAT-001",
+      "total_files": 763,
+      "unique_files": 3,
+      "shared_files": 760,
+      "uniqueness_ratio": 0.003931847968545216,
+      "unique_by_category": {
+        "specs": 3
+      }
+    },
+    {
+      "branch": "SPEC-AGENT-GROWTH-001",
+      "total_files": 781,
+      "unique_files": 0,
+      "shared_files": 781,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-AGENT-GROWTH-002",
+      "total_files": 791,
+      "unique_files": 0,
+      "shared_files": 791,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-AGENT-GROWTH-004",
+      "total_files": 809,
+      "unique_files": 0,
+      "shared_files": 809,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-AGENT-GROWTH-005",
+      "total_files": 1121,
+      "unique_files": 312,
+      "shared_files": 809,
+      "uniqueness_ratio": 0.2783229259589652,
+      "unique_by_category": {
+        "docs": 184,
+        "app_code": 68,
+        "infrastructure": 14,
+        "other": 34,
+        "tests": 6,
+        "specs": 6
+      }
+    },
+    {
+      "branch": "SPEC-CASEBANK-002",
+      "total_files": 664,
+      "unique_files": 0,
+      "shared_files": 664,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-CONSOLIDATION-001",
+      "total_files": 664,
+      "unique_files": 0,
+      "shared_files": 664,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-DEBATE-001",
+      "total_files": 651,
+      "unique_files": 0,
+      "shared_files": 651,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-JOB-OPTIMIZE-001",
+      "total_files": 765,
+      "unique_files": 0,
+      "shared_files": 765,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-REFLECTION-001",
+      "total_files": 664,
+      "unique_files": 0,
+      "shared_files": 664,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-REPLAY-001",
+      "total_files": 640,
+      "unique_files": 0,
+      "shared_files": 640,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-SOFTQ-001",
+      "total_files": 639,
+      "unique_files": 0,
+      "shared_files": 639,
+      "uniqueness_ratio": 0.0,
+      "unique_by_category": {}
+    },
+    {
+      "branch": "SPEC-UI-INTEGRATION-001",
+      "total_files": 745,
+      "unique_files": 24,
+      "shared_files": 721,
+      "uniqueness_ratio": 0.032214765100671144,
+      "unique_by_category": {
+        "app_code": 13,
+        "infrastructure": 7,
+        "specs": 3,
+        "tests": 1
+      }
+    }
+  ],
+  "recommended_base": "SPEC-AGENT-GROWTH-005",
+  "most_unique": "SPEC-AGENT-GROWTH-005"
+}

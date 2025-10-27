@@ -8,28 +8,26 @@ This module integrates with the new environment management and LLM configuration
 to provide comprehensive, secure, and fallback-enabled configuration management.
 """
 
-import logging
 import os
 import secrets
+import logging
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
 
 # Import new configuration management modules
 try:
-    from .env_manager import Environment, get_env_manager
+    from .env_manager import get_env_manager, Environment
     from .llm_config import get_llm_config
 except ImportError:
     # Fallback for direct execution
-    from env_manager import Environment, get_env_manager  # type: ignore[no-redef]
-    from llm_config import get_llm_config  # type: ignore[no-redef]
+    from env_manager import get_env_manager, Environment
+    from llm_config import get_llm_config
 
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class DatabaseConfig:
     """Database configuration"""
-
     url: str = "postgresql://localhost:5432/dt_rag"
     pool_size: int = 20
     max_overflow: int = 30
@@ -37,17 +35,14 @@ class DatabaseConfig:
     pool_recycle: int = 3600
     echo: bool = False
 
-
 @dataclass
 class RedisConfig:
     """Redis configuration for caching and rate limiting"""
-
     url: str = "redis://redis:6379/0"
     max_connections: int = 10
     socket_timeout: int = 5
     socket_connect_timeout: int = 5
     socket_keepalive: bool = True
-
 
 @dataclass
 class SecurityConfig:
@@ -60,7 +55,6 @@ class SecurityConfig:
     - NEVER use hardcoded secrets in production environments
     - JWT secrets should be rotated regularly in production
     """
-
     # This will be overridden by environment variable or generated securely
     secret_key: str = ""  # Will be set by _generate_secure_secret() if needed
     jwt_algorithm: str = "HS256"
@@ -71,7 +65,6 @@ class SecurityConfig:
     api_key_header: str = "X-API-Key"
     oauth_providers: Dict[str, Dict[str, str]] = field(default_factory=dict)
     trusted_hosts: List[str] = field(default_factory=list)
-
 
 def _generate_secure_secret() -> str:
     """
@@ -89,7 +82,6 @@ def _generate_secure_secret() -> str:
     """
     # Generate 32 random bytes (256 bits) and encode as URL-safe base64
     return secrets.token_urlsafe(32)
-
 
 def _validate_secret_strength(secret: str) -> bool:
     """
@@ -116,14 +108,13 @@ def _validate_secret_strength(secret: str) -> bool:
         "password",
         "123456",
         "change-me",
-        "development-key",
+        "development-key"
     ]
 
     if secret.lower() in [weak.lower() for weak in weak_secrets]:
         return False
 
     return True
-
 
 def _validate_openai_api_key(api_key: Optional[str]) -> bool:
     """
@@ -151,11 +142,9 @@ def _validate_openai_api_key(api_key: Optional[str]) -> bool:
 
     return True
 
-
 @dataclass
 class RateLimitConfig:
     """Rate limiting configuration"""
-
     default_rate: str = "100/minute"
     burst_rate: str = "200/minute"
     auth_rate: str = "5/minute"
@@ -164,7 +153,6 @@ class RateLimitConfig:
     pipeline_rate: str = "10/minute"
     admin_rate: str = "1000/minute"
     redis_url: str = "redis://redis:6379/1"
-
 
 @dataclass
 class CORSConfig:
@@ -177,42 +165,27 @@ class CORSConfig:
     - Use specific headers instead of wildcard for allow_headers
     - Enable credentials only when necessary and with specific origins
     """
-
-    allow_origins: List[str] = field(
-        default_factory=lambda: ["http://localhost:3000", "http://localhost:8080"]
-    )
+    allow_origins: List[str] = field(default_factory=lambda: ["http://localhost:3000", "http://localhost:8080"])
     allow_credentials: bool = True
-    allow_methods: List[str] = field(
-        default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-    )
+    allow_methods: List[str] = field(default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
     # Specific headers instead of wildcard for security
-    allow_headers: List[str] = field(
-        default_factory=lambda: [
-            "Accept",
-            "Accept-Language",
-            "Content-Language",
-            "Content-Type",
-            "Authorization",
-            "X-API-Key",
-            "X-Requested-With",
-            "X-Request-ID",
-            "Cache-Control",
-        ]
-    )
-    expose_headers: List[str] = field(
-        default_factory=lambda: [
-            "X-Request-ID",
-            "X-RateLimit-Remaining",
-            "X-RateLimit-Limit",
-        ]
-    )
+    allow_headers: List[str] = field(default_factory=lambda: [
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-API-Key",
+        "X-Requested-With",
+        "X-Request-ID",
+        "Cache-Control"
+    ])
+    expose_headers: List[str] = field(default_factory=lambda: ["X-Request-ID", "X-RateLimit-Remaining", "X-RateLimit-Limit"])
     max_age: int = 86400  # 24 hours
-
 
 @dataclass
 class MonitoringConfig:
     """Monitoring and observability configuration"""
-
     enabled: bool = True
     metrics_endpoint: str = "/metrics"
     prometheus_port: int = 8001
@@ -222,11 +195,9 @@ class MonitoringConfig:
     request_logging: bool = True
     error_tracking: bool = True
 
-
 @dataclass
 class PerformanceConfig:
     """Performance optimization configuration"""
-
     worker_processes: int = 1
     worker_connections: int = 1000
     keepalive_timeout: int = 65
@@ -235,18 +206,16 @@ class PerformanceConfig:
     timeout_keep_alive: int = 5
     timeout_graceful_shutdown: int = 30
 
-
 @dataclass
 class APIConfig:
     """Main API configuration"""
-
     # Environment
     environment: str = "development"
     debug: bool = True
     testing: bool = False
 
     # Server
-    host: str = "0.0.0.0"  # nosec B104 - intentional for container deployment
+    host: str = "0.0.0.0"
     port: int = 8000
     title: str = "Dynamic Taxonomy RAG API"
     version: str = "1.8.1"
@@ -276,7 +245,6 @@ class APIConfig:
     enable_rate_limiting: bool = True
     enable_request_logging: bool = True
     enable_error_tracking: bool = True
-
 
 def get_api_config() -> APIConfig:
     """
@@ -312,9 +280,7 @@ def get_api_config() -> APIConfig:
     # Redis configuration
     if redis_url := os.getenv("REDIS_URL"):
         config.redis.url = redis_url
-        config.rate_limit.redis_url = (
-            redis_url + "/1"
-        )  # Use different DB for rate limiting
+        config.rate_limit.redis_url = redis_url + "/1"  # Use different DB for rate limiting
 
     # Security configuration - CRITICAL: JWT Secret Key Management
     secret_key = os.getenv("SECRET_KEY")
@@ -329,9 +295,7 @@ def get_api_config() -> APIConfig:
                 )
             else:
                 # Log warning in non-production environments but continue
-                print(
-                    f"WARNING: Weak SECRET_KEY detected in {config.environment} environment"
-                )
+                print(f"WARNING: Weak SECRET_KEY detected in {config.environment} environment")
 
         config.security.secret_key = secret_key
 
@@ -353,12 +317,8 @@ def get_api_config() -> APIConfig:
             f"SECRET_KEY environment variable is required for {config.environment} environment"
         )
 
-    config.security.jwt_expiration_minutes = int(
-        os.getenv("JWT_EXPIRATION_MINUTES", "30")
-    )
-    config.security.jwt_refresh_expiration_days = int(
-        os.getenv("JWT_REFRESH_EXPIRATION_DAYS", "7")
-    )
+    config.security.jwt_expiration_minutes = int(os.getenv("JWT_EXPIRATION_MINUTES", "30"))
+    config.security.jwt_refresh_expiration_days = int(os.getenv("JWT_REFRESH_EXPIRATION_DAYS", "7"))
 
     # CORS configuration - Environment specific security
     if cors_origins := os.getenv("CORS_ORIGINS"):
@@ -373,9 +333,7 @@ def get_api_config() -> APIConfig:
                 )
             # Ensure HTTPS in production
             for origin in origins:
-                if origin.startswith("http://") and not origin.startswith(
-                    "http://localhost"
-                ):
+                if origin.startswith("http://") and not origin.startswith("http://localhost"):
                     raise ValueError(
                         f"HTTP origins are not allowed in production: {origin}. "
                         "Please use HTTPS origins only."
@@ -395,9 +353,7 @@ def get_api_config() -> APIConfig:
                     "Please specify exact headers in CORS_HEADERS environment variable."
                 )
             else:
-                print(
-                    f"WARNING: Wildcard CORS headers detected in {config.environment} environment"
-                )
+                print(f"WARNING: Wildcard CORS headers detected in {config.environment} environment")
 
         config.cors.allow_headers = headers
 
@@ -412,18 +368,12 @@ def get_api_config() -> APIConfig:
                     "CORS credentials cannot be enabled with wildcard origins in production"
                 )
             else:
-                print(
-                    f"WARNING: CORS credentials with wildcard origins in {config.environment} environment"
-                )
+                print(f"WARNING: CORS credentials with wildcard origins in {config.environment} environment")
 
     # Monitoring configuration
-    config.monitoring.enabled = (
-        os.getenv("MONITORING_ENABLED", "true").lower() == "true"
-    )
+    config.monitoring.enabled = os.getenv("MONITORING_ENABLED", "true").lower() == "true"
     config.monitoring.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    config.monitoring.trace_sampling_rate = float(
-        os.getenv("TRACE_SAMPLING_RATE", "0.1")
-    )
+    config.monitoring.trace_sampling_rate = float(os.getenv("TRACE_SAMPLING_RATE", "0.1"))
 
     # Performance configuration
     config.performance.worker_processes = int(os.getenv("WORKER_PROCESSES", "1"))
@@ -436,7 +386,7 @@ def get_api_config() -> APIConfig:
     # Apply security configuration
     config.docs_url = "/docs" if security_config["enable_docs"] else None
     config.redoc_url = "/redoc" if security_config["enable_docs"] else None
-    # Note: config.debug already set from env_manager.config.debug at line 266
+    config.debug = security_config["debug"]
 
     # Apply feature flags
     config.enable_swagger_ui = feature_flags["enable_swagger_ui"]
@@ -466,10 +416,7 @@ def get_api_config() -> APIConfig:
 
         # Staging CORS settings (only if not overridden by env vars)
         if not os.getenv("CORS_ORIGINS"):
-            config.cors.allow_origins = [
-                "https://staging.dt-rag.com",
-                "https://staging-app.dt-rag.com",
-            ]
+            config.cors.allow_origins = ["https://staging.dt-rag.com", "https://staging-app.dt-rag.com"]
 
         config.cors.max_age = 1800  # 30 minutes cache for staging
         config.monitoring.log_level = "INFO"
@@ -484,7 +431,7 @@ def get_api_config() -> APIConfig:
                 "http://localhost:8080",
                 "http://localhost:8081",
                 "http://127.0.0.1:3000",
-                "http://127.0.0.1:8080",
+                "http://127.0.0.1:8080"
             ]
         config.cors.max_age = 300  # 5 minutes cache for development
         config.performance.worker_processes = env_manager.config.worker_processes
@@ -495,7 +442,6 @@ def get_api_config() -> APIConfig:
         config.performance.worker_processes = 1
 
     return config
-
 
 def get_openapi_tags() -> List[Dict[str, str]]:
     """
@@ -508,41 +454,49 @@ def get_openapi_tags() -> List[Dict[str, str]]:
     return [
         {
             "name": "Authentication",
-            "description": "User authentication and session management",
+            "description": "User authentication and session management"
         },
         {
             "name": "Taxonomy",
-            "description": "Hierarchical taxonomy management and navigation",
+            "description": "Hierarchical taxonomy management and navigation"
         },
         {
             "name": "Search",
-            "description": "Hybrid search operations with BM25 and vector search",
+            "description": "Hybrid search operations with BM25 and vector search"
         },
         {
             "name": "Classification",
-            "description": "Document classification with HITL support",
+            "description": "Document classification with HITL support"
         },
         {
             "name": "Ingestion",
-            "description": "Document ingestion and processing pipeline",
+            "description": "Document ingestion and processing pipeline"
         },
         {
             "name": "Orchestration",
-            "description": "LangGraph-based RAG pipeline execution",
+            "description": "LangGraph-based RAG pipeline execution"
         },
         {
             "name": "Evaluation",
-            "description": "RAGAS evaluation and A/B testing framework",
+            "description": "RAGAS evaluation and A/B testing framework"
         },
-        {"name": "Monitoring", "description": "System metrics and observability"},
-        {"name": "Security", "description": "Security management and compliance"},
+        {
+            "name": "Monitoring",
+            "description": "System metrics and observability"
+        },
+        {
+            "name": "Security",
+            "description": "Security management and compliance"
+        },
         {
             "name": "Agent Factory",
-            "description": "Dynamic agent creation and management",
+            "description": "Dynamic agent creation and management"
         },
-        {"name": "System", "description": "System health and status endpoints"},
+        {
+            "name": "System",
+            "description": "System health and status endpoints"
+        }
     ]
-
 
 # Configuration validation
 def validate_config(config: APIConfig) -> None:
@@ -601,9 +555,7 @@ def validate_config(config: APIConfig) -> None:
 
         # Validate HTTPS origins in production (except localhost for testing)
         for origin in config.cors.allow_origins:
-            if origin.startswith("http://") and not origin.startswith(
-                "http://localhost"
-            ):
+            if origin.startswith("http://") and not origin.startswith("http://localhost"):
                 raise ValueError(f"HTTP origin not allowed in production: {origin}")
 
         # Validate no wildcard headers in production
@@ -613,7 +565,6 @@ def validate_config(config: APIConfig) -> None:
         # Validate credentials with specific origins
         if config.cors.allow_credentials and "*" in config.cors.allow_origins:
             raise ValueError("CORS credentials cannot be enabled with wildcard origins")
-
 
 def get_security_info() -> Dict[str, Any]:
     """
@@ -638,18 +589,11 @@ def get_security_info() -> Dict[str, Any]:
         "password_require_special": config.security.password_require_special,
         "api_key_header": config.security.api_key_header,
         "secret_key_configured": bool(config.security.secret_key),
-        "secret_key_length": (
-            len(config.security.secret_key) if config.security.secret_key else 0
-        ),
-        "secret_key_is_secure": (
-            _validate_secret_strength(config.security.secret_key)
-            if config.security.secret_key
-            else False
-        ),
+        "secret_key_length": len(config.security.secret_key) if config.security.secret_key else 0,
+        "secret_key_is_secure": _validate_secret_strength(config.security.secret_key) if config.security.secret_key else False,
         "security_recommendations": _get_security_recommendations(config),
-        "environment_validation": env_manager.validate_environment(),  # type: ignore[attr-defined]
+        "environment_validation": env_manager.validate_environment()
     }
-
 
 def get_system_status() -> Dict[str, Any]:
     """
@@ -663,31 +607,25 @@ def get_system_status() -> Dict[str, Any]:
 
     return {
         "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
-        "environment": env_manager.get_environment_summary(),  # type: ignore[attr-defined]
+        "environment": env_manager.get_environment_summary(),
         "llm_services": llm_config_manager.get_service_status(),
         "configuration": {
-            "database_type": (
-                "sqlite" if "sqlite" in os.getenv("DATABASE_URL", "") else "postgresql"
-            ),
+            "database_type": "sqlite" if "sqlite" in os.getenv("DATABASE_URL", "") else "postgresql",
             "redis_enabled": bool(os.getenv("REDIS_URL")),
-            "monitoring_enabled": os.getenv("MONITORING_ENABLED", "true").lower()
-            == "true",
-            "debug_mode": os.getenv("DEBUG", "false").lower() == "true",
+            "monitoring_enabled": os.getenv("MONITORING_ENABLED", "true").lower() == "true",
+            "debug_mode": os.getenv("DEBUG", "false").lower() == "true"
         },
         "api_keys": {
             "openai_configured": bool(os.getenv("OPENAI_API_KEY")),
             "anthropic_configured": bool(os.getenv("ANTHROPIC_API_KEY")),
-            "azure_configured": bool(os.getenv("AZURE_OPENAI_API_KEY")),
+            "azure_configured": bool(os.getenv("AZURE_OPENAI_API_KEY"))
         },
         "system_health": {
-            "configuration_valid": env_manager.validate_environment()["is_valid"],  # type: ignore[attr-defined]
-            "llm_service_available": llm_config_manager.get_service_status()[
-                "system_operational"
-            ],
-            "fallback_enabled": True,
-        },
+            "configuration_valid": env_manager.validate_environment()["is_valid"],
+            "llm_service_available": llm_config_manager.get_service_status()["system_operational"],
+            "fallback_enabled": True
+        }
     }
-
 
 def get_configuration_recommendations() -> List[str]:
     """
@@ -702,7 +640,7 @@ def get_configuration_recommendations() -> List[str]:
     recommendations = []
 
     # Environment validation recommendations
-    env_validation = env_manager.validate_environment()  # type: ignore[attr-defined]
+    env_validation = env_manager.validate_environment()
     recommendations.extend(env_validation.get("recommendations", []))
 
     # LLM service recommendations
@@ -719,9 +657,7 @@ def get_configuration_recommendations() -> List[str]:
         if env_manager.current_env == Environment.PRODUCTION:
             recommendations.append("Use PostgreSQL for production instead of SQLite")
         else:
-            recommendations.append(
-                "Consider PostgreSQL for better performance and features"
-            )
+            recommendations.append("Consider PostgreSQL for better performance and features")
 
     # Redis recommendations
     if not os.getenv("REDIS_URL"):
@@ -734,12 +670,9 @@ def get_configuration_recommendations() -> List[str]:
 
         cors_origins = os.getenv("CORS_ORIGINS", "")
         if "*" in cors_origins:
-            recommendations.append(
-                "Replace wildcard CORS origins with specific trusted domains"
-            )
+            recommendations.append("Replace wildcard CORS origins with specific trusted domains")
 
     return recommendations
-
 
 def _get_security_recommendations(config: APIConfig) -> List[str]:
     """
@@ -760,57 +693,36 @@ def _get_security_recommendations(config: APIConfig) -> List[str]:
         if config.docs_url or config.redoc_url:
             recommendations.append("Disable API documentation in production")
 
-        if not config.security.secret_key or not _validate_secret_strength(
-            config.security.secret_key
-        ):
-            recommendations.append(
-                "Use a strong SECRET_KEY (32+ characters, cryptographically random)"
-            )
+        if not config.security.secret_key or not _validate_secret_strength(config.security.secret_key):
+            recommendations.append("Use a strong SECRET_KEY (32+ characters, cryptographically random)")
 
     if config.security.jwt_expiration_minutes > 60:
-        recommendations.append(
-            "Consider shorter JWT expiration time for better security"
-        )
+        recommendations.append("Consider shorter JWT expiration time for better security")
 
     if config.security.password_min_length < 12:
-        recommendations.append(
-            "Consider increasing minimum password length to 12+ characters"
-        )
+        recommendations.append("Consider increasing minimum password length to 12+ characters")
 
     if not config.security.password_require_special:
         recommendations.append("Consider requiring special characters in passwords")
 
     # CORS security recommendations
     if "*" in config.cors.allow_origins:
-        recommendations.append(
-            "Replace wildcard CORS origins with specific trusted origins"
-        )
+        recommendations.append("Replace wildcard CORS origins with specific trusted origins")
 
     if "*" in config.cors.allow_headers:
-        recommendations.append(
-            "Replace wildcard CORS headers with specific required headers"
-        )
+        recommendations.append("Replace wildcard CORS headers with specific required headers")
 
     if config.cors.allow_credentials and len(config.cors.allow_origins) > 5:
-        recommendations.append(
-            "Consider limiting CORS origins when credentials are enabled"
-        )
+        recommendations.append("Consider limiting CORS origins when credentials are enabled")
 
     # Check for HTTP origins in non-development environments
     if config.environment not in ["development", "testing"]:
-        http_origins = [
-            origin
-            for origin in config.cors.allow_origins
-            if origin.startswith("http://")
-            and not origin.startswith("http://localhost")
-        ]
+        http_origins = [origin for origin in config.cors.allow_origins
+                       if origin.startswith("http://") and not origin.startswith("http://localhost")]
         if http_origins:
-            recommendations.append(
-                f"Use HTTPS for these origins: {', '.join(http_origins)}"
-            )
+            recommendations.append(f"Use HTTPS for these origins: {', '.join(http_origins)}")
 
     return recommendations
-
 
 # Alias for backwards compatibility
 get_config = get_api_config
@@ -834,5 +746,5 @@ __all__ = [
     "get_configuration_recommendations",
     "_generate_secure_secret",
     "_validate_secret_strength",
-    "_validate_openai_api_key",
+    "_validate_openai_api_key"
 ]

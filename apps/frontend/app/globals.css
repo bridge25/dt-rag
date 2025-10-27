@@ -118,25 +118,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-@layer utilities {
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .dark .glass-effect {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
-  .gradient-glow {
-    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
-  }
-
-  .dark .gradient-glow {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.8);
-  }
-}

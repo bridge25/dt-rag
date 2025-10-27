@@ -1,9 +1,9 @@
 ---
 id: UI-DESIGN-001
-version: 0.2.0
-status: completed
+version: 0.1.0
+status: draft
 created: 2025-10-10
-updated: 2025-10-22
+updated: 2025-10-10
 author: @sonheungmin
 priority: high
 category: feature
@@ -12,32 +12,15 @@ labels:
   - design-system
   - saas
   - component-library
-  - reverse-engineered
 scope:
   packages:
-    - apps/frontend/components/ui
-    - apps/frontend/lib
-  files:
-    - 22개 UI 컴포넌트 (요구사항 15개 초과 달성 147%)
-    - 21개 테스트 파일 (통합 테스트 포함)
+    - src/components/ui
+    - src/styles/tokens
 ---
 
 # SPEC-UI-DESIGN-001: SaaS-Grade UI Design System
 
 ## HISTORY
-
-### v0.2.0 (2025-10-22) - REVERSE_ENGINEERING_COMPLETED
-- **실제 구현 분석 완료**: 22개 컴포넌트 (요구사항 15개 대비 147% 달성)
-- **구현 컴포넌트 목록**:
-  - 인터랙션 (5개): button, input, card, badge, toast ✅
-  - 피드백 (3개): progress, spinner, modal ✅
-  - 네비게이션 (3개): tooltip, breadcrumb, pagination ✅
-  - 레이아웃 (4개): container, grid, stack, tabs ✅
-  - 추가 컴포넌트 (7개): checkbox, dialog, icon-badge, label, modern-card, skeleton, textarea
-- **페이지 구현**: dashboard, documents, hitl, monitoring, pipeline, search, taxonomy
-- **테스트 커버리지**: 21개 테스트 파일 (통합 테스트 포함)
-- **기술 스택**: Next.js 14 (App Router) + Tailwind CSS + TypeScript
-- **상태 변경**: draft → completed
 
 ### v0.1.0 (2025-10-10) - INITIAL
 - SaaS 제품 디자인 시스템 명세 초안 작성

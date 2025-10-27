@@ -6,30 +6,29 @@ Provides REST endpoints for dynamic agent creation and management including:
 - Agent configuration and customization
 - Agent lifecycle management
 - Agent performance monitoring
-
-@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import logging
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+import uuid
+
+from fastapi import APIRouter, HTTPException, Query, Depends, status
+from pydantic import BaseModel
+
+try:
+    from ..deps import verify_api_key
+except ImportError:
+    def verify_api_key():
+        return None
 
 # Import common schemas
 import sys
-import uuid
-from datetime import datetime
 from pathlib import Path as PathLib
-from typing import Any, Dict, List, Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
-
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
-from ..models.common_models import (
-    AgentManifest,
-    FeaturesConfig,
-    FromCategoryRequest,
-    RetrievalConfig,
+from packages.common_schemas.common_schemas.models import (
+    FromCategoryRequest, RetrievalConfig, FeaturesConfig
 )
 
 # Configure logging
@@ -40,20 +39,16 @@ agent_factory_router = APIRouter(prefix="/agents", tags=["Agent Factory"])
 
 # Additional models for agent operations
 
-
 class AgentCreateResponse(BaseModel):
     """Response for agent creation"""
-
     agent_id: str
     name: str
     status: str
     capabilities: List[str]
     created_at: datetime
 
-
 class AgentStatus(BaseModel):
     """Agent status information"""
-
     agent_id: str
     name: str
     status: str
@@ -62,56 +57,46 @@ class AgentStatus(BaseModel):
     usage_count: int = 0
     performance_metrics: Dict[str, float]
 
-
 class AgentMetrics(BaseModel):
     """Agent performance metrics"""
-
     total_requests: int
     avg_response_time_ms: float
     success_rate: float
     user_satisfaction: float
     cost_efficiency: float
 
-
 class AgentListResponse(BaseModel):
     """Response for listing agents"""
-
     agents: List[AgentStatus]
     total: int
     active: int
     inactive: int
 
-
 class AgentUpdateRequest(BaseModel):
     """Request to update agent configuration"""
-
     name: Optional[str] = None
     retrieval: Optional[RetrievalConfig] = None
     features: Optional[FeaturesConfig] = None
     mcp_tools_allowlist: Optional[List[str]] = None
 
-
 # Mock agent factory service
-
 
 class AgentFactoryService:
     """Mock agent factory service"""
 
-    async def create_agent_from_category(
-        self, request: FromCategoryRequest
-    ) -> AgentCreateResponse:
+    async def create_agent_from_category(self, request: FromCategoryRequest) -> AgentCreateResponse:
         """Create agent from taxonomy categories"""
         agent_id = str(uuid.uuid4())
 
-        # Generate agent name from category
-        category_parts = request.category.split("/")
-        agent_name = f"Agent-{'-'.join(category_parts[:2])}"
+        # Generate agent name from categories
+        category_names = ["/".join(path) for path in request.node_paths]
+        agent_name = f"Agent-{'-'.join(category_names[0].split('/')[:2])}"
 
         capabilities = [
             "document_search",
             "question_answering",
             "information_extraction",
-            "content_summarization",
+            "content_summarization"
         ]
 
         return AgentCreateResponse(
@@ -119,12 +104,10 @@ class AgentFactoryService:
             name=agent_name,
             status="created",
             capabilities=capabilities,
-            created_at=datetime.utcnow(),
+            created_at=datetime.utcnow()
         )
 
-    async def list_agents(
-        self, status_filter: Optional[str] = None
-    ) -> AgentListResponse:
+    async def list_agents(self, status_filter: Optional[str] = None) -> AgentListResponse:
         """List all agents"""
         agents = [
             AgentStatus(
@@ -137,8 +120,8 @@ class AgentFactoryService:
                 performance_metrics={
                     "avg_response_time": 1.89,
                     "success_rate": 0.94,
-                    "user_satisfaction": 4.2,
-                },
+                    "user_satisfaction": 4.2
+                }
             ),
             AgentStatus(
                 agent_id="agent-456",
@@ -149,9 +132,9 @@ class AgentFactoryService:
                 performance_metrics={
                     "avg_response_time": 2.15,
                     "success_rate": 0.91,
-                    "user_satisfaction": 4.0,
-                },
-            ),
+                    "user_satisfaction": 4.0
+                }
+            )
         ]
 
         if status_filter:
@@ -161,7 +144,7 @@ class AgentFactoryService:
             agents=agents,
             total=len(agents),
             active=sum(1 for a in agents if a.status == "active"),
-            inactive=sum(1 for a in agents if a.status == "inactive"),
+            inactive=sum(1 for a in agents if a.status == "inactive")
         )
 
     async def get_agent(self, agent_id: str) -> Optional[AgentStatus]:
@@ -177,14 +160,12 @@ class AgentFactoryService:
                 performance_metrics={
                     "avg_response_time": 1.89,
                     "success_rate": 0.94,
-                    "user_satisfaction": 4.2,
-                },
+                    "user_satisfaction": 4.2
+                }
             )
         return None
 
-    async def update_agent(
-        self, agent_id: str, update: AgentUpdateRequest
-    ) -> Optional[AgentStatus]:
+    async def update_agent(self, agent_id: str, update: AgentUpdateRequest) -> AgentStatus:
         """Update agent configuration"""
         agent = await self.get_agent(agent_id)
         if not agent:
@@ -209,7 +190,7 @@ class AgentFactoryService:
                 avg_response_time_ms=1890.5,
                 success_rate=0.943,
                 user_satisfaction=4.2,
-                cost_efficiency=0.85,
+                cost_efficiency=0.85
             )
         return None
 
@@ -221,24 +202,25 @@ class AgentFactoryService:
             "active_agents": 8,
             "requests_today": 1456,
             "avg_creation_time_seconds": 15.4,
-            "resource_usage": {"cpu_percent": 45.2, "memory_mb": 1024.5},
+            "resource_usage": {
+                "cpu_percent": 45.2,
+                "memory_mb": 1024.5
+            }
         }
-
 
 # Dependency injection
 async def get_agent_factory_service() -> AgentFactoryService:
     """Get agent factory service instance"""
     return AgentFactoryService()
 
-
 # API Endpoints
-
 
 @agent_factory_router.post("/from-category", response_model=AgentCreateResponse)
 async def create_agent_from_category(
     request: FromCategoryRequest,
     service: AgentFactoryService = Depends(get_agent_factory_service),
-) -> AgentCreateResponse:
+    api_key: str = Depends(verify_api_key)
+):
     """
     Create specialized agent from taxonomy categories
 
@@ -250,10 +232,10 @@ async def create_agent_from_category(
     """
     try:
         # Validate request
-        if not request.category:
+        if not request.node_paths:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Category is required",
+                detail="At least one node path is required"
             )
 
         # Validate taxonomy version exists
@@ -270,16 +252,16 @@ async def create_agent_from_category(
         logger.error(f"Agent creation failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create agent",
+            detail="Failed to create agent"
         )
-
 
 @agent_factory_router.get("/", response_model=AgentListResponse)
 async def list_agents(
-    status_filter: Optional[str] = Query(None, alias="status", description="Filter by status"),
+    status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum agents to return"),
     service: AgentFactoryService = Depends(get_agent_factory_service),
-) -> AgentListResponse:
+    api_key: str = Depends(verify_api_key)
+):
     """
     List all agents with optional filtering
 
@@ -289,7 +271,7 @@ async def list_agents(
     - Performance metrics overview
     """
     try:
-        agents_response = await service.list_agents(status_filter)
+        agents_response = await service.list_agents(status)
 
         # Apply limit
         if len(agents_response.agents) > limit:
@@ -301,14 +283,15 @@ async def list_agents(
         logger.error(f"Failed to list agents: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve agents",
+            detail="Failed to retrieve agents"
         )
-
 
 @agent_factory_router.get("/{agent_id}", response_model=AgentStatus)
 async def get_agent(
-    agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-) -> AgentStatus:
+    agent_id: str,
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
+):
     """
     Get detailed information about specific agent
 
@@ -323,7 +306,7 @@ async def get_agent(
         if agent is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Agent '{agent_id}' not found",
+                detail=f"Agent '{agent_id}' not found"
             )
 
         return agent
@@ -334,16 +317,16 @@ async def get_agent(
         logger.error(f"Failed to get agent: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve agent",
+            detail="Failed to retrieve agent"
         )
-
 
 @agent_factory_router.put("/{agent_id}", response_model=AgentStatus)
 async def update_agent(
     agent_id: str,
     update: AgentUpdateRequest,
     service: AgentFactoryService = Depends(get_agent_factory_service),
-) -> AgentStatus:
+    api_key: str = Depends(verify_api_key)
+):
     """
     Update agent configuration
 
@@ -359,7 +342,7 @@ async def update_agent(
         if agent is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Agent '{agent_id}' not found",
+                detail=f"Agent '{agent_id}' not found"
             )
 
         return agent
@@ -370,14 +353,15 @@ async def update_agent(
         logger.error(f"Failed to update agent: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update agent",
+            detail="Failed to update agent"
         )
-
 
 @agent_factory_router.delete("/{agent_id}")
 async def delete_agent(
-    agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-) -> Dict[str, str]:
+    agent_id: str,
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
+):
     """
     Delete agent
 
@@ -390,7 +374,7 @@ async def delete_agent(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Agent '{agent_id}' not found",
+                detail=f"Agent '{agent_id}' not found"
             )
 
         return {"message": f"Agent '{agent_id}' deleted successfully"}
@@ -401,14 +385,15 @@ async def delete_agent(
         logger.error(f"Failed to delete agent: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete agent",
+            detail="Failed to delete agent"
         )
-
 
 @agent_factory_router.get("/{agent_id}/metrics", response_model=AgentMetrics)
 async def get_agent_metrics(
-    agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-) -> AgentMetrics:
+    agent_id: str,
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
+):
     """
     Get detailed performance metrics for agent
 
@@ -424,7 +409,7 @@ async def get_agent_metrics(
         if metrics is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Agent '{agent_id}' not found or no metrics available",
+                detail=f"Agent '{agent_id}' not found or no metrics available"
             )
 
         return metrics
@@ -435,14 +420,15 @@ async def get_agent_metrics(
         logger.error(f"Failed to get agent metrics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve agent metrics",
+            detail="Failed to retrieve agent metrics"
         )
-
 
 @agent_factory_router.post("/{agent_id}/activate")
 async def activate_agent(
-    agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-) -> Dict[str, str]:
+    agent_id: str,
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
+):
     """
     Activate agent for use
 
@@ -455,19 +441,19 @@ async def activate_agent(
         if agent is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Agent '{agent_id}' not found",
+                detail=f"Agent '{agent_id}' not found"
             )
 
         if agent.status == "active":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Agent is already active",
+                detail="Agent is already active"
             )
 
         # Activate agent (mock implementation)
         return {
             "message": f"Agent '{agent_id}' activated successfully",
-            "status": "active",
+            "status": "active"
         }
 
     except HTTPException:
@@ -476,14 +462,15 @@ async def activate_agent(
         logger.error(f"Failed to activate agent: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to activate agent",
+            detail="Failed to activate agent"
         )
-
 
 @agent_factory_router.post("/{agent_id}/deactivate")
 async def deactivate_agent(
-    agent_id: str, service: AgentFactoryService = Depends(get_agent_factory_service)
-) -> Dict[str, str]:
+    agent_id: str,
+    service: AgentFactoryService = Depends(get_agent_factory_service),
+    api_key: str = Depends(verify_api_key)
+):
     """
     Deactivate agent
 
@@ -496,19 +483,19 @@ async def deactivate_agent(
         if agent is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Agent '{agent_id}' not found",
+                detail=f"Agent '{agent_id}' not found"
             )
 
         if agent.status == "inactive":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Agent is already inactive",
+                detail="Agent is already inactive"
             )
 
         # Deactivate agent (mock implementation)
         return {
             "message": f"Agent '{agent_id}' deactivated successfully",
-            "status": "inactive",
+            "status": "inactive"
         }
 
     except HTTPException:
@@ -517,14 +504,14 @@ async def deactivate_agent(
         logger.error(f"Failed to deactivate agent: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to deactivate agent",
+            detail="Failed to deactivate agent"
         )
-
 
 @agent_factory_router.get("/factory/status")
 async def get_factory_status(
     service: AgentFactoryService = Depends(get_agent_factory_service),
-) -> Dict[str, Any]:
+    api_key: str = Depends(verify_api_key)
+):
     """
     Get agent factory system status
 
@@ -534,16 +521,15 @@ async def get_factory_status(
     - Resource usage information
     """
     try:
-        factory_status = await service.get_factory_status()
-        return factory_status
+        status = await service.get_factory_status()
+        return status
 
     except Exception as e:
         logger.error(f"Failed to get factory status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve factory status",
+            detail="Failed to retrieve factory status"
         )
-
 
 # Export router
 __all__ = ["agent_factory_router"]

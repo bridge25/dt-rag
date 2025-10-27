@@ -1,3 +1,5 @@
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 RAGAS Evaluation System for DT-RAG v1.8.1
 
@@ -20,5 +22,5 @@ __all__ = [
     "EvaluationMetrics",
     "EvaluationResult",
     "QualityMonitor",
-    "ExperimentTracker",
+    "ExperimentTracker"
 ]

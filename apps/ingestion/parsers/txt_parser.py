@@ -1,5 +1,4 @@
 from typing import Optional
-
 from .base import BaseParser, ParserError
 
 

@@ -1,9 +1,9 @@
 ---
 id: API-001
-version: 0.2.0
-status: completed
+version: 0.1.0
+status: active
 created: 2025-10-09
-updated: 2025-10-22
+updated: 2025-10-09
 author: @Alfred
 priority: critical
 
@@ -14,18 +14,21 @@ labels:
   - rest-api
   - openapi
   - authentication
-  - reverse-engineered
 
 scope:
   packages:
     - apps/api/main.py
     - apps/api/routers/*
   files:
-    - main.py (FastAPI application entry point)
-    - classify.py (POST /classify - ML-based text classification)
-    - search.py (POST /search - BM25 + Vector hybrid search)
-    - taxonomy.py (GET /taxonomy/{version}/tree, GET /taxonomy/versions)
-    - health.py (GET /healthz - health check)
+    - main.py
+    - search.py
+    - ingestion.py
+    - taxonomy.py
+    - classification_router.py
+    - evaluation.py
+    - monitoring_router.py
+    - admin/api_keys.py
+    - health.py
 
 related_specs:
   - EMBED-001
@@ -37,50 +40,32 @@ related_specs:
 
 ## HISTORY
 
-### v0.2.0 (2025-10-22)
-- **REVERSE_ENGINEERING_COMPLETED**: 실제 구현 분석 완료
-- **AUTHOR**: @Claude
-- **SCOPE**: 4개 구현된 라우터로 SPEC 수정 (classify, search, taxonomy, health)
-- **IMPLEMENTATION**:
-  - classify.py (77 LOC): POST /classify - ML 기반 텍스트 분류
-  - search.py (95 LOC): POST /search - BM25 + Vector 하이브리드 검색
-  - taxonomy.py (155 LOC): GET /taxonomy/{version}/tree, GET /taxonomy/versions
-  - health.py (29 LOC): GET /healthz - 헬스 체크
-- **STATUS_CHANGE**: active → completed (실제 구현 문서화 완료)
-- **FUTURE_WORK**: 미구현 라우터 4개(ingestion, evaluation, monitoring, admin/api_keys)는 별도 SPEC으로 분리 예정
-
 ### v0.1.0 (2025-10-09)
 - **INITIAL**: API Gateway 역공학 및 EARS 명세 작성
 - **AUTHOR**: @Alfred
-- **SCOPE**: 8개 주요 router 분석 및 통합 API 설계 (초기 계획)
+- **SCOPE**: 8개 주요 router 분석 및 통합 API 설계
 - **CONTEXT**: dt-rag v1.8.1 프로젝트의 RESTful API Gateway 시스템
 
 ---
 
 ## 개요
 
-DT-RAG 프로젝트의 API Gateway는 FastAPI 기반 RESTful API로, 하이브리드 검색, 문서 분류, 분류체계 관리, 헬스체크 기능을 제공한다. OpenAPI 3.0.3 표준을 준수하며, Bridge Pack ACCESS_CARD.md 스펙과 100% 호환된다.
+DT-RAG 프로젝트의 API Gateway는 FastAPI 기반 RESTful API로, 하이브리드 검색, 문서 분류, RAGAS 평가, 모니터링, 관리 기능을 제공한다. OpenAPI 3.0.3 표준을 준수하며, 인증/인가, Rate Limiting, 에러 처리, 모니터링을 통합한다.
 
-### 구현 완료된 핵심 기능 (v0.2.0)
+### 핵심 기능
 
-1. **Classification API** (classify.py): ML 기반 텍스트 분류, HITL 플래그, 신뢰도 평가
-2. **Hybrid Search API** (search.py): BM25 + Vector 하이브리드 검색, 재랭킹, 소스 추적
-3. **Taxonomy Management API** (taxonomy.py): 계층적 분류체계 조회, 버전 관리
-4. **Health Check API** (health.py): 기본 헬스체크, 서비스 상태 확인
-
-### Future Work (미구현)
-
-다음 기능들은 초기 계획에 포함되었으나 아직 구현되지 않았으며, 향후 별도 SPEC으로 분리될 예정:
-- **Document Ingestion API**: 문서 업로드, 배치 처리, 상태 추적
-- **Evaluation API**: RAGAS 메트릭, 품질 모니터링, 배치 평가
-- **Monitoring API**: 시스템 헬스, LLM 비용 추적, Langfuse 통합
-- **Admin API**: API 키 관리, 사용자 권한, 감사 로깅
+1. **Hybrid Search API**: BM25 + Vector 하이브리드 검색, LLM 답변 생성
+2. **Document Ingestion API**: 문서 업로드, 배치 처리, 상태 추적
+3. **Taxonomy Management API**: 계층적 분류체계 관리, DAG 검증, 롤백
+4. **Classification API**: 문서 분류, HITL 워크플로, 배치 처리
+5. **Evaluation API**: RAGAS 메트릭, 품질 모니터링, 배치 평가
+6. **Monitoring API**: 시스템 헬스, LLM 비용 추적, Langfuse 통합
+7. **Admin API**: API 키 관리, 사용자 권한, 감사 로깅
+8. **Health Check API**: 기본 헬스체크, 서비스 상태 확인
 
 ---
 
 ## EARS 요구사항
-
-> **⚠️ 주의**: 본 섹션의 FR-API-002 (Ingestion), FR-API-005 (Evaluation), FR-API-006 (Monitoring), FR-API-007 (Admin)은 미구현 상태입니다. 실제로 구현되어 있는 것은 FR-API-001 (Search), FR-API-003 (Taxonomy), FR-API-004 (Classification), FR-API-008 (Health Check)입니다.
 
 ### Ubiquitous Requirements (기본 요구사항)
 
@@ -194,11 +179,7 @@ DT-RAG 프로젝트의 API Gateway는 FastAPI 기반 RESTful API로, 하이브�
 
 ## API 엔드포인트 목록
 
-> **⚠️ 주의**: 본 섹션은 초기 계획을 포함하고 있습니다. 실제 구현 완료된 것은 다음과 같습니다:
-> - ✅ **구현 완료**: 1. Search API, 3. Taxonomy API, 4. Classification API, 8. Health Check API
-> - ⏳ **미구현**: 2. Ingestion API, 5. Evaluation API, 6. Monitoring API, 7. Admin API
-
-### 1. Search API (FR-API-001) ✅ 구현 완료
+### 1. Search API (FR-API-001)
 
 #### POST /search
 Bridge Pack 호환 하이브리드 검색
@@ -318,9 +299,7 @@ LLM 기반 자연어 답변 생성
 
 ---
 
-### 2. Ingestion API (FR-API-002) ⏳ 미구현
-
-> **⚠️ 이 API는 아직 구현되지 않았습니다.** 아래 내용은 초기 계획이며, 향후 별도 SPEC으로 분리될 예정입니다.
+### 2. Ingestion API (FR-API-002)
 
 #### POST /ingestion/upload
 문서 업로드 및 비동기 처리
@@ -377,7 +356,7 @@ priority: int (default: 5, range: 1-10)
 
 ---
 
-### 3. Taxonomy API (FR-API-003) ✅ 구현 완료
+### 3. Taxonomy API (FR-API-003)
 
 #### GET /taxonomy/{version}/tree
 계층적 분류체계 조회
@@ -474,7 +453,7 @@ Taxonomy 시스템 상태
 
 ---
 
-### 4. Classification API (FR-API-004) ✅ 구현 완료
+### 4. Classification API (FR-API-004)
 
 #### POST /classify
 문서 청크 분류
@@ -590,9 +569,7 @@ HITL 리뷰 제출
 
 ---
 
-### 5. Evaluation API (FR-API-005) ⏳ 미구현
-
-> **⚠️ 이 API는 아직 구현되지 않았습니다.** 아래 내용은 초기 계획이며, 향후 별도 SPEC으로 분리될 예정입니다.
+### 5. Evaluation API (FR-API-005)
 
 #### POST /evaluation/evaluate
 RAG 응답 평가 (RAGAS)
@@ -722,9 +699,7 @@ RAG 응답 평가 (RAGAS)
 
 ---
 
-### 6. Monitoring API (FR-API-006) ⏳ 미구현
-
-> **⚠️ 이 API는 아직 구현되지 않았습니다.** 아래 내용은 초기 계획이며, 향후 별도 SPEC으로 분리될 예정입니다.
+### 6. Monitoring API (FR-API-006)
 
 #### GET /monitoring/health
 시스템 헬스 체크
@@ -789,9 +764,7 @@ Langfuse 통합 상태
 
 ---
 
-### 7. Admin API (FR-API-007) ⏳ 미구현
-
-> **⚠️ 이 API는 아직 구현되지 않았습니다.** 아래 내용은 초기 계획이며, 향후 별도 SPEC으로 분리될 예정입니다.
+### 7. Admin API (FR-API-007)
 
 #### POST /admin/api-keys
 API 키 생성 (admin 권한 필수)
@@ -921,7 +894,7 @@ API 키 형식 검증 (admin)
 
 ---
 
-### 8. Health Check API (FR-API-008) ✅ 구현 완료
+### 8. Health Check API (FR-API-008)
 
 #### GET /healthz
 기본 헬스체크
@@ -1662,37 +1635,20 @@ curl -H "Authorization: Bearer <api_key>" \
 - `.moai/specs/SPEC-SEARCH-001/spec.md` - 하이브리드 검색 시스템
 - `.moai/specs/SPEC-CLASS-001/spec.md` - 분류 시스템
 
-### 관련 파일 (v0.2.0 - 실제 구현됨)
-- ✅ `apps/api/main.py` - FastAPI 애플리케이션 진입점 (4개 라우터 등록)
-- ✅ `apps/api/routers/classify.py` - ML 기반 분류 라우터 (77 LOC)
-- ✅ `apps/api/routers/search.py` - BM25 + Vector 하이브리드 검색 라우터 (95 LOC)
-- ✅ `apps/api/routers/taxonomy.py` - 계층적 분류체계 라우터 (155 LOC)
-- ✅ `apps/api/routers/health.py` - 헬스체크 라우터 (29 LOC)
-
-### 미구현 파일 (향후 별도 SPEC 예정)
-- ⏳ `apps/api/routers/ingestion.py` - 문서 수집 라우터 (미구현)
-- ⏳ `apps/api/routers/evaluation.py` - RAGAS 평가 라우터 (미구현)
-- ⏳ `apps/api/routers/monitoring_router.py` - 모니터링 라우터 (미구현)
-- ⏳ `apps/api/routers/admin/api_keys.py` - API 키 관리 라우터 (미구현)
+### 관련 파일
+- `apps/api/main.py` - FastAPI 애플리케이션 진입점
+- `apps/api/routers/search.py` - 검색 라우터
+- `apps/api/routers/ingestion.py` - 문서 수집 라우터
+- `apps/api/routers/taxonomy.py` - 분류체계 라우터
+- `apps/api/routers/classification_router.py` - 분류 라우터
+- `apps/api/routers/evaluation.py` - 평가 라우터
+- `apps/api/routers/monitoring_router.py` - 모니터링 라우터
+- `apps/api/routers/admin/api_keys.py` - API 키 관리 라우터
+- `apps/api/routers/health.py` - 헬스체크 라우터
 
 ---
 
-## 역공학 완료 요약 (v0.2.0)
-
-### 실제 구현 현황
-- **구현 완료**: 4개 라우터 (classify, search, taxonomy, health)
-- **총 코드량**: 356 LOC (classify 77 + search 95 + taxonomy 155 + health 29)
-- **엔드포인트**: 5개 (POST /classify, POST /search, GET /taxonomy/{version}/tree, GET /taxonomy/versions, GET /healthz)
-- **Bridge Pack 호환**: 100% (ACCESS_CARD.md 스펙 준수)
-- **상태**: completed (실제 구현 문서화 완료)
-
-### 미구현 계획
-- **미구현**: 4개 라우터 (ingestion, evaluation, monitoring, admin/api_keys)
-- **향후 계획**: 별도 SPEC으로 분리 예정 (SPEC-INGESTION-001, SPEC-EVAL-001, SPEC-MONITORING-001, SPEC-ADMIN-001)
-
----
-
-**문서 버전**: v0.2.0
-**최종 업데이트**: 2025-10-22
-**작성자**: @Alfred (v0.1.0), @Claude (v0.2.0 역공학 완료)
-**상태**: Completed (실제 구현 문서화 완료)
+**문서 버전**: v0.1.0
+**최종 업데이트**: 2025-10-09
+**작성자**: @Alfred
+**상태**: Active

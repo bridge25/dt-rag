@@ -1,11 +1,9 @@
-# @CODE:MYPY-001:PHASE2:BATCH6
 import re
-from dataclasses import dataclass
 from typing import List
+from dataclasses import dataclass
 
 try:
     import tiktoken
-
     TIKTOKEN_AVAILABLE = True
 except ImportError:
     TIKTOKEN_AVAILABLE = False
@@ -30,7 +28,7 @@ class IntelligentChunker:
         chunk_size: int = 500,
         overlap_size: int = 128,
         encoding_name: str = "cl100k_base",
-    ) -> None:
+    ):
         if not TIKTOKEN_AVAILABLE:
             raise ChunkingError("tiktoken not installed")
 
@@ -59,7 +57,7 @@ class IntelligentChunker:
             raise ChunkingError("No sentences found in text")
 
         chunks = []
-        current_chunk_sentences: List[str] = []
+        current_chunk_sentences = []
         current_tokens = 0
         position = 0
 
@@ -82,7 +80,7 @@ class IntelligentChunker:
                     current_tokens = 0
 
                 words = sentence.split()
-                word_chunk: List[str] = []
+                word_chunk = []
                 word_tokens = 0
 
                 for word in words:
@@ -134,7 +132,7 @@ class IntelligentChunker:
                     )
                 )
 
-                overlap_sentences: List[str] = []
+                overlap_sentences = []
                 overlap_tokens = 0
                 for sent in reversed(current_chunk_sentences):
                     sent_tokens = self.count_tokens(sent)
@@ -164,13 +162,9 @@ class IntelligentChunker:
 
         return chunks
 
-    def calculate_sentence_boundary_preservation_rate(
-        self, chunks: List[Chunk]
-    ) -> float:
+    def calculate_sentence_boundary_preservation_rate(self, chunks: List[Chunk]) -> float:
         if not chunks:
             return 0.0
 
-        preserved_count = sum(
-            1 for chunk in chunks if chunk.sentence_boundary_preserved
-        )
+        preserved_count = sum(1 for chunk in chunks if chunk.sentence_boundary_preserved)
         return preserved_count / len(chunks)

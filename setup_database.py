@@ -30,7 +30,8 @@ async def main():
         from apps.api.database import (
             init_database,
             test_database_connection,
-            setup_search_system
+            setup_search_system,
+            get_search_performance_metrics
         )
 
         print("\n1️⃣ Testing Database Connection...")
@@ -65,20 +66,20 @@ async def main():
             print("✅ Search system configured!")
 
         print("\n4️⃣ Checking Performance Metrics...")
-        try:
-            # 간소화된 검증: 모니터링 시스템 사용
-            from apps.api.monitoring.search_metrics import get_search_metrics
-            metrics_collector = get_search_metrics()
-            metrics_data = metrics_collector.get_metrics()
+        metrics = await get_search_performance_metrics()
+
+        if "error" in metrics:
+            print(f"⚠️ Metrics collection failed: {metrics['error']}")
+        else:
+            performance = metrics.get("performance", {})
+            stats = metrics.get("analytics", {}).get("statistics", {})
 
             print(f"📊 System Status:")
-            print(f"   - Monitoring: {'✅ Enabled' if metrics_data else '❌ Disabled'}")
-            if metrics_data:
-                search_metrics = metrics_data.get("search_metrics", {})
-                print(f"   - Search Types: {len(search_metrics.get('search_types', []))}")
-                print(f"   - Total Searches: {sum(search_metrics.get('search_counts', {}).values())}")
-        except Exception as e:
-            print(f"⚠️ Metrics collection unavailable: {e}")
+            print(f"   - Total Documents: {stats.get('total_docs', 0)}")
+            print(f"   - BM25 Ready: {'✅' if performance.get('bm25_ready') else '❌'}")
+            print(f"   - Vector Ready: {'✅' if performance.get('vector_ready') else '❌'}")
+            print(f"   - Hybrid Ready: {'✅' if performance.get('hybrid_ready') else '❌'}")
+            print(f"   - API Status: {'✅' if performance.get('api_status') == 'enabled' else '❌ (No OpenAI API Key)'}")
 
         print("\n5️⃣ Testing Sample Operations...")
 

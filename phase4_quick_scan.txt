@@ -1,0 +1,154 @@
+================================================================================
+Phase 4 브랜치 빠른 스캔 결과
+================================================================================
+
+
+브랜치: chore/bootstrap-ci-governance
+--------------------------------------------------------------------------------
+Ahead: 8 | Behind: 173
+
+Diff 통계:
+21 files changed, 3712 insertions(+), 5 deletions(-)
+
+최근 커밋:
+05b27927 docs: add branch protection setup guide and finalize CI/CD governance
+db151735 docs: improve CI/CD workflow guide clarity
+bd5e615e docs: add comprehensive CI/CD workflow guide for team
+e3d7f6f2 feat: add docs-only skip logic and Alembic rollback smoke test
+5aaa239f fix(ci): unify npm test log filename and improve failure summary
+
+
+브랜치: chore/codex-auto-review
+--------------------------------------------------------------------------------
+Ahead: 3 | Behind: 173
+
+Diff 통계:
+9 files changed, 1067 insertions(+), 2 deletions(-)
+
+최근 커밋:
+a2c28ac9 test: Add intentionally failing code for CI/CD testing
+a5f4a997 merge: resolve conflicts with origin/master
+4afe9b8a merge: unity-main-2025-0908 \ube0c\ub79c\uce58\ub97c master\uc5d0 \uba38\uc9c0
+79703021 feat: Dynamic Taxonomy RAG \ud1b5\ud569 \uc644\ub8cc \ubc0f \uac1c\uc120
+f380ff46 feat(orchestration): add Retry-After aware backoff with max delay cap in LangGraph /search
+
+
+브랜치: dt-rag/chore/a-readme-hardening
+--------------------------------------------------------------------------------
+Ahead: 7 | Behind: 202
+
+Diff 통계:
+42 files changed, 7582 insertions(+), 210 deletions(-)
+
+최근 커밋:
+0e9cd6e2 fix(docs): README 최종 검증 완료
+7b5fc06b feat(deployment): Day 2 Docker 패키징 및 배포 인프라 완성
+f0e78a58 chore(docs): README를 B/C팀 온보딩 단일 진입점으로 승격
+973618a5 feat(observability): Add comprehensive monitoring system
+90025358 feat(ingestion): Add document ingestion pipeline
+
+
+브랜치: dt-rag/feat/a-api-services
+--------------------------------------------------------------------------------
+Ahead: 2 | Behind: 173
+
+Diff 통계:
+8 files changed, 1044 insertions(+), 2 deletions(-)
+
+최근 커밋:
+a5f4a997 merge: resolve conflicts with origin/master
+4afe9b8a merge: unity-main-2025-0908 \ube0c\ub79c\uce58\ub97c master\uc5d0 \uba38\uc9c0
+79703021 feat: Dynamic Taxonomy RAG \ud1b5\ud569 \uc644\ub8cc \ubc0f \uac1c\uc120
+f380ff46 feat(orchestration): add Retry-After aware backoff with max delay cap in LangGraph /search
+ca3e12a5 ops(k8s): add cert-manager ClusterIssuer sample for TLS
+
+
+브랜치: dt-rag/feat/a-hitl-worker
+--------------------------------------------------------------------------------
+Ahead: 2 | Behind: 202
+
+Diff 통계:
+17 files changed, 3572 insertions(+)
+
+최근 커밋:
+ca41d673 feat(hitl): implement HITL worker system with state machine
+f523bc54 feat(api): implement FastAPI service endpoints
+e4fa8f7e refactor(ci): 6-minute polish - CI stability improvements
+9edf064a feat(dt-rag): 통합 CI/CD + B/C팀 온보딩 + 머지 게이트 완료
+65d7a2e1 feat(dt-rag/ddl): implement DDL hardening with PostgreSQL + pgvector schema
+
+
+브랜치: dt-rag/feat/a-ingest-pipeline
+--------------------------------------------------------------------------------
+Ahead: 3 | Behind: 202
+
+Diff 통계:
+30 files changed, 5559 insertions(+)
+
+최근 커밋:
+90025358 feat(ingestion): Add document ingestion pipeline
+ca41d673 feat(hitl): implement HITL worker system with state machine
+f523bc54 feat(api): implement FastAPI service endpoints
+e4fa8f7e refactor(ci): 6-minute polish - CI stability improvements
+9edf064a feat(dt-rag): 통합 CI/CD + B/C팀 온보딩 + 머지 게이트 완료
+
+
+브랜치: dt-rag/feat/a-observability
+--------------------------------------------------------------------------------
+Ahead: 4 | Behind: 202
+
+Diff 통계:
+32 files changed, 6196 insertions(+)
+
+최근 커밋:
+973618a5 feat(observability): Add comprehensive monitoring system
+90025358 feat(ingestion): Add document ingestion pipeline
+ca41d673 feat(hitl): implement HITL worker system with state machine
+f523bc54 feat(api): implement FastAPI service endpoints
+e4fa8f7e refactor(ci): 6-minute polish - CI stability improvements
+
+
+브랜치: dt-rag/feat/a-packaging
+--------------------------------------------------------------------------------
+Ahead: 4 | Behind: 202
+
+Diff 통계:
+32 files changed, 6196 insertions(+)
+
+최근 커밋:
+973618a5 feat(observability): Add comprehensive monitoring system
+90025358 feat(ingestion): Add document ingestion pipeline
+ca41d673 feat(hitl): implement HITL worker system with state machine
+f523bc54 feat(api): implement FastAPI service endpoints
+e4fa8f7e refactor(ci): 6-minute polish - CI stability improvements
+
+
+브랜치: dt-rag/feat/c-frontend
+--------------------------------------------------------------------------------
+Ahead: 6 | Behind: 202
+
+Diff 통계:
+34 files changed, 9306 insertions(+)
+
+최근 커밋:
+f05b5fd0 feat(c-team): GPT 피드백 반영 - 프로덕션 준비 개선
+dd67caf2 fix: Add correct routing for agent-factory and admin pages
+8299fb03 feat(dt-rag/frontend): Implement C-F4 Admin Dashboard with metrics and rollback
+2ddf70ac feat(dt-rag/frontend): Implement C-F3 Chat UI with sources and accuracy toggle
+c9304dab feat(dt-rag/frontend): Implement C-F2 Agent Factory with navigation system
+
+
+브랜치: feat/dt-rag-v1.8.1-implementation
+--------------------------------------------------------------------------------
+Ahead: 30 | Behind: 29
+
+Diff 통계:
+618 files changed, 188070 insertions(+), 20219 deletions(-)
+
+최근 커밋:
+1a8e0f2b chore: Setup MoAI-ADK infrastructure for Phase 0-4 Memento integration
+bb50f0da fix: 교차 검증 기반 Critical/Medium 이슈 수정
+373b5c06 feat: Reconstruct Phase 2 API client with VibeCoding methodology
+e9cf8d8b refactor: Remove default app/page.tsx
+75497343 docs: Update README and configuration
+

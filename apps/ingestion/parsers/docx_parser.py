@@ -1,18 +1,16 @@
 import io
 from typing import Optional
-
 from .base import BaseParser, ParserError
 
 try:
     from docx import Document
-
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
 
 
 class DOCXParser(BaseParser):
-    def __init__(self) -> None:
+    def __init__(self):
         if not DOCX_AVAILABLE:
             raise ParserError("python-docx not installed")
 

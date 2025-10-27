@@ -1,26 +1,143 @@
-version: '3.8'
-
 services:
+  # PostgreSQL Database (Production)
   postgres:
-    image: ankane/pgvector:latest
+    image: pgvector/pgvector:pg16
     container_name: dt_rag_postgres
     environment:
       POSTGRES_DB: dt_rag
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
+    networks:
+      - dt_rag_network
 
+  # PostgreSQL Database (Test)
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: dt_rag_postgres_test
+    environment:
+      POSTGRES_DB: dt_rag_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dt_rag_network
+
+  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: dt_rag_redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
+    networks:
+      - dt_rag_network
+
+  # Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: dt_rag_api
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/dt_rag
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-dev_secret_key_change_in_production}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY:-}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY:-}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+      - ENABLE_TEST_API_KEYS=${ENABLE_TEST_API_KEYS:-true}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./alembic:/app/alembic
+      - ./apps:/app/apps
+      - ./tests:/app/tests
+      - ./packages:/app/packages
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - dt_rag_network
+
+  # Test service with build
+  test-nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: dt_rag_test_nginx
+    ports:
+      - "8888:80"
+    restart: unless-stopped
+    networks:
+      - dt_rag_network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: dt_rag_frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_API_KEY=${NEXT_PUBLIC_API_KEY}
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dt_rag_network
 
 volumes:
   postgres_data:
+    driver: local
+  postgres_test_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  dt_rag_network:
+    driver: bridge

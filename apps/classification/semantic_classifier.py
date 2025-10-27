@@ -6,15 +6,13 @@ Replaces mock classification with actual ML-based taxonomy classification
 # @CODE:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md | TEST: tests/e2e/test_complete_workflow.py
 
 import logging
-import uuid
-from typing import Any, Dict, List, Optional
-
+from typing import List, Dict, Any, Optional
 import numpy as np
 
 from packages.common_schemas.common_schemas.models import (
-    ClassificationResult,
-    ClassifyResponse,
+    ClassifyResponse, ClassificationResult
 )
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +20,7 @@ logger = logging.getLogger(__name__)
 class SemanticClassifier:
     """Semantic similarity-based document classifier"""
 
-    def __init__(
-        self, embedding_service: Any, taxonomy_dao: Any, confidence_threshold: float = 0.7
-    ):
+    def __init__(self, embedding_service, taxonomy_dao, confidence_threshold: float = 0.7):
         """
         Initialize semantic classifier
 
@@ -36,16 +32,14 @@ class SemanticClassifier:
         self.embedding_service = embedding_service
         self.taxonomy_dao = taxonomy_dao
         self.confidence_threshold = confidence_threshold
-        logger.info(
-            f"SemanticClassifier initialized with threshold={confidence_threshold}"
-        )
+        logger.info(f"SemanticClassifier initialized with threshold={confidence_threshold}")
 
     async def classify(
         self,
         text: str,
         confidence_threshold: Optional[float] = None,
         top_k: int = 5,
-        correlation_id: Optional[str] = None,
+        correlation_id: Optional[str] = None
     ) -> ClassifyResponse:
         """
         Classify text using semantic similarity to taxonomy nodes
@@ -59,7 +53,6 @@ class SemanticClassifier:
             ClassifyResponse with classifications following common_schemas format
         """
         import time
-
         start_time = time.time()
         request_id = correlation_id or str(uuid.uuid4())
 
@@ -84,14 +77,15 @@ class SemanticClassifier:
         for cand in top_candidates:
             alternatives = []
             if cand != best_match:
-                alternatives.append(
-                    {"taxonomy_path": cand["path"], "confidence": cand["confidence"]}
-                )
+                alternatives.append({
+                    "taxonomy_path": cand["path"],
+                    "confidence": cand["confidence"]
+                })
 
             classification_result = ClassificationResult(
                 taxonomy_path=cand["path"],
                 confidence=cand["confidence"],
-                alternatives=alternatives if alternatives else None,
+                alternatives=alternatives if alternatives else None
             )
             classifications.append(classification_result)
 
@@ -101,11 +95,13 @@ class SemanticClassifier:
             classifications=classifications,
             request_id=request_id,
             processing_time=processing_time,
-            taxonomy_version="1.8.1",
+            taxonomy_version="1.8.1"
         )
 
     async def _compute_similarities(
-        self, text_embedding: List[float], taxonomy_nodes: List[Dict[str, Any]]
+        self,
+        text_embedding: List[float],
+        taxonomy_nodes: List[Dict[str, Any]]
     ) -> List[float]:
         """Compute cosine similarity between text and taxonomy node embeddings"""
         text_vec = np.array(text_embedding)
@@ -139,20 +135,18 @@ class SemanticClassifier:
         self,
         similarities: List[float],
         taxonomy_nodes: List[Dict[str, Any]],
-        top_k: int,
+        top_k: int
     ) -> List[Dict[str, Any]]:
         """Get top-k classification candidates sorted by similarity"""
         candidates = []
         for idx, similarity in enumerate(similarities):
             node = taxonomy_nodes[idx]
-            candidates.append(
-                {
-                    "node_id": node["id"],
-                    "label": node["name"],
-                    "path": node["path"],
-                    "confidence": similarity,
-                }
-            )
+            candidates.append({
+                "node_id": node["id"],
+                "label": node["name"],
+                "path": node["path"],
+                "confidence": similarity
+            })
 
         candidates.sort(key=lambda x: x["confidence"], reverse=True)
         return candidates[:top_k]
@@ -162,7 +156,7 @@ class SemanticClassifier:
         text: str,
         best_match: Dict[str, Any],
         text_embedding: List[float],
-        confidence: float,
+        confidence: float
     ) -> List[str]:
         """Generate human-readable reasoning for classification"""
         reasoning = []
@@ -172,60 +166,52 @@ class SemanticClassifier:
         reasoning.append(f"Best matching taxonomy: {' > '.join(best_match['path'])}")
 
         if confidence >= 0.85:
-            reasoning.append(
-                "High confidence classification based on strong semantic match"
-            )
+            reasoning.append("High confidence classification based on strong semantic match")
         elif confidence >= self.confidence_threshold:
-            reasoning.append(
-                "Moderate confidence classification - automatic assignment"
-            )
+            reasoning.append("Moderate confidence classification - automatic assignment")
         else:
             reasoning.append("Low confidence - human review recommended")
 
         text_keywords = set(text.lower().split())
-        path_keywords = set(" ".join(best_match["path"]).lower().split())
+        path_keywords = set(' '.join(best_match['path']).lower().split())
         common_keywords = text_keywords & path_keywords
 
         if common_keywords:
-            reasoning.append(
-                f"Keyword overlap detected: {', '.join(list(common_keywords)[:3])}"
-            )
+            reasoning.append(f"Keyword overlap detected: {', '.join(list(common_keywords)[:3])}")
 
         return reasoning
 
-    def _fallback_response(
-        self, text: str, request_id: str, start_time: float
-    ) -> ClassifyResponse:
+    def _fallback_response(self, text: str, request_id: str, start_time: float) -> ClassifyResponse:
         """Fallback response when classification fails"""
         import time
-
         logger.warning("Classification fallback triggered")
 
         processing_time = time.time() - start_time
 
         fallback_result = ClassificationResult(
-            taxonomy_path=["Uncategorized"], confidence=0.5, alternatives=None
+            taxonomy_path=["Uncategorized"],
+            confidence=0.5,
+            alternatives=None
         )
 
         return ClassifyResponse(
             classifications=[fallback_result],
             request_id=request_id,
             processing_time=processing_time,
-            taxonomy_version="1.8.1",
+            taxonomy_version="1.8.1"
         )
 
 
 class TaxonomyDAO:
     """Data Access Object for taxonomy operations"""
 
-    def __init__(self, db_session: Any) -> None:
+    def __init__(self, db_session):
         """Initialize with database session"""
         self.db_session = db_session
 
     async def get_all_leaf_nodes(self) -> List[Dict[str, Any]]:
         """Get all leaf taxonomy nodes with embeddings"""
         from sqlalchemy import select
-
         from apps.api.database import TaxonomyNode
 
         query = select(TaxonomyNode).where(TaxonomyNode.version == "1.0.0")
@@ -234,23 +220,18 @@ class TaxonomyDAO:
 
         leaf_nodes = []
         for node in nodes:
-            leaf_nodes.append(
-                {
-                    "id": str(node.node_id),
-                    "name": node.label,
-                    "path": (
-                        node.canonical_path if node.canonical_path else [node.label]
-                    ),
-                    "embedding": None,
-                }
-            )
+            leaf_nodes.append({
+                "id": str(node.node_id),
+                "name": node.label,
+                "path": node.canonical_path if node.canonical_path else [node.label],
+                "embedding": None
+            })
 
         return leaf_nodes
 
     async def get_node_by_id(self, node_id: str) -> Optional[Dict[str, Any]]:
         """Get taxonomy node by ID"""
         from sqlalchemy import select
-
         from apps.api.database import TaxonomyNode
 
         query = select(TaxonomyNode).where(TaxonomyNode.node_id == node_id)
@@ -266,5 +247,5 @@ class TaxonomyDAO:
             "path": node.canonical_path if node.canonical_path else [node.label],
             "embedding": None,
             "parent_id": None,
-            "children_ids": [],
+            "children_ids": []
         }

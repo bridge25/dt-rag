@@ -1,19 +1,17 @@
 import io
-from typing import Optional, cast
-
+from typing import Optional
 from .base import BaseParser, ParserError
 
 try:
     import pymupdf
     import pymupdf4llm
-
     PYMUPDF_AVAILABLE = True
 except ImportError:
     PYMUPDF_AVAILABLE = False
 
 
 class PDFParser(BaseParser):
-    def __init__(self) -> None:
+    def __init__(self):
         if not PYMUPDF_AVAILABLE:
             raise ParserError("pymupdf and pymupdf4llm not installed")
 
@@ -26,7 +24,7 @@ class PDFParser(BaseParser):
             if not markdown_text or not markdown_text.strip():
                 raise ParserError("PDF parsing resulted in empty content")
 
-            return cast(str, markdown_text)
+            return markdown_text
         except Exception as e:
             raise ParserError(f"PDF parsing failed: {str(e)}")
 

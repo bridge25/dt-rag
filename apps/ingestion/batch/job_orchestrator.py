@@ -1,31 +1,23 @@
 import asyncio
 import logging
-import uuid
+from typing import Optional, Dict, Any, List
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+import uuid
 
-from sqlalchemy import Text, cast, select
+from sqlalchemy import select, cast, Text
 from sqlalchemy.dialects.postgresql import ARRAY
-
-from apps.api.database import (
-    DocTaxonomy,
-    Document,
-    DocumentChunk,
-    Embedding,
-    TaxonomyNode,
-)
-from apps.api.embedding_service import EmbeddingService
-from apps.core.db_session import async_session
-from apps.ingestion.chunking import IntelligentChunker
 from apps.ingestion.contracts.signals import (
-    ChunkV1,
-    DocumentProcessedEventV1,
     DocumentUploadCommandV1,
+    DocumentProcessedEventV1,
     ProcessingStatusV1,
+    ChunkV1,
 )
 from apps.ingestion.parsers import ParserFactory
+from apps.ingestion.chunking import IntelligentChunker
 from apps.ingestion.pii import PIIDetector
-
+from apps.api.embedding_service import EmbeddingService
+from apps.core.db_session import async_session
+from apps.api.database import Document, DocumentChunk, Embedding, DocTaxonomy, TaxonomyNode
 from .job_queue import JobQueue
 
 logger = logging.getLogger(__name__)
@@ -38,7 +30,7 @@ class JobOrchestrator:
         job_queue: Optional[JobQueue] = None,
         embedding_service: Optional[EmbeddingService] = None,
         max_workers: int = 10,
-    ) -> None:
+    ):
         self.job_queue = job_queue or JobQueue()
         self.embedding_service = embedding_service or EmbeddingService()
         self.max_workers = max_workers
@@ -49,7 +41,7 @@ class JobOrchestrator:
         self.internal_queue: asyncio.Queue = asyncio.Queue(maxsize=100)
         self.dispatcher_task: Optional[asyncio.Task] = None
 
-    async def start(self) -> None:
+    async def start(self):
         self.running = True
         await self.job_queue.initialize()
 
@@ -64,7 +56,7 @@ class JobOrchestrator:
 
         logger.info("Job Orchestrator started successfully")
 
-    async def stop(self) -> None:
+    async def stop(self):
         self.running = False
         logger.info("Stopping Job Orchestrator...")
 
@@ -74,9 +66,7 @@ class JobOrchestrator:
         for worker_task in self.workers:
             worker_task.cancel()
 
-        all_tasks = self.workers + (
-            [self.dispatcher_task] if self.dispatcher_task else []
-        )
+        all_tasks = self.workers + ([self.dispatcher_task] if self.dispatcher_task else [])
         await asyncio.gather(*all_tasks, return_exceptions=True)
 
         self.workers.clear()
@@ -84,7 +74,7 @@ class JobOrchestrator:
         logger.info("Job Orchestrator stopped")
 
     # @CODE:JOB-OPTIMIZE-001:DISPATCHER
-    async def _dispatcher(self) -> None:
+    async def _dispatcher(self):
         """Single Redis connection for job reception and internal queue distribution"""
         logger.info("Dispatcher started")
         retry_count = 0
@@ -99,9 +89,9 @@ class JobOrchestrator:
                     logger.debug(
                         f"Job dispatched to internal queue",
                         extra={
-                            "job_id": job_payload["job_id"],
-                            "queue_size": self.internal_queue.qsize(),
-                        },
+                            "job_id": job_payload['job_id'],
+                            "queue_size": self.internal_queue.qsize()
+                        }
                     )
                     retry_count = 0
 
@@ -112,9 +102,9 @@ class JobOrchestrator:
                 retry_count += 1
                 logger.error(
                     f"Dispatcher connection error (retry {retry_count}/{max_retries})",
-                    extra={"error": str(e)},
+                    extra={"error": str(e)}
                 )
-                await asyncio.sleep(min(2**retry_count, 30))
+                await asyncio.sleep(min(2 ** retry_count, 30))
             except Exception as e:
                 logger.error(f"Dispatcher unexpected error: {e}")
                 await asyncio.sleep(1)
@@ -125,7 +115,7 @@ class JobOrchestrator:
         logger.info("Dispatcher stopped")
 
     # @CODE:JOB-OPTIMIZE-001:WORKER
-    async def _worker(self, worker_id: int) -> None:
+    async def _worker(self, worker_id: int):
         logger.info(f"Worker {worker_id} started")
 
         QUEUE_TIMEOUT = 5.0
@@ -179,7 +169,7 @@ class JobOrchestrator:
                             job_id=job_id,
                             command_id=command_id,
                             job_data=job_data,
-                            priority=priority,
+                            priority=priority
                         )
                         if retry_success:
                             logger.info(f"Job {job_id} scheduled for retry")
@@ -257,7 +247,7 @@ class JobOrchestrator:
                     title=file_name,
                     content_type=f"application/{file_format}",
                     doc_metadata=job_data.get("metadata", {}),
-                    processed_at=datetime.utcnow(),
+                    processed_at=datetime.utcnow()
                 )
                 session.add(document)
 
@@ -281,7 +271,7 @@ class JobOrchestrator:
                         version="1.0.0",
                         path=taxonomy_path,
                         confidence=1.0,
-                        hitl_required=False,
+                        hitl_required=False
                     )
                     session.add(doc_taxonomy)
                     logger.info(
@@ -290,27 +280,23 @@ class JobOrchestrator:
                             "doc_id": str(doc_id),
                             "node_id": str(node_id),
                             "taxonomy_path": taxonomy_path,
-                            "version": "1.0.0",
-                        },
+                            "version": "1.0.0"
+                        }
                     )
 
                 all_chunk_texts = [chunk_signal.text for chunk_signal in chunk_signals]
 
-                logger.info(
-                    f"Generating embeddings for {len(all_chunk_texts)} chunks in batch"
-                )
-                embedding_vectors = (
-                    await self.embedding_service.batch_generate_embeddings(
-                        all_chunk_texts, batch_size=50, show_progress=True
-                    )
+                logger.info(f"Generating embeddings for {len(all_chunk_texts)} chunks in batch")
+                embedding_vectors = await self.embedding_service.batch_generate_embeddings(
+                    all_chunk_texts,
+                    batch_size=50,
+                    show_progress=True
                 )
 
-                for idx, (chunk_signal, embedding_vector) in enumerate(
-                    zip(chunk_signals, embedding_vectors)
-                ):
+                for idx, (chunk_signal, embedding_vector) in enumerate(zip(chunk_signals, embedding_vectors)):
                     chunk_id = uuid.uuid4()
 
-                    db_chunk: DocumentChunk = DocumentChunk(
+                    chunk = DocumentChunk(
                         chunk_id=chunk_id,
                         doc_id=doc_id,
                         text=chunk_signal.text,
@@ -319,28 +305,26 @@ class JobOrchestrator:
                         chunk_metadata={
                             "taxonomy_path": job_data.get("taxonomy_path"),
                             "author": job_data.get("author"),
-                            "language": job_data.get("language"),
+                            "language": job_data.get("language")
                         },
                         token_count=chunk_signal.token_count,
                         has_pii=chunk_signal.has_pii,
                         pii_types=chunk_signal.pii_types,
-                        created_at=datetime.utcnow(),
+                        created_at=datetime.utcnow()
                     )
-                    session.add(db_chunk)
+                    session.add(chunk)
 
                     embedding = Embedding(
                         embedding_id=uuid.uuid4(),
                         chunk_id=chunk_id,
                         vec=embedding_vector,
                         model_name=self.embedding_service.model_name,
-                        created_at=datetime.utcnow(),
+                        created_at=datetime.utcnow()
                     )
                     session.add(embedding)
 
                 await session.commit()
-                logger.info(
-                    f"Stored document {doc_id} with {len(chunk_signals)} chunks in database"
-                )
+                logger.info(f"Stored document {doc_id} with {len(chunk_signals)} chunks in database")
 
             except Exception as e:
                 await session.rollback()
@@ -357,8 +341,6 @@ class JobOrchestrator:
             chunks=chunk_signals,
             total_chunks=len(chunk_signals),
             total_tokens=total_tokens,
-            error_message=None,
-            error_code=None,
             processing_duration_ms=processing_duration_ms,
         )
 
@@ -410,7 +392,11 @@ class JobOrchestrator:
             logger.info(f"Job {job_id} reached max retries ({max_retries})")
             return False
 
-        non_retryable_errors = ["ParserError", "ValidationError", "AuthenticationError"]
+        non_retryable_errors = [
+            "ParserError",
+            "ValidationError",
+            "AuthenticationError"
+        ]
 
         error_type = type(error).__name__
         if any(err in error_type for err in non_retryable_errors):

@@ -59,16 +59,9 @@ class IntegrationTestSuite:
                 'dimensions': [len(emb) for emb in batch_embeddings]
             }
 
-            # 유사도 계산 테스트
-
-
-            embedding1 = await embedding_service.generate_embedding(test_texts[0])
-
-
+            # 유사도 계산 테스트 (임베딩 벡터 사용)
             embedding2 = await embedding_service.generate_embedding(test_texts[1])
-
-
-            similarity = embedding_service.calculate_similarity(embedding1, embedding2)
+            similarity = embedding_service.calculate_similarity(embedding, embedding2)
             results['similarity'] = float(similarity)
 
             # 캐싱 테스트
@@ -161,7 +154,7 @@ class IntegrationTestSuite:
                     'context_recall': evaluation_result.metrics.context_recall,
                     'answer_relevancy': evaluation_result.metrics.answer_relevancy
                 },
-                'overall_score': calculate_overall_score(evaluation_result.metrics),
+                'overall_score': evaluation_result.overall_score,
                 'quality_flags': evaluation_result.quality_flags,
                 'has_all_metrics': all([
                     evaluation_result.metrics.faithfulness is not None,
@@ -174,7 +167,7 @@ class IntegrationTestSuite:
             return {
                 'status': 'PASS',
                 'results': test_results,
-                'message': f"RAGAS 평가 정상 동작 (전체 점수: {calculate_overall_score(evaluation_result.metrics):.3f})"
+                'message': f"RAGAS 평가 정상 동작 (전체 점수: {evaluation_result.overall_score:.3f})"
             }
 
         except Exception as e:
@@ -336,6 +329,7 @@ class IntegrationTestSuite:
             query_text = "What is RAG in machine learning?"
             query_embedding = await embedding_service.generate_embedding(query_text)
 
+            # 임베딩 벡터를 사용하여 유사도 계산
             similarity = embedding_service.calculate_similarity(document_embedding, query_embedding)
 
             # 3. RAG 응답 생성 시뮬레이션
@@ -352,7 +346,7 @@ class IntegrationTestSuite:
                 'document_embedding_dim': len(document_embedding),
                 'query_embedding_dim': len(query_embedding),
                 'similarity_score': float(similarity),
-                'ragas_overall_score': calculate_overall_score(evaluation.metrics),
+                'ragas_overall_score': evaluation.overall_score,
                 'ragas_metrics': {
                     'faithfulness': evaluation.metrics.faithfulness,
                     'context_precision': evaluation.metrics.context_precision,
@@ -365,7 +359,7 @@ class IntegrationTestSuite:
             return {
                 'status': 'PASS',
                 'results': workflow_results,
-                'message': f"E2E 워크플로우 성공 (유사도: {similarity:.3f}, RAGAS: {calculate_overall_score(evaluation.metrics):.3f})"
+                'message': f"E2E 워크플로우 성공 (유사도: {similarity:.3f}, RAGAS: {evaluation.overall_score:.3f})"
             }
 
         except Exception as e:
@@ -467,11 +461,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-def calculate_overall_score(metrics):
-    """Calculate overall score from individual metrics"""
-    scores = []
-    for attr in ['faithfulness', 'context_precision', 'context_recall', 'answer_relevancy']:
-        value = getattr(metrics, attr, None)
-        if value is not None:
-            scores.append(value)
-    return sum(scores) / len(scores) if scores else 0.0

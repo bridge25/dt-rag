@@ -1,0 +1,40 @@
+{
+  "name": "dt-rag-frontend-admin",
+  "version": "1.8.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "next lint",
+    "test": "jest --watch",
+    "test:ci": "jest --ci --coverage",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@types/node": "^20.9.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "autoprefixer": "^10.4.16",
+    "lucide-react": "^0.545.0",
+    "next": "14.0.3",
+    "postcss": "^8.4.31",
+    "react": "^18.2.0",
+    "react-arborist": "^3.4.3",
+    "react-dom": "^18.2.0",
+    "react-focus-lock": "^2.13.6",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "eslint": "^8.53.0",
+    "eslint-config-next": "14.0.3",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0"
+  }
+}

@@ -1,10 +1,8 @@
-# @CODE:MYPY-001:PHASE2:BATCH4
 import asyncio
 import json
 import logging
+from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
-
 from apps.api.cache.redis_manager import RedisManager, get_redis_manager
 
 logger = logging.getLogger(__name__)
@@ -16,11 +14,11 @@ class JobQueue:
     IDEMPOTENCY_KEY_PREFIX = "ingestion:idempotency"
     PRIORITY_QUEUES = ["high", "medium", "low"]
 
-    def __init__(self, redis_manager: Optional[RedisManager] = None) -> None:
+    def __init__(self, redis_manager: Optional[RedisManager] = None):
         self.redis_manager = redis_manager
         self._redis_initialized = False
 
-    async def initialize(self) -> None:
+    async def initialize(self):
         if not self._redis_initialized:
             if self.redis_manager is None:
                 self.redis_manager = await get_redis_manager()
@@ -38,10 +36,6 @@ class JobQueue:
     async def check_idempotency_key(self, idempotency_key: str) -> Optional[str]:
         await self.initialize()
 
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return None
-
         try:
             key = self._get_idempotency_key(idempotency_key)
             existing_job_id = await self.redis_manager.get(key)
@@ -50,21 +44,13 @@ class JobQueue:
             logger.error(f"Failed to check idempotency key {idempotency_key}: {e}")
             return None
 
-    async def store_idempotency_key(
-        self, idempotency_key: str, job_id: str, ttl: int = 3600
-    ) -> bool:
+    async def store_idempotency_key(self, idempotency_key: str, job_id: str, ttl: int = 3600) -> bool:
         await self.initialize()
-
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return False
 
         try:
             key = self._get_idempotency_key(idempotency_key)
             await self.redis_manager.set(key, job_id, ttl=ttl)
-            logger.info(
-                f"Stored idempotency key {idempotency_key} for job {job_id} with TTL {ttl}s"
-            )
+            logger.info(f"Stored idempotency key {idempotency_key} for job {job_id} with TTL {ttl}s")
             return True
         except Exception as e:
             logger.error(f"Failed to store idempotency key {idempotency_key}: {e}")
@@ -80,24 +66,14 @@ class JobQueue:
     ) -> bool:
         await self.initialize()
 
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return False
-
         try:
             if idempotency_key:
                 existing_job_id = await self.check_idempotency_key(idempotency_key)
                 if existing_job_id:
-                    logger.warning(
-                        f"Duplicate idempotency key {idempotency_key} detected (existing job: {existing_job_id})"
-                    )
-                    raise ValueError(
-                        f"Duplicate request with idempotency key: {idempotency_key}"
-                    )
+                    logger.warning(f"Duplicate idempotency key {idempotency_key} detected (existing job: {existing_job_id})")
+                    raise ValueError(f"Duplicate request with idempotency key: {idempotency_key}")
 
-            priority_level = (
-                "high" if priority <= 3 else ("medium" if priority <= 7 else "low")
-            )
+            priority_level = "high" if priority <= 3 else ("medium" if priority <= 7 else "low")
 
             queue_key = self._get_queue_key(priority_level)
 
@@ -134,10 +110,6 @@ class JobQueue:
     async def dequeue_job(self, timeout: int = 5) -> Optional[Dict[str, Any]]:
         await self.initialize()
 
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return None
-
         try:
             for priority in self.PRIORITY_QUEUES:
                 queue_key = self._get_queue_key(priority)
@@ -146,12 +118,10 @@ class JobQueue:
 
                 if result:
                     _, job_payload_bytes = result
-                    job_payload_dict: Dict[str, Any] = json.loads(job_payload_bytes.decode("utf-8"))
+                    job_payload = json.loads(job_payload_bytes.decode("utf-8"))
 
-                    logger.info(
-                        f"Dequeued job {job_payload_dict['job_id']} from {priority} priority"
-                    )
-                    return job_payload_dict
+                    logger.info(f"Dequeued job {job_payload['job_id']} from {priority} priority")
+                    return job_payload
 
             return None
 
@@ -178,10 +148,6 @@ class JobQueue:
         next_retry_at: Optional[str] = None,
     ) -> bool:
         await self.initialize()
-
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return False
 
         try:
             status_key = self._get_job_status_key(job_id)
@@ -218,10 +184,6 @@ class JobQueue:
     async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         await self.initialize()
 
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return None
-
         try:
             status_key = self._get_job_status_key(job_id)
             status_data = await self.redis_manager.get(status_key)
@@ -234,10 +196,6 @@ class JobQueue:
 
     async def get_queue_size(self, priority: Optional[str] = None) -> int:
         await self.initialize()
-
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return 0
 
         try:
             if priority:
@@ -256,10 +214,6 @@ class JobQueue:
 
     async def clear_queue(self, priority: Optional[str] = None) -> bool:
         await self.initialize()
-
-        if self.redis_manager is None:
-            logger.error("Redis manager not initialized")
-            return False
 
         try:
             if priority:
@@ -282,7 +236,7 @@ class JobQueue:
         job_id: str,
         command_id: str,
         job_data: Dict[str, Any],
-        priority: str = "medium",
+        priority: str = "medium"
     ) -> bool:
         await self.initialize()
 
@@ -299,10 +253,8 @@ class JobQueue:
                 logger.error(f"Job {job_id} exceeded max retries ({max_retries})")
                 return False
 
-            delay_seconds = 2**retry_count
-            next_retry_at = (
-                datetime.utcnow() + timedelta(seconds=delay_seconds)
-            ).isoformat()
+            delay_seconds = 2 ** retry_count
+            next_retry_at = (datetime.utcnow() + timedelta(seconds=delay_seconds)).isoformat()
 
             await self.set_job_status(
                 job_id=job_id,
@@ -313,33 +265,22 @@ class JobQueue:
                 retry_count=retry_count,
                 max_retries=max_retries,
                 last_attempt_at=datetime.utcnow().isoformat(),
-                next_retry_at=next_retry_at,
+                next_retry_at=next_retry_at
             )
 
             await asyncio.sleep(delay_seconds)
 
             idempotency_key = job_data.get("idempotency_key")
 
-            # Convert priority string to int
-            priority_int = 5  # default medium priority
-            if priority == "high":
-                priority_int = 1
-            elif priority == "medium":
-                priority_int = 5
-            elif priority == "low":
-                priority_int = 9
-
             await self.enqueue_job(
                 job_id=job_id,
                 command_id=command_id,
                 job_data=job_data,
-                priority=priority_int,
-                idempotency_key=idempotency_key,
+                priority=priority,
+                idempotency_key=idempotency_key
             )
 
-            logger.info(
-                f"Retrying job {job_id} (attempt {retry_count}/{max_retries}) after {delay_seconds}s with idempotency_key={idempotency_key}"
-            )
+            logger.info(f"Retrying job {job_id} (attempt {retry_count}/{max_retries}) after {delay_seconds}s with idempotency_key={idempotency_key}")
             return True
 
         except Exception as e:

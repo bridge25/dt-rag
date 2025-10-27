@@ -1,16 +1,10 @@
----
-id: INGESTION-001
-version: 1.0.0
-status: completed
-created: 2025-10-09
-updated: 2025-10-09
-author: "@claude"
-priority: critical
-category: system
-labels: [ingestion, document, pipeline, parser, chunking, pii]
----
-
 # SPEC-INGESTION-001: Document Ingestion Pipeline System
+
+**상태**: completed
+**우선순위**: critical
+**담당자**: @claude
+**작성일**: 2025-10-09
+**최종 수정일**: 2025-10-09
 
 ## 1. 개요
 

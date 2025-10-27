@@ -6,16 +6,16 @@ Provides 2-agent debate structure (Affirmative vs Critical)
 with 2-round debate process and synthesis.
 """
 
+from apps.orchestration.src.debate.debate_engine import (
+    DebateAgent,
+    DebateEngine,
+    DebateResult,
+)
 from apps.orchestration.src.debate.agent_prompts import (
     AFFIRMATIVE_PROMPT_R1,
     CRITICAL_PROMPT_R1,
     CRITIQUE_PROMPT_R2,
     SYNTHESIS_PROMPT,
-)
-from apps.orchestration.src.debate.debate_engine import (
-    DebateAgent,
-    DebateEngine,
-    DebateResult,
 )
 
 __all__ = [

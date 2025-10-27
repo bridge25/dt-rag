@@ -1,10 +1,10 @@
-# @SPEC:REPLAY-001 @IMPL:REPLAY-001:0.2
+# @SPEC:REPLAY-001 @SPEC:SOFTQ-001
+# @IMPL:REPLAY-001:0.2 @CODE:SOFTQ-001:0.3
 """
-Soft Q-learning with Experience Replay (SPEC-REPLAY-001)
+Soft Q-learning with Experience Replay (SPEC-REPLAY-001, SPEC-SOFTQ-001)
 """
 import logging
 from typing import Dict, List, Optional
-
 from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
 
 logger = logging.getLogger(__name__)
@@ -154,3 +154,20 @@ class SoftQLearning:
             List of Q-values for all actions, or None if state not seen
         """
         return self.q_table.get(state_hash)
+
+    def calculate_reward(self, confidence: float, latency: float) -> float:
+        """
+        Calculate reward from confidence and latency (SOFTQ-001).
+
+        Weighted combination: confidence 70% + latency 30%
+
+        Args:
+            confidence: Confidence score (0.0 ~ 1.0)
+            latency: Latency in seconds
+
+        Returns:
+            Reward value (0.0 ~ 1.0)
+        """
+        normalized_latency = min(latency, 1.0)
+        reward = 0.7 * confidence + 0.3 * (1 - normalized_latency)
+        return max(0.0, min(1.0, reward))

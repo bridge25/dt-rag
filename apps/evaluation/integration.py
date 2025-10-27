@@ -1,4 +1,5 @@
-# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
+# @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+
 """
 Integration utilities for RAGAS evaluation system
 
@@ -12,46 +13,42 @@ Provides integration hooks and middleware for automatic evaluation:
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional
-
+from typing import Dict, Any, Optional, List
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from .ragas_engine import RAGASEvaluator
+from .quality_monitor import QualityMonitor
 from .experiment_tracker import ExperimentTracker
 from .models import EvaluationRequest, EvaluationResult
-from .quality_monitor import QualityMonitor
-from .ragas_engine import RAGASEvaluator
 
 logger = logging.getLogger(__name__)
-
 
 class RAGEvaluationMiddleware(BaseHTTPMiddleware):
     """Middleware to automatically evaluate RAG responses"""
 
-    def __init__(self, app: Any, enable_evaluation: bool = True) -> None:
+    def __init__(self, app, enable_evaluation: bool = True):
         super().__init__(app)
         self.enable_evaluation = enable_evaluation
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Any]) -> Response:
-        response: Response = await call_next(request)
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
 
         # Only evaluate search endpoints
-        if (
-            self.enable_evaluation
-            and request.url.path.startswith("/search")
-            and request.method == "POST"
-            and response.status_code == 200
-        ):
+        if (self.enable_evaluation and
+            request.url.path.startswith("/search") and
+            request.method == "POST" and
+            response.status_code == 200):
 
             # Schedule evaluation in background
             asyncio.create_task(self._evaluate_search_response(request, response))
 
         return response
 
-    async def _evaluate_search_response(self, request: Request, response: Response) -> None:
+    async def _evaluate_search_response(self, request: Request, response: Response):
         """Evaluate search response in background"""
         try:
             # Extract query and response data
@@ -62,16 +59,14 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
                 return
 
             # Create evaluation request
-            eval_request = self._create_evaluation_request(
-                request_body, response_data, request
-            )
+            eval_request = self._create_evaluation_request(request_body, response_data, request)
 
             if eval_request:
                 # Perform evaluation
                 result = await self.evaluator.evaluate_rag_response(
                     query=eval_request.query,
                     response=eval_request.response,
-                    retrieved_contexts=eval_request.retrieved_contexts,
+                    retrieved_contexts=eval_request.retrieved_contexts
                 )
 
                 # Record for quality monitoring
@@ -82,7 +77,9 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
                     user_id = self._extract_user_id(request)
                     if user_id:
                         await self.experiment_tracker.record_experiment_result(
-                            eval_request.experiment_id, user_id, result
+                            eval_request.experiment_id,
+                            user_id,
+                            result
                         )
 
         except Exception as e:
@@ -93,17 +90,14 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
         try:
             # Note: This is simplified - in practice, you'd need to handle
             # request body reading more carefully
-            if hasattr(request, "_body"):
+            if hasattr(request, '_body'):
                 import json
-                body_dict: Dict[str, Any] = json.loads(request._body)
-                return body_dict
+                return json.loads(request._body)
         except Exception as e:
             logger.warning(f"Failed to extract request body: {e}")
         return None
 
-    async def _extract_response_data(
-        self, response: Response
-    ) -> Optional[Dict[str, Any]]:
+    async def _extract_response_data(self, response: Response) -> Optional[Dict[str, Any]]:
         """Extract response data"""
         try:
             # Note: This is simplified - response body extraction in middleware
@@ -117,7 +111,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
         self,
         request_body: Dict[str, Any],
         response_data: Dict[str, Any],
-        request: Request,
+        request: Request
     ) -> Optional[EvaluationRequest]:
         """Create evaluation request from search data"""
         try:
@@ -142,10 +136,8 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
                 query=query,
                 response=response_text,
                 retrieved_contexts=contexts,
-                ground_truth=None,
-                model_version="default",
                 session_id=session_id,
-                experiment_id=experiment_id,
+                experiment_id=experiment_id
             )
 
         except Exception as e:
@@ -170,17 +162,16 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
         """Extract user ID from request"""
         # Check headers, session, JWT token, etc.
         user_id = request.headers.get("X-User-ID")
-        if not user_id and request.client:
+        if not user_id:
             # Could extract from session or JWT
             user_id = f"anon_{hash(request.client.host) % 10000}"
 
         return user_id
 
-
 class EvaluationIntegration:
     """Integration utilities for evaluation system"""
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
@@ -192,7 +183,7 @@ class EvaluationIntegration:
         generated_response: Optional[str] = None,
         user_id: Optional[str] = None,
         session_id: Optional[str] = None,
-        experiment_id: Optional[str] = None,
+        experiment_id: Optional[str] = None
     ) -> EvaluationResult:
         """
         Evaluate a complete search interaction
@@ -216,29 +207,29 @@ class EvaluationIntegration:
             query=query,
             response=generated_response,
             retrieved_contexts=contexts,
-            ground_truth=None,
-            model_version="default",
             session_id=session_id,
-            experiment_id=experiment_id,
+            experiment_id=experiment_id
         )
 
         # Perform evaluation
-        eval_result: EvaluationResult = await self.evaluator.evaluate_rag_response(
+        result = await self.evaluator.evaluate_rag_response(
             query=eval_request.query,
             response=eval_request.response,
-            retrieved_contexts=eval_request.retrieved_contexts,
+            retrieved_contexts=eval_request.retrieved_contexts
         )
 
         # Record for quality monitoring
-        await self.quality_monitor.record_evaluation(eval_result)
+        await self.quality_monitor.record_evaluation(result)
 
         # Record for experiments if applicable
         if experiment_id and user_id:
             await self.experiment_tracker.record_experiment_result(
-                experiment_id, user_id, eval_result
+                experiment_id,
+                user_id,
+                result
             )
 
-        return eval_result
+        return result
 
     def _generate_response_from_contexts(self, query: str, contexts: List[str]) -> str:
         """
@@ -272,8 +263,8 @@ class EvaluationIntegration:
         faithfulness_threshold: float = 0.85,
         precision_threshold: float = 0.75,
         recall_threshold: float = 0.70,
-        relevancy_threshold: float = 0.80,
-    ) -> None:
+        relevancy_threshold: float = 0.80
+    ):
         """Setup quality monitoring with custom thresholds"""
         from .models import QualityThresholds
 
@@ -281,8 +272,7 @@ class EvaluationIntegration:
             faithfulness_min=faithfulness_threshold,
             context_precision_min=precision_threshold,
             context_recall_min=recall_threshold,
-            answer_relevancy_min=relevancy_threshold,
-            response_time_max=5.0,
+            answer_relevancy_min=relevancy_threshold
         )
 
         await self.quality_monitor.update_thresholds(thresholds)
@@ -292,7 +282,7 @@ class EvaluationIntegration:
         experiment_name: str,
         control_config: Dict[str, Any],
         treatment_config: Dict[str, Any],
-        target_sample_size: int = 200,
+        target_sample_size: int = 200
     ) -> str:
         """Start A/B testing experiment"""
         from .models import ExperimentConfig
@@ -302,9 +292,7 @@ class EvaluationIntegration:
             name=experiment_name,
             control_config=control_config,
             treatment_config=treatment_config,
-            minimum_sample_size=target_sample_size,
-            significance_threshold=0.05,
-            power_threshold=0.8,
+            minimum_sample_size=target_sample_size
         )
 
         experiment_id = await self.experiment_tracker.create_experiment(config)
@@ -316,33 +304,25 @@ class EvaluationIntegration:
         """Get current quality monitoring summary"""
         return await self.quality_monitor.get_quality_status()
 
-    async def get_experiment_results(
-        self, experiment_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def get_experiment_results(self, experiment_id: str) -> Optional[Dict[str, Any]]:
         """Get experiment results"""
-        results = await self.experiment_tracker.analyze_experiment_results(
-            experiment_id
-        )
+        results = await self.experiment_tracker.analyze_experiment_results(experiment_id)
         return results.dict() if results else None
-
 
 # Global integration instance
 evaluation_integration = EvaluationIntegration()
-
 
 def get_evaluation_integration() -> EvaluationIntegration:
     """Get global evaluation integration instance"""
     return evaluation_integration
 
-
 # Utility functions for common integration patterns
-
 
 async def evaluate_rag_response(
     query: str,
     response: str,
     contexts: List[str],
-    metadata: Optional[Dict[str, Any]] = None,
+    metadata: Optional[Dict[str, Any]] = None
 ) -> EvaluationResult:
     """
     Quick evaluation function for immediate use
@@ -350,12 +330,14 @@ async def evaluate_rag_response(
     This is a convenience function for one-off evaluations.
     """
     return await evaluation_integration.evaluator.evaluate_rag_response(
-        query=query, response=response, retrieved_contexts=contexts
+        query=query,
+        response=response,
+        retrieved_contexts=contexts
     )
 
-
 async def check_quality_gates(
-    evaluation_result: EvaluationResult, thresholds: Optional[Dict[str, float]] = None
+    evaluation_result: EvaluationResult,
+    thresholds: Optional[Dict[str, float]] = None
 ) -> Dict[str, bool]:
     """
     Check if evaluation result passes quality gates
@@ -367,25 +349,18 @@ async def check_quality_gates(
             "faithfulness": 0.85,
             "context_precision": 0.75,
             "context_recall": 0.70,
-            "answer_relevancy": 0.80,
+            "answer_relevancy": 0.80
         }
 
     metrics = evaluation_result.metrics
     gates = {}
 
     gates["faithfulness"] = (metrics.faithfulness or 0) >= thresholds["faithfulness"]
-    gates["context_precision"] = (metrics.context_precision or 0) >= thresholds[
-        "context_precision"
-    ]
-    gates["context_recall"] = (metrics.context_recall or 0) >= thresholds[
-        "context_recall"
-    ]
-    gates["answer_relevancy"] = (metrics.answer_relevancy or 0) >= thresholds[
-        "answer_relevancy"
-    ]
+    gates["context_precision"] = (metrics.context_precision or 0) >= thresholds["context_precision"]
+    gates["context_recall"] = (metrics.context_recall or 0) >= thresholds["context_recall"]
+    gates["answer_relevancy"] = (metrics.answer_relevancy or 0) >= thresholds["answer_relevancy"]
 
     return gates
-
 
 def should_record_evaluation(request: Request) -> bool:
     """
@@ -405,9 +380,9 @@ def should_record_evaluation(request: Request) -> bool:
     # Sample evaluation (e.g., 10% of requests)
     return hash(str(request.url) + str(datetime.now().minute)) % 10 == 0
 
-
 async def run_evaluation_batch(
-    evaluation_requests: List[EvaluationRequest], max_concurrent: int = 5
+    evaluation_requests: List[EvaluationRequest],
+    max_concurrent: int = 5
 ) -> List[EvaluationResult]:
     """
     Run batch evaluation with concurrency control
@@ -422,7 +397,7 @@ async def run_evaluation_batch(
                 query=request.query,
                 response=request.response,
                 retrieved_contexts=request.retrieved_contexts,
-                ground_truth=request.ground_truth,
+                ground_truth=request.ground_truth
             )
 
     # Run evaluations concurrently

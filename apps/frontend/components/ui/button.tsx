@@ -71,7 +71,7 @@ export function Button({
             isHovered ? "animate-shine" : ""
           } motion-reduce:animate-none`}
           style={{
-            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)",
+            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
             transform: isHovered ? "translateX(0)" : "translateX(-100%)",
             pointerEvents: "none"
           }}

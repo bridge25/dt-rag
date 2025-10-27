@@ -1,642 +1,637 @@
 """
-B-O3: 7-Step LangGraph Pipeline Implementation
-intent → retrieve → plan → tools/debate → compose → cite → respond
+LangGraph 7-Step Pipeline Implementation for DT-RAG v1.8.1
 
-Week-1 목표: 완전한 7-Step 파이프라인 골격 + 메타데이터 수집
+Implements a simplified 4-step pipeline (intent, retrieve, compose, respond)
+following PRD requirements:
+- p95 ≤ 4s latency
+- Output format: answer, sources ≥ 2, confidence, taxonomy_version
+- Canonical path filtering enforcement
+- Feature flags support (debate/tools reserved for 1.5P)
 
-@CODE:MYPY-001:PHASE2:BATCH3
+Phase 5 (1P) Scope:
+- Basic sequential pipeline without Debate/Tools
+- Simple confidence calculation (rerank score + source count)
+- Timeout enforcement per step
 """
 
-import asyncio
-import logging
 import time
-from datetime import datetime
-
-# LangGraph 대신 간단한 그래프 구현 사용
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
-
-import httpx
+import logging
+import asyncio
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
-# Configure logging
+# Import hybrid search engine (lazy to avoid initialization delays)
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent.parent))
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Lazy imports to avoid blocking initialization
+_search_engine = None
+_llm_service = None
 
-class PipelineState(TypedDict):
-    """LangGraph 파이프라인 상태 관리"""
 
-    # 입력
+def get_search_engine():
+    """Lazy load search engine"""
+    global _search_engine
+    if _search_engine is None:
+        from apps.search.hybrid_search_engine import search_engine
+
+        _search_engine = search_engine
+    return _search_engine
+
+
+def get_llm_service_cached():
+    """Lazy load LLM service"""
+    global _llm_service
+    if _llm_service is None:
+        from apps.api.llm_service import get_llm_service
+
+        _llm_service = get_llm_service()
+    return _llm_service
+
+
+class PipelineState(BaseModel):
+    """Minimal state schema for 7-Step pipeline (6 fields)"""
+
     query: str
-    chunk_id: Optional[str]
-    taxonomy_version: str
+    intent: Optional[str] = None
+    retrieved_chunks: List[Dict[str, Any]] = Field(default_factory=list)
+    answer: Optional[str] = None
+    sources: List[Dict[str, Any]] = Field(default_factory=list)
+    confidence: float = 0.0
 
-    # Step 1: Intent
-    intent: str
-    intent_confidence: float
-
-    # Step 2: Retrieve
-    retrieved_docs: List[Dict[str, Any]]
-    retrieval_filter_applied: bool
-    bm25_results: List[Dict]
-    vector_results: List[Dict]
-
-    # Step 3: Plan
-    answer_strategy: str
-    plan_reasoning: List[str]
-
-    # Step 4: Tools/Debate
-    tools_used: List[str]
-    debate_activated: bool
-    debate_reasoning: Optional[str]
-
-    # Step 5: Compose
-    draft_answer: str
-
-    # Step 6: Cite
-    sources: List[Dict[str, Any]]
-    citations_count: int
-
-    # Step 7: Respond
-    final_answer: str
-    confidence: float
-
-    # 메타데이터 (B-O3 필수 요구사항)
-    cost: float  # 토큰 사용량 기반 비용
-    latency: float  # 파이프라인 전체 시간
-    step_timings: Dict[str, float]  # 각 단계별 실행 시간
-
-    # 에러 처리
-    errors: List[str]
-    retry_count: int
+    # Metadata (not exposed in API response)
+    taxonomy_version: str = "1.0.0"
+    canonical_filter: Optional[List[List[str]]] = None
+    start_time: float = Field(default_factory=time.time)
+    step_timings: Dict[str, float] = Field(default_factory=dict)
+    plan: Optional[Dict[str, Any]] = None  # Meta-planner output
+    tool_results: List[Dict[str, Any]] = Field(default_factory=list)  # Tool execution results
+    debate_result: Optional[Any] = None  # Debate result (DEBATE-001)
 
 
 class PipelineRequest(BaseModel):
-    """파이프라인 요청 스키마"""
+    """Request to LangGraph pipeline"""
 
-    query: str = Field(..., min_length=1, description="사용자 질의")
-    taxonomy_version: str = Field(default="1.8.1", description="택소노미 버전")
-    chunk_id: Optional[str] = Field(default=None, description="청크 ID (분류용)")
-    filters: Optional[Dict[str, Any]] = Field(default=None, description="검색 필터")
-    options: Optional[Dict[str, Any]] = Field(default={}, description="추가 옵션")
+    query: str
+    taxonomy_version: str = "1.0.0"
+    canonical_filter: Optional[List[List[str]]] = None
+    options: Dict[str, Any] = Field(default_factory=dict)
 
 
 class PipelineResponse(BaseModel):
-    """파이프라인 응답 스키마 (B-O3 메타데이터 포함)"""
+    """Response from LangGraph pipeline"""
 
-    # 핵심 응답
-    answer: str = Field(..., description="최종 답변")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="신뢰도 점수")
+    answer: str
+    sources: List[Dict[str, Any]]
+    confidence: float
+    taxonomy_version: str
+    latency: float
 
-    # B-O3 필수 메타데이터
-    sources: List[Dict[str, Any]] = Field(
-        default_factory=list, description="출처 목록 (≥2개 권장)"
-    )
-    taxonomy_version: str = Field(..., description="사용된 택소노미 버전")
-    cost: float = Field(..., ge=0.0, description="토큰 사용량 기반 비용 (₩)")
-    latency: float = Field(..., ge=0.0, description="파이프라인 전체 실행 시간 (초)")
-
-    # 디버깅 정보
-    intent: str = Field(..., description="파악된 사용자 의도")
-    step_timings: Dict[str, float] = Field(..., description="각 단계별 실행 시간")
-    debate_activated: bool = Field(
-        default=False, description="debate 스위치 활성화 여부"
-    )
-
-    # 품질 정보
-    retrieved_count: int = Field(default=0, description="검색된 문서 수")
-    citations_count: int = Field(default=0, description="인용된 출처 수")
+    # Additional metrics
+    cost: float = 0.0
+    intent: Optional[str] = None
+    step_timings: Dict[str, float] = Field(default_factory=dict)
 
 
-class SimpleGraph:
-    """간단한 순차 실행 그래프"""
+# @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
+# Step timeout configuration (2025-10-06 실측 기반 조정 완료)
+# 실측값 (2회 테스트 평균): intent(~0.1ms), retrieve(0.37~1.19s), compose(1.29~2.06s), respond(~0.05ms)
+# 각 단계별 최대 실측값 × 1.5 여유율 적용
+STEP_TIMEOUTS = {
+    "intent": 0.1,  # 0.1s - 간단한 파싱 (실측 0.056~0.15ms)
+    "retrieve": 2.0,  # 2.0s - Hybrid search + rerank + embedding generation (실측 0.37~1.19s)
+    "plan": 0.5,  # 0.5s - Meta-level Planning (stub, Phase 1)
+    "tools_debate": 1.0,  # 1.0s - Tools/Debate (stub, Phase 2B/3)
+    "compose": 3.5,  # 3.5s - LLM 1회 호출 (Gemini API 포함, 실측 1.29~2.06s, API 변동 고려)
+    "cite": 0.1,  # 0.1s - Source Citation (stub)
+    "respond": 0.1,  # 0.1s - 포맷팅 및 신뢰도 계산 (실측 0.043~0.05ms)
+}
 
-    def __init__(self) -> None:
-        self.steps: List[Tuple[str, Callable[[PipelineState], Any]]] = []
 
-    def add_step(self, name: str, func: Callable) -> None:
-        self.steps.append((name, func))
+async def execute_with_timeout(step_func, state: PipelineState, step_name: str):
+    """Execute step with timeout enforcement"""
+    timeout = STEP_TIMEOUTS.get(step_name, 1.0)
+    step_start = time.time()
 
-    async def ainvoke(self, state: PipelineState) -> PipelineState:
-        """순차적으로 모든 단계 실행"""
-        for step_name, step_func in self.steps:
-            logger.info(f"실행 중: {step_name}")
-            state = await step_func(state)
+    try:
+        result = await asyncio.wait_for(step_func(state), timeout=timeout)
+        elapsed = time.time() - step_start
+        state.step_timings[step_name] = elapsed
+        logger.info(f"Step {step_name} completed in {elapsed:.3f}s")
+        return result
+
+    except asyncio.TimeoutError:
+        elapsed = time.time() - step_start
+        logger.error(
+            f"Step {step_name} timeout after {elapsed:.3f}s (limit: {timeout}s)"
+        )
+        raise TimeoutError(
+            f"Pipeline step '{step_name}' exceeded timeout of {timeout}s"
+        )
+
+
+async def step1_intent(state: PipelineState) -> PipelineState:
+    """
+    Step 1: Intent Analysis
+
+    Parses user query to extract:
+    - Core intent (question, command, exploration)
+    - Taxonomy hints (if query mentions specific categories)
+    - Time/date constraints
+
+    Output: state.intent (simple string for now)
+    """
+    query_lower = state.query.lower()
+
+    # Simple intent classification
+    if "?" in state.query or any(
+        q in query_lower for q in ["what", "how", "why", "when", "where", "who"]
+    ):
+        intent = "question"
+    elif any(cmd in query_lower for cmd in ["explain", "describe", "tell me"]):
+        intent = "explanation"
+    elif any(cmd in query_lower for cmd in ["find", "search", "look for"]):
+        intent = "search"
+    else:
+        intent = "general"
+
+    state.intent = intent
+    logger.info(f"Intent classified as: {intent}")
+
+    return state
+
+
+async def step2_retrieve(state: PipelineState) -> PipelineState:
+    """
+    Step 2: Hybrid Search Retrieval
+
+    Executes BM25 + Vector search with:
+    - Canonical path filtering (if state.canonical_filter is set)
+    - Reranking (50 → 5 candidates)
+
+    Output: state.retrieved_chunks (List[Dict])
+    """
+    # Build filters
+    filters = {}
+    if state.canonical_filter:
+        filters["taxonomy_paths"] = state.canonical_filter
+
+    # Execute hybrid search
+    try:
+        search_eng = get_search_engine()
+        results, metrics = await search_eng.search(
+            query=state.query,
+            top_k=5,  # PRD: rerank 50→5, but search_engine already does this
+            filters=filters,
+            bm25_candidates=12,  # PRD: BM25 topk=12
+            vector_candidates=12,  # PRD: Vector topk=12
+        )
+
+        # Convert SearchResult to dict
+        state.retrieved_chunks = [
+            {
+                "chunk_id": r.chunk_id,
+                "text": r.text,
+                "title": r.title or "Untitled",
+                "source_url": r.source_url or "",
+                "taxonomy_path": r.taxonomy_path,
+                "score": r.rerank_score if r.rerank_score > 0 else r.hybrid_score,
+                "date": "2025-09-01",  # TODO: Extract from metadata
+                "version": state.taxonomy_version,
+            }
+            for r in results
+        ]
+
+        logger.info(f"Retrieved {len(state.retrieved_chunks)} chunks (hybrid search)")
+
+    except Exception as e:
+        logger.error(f"Retrieve step failed: {e}")
+        state.retrieved_chunks = []
+
+    return state
+
+
+async def step3_plan(state: PipelineState) -> PipelineState:
+    """
+    # @SPEC:PLANNER-001 @IMPL:PLANNER-001:0.3
+    Step 3: Meta-level Planning
+
+    Analyzes query complexity and generates execution plan using LLM.
+    Conditional execution based on meta_planner feature flag.
+    """
+    from apps.api.env_manager import get_env_manager
+    from apps.orchestration.src.meta_planner import analyze_complexity, generate_plan
+
+    flags = get_env_manager().get_feature_flags()
+
+    if not flags.get("meta_planner", False):
+        logger.info("Step 3 (plan) skipped (feature flag OFF)")
         return state
+
+    complexity_result = await analyze_complexity(state.query)
+    logger.info(f"Query complexity: {complexity_result['complexity']}")
+
+    plan = await generate_plan(
+        query=state.query, complexity=complexity_result["complexity"], timeout=10.0
+    )
+
+    state.plan = plan
+    logger.info(
+        f"Step 3 (plan) executed: strategy={plan['strategy']}, tools={plan['tools']}"
+    )
+
+    return state
+
+
+async def step4_tools_debate(state: PipelineState) -> PipelineState:
+    """
+    # @SPEC:TOOLS-001 @IMPL:TOOLS-001:0.4
+    # @SPEC:DEBATE-001 @IMPL:DEBATE-001:0.3
+    Step 4: Tools Execution & Debate
+
+    Executes tools from Meta-Planner's plan.tools list OR runs debate if enabled.
+    Conditional execution based on mcp_tools, tools_policy, and debate_mode flags.
+    """
+    from apps.api.env_manager import get_env_manager
+
+    flags = get_env_manager().get_feature_flags()
+
+    debate_enabled = flags.get("debate_mode", False)
+    tools_enabled = flags.get("mcp_tools", False)
+
+    if debate_enabled:
+        from apps.orchestration.src.debate.debate_engine import DebateEngine
+
+        logger.info("Step 4: Debate mode enabled, running multi-agent debate")
+
+        if not state.retrieved_chunks:
+            logger.warning("No retrieved chunks for debate, skipping")
+            return state
+
+        debate_engine = DebateEngine()
+
+        try:
+            result = await debate_engine.run_debate(
+                query=state.query,
+                context=state.retrieved_chunks,
+                max_rounds=2,
+                timeout=10.0,
+            )
+
+            state.answer = result.final_answer
+            state.debate_result = result
+
+            logger.info(
+                f"Debate completed: {result.rounds} rounds, {result.llm_calls} LLM calls, {result.elapsed_time:.2f}s"
+            )
+
+        except asyncio.TimeoutError:
+            logger.warning(
+                "Debate timeout - proceeding without debate answer (step5 will handle)"
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Debate failed: {e} - proceeding without debate answer (step5 will handle)"
+            )
+
+        return state
+
+    if tools_enabled:
+        from apps.orchestration.src.tool_executor import execute_tool
+
+        logger.info("Step 4: Tools mode enabled")
+
+        plan = state.plan or {}
+        tools_to_execute = plan.get("tools", [])
+
+        if not tools_to_execute:
+            logger.info("Step 4: No tools to execute")
+            return state
+
+        registry = None
+        if flags.get("tools_policy", False):
+            from apps.orchestration.src.tool_registry import ToolRegistry
+
+            registry = ToolRegistry()
+
+        tool_results = []
+        for tool_name in tools_to_execute:
+            if flags.get("tools_policy", False) and registry:
+                if not registry.validate_tool(tool_name):
+                    logger.warning(f"Tool '{tool_name}' blocked by whitelist")
+                    tool_results.append(
+                        {
+                            "tool": tool_name,
+                            "success": False,
+                            "error": "Blocked by whitelist policy",
+                        }
+                    )
+                    continue
+
+            input_data = plan.get(f"{tool_name}_input", {})
+            result = await execute_tool(tool_name, input_data, timeout=30.0)
+
+            tool_results.append(
+                {
+                    "tool": tool_name,
+                    "success": result.success,
+                    "result": result.result,
+                    "error": result.error,
+                    "elapsed": result.elapsed,
+                }
+            )
+
+        state.tool_results = tool_results
+        logger.info(f"Step 4 (tools) executed: {len(tool_results)} tools")
+
+        return state
+
+    logger.info("Step 4 (tools/debate) skipped (all flags OFF)")
+    return state
+
+
+async def step5_compose(state: PipelineState) -> PipelineState:
+    """
+    Step 5: Answer Composition
+
+    Generates final answer using LLM with:
+    - Top 3-5 retrieved chunks as context
+    - Instruction to cite sources
+    - Instruction to include taxonomy version
+
+    Output: state.answer, state.sources
+    """
+    if not state.retrieved_chunks:
+        state.answer = "죄송합니다. 관련 정보를 찾을 수 없습니다."
+        state.sources = []
+        return state
+
+    # Build context from top chunks
+    context_chunks = state.retrieved_chunks[:5]
+    context_text = "\n\n".join(
+        [
+            f"[출처 {i + 1}] {chunk['title']}\n{chunk['text'][:500]}..."
+            for i, chunk in enumerate(context_chunks)
+        ]
+    )
+
+    # Build prompt
+    f"""다음 정보를 바탕으로 사용자 질문에 답변하세요.
+
+사용자 질문: {state.query}
+
+참고 자료:
+{context_text}
+
+답변 작성 시 주의사항:
+1. 제공된 참고 자료만 사용하여 답변하세요
+2. 답변 끝에 "[출처: 1, 2, ...]" 형식으로 사용한 출처 번호를 명시하세요
+3. 정확하게 답변할 수 없는 경우 솔직히 말하세요
+
+답변:"""
+
+    # Call LLM
+    try:
+        llm_service = get_llm_service_cached()
+        # Use Gemini's generate_answer method (simpler wrapper)
+        result = await llm_service.generate_answer(
+            question=state.query,
+            search_results=[
+                {
+                    "text": chunk["text"],
+                    "source_url": chunk["source_url"],
+                    "title": chunk["title"],
+                    "hybrid_score": chunk["score"],
+                }
+                for chunk in context_chunks
+            ],
+            mode="answer",
+        )
+
+        state.answer = result.answer.strip()
+
+        # Extract sources (simple version: use all top 3 chunks)
+        state.sources = [
+            {
+                "url": chunk["source_url"],
+                "title": chunk["title"],
+                "date": chunk["date"],
+                "version": chunk["version"],
+            }
+            for chunk in context_chunks[:3]  # Ensure at least 2, usually 3
+        ]
+
+        logger.info(f"Composed answer with {len(state.sources)} sources")
+
+    except Exception as e:
+        logger.error(f"Compose step failed: {e}")
+        state.answer = f"답변 생성 중 오류가 발생했습니다: {str(e)}"
+        state.sources = []
+
+    return state
+
+
+async def step6_cite(state: PipelineState) -> PipelineState:
+    """
+    # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
+    Step 6: Source Citation (stub)
+
+    Currently citation is handled in step5_compose.
+    TODO: Extract citation logic from step5 in future
+    """
+    logger.info("Step 6 (cite) executed (currently handled in step5)")
+    # TODO: Extract citation logic from step5 in future
+    return state
+
+
+async def step7_respond(state: PipelineState) -> PipelineState:
+    """
+    Step 7: Final Response Formatting
+
+    Calculates confidence score and prepares final response:
+    - Confidence = rerank_score * source_count_penalty
+    - Source count penalty: 1.0 if ≥2, else 0.5
+
+    Output: state.confidence
+    """
+    if not state.retrieved_chunks:
+        state.confidence = 0.0
+        return state
+
+    # Simple confidence calculation
+    top_score = state.retrieved_chunks[0]["score"] if state.retrieved_chunks else 0.0
+    source_count = len(state.sources)
+
+    # Source count penalty (PRD requirement: ≥2 sources)
+    source_penalty = 1.0 if source_count >= 2 else 0.5
+
+    # Final confidence
+    state.confidence = min(max(top_score * source_penalty, 0.0), 1.0)
+
+    logger.info(
+        f"Confidence score: {state.confidence:.3f} (top_score={top_score:.3f}, sources={source_count})"
+    )
+
+    return state
+
+
+_global_replay_buffer = None
+
+
+def get_global_replay_buffer():
+    """Get global replay buffer instance"""
+    global _global_replay_buffer
+    if _global_replay_buffer is None:
+        from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
+        _global_replay_buffer = ReplayBuffer(max_size=10000)
+    return _global_replay_buffer
 
 
 class LangGraphPipeline:
-    """B-O3 7-Step 파이프라인 (A팀 API 연동, PRD 준수)"""
+    """LangGraph 7-Step Pipeline"""
 
-    def __init__(self, a_team_base_url: str = "http://localhost:8001") -> None:
-        self.a_team_base_url = a_team_base_url
-        self.client = httpx.AsyncClient()
-        self.graph = self._build_graph()
-        # 복원력 시스템 통합
-        self.resilience_manager: Optional[Any] = None
-        try:
-            from pipeline_resilience import get_resilience_manager  # type: ignore[import-not-found]
+    def __init__(self):
+        from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
 
-            self.resilience_manager = get_resilience_manager()
-        except ImportError:
-            logger.warning(
-                "pipeline_resilience 모듈을 찾을 수 없습니다. 기본 실행 모드로 진행합니다."
-            )
+        self.name = "DT-RAG-7Step-Pipeline"
+        self.replay_buffer = ReplayBuffer(max_size=10000)
+        logger.info("LangGraph pipeline initialized (7-step pipeline with replay buffer)")
 
-    def _build_graph(self) -> SimpleGraph:
-        """7-Step 파이프라인 그래프 구성"""
-        workflow = SimpleGraph()
+    def _encode_state(self, state: PipelineState) -> str:
+        """
+        Encode pipeline state to hash string.
 
-        # 7개 단계 순차 추가
-        workflow.add_step("step1_intent", self._step1_intent_classification)
-        workflow.add_step("step2_retrieve", self._step2_hybrid_retrieval)
-        workflow.add_step("step3_plan", self._step3_answer_planning)
-        workflow.add_step("step4_tools_debate", self._step4_tools_and_debate)
-        workflow.add_step("step5_compose", self._step5_answer_composition)
-        workflow.add_step("step6_cite", self._step6_citation_extraction)
-        workflow.add_step("step7_respond", self._step7_final_response)
+        Args:
+            state: Pipeline state
 
-        return workflow
+        Returns:
+            State hash string
+        """
+        query_prefix = state.query[:50] if len(state.query) > 50 else state.query
+        return f"{query_prefix}_{state.confidence:.2f}"
 
-    async def _step1_intent_classification(self, state: PipelineState) -> PipelineState:
-        """Step 1: Intent Classification (사용자 의도 파악)"""
-        step_start = time.time()
-        logger.info(f"Step 1: Intent Classification - Query: {state['query']}")
+    async def _save_experience_to_replay_buffer(self, state: PipelineState) -> None:
+        """
+        Save pipeline execution experience to replay buffer.
 
-        # TODO: 실제 의도 분류 로직 구현 (LLM 호출)
-        # 현재는 스캐폴딩 구현
-        query = state["query"].lower()
+        Args:
+            state: Pipeline state after step7_respond
 
-        if any(keyword in query for keyword in ["검색", "search", "찾아", "조회"]):
-            intent = "search"
-        elif any(keyword in query for keyword in ["분류", "classify", "카테고리"]):
-            intent = "classify"
-        elif any(keyword in query for keyword in ["설명", "explain", "알려줘"]):
-            intent = "explain"
-        else:
-            intent = "general_query"
+        Raises:
+            ValueError: If state is invalid
+            RuntimeError: If buffer save fails
+        """
+        from apps.api.env_manager import get_env_manager
 
-        intent_confidence = 0.8  # TODO: 실제 신뢰도 계산
-
-        step_time = time.time() - step_start
-
-        state.update(
-            {
-                "intent": intent,
-                "intent_confidence": intent_confidence,
-                "step_timings": {
-                    **state.get("step_timings", {}),
-                    "step1_intent": step_time,
-                },
-            }
-        )
-
-        logger.info(
-            f"Step 1 완료: intent={intent}, confidence={intent_confidence:.3f}, time={step_time:.3f}s"
-        )
-        return state
-
-    async def _step2_hybrid_retrieval(self, state: PipelineState) -> PipelineState:
-        """Step 2: Hybrid Retrieval (A팀 /search API 호출, PRD 준수)"""
-        step_start = time.time()
-        logger.info(f"Step 2: Hybrid Retrieval - Intent: {state['intent']}")
+        flags = get_env_manager().get_feature_flags()
+        if not flags.get("experience_replay", False):
+            return
 
         try:
-            # A팀 /search API 호출 (PRD 준수)
-            search_request = {
-                "q": state["query"],
-                "filters": None,  # TODO: intent에 따른 필터 적용
-                "bm25_topk": 12,
-                "vector_topk": 12,
-                "rerank_candidates": 50,
-                "final_topk": 5,
-            }
+            if not state.query:
+                raise ValueError("state.query is empty")
+            if not (0.0 <= state.confidence <= 1.0):
+                raise ValueError(f"Invalid confidence: {state.confidence}")
 
-            response = await self.client.post(
-                f"{self.a_team_base_url}/search", json=search_request
+            state_hash = self._encode_state(state)
+            reward = state.confidence
+
+            await self.replay_buffer.add(
+                state_hash=state_hash,
+                action_idx=0,
+                reward=reward,
+                next_state_hash=state_hash,
             )
 
-            if response.status_code == 200:
-                search_result = response.json()
-                retrieved_docs = search_result.get("hits", [])
+            logger.debug(
+                f"Experience saved: query='{state.query[:30]}...', "
+                f"confidence={state.confidence:.3f}, "
+                f"buffer_size={len(self.replay_buffer)}"
+            )
 
-                # A팀 응답을 B팀 형식으로 변환
-                formatted_docs = []
-                for i, doc in enumerate(retrieved_docs):
-                    formatted_doc = {
-                        "chunk_id": doc.get("chunk_id", f"doc_{i}"),
-                        "score": doc.get("score", 0.0),
-                        "text": doc.get("text", ""),
-                        "source": {
-                            "url": doc.get("source", {}).get("url", ""),
-                            "title": doc.get("source", {}).get("title", f"문서 {i+1}"),
-                        },
-                    }
-                    formatted_docs.append(formatted_doc)
-
-                logger.info(f"A팀 /search API 호출 성공: {len(formatted_docs)}개 문서")
-
-                step_time = time.time() - step_start
-
-                state.update(
-                    {
-                        "bm25_results": [],  # A팀에서 이미 통합 처리됨
-                        "vector_results": [],  # A팀에서 이미 통합 처리됨
-                        "retrieved_docs": formatted_docs,
-                        "retrieval_filter_applied": True,
-                        "step_timings": {
-                            **state.get("step_timings", {}),
-                            "step2_retrieve": step_time,
-                        },
-                    }
-                )
-
-                logger.info(
-                    f"Step 2 완료: retrieved={len(formatted_docs)} docs, time={step_time:.3f}s"
-                )
-                return state
-
-            else:
-                logger.error(f"A팀 /search API 호출 실패: {response.status_code}")
-
+        except ValueError as e:
+            logger.warning(f"Invalid state for replay buffer: {e}")
         except Exception as e:
-            logger.error(f"A팀 /search API 호출 오류: {str(e)}")
-
-        # A팀 API 호출 실패 시 빈 결과로 처리 (PRD 준수)
-        step_time = time.time() - step_start
-
-        state.update(
-            {
-                "bm25_results": [],
-                "vector_results": [],
-                "retrieved_docs": [],
-                "retrieval_filter_applied": False,
-                "step_timings": {
-                    **state.get("step_timings", {}),
-                    "step2_retrieve": step_time,
-                },
-            }
-        )
-
-        logger.warning("Step 2 완료: A팀 API 호출 실패, 빈 결과 반환")
-        return state
-
-    async def _step3_answer_planning(self, state: PipelineState) -> PipelineState:
-        """Step 3: Answer Planning (답변 전략 계획)"""
-        step_start = time.time()
-        logger.info(f"Step 3: Answer Planning - Intent: {state['intent']}")
-
-        # 병렬 처리 최적화: 전략 결정과 추론을 동시 수행
-        docs_count = len(state["retrieved_docs"])
-        intent = state["intent"]
-
-        async def determine_strategy() -> str:
-            """답변 전략 결정"""
-            if intent == "search" and docs_count > 0:
-                return "search_results_summary"
-            elif intent == "explain" and docs_count > 0:
-                return "detailed_explanation"
-            else:
-                return "general_answer"
-
-        async def generate_reasoning(strategy_type: str) -> List[str]:
-            """전략별 추론 생성"""
-            if strategy_type == "search_results_summary":
-                return [
-                    f"검색 의도로 파악됨",
-                    f"{docs_count}개 문서 검색됨",
-                    "검색 결과 요약 전략 선택",
-                ]
-            elif strategy_type == "detailed_explanation":
-                return [
-                    "설명 요청으로 파악됨",
-                    "상세 설명 전략 선택",
-                    "근거 문서 기반 설명",
-                ]
-            else:
-                return ["일반 질의로 처리", "기본 답변 전략 적용"]
-
-        # 전략 결정
-        strategy = await determine_strategy()
-
-        # 병렬 처리로 추론 생성 시간 단축
-        reasoning = await generate_reasoning(strategy)
-
-        step_time = time.time() - step_start
-
-        state.update(
-            {
-                "answer_strategy": strategy,
-                "plan_reasoning": reasoning,
-                "step_timings": {
-                    **state.get("step_timings", {}),
-                    "step3_plan": step_time,
-                },
-            }
-        )
-
-        logger.info(f"Step 3 완료: strategy={strategy}, time={step_time:.3f}s")
-        return state
-
-    async def _step4_tools_and_debate(self, state: PipelineState) -> PipelineState:
-        """Step 4: Tools/Debate (도구 사용 및 debate 스위치)"""
-        step_start = time.time()
-        logger.info("Step 4: Tools and Debate")
-
-        # TODO: 실제 도구 사용 및 debate 로직 구현
-        tools_used = []
-        debate_activated = False
-        debate_reasoning = None
-
-        # debate 스위치 로직: confidence < 0.7 시 활성화
-        if state.get("intent_confidence", 1.0) < 0.7:
-            debate_activated = True
-            debate_reasoning = f"의도 파악 신뢰도 {state['intent_confidence']:.3f} < 0.7, debate 활성화"
-            tools_used.append("debate_module")
-
-        # 검색 결과가 부족한 경우 추가 도구 사용
-        if len(state["retrieved_docs"]) < 2:
-            tools_used.append("fallback_search")
-
-        step_time = time.time() - step_start
-
-        state.update(
-            {
-                "tools_used": tools_used,
-                "debate_activated": debate_activated,
-                "debate_reasoning": debate_reasoning,
-                "step_timings": {
-                    **state.get("step_timings", {}),
-                    "step4_tools_debate": step_time,
-                },
-            }
-        )
-
-        logger.info(
-            f"Step 4 완료: tools={tools_used}, debate={debate_activated}, time={step_time:.3f}s"
-        )
-        return state
-
-    async def _step5_answer_composition(self, state: PipelineState) -> PipelineState:
-        """Step 5: Answer Composition (답변 구성)"""
-        step_start = time.time()
-        logger.info("Step 5: Answer Composition")
-
-        # TODO: 실제 답변 생성 로직 구현 (LLM 호출)
-        query = state["query"]
-        docs = state["retrieved_docs"]
-        strategy = state["answer_strategy"]
-
-        if strategy == "search_results_summary":
-            draft_answer = f"'{query}' 검색 결과:\n"
-            for i, doc in enumerate(docs[:3], 1):
-                draft_answer += f"{i}. {doc['text'][:100]}...\n"
-        elif strategy == "detailed_explanation":
-            draft_answer = f"'{query}'에 대한 설명:\n"
-            draft_answer += f"검색된 {len(docs)}개 문서를 바탕으로 설명드리겠습니다.\n"
-            draft_answer += (
-                docs[0]["text"][:200] + "..."
-                if docs
-                else "관련 자료를 찾을 수 없습니다."
-            )
-        else:
-            draft_answer = (
-                f"'{query}'에 대한 답변을 준비 중입니다. 검색된 문서: {len(docs)}개"
-            )
-
-        step_time = time.time() - step_start
-
-        state.update(
-            {
-                "draft_answer": draft_answer,
-                "step_timings": {
-                    **state.get("step_timings", {}),
-                    "step5_compose": step_time,
-                },
-            }
-        )
-
-        logger.info(
-            f"Step 5 완료: draft length={len(draft_answer)}, time={step_time:.3f}s"
-        )
-        return state
-
-    async def _step6_citation_extraction(self, state: PipelineState) -> PipelineState:
-        """Step 6: Citation (출처 인용 ≥2개)"""
-        step_start = time.time()
-        logger.info("Step 6: Citation Extraction")
-
-        # B-O3 필수 요구사항: 출처 ≥2개 포함
-        sources = []
-        for doc in state["retrieved_docs"][:5]:  # 최대 5개 출처
-            source_info = {
-                "url": doc["source"]["url"],
-                "title": doc["source"]["title"],
-                "date": datetime.now().strftime("%Y-%m-%d"),  # TODO: 실제 문서 날짜
-                "version": state.get("taxonomy_version", "1.8.1"),
-                "relevance_score": doc["score"],
-                "text_snippet": (
-                    doc["text"][:150] + "..." if len(doc["text"]) > 150 else doc["text"]
-                ),
-            }
-            sources.append(source_info)
-
-        citations_count = len(sources)
-
-        step_time = time.time() - step_start
-
-        state.update(
-            {
-                "sources": sources,
-                "citations_count": citations_count,
-                "step_timings": {
-                    **state.get("step_timings", {}),
-                    "step6_cite": step_time,
-                },
-            }
-        )
-
-        logger.info(f"Step 6 완료: citations={citations_count}, time={step_time:.3f}s")
-        return state
-
-    async def _step7_final_response(self, state: PipelineState) -> PipelineState:
-        """Step 7: Final Response (최종 응답 생성)"""
-        step_start = time.time()
-        logger.info("Step 7: Final Response Generation")
-
-        # 최종 답변 생성
-        draft = state["draft_answer"]
-        sources = state["sources"]
-
-        final_answer = draft + "\n\n"
-
-        # 출처 정보 추가 (B-O3 필수 요구사항)
-        if sources:
-            final_answer += "📚 출처:\n"
-            for i, source in enumerate(sources, 1):
-                final_answer += f"{i}. {source['title']} - {source['url']}\n"
-
-        # 메타데이터 추가
-        final_answer += (
-            f"\n🔍 검색 정보: {state.get('taxonomy_version', '1.8.1')} 버전 기준"
-        )
-
-        # 신뢰도 계산
-        confidence = min(
-            state.get("intent_confidence", 0.8),
-            0.9 if len(sources) >= 2 else 0.7,  # 출처 2개 이상이면 더 높은 신뢰도
-            0.95,  # 최대 신뢰도
-        )
-
-        # 비용 및 지연시간 계산 (B-O3 필수 메타데이터)
-        total_latency = sum(state.get("step_timings", {}).values())
-        estimated_tokens = (
-            len(state["query"])
-            + sum(len(doc["text"]) for doc in state["retrieved_docs"])
-            + len(final_answer)
-        )
-        estimated_cost = estimated_tokens * 0.001  # 대략적인 토큰당 비용 (₩0.001)
-
-        step_time = time.time() - step_start
-
-        state.update(
-            {
-                "final_answer": final_answer,
-                "confidence": confidence,
-                "cost": estimated_cost,
-                "latency": total_latency + step_time,
-                "step_timings": {
-                    **state.get("step_timings", {}),
-                    "step7_respond": step_time,
-                },
-            }
-        )
-
-        logger.info(
-            f"Step 7 완료: confidence={confidence:.3f}, cost=₩{estimated_cost:.3f}, "
-            f"total_latency={total_latency + step_time:.3f}s"
-        )
-        return state
+            logger.error(f"Replay buffer save failed: {e}", exc_info=True)
+            raise RuntimeError(f"Failed to save experience: {e}") from e
 
     async def execute(self, request: PipelineRequest) -> PipelineResponse:
-        """파이프라인 실행 (B-O3 진입점) - 복원력 기능 통합"""
-        pipeline_start = time.time()
-        logger.info(f"=== B-O3 Pipeline 시작 (복원력 기능 적용) ===")
-        logger.info(f"Query: {request.query}")
-        logger.info(f"Taxonomy Version: {request.taxonomy_version}")
+        """
+        # @SPEC:FOUNDATION-001 @IMPL:0.3-pipeline-steps
+        Execute 7-step pipeline with timeout enforcement
+        """
+        start_time = time.time()
 
-        # 복원력 시스템 시작 (있을 경우에만)
-        if self.resilience_manager:
-            await self.resilience_manager.start()
+        # Initialize state
+        state = PipelineState(
+            query=request.query,
+            taxonomy_version=request.taxonomy_version,
+            canonical_filter=request.canonical_filter,
+            start_time=start_time,
+        )
 
         try:
-            # 초기 상태 설정
-            initial_state: PipelineState = {
-                "query": request.query,
-                "chunk_id": request.chunk_id,
-                "taxonomy_version": request.taxonomy_version,
-                "intent": "",
-                "intent_confidence": 0.0,
-                "retrieved_docs": [],
-                "retrieval_filter_applied": False,
-                "bm25_results": [],
-                "vector_results": [],
-                "answer_strategy": "",
-                "plan_reasoning": [],
-                "tools_used": [],
-                "debate_activated": False,
-                "debate_reasoning": None,
-                "draft_answer": "",
-                "sources": [],
-                "citations_count": 0,
-                "final_answer": "",
-                "confidence": 0.0,
-                "cost": 0.0,
-                "latency": 0.0,
-                "step_timings": {},
-                "errors": [],
-                "retry_count": 0,
-            }
+            # Step 1: Intent
+            state = await execute_with_timeout(step1_intent, state, "intent")
 
-            # LangGraph 실행 (복원력 기능 있으면 적용, 없으면 직접 실행)
-            if self.resilience_manager:
-                final_state = await self.resilience_manager.execute_with_resilience(
-                    self.graph.ainvoke, initial_state
-                )
-            else:
-                final_state = await self.graph.ainvoke(initial_state)
+            # Step 2: Retrieve
+            state = await execute_with_timeout(step2_retrieve, state, "retrieve")
 
-            # 응답 구성
-            total_time = time.time() - pipeline_start
-            response = PipelineResponse(
-                answer=final_state["final_answer"],
-                confidence=final_state["confidence"],
-                sources=final_state["sources"],
-                taxonomy_version=final_state["taxonomy_version"],
-                cost=final_state["cost"],
-                latency=total_time,
-                intent=final_state["intent"],
-                step_timings=final_state["step_timings"],
-                debate_activated=final_state["debate_activated"],
-                retrieved_count=len(final_state["retrieved_docs"]),
-                citations_count=final_state["citations_count"],
+            # Step 3: Plan (NEW)
+            state = await execute_with_timeout(step3_plan, state, "plan")
+
+            # Step 4: Tools/Debate (NEW)
+            state = await execute_with_timeout(
+                step4_tools_debate, state, "tools_debate"
             )
 
-            logger.info(f"=== B-O3 Pipeline 완료 ===")
-            logger.info(f"Total Time: {total_time:.3f}s")
-            logger.info(f"Confidence: {response.confidence:.3f}")
-            logger.info(f"Sources: {response.citations_count}")
-            logger.info(f"Cost: ₩{response.cost:.3f}")
+            # Step 5: Compose
+            state = await execute_with_timeout(step5_compose, state, "compose")
 
-            # 시스템 건강도 로깅 (복원력 시스템이 있을 경우에만)
-            if self.resilience_manager:
-                health = self.resilience_manager.get_system_health()
-                logger.info(
-                    f"메모리 상태: {health['memory']['status']} ({health['memory']['usage']['current_mb']:.1f}MB)"
-                )
+            # Step 6: Cite (NEW)
+            state = await execute_with_timeout(step6_cite, state, "cite")
+
+            # Step 7: Respond
+            state = await execute_with_timeout(step7_respond, state, "respond")
+
+            # @SPEC:REPLAY-001 @IMPL:REPLAY-001:0.3
+            # Experience Replay Buffer integration
+            await self._save_experience_to_replay_buffer(state)
+
+            # Calculate total latency
+            total_latency = time.time() - start_time
+
+            # Build response
+            response = PipelineResponse(
+                answer=state.answer or "답변을 생성할 수 없습니다.",
+                sources=state.sources,
+                confidence=state.confidence,
+                taxonomy_version=state.taxonomy_version,
+                latency=total_latency,
+                cost=0.0,  # TODO: Calculate actual cost
+                intent=state.intent,
+                step_timings=state.step_timings,
+            )
+
+            logger.info(f"Pipeline completed in {total_latency:.3f}s (p95 target: 4s)")
 
             return response
 
-        except Exception as e:
-            logger.error(f"Pipeline 실행 오류: {str(e)}", exc_info=True)
+        except TimeoutError as e:
+            logger.error(f"Pipeline timeout: {e}")
             raise
-        finally:
-            # 복원력 시스템 정리 (있을 경우에만)
-            if self.resilience_manager:
-                await self.resilience_manager.stop()
 
-
-# 전역 파이프라인 인스턴스
-_pipeline_instance: Optional[LangGraphPipeline] = None
+        except Exception as e:
+            logger.error(f"Pipeline execution failed: {e}")
+            raise
 
 
 def get_pipeline() -> LangGraphPipeline:
-    """파이프라인 싱글톤 인스턴스 반환"""
-    global _pipeline_instance
-    if _pipeline_instance is None:
-        _pipeline_instance = LangGraphPipeline()
-    return _pipeline_instance
-
-
-# 사용 예시
-async def main() -> None:
-    """테스트 실행 예시"""
-    pipeline = get_pipeline()
-
-    test_request = PipelineRequest(
-        query="AI RAG 시스템에 대해 설명해주세요", taxonomy_version="1.8.1"
-    )
-
-    response = await pipeline.execute(test_request)
-
-    print("\n=== B-O3 Pipeline 실행 결과 ===")
-    print(f"답변: {response.answer}")
-    print(f"신뢰도: {response.confidence:.3f}")
-    print(f"출처 개수: {response.citations_count}")
-    print(f"실행 시간: {response.latency:.3f}초")
-    print(f"비용: ₩{response.cost:.3f}")
-    print(f"단계별 시간: {response.step_timings}")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    """Get pipeline instance"""
+    return LangGraphPipeline()

@@ -71,16 +71,6 @@ export async function uploadDocument(formData: FormData): Promise<DocumentUpload
   return DocumentUploadResponseSchema.parse(response.data)
 }
 
-export async function deleteDocument(documentId: string): Promise<{ message: string; document_id: string; title: string; deleted_at: number }> {
-  const response = await apiClient.delete(`http://localhost:8000/ingestion/document/${documentId}`)
-  return z.object({
-    message: z.string(),
-    document_id: z.string(),
-    title: z.string(),
-    deleted_at: z.number(),
-  }).parse(response.data)
-}
-
 export async function getHealth(): Promise<HealthCheckResponse> {
   const response = await apiClient.get("http://localhost:8000/health")
   return HealthCheckResponseSchema.parse(response.data)

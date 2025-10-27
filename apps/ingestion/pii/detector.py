@@ -1,7 +1,7 @@
 import re
+from typing import List, Tuple, Dict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Set, Tuple
 
 
 class PIIType(str, Enum):
@@ -50,7 +50,7 @@ class PIIDetector:
         PIIType.BANK_ACCOUNT: "[계좌번호]",
     }
 
-    def __init__(self) -> None:
+    def __init__(self):
         self.compiled_patterns: Dict[PIIType, List[re.Pattern]] = {}
         for pii_type, patterns in self.PATTERNS.items():
             self.compiled_patterns[pii_type] = [
@@ -104,7 +104,7 @@ class PIIDetector:
 
     def detect_pii(self, text: str) -> List[PIIMatch]:
         matches = []
-        matched_ranges: Set[Tuple[int, int]] = set()
+        matched_ranges = set()
 
         priority_order = [
             PIIType.RESIDENT_REGISTRATION_NUMBER,
@@ -122,18 +122,14 @@ class PIIDetector:
                     start_pos = match.start()
                     end_pos = match.end()
 
-                    if any(
-                        start_pos < r_end and end_pos > r_start
-                        for r_start, r_end in matched_ranges
-                    ):
+                    if any(start_pos < r_end and end_pos > r_start
+                           for r_start, r_end in matched_ranges):
                         continue
 
                     confidence = 1.0
 
                     if pii_type == PIIType.RESIDENT_REGISTRATION_NUMBER:
-                        if not self.validate_resident_registration_number(
-                            original_text
-                        ):
+                        if not self.validate_resident_registration_number(original_text):
                             continue
                     elif pii_type == PIIType.CREDIT_CARD:
                         if not self.validate_luhn(original_text):

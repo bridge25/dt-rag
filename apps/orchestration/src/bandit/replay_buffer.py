@@ -2,11 +2,11 @@
 """
 Experience Replay Buffer for Soft Q-learning Bandit (SPEC-REPLAY-001)
 """
-import asyncio
-import logging
-import random
 from collections import deque
-from typing import Deque, List, Tuple
+import asyncio
+import random
+import logging
+from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class ReplayBuffer:
     - Random batch sampling for experience replay
     """
 
-    def __init__(self, max_size: int = 10000) -> None:
+    def __init__(self, max_size: int = 10000):
         """
         Initialize replay buffer.
 
@@ -34,7 +34,7 @@ class ReplayBuffer:
         if max_size <= 0:
             raise ValueError(f"max_size must be positive, got {max_size}")
 
-        self.buffer: Deque[Tuple[str, int, float, str]] = deque(maxlen=max_size)
+        self.buffer = deque(maxlen=max_size)
         self.lock = asyncio.Lock()
         logger.debug(f"ReplayBuffer initialized with max_size={max_size}")
 
@@ -77,7 +77,9 @@ class ReplayBuffer:
             else:
                 logger.debug(f"Experience added (buffer_size={len(self.buffer)})")
 
-    async def sample(self, batch_size: int = 32) -> List[Tuple[str, int, float, str]]:
+    async def sample(
+        self, batch_size: int = 32
+    ) -> List[Tuple[str, int, float, str]]:
         """
         Sample random batch from buffer.
 

@@ -1,48 +1,35 @@
-# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 Core Security Manager for DT-RAG v1.8.1
 Orchestrates all security components and provides unified security interface
 """
 
 import logging
-import uuid
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import Dict, List, Any, Set
+from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+import uuid
 
-if TYPE_CHECKING:
-    from ..audit.audit_logger import AuditLogger, EventType, SecurityEvent, SeverityLevel
-    from ..auth.auth_service import AuthService, RBACManager
-    from ..compliance.compliance_manager import ComplianceManager
-    from ..compliance.pii_detector import PIIDetector
-    from ..monitoring.security_monitor import SecurityMonitor
-    from ..scanning.vulnerability_scanner import VulnerabilityScanner
-else:
-    from ..audit.audit_logger import AuditLogger, EventType, SecurityEvent, SeverityLevel
-    from ..auth.auth_service import AuthService, RBACManager
-    from ..compliance.compliance_manager import ComplianceManager
-    from ..compliance.pii_detector import PIIDetector
-    from ..monitoring.security_monitor import SecurityMonitor
-    from ..scanning.vulnerability_scanner import VulnerabilityScanner
+from ..auth.auth_service import AuthService, RBACManager
+from ..audit.audit_logger import AuditLogger, SecurityEvent, EventType, SeverityLevel
+from ..compliance.pii_detector import PIIDetector
+from ..compliance.compliance_manager import ComplianceManager
+from ..monitoring.security_monitor import SecurityMonitor
+from ..scanning.vulnerability_scanner import VulnerabilityScanner
 
 logger = logging.getLogger(__name__)
 
-
 class SecurityLevel(Enum):
     """Security clearance levels"""
-
     PUBLIC = "public"
     INTERNAL = "internal"
     CONFIDENTIAL = "confidential"
     RESTRICTED = "restricted"
     TOP_SECRET = "top_secret"
 
-
 @dataclass
 class SecurityContext:
     """Security context for requests"""
-
     user_id: str
     session_id: str
     ip_address: str
@@ -53,13 +40,11 @@ class SecurityContext:
     timestamp: datetime
     is_authenticated: bool = False
     risk_score: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
-
+    metadata: Dict[str, Any] = None
 
 @dataclass
 class SecurityPolicy:
     """Security policy configuration"""
-
     require_authentication: bool = True
     require_authorization: bool = True
     enable_audit_logging: bool = True
@@ -69,28 +54,25 @@ class SecurityPolicy:
     session_timeout_minutes: int = 30
     require_encryption: bool = True
     allow_anonymous_read: bool = False
-    sensitive_operations: List[str] = field(default_factory=list)
-
+    sensitive_operations: List[str] = None
 
 class SecurityManager:
     """
     Central security manager that orchestrates all security components
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
-        self.policy = SecurityPolicy(**self.config.get("policy", {}))
+        self.policy = SecurityPolicy(**self.config.get('policy', {}))
 
         # Initialize security components
-        self.auth_service = AuthService(self.config.get("auth", {}))
-        self.rbac_manager = RBACManager(self.config.get("rbac", {}))
-        self.audit_logger = AuditLogger(self.config.get("audit", {}))
-        self.pii_detector = PIIDetector(self.config.get("pii", {}))
-        self.compliance_manager = ComplianceManager(self.config.get("compliance", {}))
-        self.security_monitor = SecurityMonitor(self.config.get("monitoring", {}))
-        self.vulnerability_scanner = VulnerabilityScanner(
-            self.config.get("scanning", {})
-        )
+        self.auth_service = AuthService(self.config.get('auth', {}))
+        self.rbac_manager = RBACManager(self.config.get('rbac', {}))
+        self.audit_logger = AuditLogger(self.config.get('audit', {}))
+        self.pii_detector = PIIDetector(self.config.get('pii', {}))
+        self.compliance_manager = ComplianceManager(self.config.get('compliance', {}))
+        self.security_monitor = SecurityMonitor(self.config.get('monitoring', {}))
+        self.vulnerability_scanner = VulnerabilityScanner(self.config.get('scanning', {}))
 
         # Security state
         self._active_sessions: Dict[str, SecurityContext] = {}
@@ -100,7 +82,11 @@ class SecurityManager:
         logger.info("SecurityManager initialized with OWASP Top 10 compliance")
 
     async def authenticate_request(
-        self, token: str, ip_address: str, user_agent: str, operation: Optional[str] = None
+        self,
+        token: str,
+        ip_address: str,
+        user_agent: str,
+        operation: str = None
     ) -> SecurityContext:
         """
         Authenticate and authorize a request
@@ -115,7 +101,7 @@ class SecurityManager:
                     EventType.AUTHENTICATION_FAILED,
                     {"reason": "invalid_token_format", "ip": ip_address},
                     SeverityLevel.MEDIUM,
-                    request_id,
+                    request_id
                 )
                 raise SecurityException("Invalid token format")
 
@@ -126,12 +112,12 @@ class SecurityManager:
                     EventType.AUTHENTICATION_FAILED,
                     {"reason": "token_validation_failed", "ip": ip_address},
                     SeverityLevel.HIGH,
-                    request_id,
+                    request_id
                 )
                 raise SecurityException("Authentication failed")
 
             # 3. Check session validity
-            session_id = user_info.get("session_id")
+            session_id = user_info.get('session_id')
             if session_id in self._active_sessions:
                 existing_context = self._active_sessions[session_id]
                 if self._is_session_expired(existing_context):
@@ -143,61 +129,48 @@ class SecurityManager:
                 if not await self._check_rate_limit(ip_address):
                     await self._log_security_event(
                         EventType.RATE_LIMIT_EXCEEDED,
-                        {"ip": ip_address, "user_id": user_info.get("user_id")},
+                        {"ip": ip_address, "user_id": user_info.get('user_id')},
                         SeverityLevel.MEDIUM,
-                        request_id,
+                        request_id
                     )
                     raise SecurityException("Rate limit exceeded")
 
             # 5. Risk assessment
-            risk_score = await self._calculate_risk_score(
-                user_info, ip_address, user_agent
-            )
+            risk_score = await self._calculate_risk_score(user_info, ip_address, user_agent)
 
             # 6. Get user permissions
-            permissions_enum = await self.rbac_manager.get_user_permissions(
-                user_info["user_id"]
-            )
-            clearance_level_str = await self.rbac_manager.get_user_clearance(
-                user_info["user_id"]
-            )
-
-            # Convert permissions enum to strings
-            permissions_str = {p.value if hasattr(p, 'value') else str(p) for p in permissions_enum}
-
-            # Convert clearance level string to SecurityLevel enum
-            clearance_level = SecurityLevel(clearance_level_str) if isinstance(clearance_level_str, str) else clearance_level_str
+            permissions = await self.rbac_manager.get_user_permissions(user_info['user_id'])
+            clearance_level = await self.rbac_manager.get_user_clearance(user_info['user_id'])
 
             # 7. Create security context
             context = SecurityContext(
-                user_id=user_info["user_id"],
-                session_id=str(session_id) if session_id else "",
+                user_id=user_info['user_id'],
+                session_id=session_id,
                 ip_address=ip_address,
                 user_agent=user_agent,
-                permissions=permissions_str,
+                permissions=permissions,
                 clearance_level=clearance_level,
                 request_id=request_id,
                 timestamp=datetime.utcnow(),
                 is_authenticated=True,
                 risk_score=risk_score,
-                metadata=user_info.get("metadata", {}),
+                metadata=user_info.get('metadata', {})
             )
 
             # 8. Store active session
-            if session_id:
-                self._active_sessions[str(session_id)] = context
+            self._active_sessions[session_id] = context
 
             # 9. Log successful authentication
             await self._log_security_event(
                 EventType.AUTHENTICATION_SUCCESS,
                 {
-                    "user_id": user_info["user_id"],
+                    "user_id": user_info['user_id'],
                     "ip": ip_address,
                     "risk_score": risk_score,
-                    "operation": operation,
+                    "operation": operation
                 },
                 SeverityLevel.INFO,
-                request_id,
+                request_id
             )
 
             return context
@@ -209,7 +182,7 @@ class SecurityManager:
                 EventType.AUTHENTICATION_ERROR,
                 {"error": str(e), "ip": ip_address},
                 SeverityLevel.HIGH,
-                request_id,
+                request_id
             )
             raise SecurityException(f"Authentication error: {str(e)}")
 
@@ -217,8 +190,8 @@ class SecurityManager:
         self,
         context: SecurityContext,
         operation: str,
-        resource: Optional[str] = None,
-        data: Optional[Dict[str, Any]] = None,
+        resource: str = None,
+        data: Dict[str, Any] = None
     ) -> bool:
         """
         Authorize an operation based on RBAC
@@ -231,13 +204,13 @@ class SecurityManager:
                     EventType.AUTHORIZATION_FAILED,
                     {"reason": "not_authenticated", "operation": operation},
                     SeverityLevel.HIGH,
-                    context.request_id,
+                    context.request_id
                 )
                 return False
 
             # 2. Check operation permissions
             if not await self.rbac_manager.check_permission(
-                context.user_id, operation, resource or "", context
+                context.user_id, operation, resource, context
             ):
                 await self._log_security_event(
                     EventType.AUTHORIZATION_FAILED,
@@ -245,19 +218,17 @@ class SecurityManager:
                         "user_id": context.user_id,
                         "operation": operation,
                         "resource": resource,
-                        "reason": "insufficient_permissions",
+                        "reason": "insufficient_permissions"
                     },
                     SeverityLevel.MEDIUM,
-                    context.request_id,
+                    context.request_id
                 )
                 return False
 
             # 3. Check resource access level if specified
             if resource:
                 resource_level = await self._get_resource_security_level(resource)
-                if not await self._check_clearance_access(
-                    context.clearance_level, resource_level
-                ):
+                if not await self._check_clearance_access(context.clearance_level, resource_level):
                     await self._log_security_event(
                         EventType.AUTHORIZATION_FAILED,
                         {
@@ -266,10 +237,10 @@ class SecurityManager:
                             "resource": resource,
                             "reason": "insufficient_clearance",
                             "required_level": resource_level.value,
-                            "user_level": context.clearance_level.value,
+                            "user_level": context.clearance_level.value
                         },
                         SeverityLevel.HIGH,
-                        context.request_id,
+                        context.request_id
                     )
                     return False
 
@@ -281,10 +252,10 @@ class SecurityManager:
                         {
                             "user_id": context.user_id,
                             "operation": operation,
-                            "risk_score": context.risk_score,
+                            "risk_score": context.risk_score
                         },
                         SeverityLevel.HIGH,
-                        context.request_id,
+                        context.request_id
                     )
                     return False
 
@@ -293,17 +264,17 @@ class SecurityManager:
                 pii_findings = await self.pii_detector.scan_data(data)
                 if pii_findings:
                     if not await self.rbac_manager.check_permission(
-                        context.user_id, "access_pii", resource or "", context
+                        context.user_id, "access_pii", resource, context
                     ):
                         await self._log_security_event(
                             EventType.PII_ACCESS_DENIED,
                             {
                                 "user_id": context.user_id,
                                 "operation": operation,
-                                "pii_types": [f.type.value for f in pii_findings],
+                                "pii_types": [f.type.value for f in pii_findings]
                             },
                             SeverityLevel.HIGH,
-                            context.request_id,
+                            context.request_id
                         )
                         return False
 
@@ -313,10 +284,10 @@ class SecurityManager:
                 {
                     "user_id": context.user_id,
                     "operation": operation,
-                    "resource": resource,
+                    "resource": resource
                 },
                 SeverityLevel.INFO,
-                context.request_id,
+                context.request_id
             )
 
             return True
@@ -324,14 +295,20 @@ class SecurityManager:
         except Exception as e:
             await self._log_security_event(
                 EventType.AUTHORIZATION_ERROR,
-                {"error": str(e), "operation": operation, "user_id": context.user_id},
+                {
+                    "error": str(e),
+                    "operation": operation,
+                    "user_id": context.user_id
+                },
                 SeverityLevel.HIGH,
-                context.request_id,
+                context.request_id
             )
             return False
 
     async def sanitize_request_data(
-        self, data: Dict[str, Any], context: SecurityContext
+        self,
+        data: Dict[str, Any],
+        context: SecurityContext
     ) -> Dict[str, Any]:
         """
         Sanitize request data for security
@@ -359,9 +336,12 @@ class SecurityManager:
             # 4. Log data sanitization
             await self._log_security_event(
                 EventType.DATA_SANITIZED,
-                {"user_id": context.user_id, "keys_processed": list(data.keys())},
+                {
+                    "user_id": context.user_id,
+                    "keys_processed": list(data.keys())
+                },
                 SeverityLevel.DEBUG,
-                context.request_id,
+                context.request_id
             )
 
             return sanitized_data
@@ -371,12 +351,14 @@ class SecurityManager:
                 EventType.DATA_SANITIZATION_ERROR,
                 {"error": str(e)},
                 SeverityLevel.HIGH,
-                context.request_id,
+                context.request_id
             )
             raise SecurityException(f"Data sanitization failed: {str(e)}")
 
     async def sanitize_response_data(
-        self, data: Dict[str, Any], context: SecurityContext
+        self,
+        data: Dict[str, Any],
+        context: SecurityContext
     ) -> Dict[str, Any]:
         """
         Sanitize response data, including PII masking
@@ -389,15 +371,12 @@ class SecurityManager:
             if pii_findings:
                 # 2. Check if user has permission to see PII
                 can_access_pii = await self.rbac_manager.check_permission(
-                    context.user_id, "view_pii", "", context
+                    context.user_id, "view_pii", None, context
                 )
 
                 if not can_access_pii:
                     # 3. Mask PII data
-                    masked_data_any = await self.pii_detector.mask_pii_data(
-                        data, pii_findings
-                    )
-                    masked_data: Dict[str, Any] = masked_data_any if isinstance(masked_data_any, dict) else {}
+                    masked_data = await self.pii_detector.mask_pii_data(data, pii_findings)
 
                     # 4. Log PII masking
                     await self._log_security_event(
@@ -405,10 +384,10 @@ class SecurityManager:
                         {
                             "user_id": context.user_id,
                             "pii_types": [f.type.value for f in pii_findings],
-                            "masked_fields": len(pii_findings),
+                            "masked_fields": len(pii_findings)
                         },
                         SeverityLevel.INFO,
-                        context.request_id,
+                        context.request_id
                     )
 
                     return masked_data
@@ -418,10 +397,10 @@ class SecurityManager:
                         EventType.PII_ACCESSED,
                         {
                             "user_id": context.user_id,
-                            "pii_types": [f.type.value for f in pii_findings],
+                            "pii_types": [f.type.value for f in pii_findings]
                         },
                         SeverityLevel.WARNING,
-                        context.request_id,
+                        context.request_id
                     )
 
             return data
@@ -431,13 +410,13 @@ class SecurityManager:
                 EventType.DATA_SANITIZATION_ERROR,
                 {"error": str(e)},
                 SeverityLevel.HIGH,
-                context.request_id,
+                context.request_id
             )
             raise SecurityException(f"Response sanitization failed: {str(e)}")
 
     async def get_security_metrics(self) -> Dict[str, Any]:
         """Get comprehensive security metrics"""
-        metrics: Dict[str, Any] = {
+        return {
             "authentication": await self.auth_service.get_metrics(),
             "authorization": await self.rbac_manager.get_metrics(),
             "audit": await self.audit_logger.get_metrics(),
@@ -446,9 +425,8 @@ class SecurityManager:
             "monitoring": await self.security_monitor.get_metrics(),
             "vulnerability_scanning": await self.vulnerability_scanner.get_metrics(),
             "active_sessions": len(self._active_sessions),
-            "security_incidents": len(self._security_incidents),
+            "security_incidents": len(self._security_incidents)
         }
-        return metrics
 
     async def _check_rate_limit(self, identifier: str) -> bool:
         """Check rate limiting"""
@@ -460,16 +438,12 @@ class SecurityManager:
 
         # Clean old requests
         self._rate_limit_cache[identifier] = [
-            req_time
-            for req_time in self._rate_limit_cache[identifier]
+            req_time for req_time in self._rate_limit_cache[identifier]
             if req_time > window_start
         ]
 
         # Check limit
-        if (
-            len(self._rate_limit_cache[identifier])
-            >= self.policy.max_requests_per_minute
-        ):
+        if len(self._rate_limit_cache[identifier]) >= self.policy.max_requests_per_minute:
             return False
 
         # Add current request
@@ -477,7 +451,10 @@ class SecurityManager:
         return True
 
     async def _calculate_risk_score(
-        self, user_info: Dict[str, Any], ip_address: str, user_agent: str
+        self,
+        user_info: Dict[str, Any],
+        ip_address: str,
+        user_agent: str
     ) -> float:
         """Calculate risk score for the request"""
         risk_score = 0.0
@@ -502,15 +479,13 @@ class SecurityManager:
     def _is_suspicious_ip(self, ip_address: str) -> bool:
         """Check if IP address is suspicious"""
         # This would integrate with threat intelligence feeds
-        suspicious_patterns = ["127.0.0.1", "10.0.0.", "192.168."]
+        suspicious_patterns = ['127.0.0.1', '10.0.0.', '192.168.']
         return any(pattern in ip_address for pattern in suspicious_patterns)
 
     def _is_suspicious_user_agent(self, user_agent: str) -> bool:
         """Check if user agent is suspicious"""
-        suspicious_patterns = ["curl", "wget", "python-requests", "bot"]
-        return any(
-            pattern.lower() in user_agent.lower() for pattern in suspicious_patterns
-        )
+        suspicious_patterns = ['curl', 'wget', 'python-requests', 'bot']
+        return any(pattern.lower() in user_agent.lower() for pattern in suspicious_patterns)
 
     def _is_unusual_access_time(self) -> bool:
         """Check if access time is unusual"""
@@ -523,7 +498,7 @@ class SecurityManager:
         session_age = datetime.utcnow() - context.timestamp
         return session_age > timedelta(minutes=self.policy.session_timeout_minutes)
 
-    async def _invalidate_session(self, session_id: str) -> None:
+    async def _invalidate_session(self, session_id: str):
         """Invalidate a session"""
         if session_id in self._active_sessions:
             context = self._active_sessions[session_id]
@@ -533,22 +508,24 @@ class SecurityManager:
                 EventType.SESSION_INVALIDATED,
                 {"user_id": context.user_id, "session_id": session_id},
                 SeverityLevel.INFO,
-                context.request_id,
+                context.request_id
             )
 
     async def _get_resource_security_level(self, resource: str) -> SecurityLevel:
         """Get security level for a resource"""
         # This would be configured based on resource classification
         resource_levels = {
-            "pii_data": SecurityLevel.RESTRICTED,
-            "financial_data": SecurityLevel.CONFIDENTIAL,
-            "public_documents": SecurityLevel.PUBLIC,
-            "internal_documents": SecurityLevel.INTERNAL,
+            'pii_data': SecurityLevel.RESTRICTED,
+            'financial_data': SecurityLevel.CONFIDENTIAL,
+            'public_documents': SecurityLevel.PUBLIC,
+            'internal_documents': SecurityLevel.INTERNAL
         }
         return resource_levels.get(resource, SecurityLevel.INTERNAL)
 
     async def _check_clearance_access(
-        self, user_level: SecurityLevel, resource_level: SecurityLevel
+        self,
+        user_level: SecurityLevel,
+        resource_level: SecurityLevel
     ) -> bool:
         """Check if user clearance allows access to resource"""
         level_hierarchy = {
@@ -556,7 +533,7 @@ class SecurityManager:
             SecurityLevel.INTERNAL: 1,
             SecurityLevel.CONFIDENTIAL: 2,
             SecurityLevel.RESTRICTED: 3,
-            SecurityLevel.TOP_SECRET: 4,
+            SecurityLevel.TOP_SECRET: 4
         }
 
         return level_hierarchy[user_level] >= level_hierarchy[resource_level]
@@ -565,16 +542,8 @@ class SecurityManager:
         """Sanitize SQL injection patterns"""
         # Remove common SQL injection patterns
         dangerous_patterns = [
-            "'; DROP TABLE",
-            "'; DELETE FROM",
-            "'; UPDATE",
-            "'; INSERT INTO",
-            "UNION SELECT",
-            "OR 1=1",
-            "AND 1=1",
-            "--",
-            "/*",
-            "*/",
+            "'; DROP TABLE", "'; DELETE FROM", "'; UPDATE", "'; INSERT INTO",
+            "UNION SELECT", "OR 1=1", "AND 1=1", "--", "/*", "*/"
         ]
 
         sanitized = value
@@ -588,15 +557,8 @@ class SecurityManager:
         """Sanitize XSS patterns"""
         # Remove common XSS patterns
         dangerous_patterns = [
-            "<script>",
-            "</script>",
-            "javascript:",
-            "onload=",
-            "onerror=",
-            "onclick=",
-            "onmouseover=",
-            "<iframe>",
-            "</iframe>",
+            "<script>", "</script>", "javascript:", "onload=", "onerror=",
+            "onclick=", "onmouseover=", "<iframe>", "</iframe>"
         ]
 
         sanitized = value
@@ -610,16 +572,8 @@ class SecurityManager:
         """Sanitize command injection patterns"""
         # Remove common command injection patterns
         dangerous_patterns = [
-            ";",
-            "&&",
-            "||",
-            "|",
-            "`",
-            "$(",
-            "../",
-            "../../",
-            "/etc/passwd",
-            "/bin/sh",
+            ";", "&&", "||", "|", "`", "$(",
+            "../", "../../", "/etc/passwd", "/bin/sh"
         ]
 
         sanitized = value
@@ -633,27 +587,27 @@ class SecurityManager:
         event_type: EventType,
         details: Dict[str, Any],
         severity: SeverityLevel,
-        request_id: str,
-    ) -> None:
+        request_id: str
+    ):
         """Log security event"""
         event = SecurityEvent(
             event_type=event_type,
             severity=severity,
             details=details,
             request_id=request_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.utcnow()
         )
 
         await self.audit_logger.log_event(event)
 
         # Add to security incidents if high severity
         if severity in [SeverityLevel.HIGH, SeverityLevel.CRITICAL]:
-            self._security_incidents.append(
-                {"event": event, "timestamp": datetime.utcnow(), "resolved": False}
-            )
-
+            self._security_incidents.append({
+                "event": event,
+                "timestamp": datetime.utcnow(),
+                "resolved": False
+            })
 
 class SecurityException(Exception):
     """Security-related exception"""
-
     pass

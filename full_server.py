@@ -23,28 +23,28 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 # Pydantic 모델들
-class SearchRequest(BaseModel):
+class FullServerSearchRequest(BaseModel):
     query: str
     max_results: Optional[int] = 10
     filters: Optional[Dict[str, Any]] = None
 
-class SearchResponse(BaseModel):
+class FullServerSearchResponse(BaseModel):
     hits: List[Dict[str, Any]]
     total_hits: int
     search_time_ms: float
     mode: str
 
-class ClassifyRequest(BaseModel):
+class FullServerClassifyRequest(BaseModel):
     text: str
     confidence_threshold: Optional[float] = 0.7
 
-class ClassifyResponse(BaseModel):
+class FullServerClassifyResponse(BaseModel):
     classifications: List[Dict[str, Any]]
     confidence: float
     timestamp: float
     mode: str
 
-class TaxonomyNode(BaseModel):
+class FullServerTaxonomyNode(BaseModel):
     id: str
     name: str
     path: List[str]
@@ -191,8 +191,8 @@ async def health_check():
     }
 
 # 검색 API
-@app.post("/api/v1/search", response_model=SearchResponse, tags=["Search"])
-async def search_documents(request: SearchRequest):
+@app.post("/api/v1/search", response_model=FullServerSearchResponse, tags=["Search"])
+async def search_documents(request: FullServerSearchRequest):
     """
     하이브리드 검색 (BM25 + Vector Search)
 
@@ -217,7 +217,7 @@ async def search_documents(request: SearchRequest):
 
             search_time_ms = (time.time() - start_time) * 1000
 
-            return SearchResponse(
+            return FullServerSearchResponse(
                 hits=results,
                 total_hits=len(results),
                 search_time_ms=search_time_ms,
@@ -250,7 +250,7 @@ async def search_documents(request: SearchRequest):
 
     search_time_ms = (time.time() - start_time) * 1000
 
-    return SearchResponse(
+    return FullServerSearchResponse(
         hits=mock_results[:request.max_results],
         total_hits=len(mock_results),
         search_time_ms=search_time_ms,
@@ -258,8 +258,8 @@ async def search_documents(request: SearchRequest):
     )
 
 # 분류 API
-@app.post("/api/v1/classify", response_model=ClassifyResponse, tags=["Classification"])
-async def classify_document(request: ClassifyRequest):
+@app.post("/api/v1/classify", response_model=FullServerClassifyResponse, tags=["Classification"])
+async def classify_document(request: FullServerClassifyRequest):
     """
     ML 기반 문서 분류
 
@@ -294,7 +294,7 @@ async def classify_document(request: ClassifyRequest):
                 classifications = []
                 highest_confidence = 0.0
 
-            return ClassifyResponse(
+            return FullServerClassifyResponse(
                 classifications=classifications,
                 confidence=highest_confidence,
                 timestamp=time.time(),
@@ -325,7 +325,7 @@ async def classify_document(request: ClassifyRequest):
 
     highest_confidence = max([c["confidence"] for c in filtered_classifications]) if filtered_classifications else 0.0
 
-    return ClassifyResponse(
+    return FullServerClassifyResponse(
         classifications=filtered_classifications,
         confidence=highest_confidence,
         timestamp=time.time(),

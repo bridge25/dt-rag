@@ -1,55 +1,12 @@
----
-id: SOFTQ-001
-version: 0.2.0
-status: completed
-created: 2025-10-09
-updated: 2025-10-22
-author: @spec-builder
-priority: high
-category: ml
-labels:
-  - reinforcement-learning
-  - soft-q-learning
-  - bandit
-  - reverse-engineered
-scope:
-  packages:
-    - apps/orchestration/src/bandit
-  files:
-    - apps/orchestration/src/bandit/q_learning.py (104 LOC)
-    - apps/orchestration/src/bandit/replay_buffer.py (73 LOC)
-    - apps/orchestration/src/bandit/policy.py
-    - apps/orchestration/src/bandit/state_encoder.py
----
-
 # SPEC-SOFTQ-001: Soft Q-learning Bandit System for Adaptive Strategy Selection
-
-## HISTORY
-
-### v0.2.0 (2025-10-22)
-- **REVERSE_ENGINEERING_COMPLETED**: Git 커밋 fc89415, d17ff55에서 실제 구현 확인
-- **IMPLEMENTATION**:
-  - Soft Q-learning 알고리즘 완전 구현
-  - Experience Replay Buffer 통합 (SPEC-REPLAY-001)
-  - Batch update 지원
-  - Q-table 기반 value storage
-  - Temperature-based exploration
-- **FILES_RESTORED**: Git checkout으로 복원 완료
-- **STATUS_CHANGE**: draft → completed
-
-### v0.1.0 (2025-10-09)
-- **INITIAL**: Soft Q-learning Bandit SPEC 초안 작성
-- **AUTHOR**: @spec-builder
-
----
 
 ## 0. Version History
 
 - **ID**: SPEC-SOFTQ-001
-- **Version**: 0.2.0
-- **Status**: COMPLETED
+- **Version**: 0.1.0
+- **Status**: DRAFT
 - **Created**: 2025-10-09
-- **Updated**: 2025-10-22
+- **Updated**: 2025-10-09
 - **Author**: @spec-builder
 
 ## 1. Overview
