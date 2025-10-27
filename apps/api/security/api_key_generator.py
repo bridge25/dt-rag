@@ -12,7 +12,7 @@ import secrets
 import string
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -100,7 +100,7 @@ class SecureAPIKeyGenerator:
             return 0.0
 
         # Count character frequencies
-        frequencies = {}
+        frequencies: Dict[str, int] = {}
         for char in key:
             frequencies[char] = frequencies.get(char, 0) + 1
 

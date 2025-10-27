@@ -15,13 +15,13 @@ Usage:
 
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 # Lazy import to avoid startup errors
-_langfuse_client = None
-_langfuse_available = False
+_langfuse_client: Optional[Any] = None
+_langfuse_available: bool = False
 
 try:
     from langfuse import Langfuse
@@ -32,10 +32,10 @@ except ImportError:
     logger.warning("langfuse package not installed. Run: pip install langfuse>=3.6.0")
 
     # Fallback: no-op decorator
-    def observe(name: str = "", as_type: str = "span", **kwargs) -> None:
+    def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Callable[[Any], Any]:
         """No-op decorator when Langfuse is not available"""
 
-        def decorator(func: Any) -> None:
+        def decorator(func: Any) -> Any:
             return func
 
         return decorator
@@ -95,7 +95,7 @@ def get_langfuse_status() -> Dict[str, Any]:
     Returns:
         Status dictionary with availability, configuration, and health info
     """
-    status = {
+    status: Dict[str, Any] = {
         "available": _langfuse_available,
         "enabled": os.getenv("LANGFUSE_ENABLED", "false").lower() == "true",
         "configured": False,

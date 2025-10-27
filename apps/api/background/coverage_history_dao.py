@@ -14,7 +14,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.database import CoverageHistory
+from apps.api.database import CoverageHistory  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 

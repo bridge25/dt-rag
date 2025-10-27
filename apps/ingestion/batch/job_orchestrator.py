@@ -310,7 +310,7 @@ class JobOrchestrator:
                 ):
                     chunk_id = uuid.uuid4()
 
-                    chunk = DocumentChunk(
+                    db_chunk: DocumentChunk = DocumentChunk(
                         chunk_id=chunk_id,
                         doc_id=doc_id,
                         text=chunk_signal.text,
@@ -326,7 +326,7 @@ class JobOrchestrator:
                         pii_types=chunk_signal.pii_types,
                         created_at=datetime.utcnow(),
                     )
-                    session.add(chunk)
+                    session.add(db_chunk)
 
                     embedding = Embedding(
                         embedding_id=uuid.uuid4(),
@@ -357,6 +357,8 @@ class JobOrchestrator:
             chunks=chunk_signals,
             total_chunks=len(chunk_signals),
             total_tokens=total_tokens,
+            error_message=None,
+            error_code=None,
             processing_duration_ms=processing_duration_ms,
         )
 

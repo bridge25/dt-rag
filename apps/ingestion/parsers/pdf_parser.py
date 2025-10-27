@@ -1,5 +1,5 @@
 import io
-from typing import Optional
+from typing import Optional, cast
 
 from .base import BaseParser, ParserError
 
@@ -26,7 +26,7 @@ class PDFParser(BaseParser):
             if not markdown_text or not markdown_text.strip():
                 raise ParserError("PDF parsing resulted in empty content")
 
-            return markdown_text
+            return cast(str, markdown_text)
         except Exception as e:
             raise ParserError(f"PDF parsing failed: {str(e)}")
 

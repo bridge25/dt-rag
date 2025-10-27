@@ -32,9 +32,9 @@ if orchestration_src not in sys.path:
     sys.path.insert(0, orchestration_src)
 
 try:
-    from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]
+    from reflection_engine import ReflectionEngine
 except ImportError:
-    ReflectionEngine = None  # type: ignore[assignment]
+    ReflectionEngine = None
 
 logger = logging.getLogger(__name__)
 
@@ -91,9 +91,9 @@ class ImprovementSuggestionsResponse(BaseModel):
 async def get_reflection_engine() -> AsyncGenerator[Any, None]:
     """ReflectionEngine 인스턴스 생성"""
     try:
-        from reflection_engine import ReflectionEngine as RE  # type: ignore[import-not-found]
+        from reflection_engine import ReflectionEngine as RE
     except ImportError:
-        RE = None  # type: ignore[assignment]
+        RE = None
 
     async with db_manager.async_session() as session:
         if RE:

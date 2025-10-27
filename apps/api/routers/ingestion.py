@@ -71,7 +71,9 @@ async def upload_document(
                 detail="File name is required",
             )
 
-        file_extension = file.filename.split(".")[-1].lower()
+        # Type narrowing: file.filename is guaranteed to be str here
+        filename_str: str = file.filename
+        file_extension = filename_str.split(".")[-1].lower()
 
         try:
             file_format = DocumentFormatV1(file_extension)
@@ -103,7 +105,7 @@ async def upload_document(
         command = DocumentUploadCommandV1(
             correlationId=correlation_id,
             idempotencyKey=idempotency_key,
-            file_name=file.filename,
+            file_name=filename_str,
             file_content=file_content,
             file_format=file_format,
             taxonomy_path=taxonomy_path_list,
@@ -113,15 +115,13 @@ async def upload_document(
             priority=priority,
         )
 
-        try:
-            job_id = await orchestrator.submit_job(command)
-        except ValueError as e:
-            if "Duplicate request with idempotency key" in str(e):
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail=str(e),
-                )
-            raise
+        job_id = await orchestrator.submit_job(command)
+
+        if not job_id:  # Handle duplicate idempotency key
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Duplicate request with idempotency key",
+            )
 
         estimated_completion_minutes = max(1, len(file_content) // (1024 * 1024))
 
@@ -170,9 +170,7 @@ async def get_job_status(
                 detail="Job not found",
             )
 
-        response = JobStatusResponseV1(**status_data)
-
-        return response
+        return JobStatusResponseV1(**status_data)
 
     except HTTPException:
         raise

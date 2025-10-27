@@ -23,7 +23,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from sqlalchemy import func, text
@@ -494,12 +494,12 @@ class HybridSearchEngine:
             if isinstance(bm25_results_raw, Exception):
                 logger.error(f"BM25 search failed: {bm25_results_raw}")
             else:
-                bm25_results = bm25_results_raw
+                bm25_results = cast(List[SearchResult], bm25_results_raw)
 
             if isinstance(vector_results_raw, Exception):
                 logger.error(f"Vector search failed: {vector_results_raw}")
             else:
-                vector_results = vector_results_raw
+                vector_results = cast(List[SearchResult], vector_results_raw)
 
             metrics.bm25_candidates = len(bm25_results)
             metrics.vector_candidates = len(vector_results)

@@ -12,7 +12,7 @@ Uses Fixed Window algorithm with Redis for distributed rate limiting.
 import logging
 import os
 import time
-from typing import Callable, Optional
+from typing import Callable, Optional, cast
 
 import redis.asyncio as aioredis
 from fastapi import HTTPException, Request, Response
@@ -150,7 +150,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Apply rate limiting based on HTTP method"""
         # Skip rate limiting for health check
         if request.url.path == "/health":
-            return await call_next(request)
+            return cast(Response, await call_next(request))
 
         # Get client identifier
         identifier = get_client_identifier(request)
@@ -181,7 +181,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             )
 
         # Process request
-        response = await call_next(request)
+        response = cast(Response, await call_next(request))
 
         # Add rate limit headers
         response.headers["X-RateLimit-Limit"] = str(limit)

@@ -3,7 +3,7 @@
 import logging
 import math
 import random
-from typing import Dict, List
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class SoftQPolicy:
 
     def select_action(
         self, q_values: List[float], temperature: float = 0.5
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Softmax 정책으로 action 선택
 

@@ -67,10 +67,11 @@ class LangGraphService:
         """
         try:
             # Build pipeline request
+            filters = {"canonical_paths": canonical_filter} if canonical_filter else None
             pipeline_request = LangGraphRequest(
                 query=query,
                 taxonomy_version=taxonomy_version or "1.0.0",
-                canonical_filter=canonical_filter,
+                filters=filters,
                 options=options or {},
             )
 

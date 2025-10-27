@@ -6,7 +6,7 @@ import asyncio
 import logging
 import random
 from collections import deque
-from typing import List, Tuple
+from typing import Deque, List, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class ReplayBuffer:
         if max_size <= 0:
             raise ValueError(f"max_size must be positive, got {max_size}")
 
-        self.buffer = deque(maxlen=max_size)
+        self.buffer: Deque[Tuple[str, int, float, str]] = deque(maxlen=max_size)
         self.lock = asyncio.Lock()
         logger.debug(f"ReplayBuffer initialized with max_size={max_size}")
 

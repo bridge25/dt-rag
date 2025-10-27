@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
 
 class PIIType(str, Enum):
@@ -104,7 +104,7 @@ class PIIDetector:
 
     def detect_pii(self, text: str) -> List[PIIMatch]:
         matches = []
-        matched_ranges = set()
+        matched_ranges: Set[Tuple[int, int]] = set()
 
         priority_order = [
             PIIType.RESIDENT_REGISTRATION_NUMBER,

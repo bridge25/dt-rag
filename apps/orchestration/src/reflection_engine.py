@@ -4,7 +4,7 @@
 import logging
 import os
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -161,7 +161,7 @@ class ReflectionEngine:
             for error_type, count in error_counts.items()
         ]
 
-        patterns.sort(key=lambda x: x["count"], reverse=True)
+        patterns.sort(key=lambda x: cast(int, x["count"]), reverse=True)
         return patterns
 
     async def generate_improvement_suggestions(self, case_id: str) -> List[str]:

@@ -5,12 +5,16 @@ Calculator Tool
 Basic calculator tool for testing MCP tool execution.
 """
 
+from typing import cast
+
 from apps.orchestration.src.tool_registry import Tool, ToolRegistry, ToolSchema
 
 
 async def calculator_execute(input_data: dict) -> float:
     """Add two numbers"""
-    return input_data.get("a", 0) + input_data.get("b", 0)
+    a = cast(float, input_data.get("a", 0))
+    b = cast(float, input_data.get("b", 0))
+    return a + b
 
 
 CALCULATOR_TOOL = Tool(

@@ -81,6 +81,8 @@ class MLClassifier:
         if self.model is None:
             self.load_model()
 
+        assert self.model is not None, "Model should be loaded"
+
         try:
             text_embedding = self.model.encode(
                 text, convert_to_numpy=True, show_progress_bar=False

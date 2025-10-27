@@ -328,7 +328,7 @@ def custom_openapi() -> Dict[str, Any]:
         return app.openapi_schema
 
     # Use our comprehensive OpenAPI specification
-    openapi_schema = generate_openapi_spec(app)  # type: ignore[func-returns-value]
+    openapi_schema = generate_openapi_spec(app)
 
     # Override with actual path operations from FastAPI
     openapi_schema["paths"] = get_openapi(

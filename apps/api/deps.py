@@ -71,7 +71,7 @@ async def verify_api_key(
 
     # For production, verify with database
     try:
-        async with db_manager.get_session() as session:
+        async with db_manager.async_session() as session:
             manager = APIKeyManager(session)
 
             # Get client IP

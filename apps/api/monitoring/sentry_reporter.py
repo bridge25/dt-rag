@@ -512,7 +512,7 @@ def _generate_next_steps(
     return steps
 
 
-def capture_message(message: str, level: str = "info", **kwargs) -> None:
+def capture_message(message: str, level: str = "info", **kwargs: Any) -> None:
     """
     Capture informational message to Sentry.
 
@@ -533,7 +533,7 @@ def capture_message(message: str, level: str = "info", **kwargs) -> None:
 
 
 def add_search_breadcrumb(
-    query: str, search_type: str, correlation_id: Optional[str] = None, **data
+    query: str, search_type: str, correlation_id: Optional[str] = None, **data: Any
 ) -> None:
     """Add search operation breadcrumb for debugging context with correlation tracking."""
     if not SENTRY_AVAILABLE:

@@ -23,7 +23,7 @@ class SemanticClassifier:
     """Semantic similarity-based document classifier"""
 
     def __init__(
-        self, embedding_service, taxonomy_dao, confidence_threshold: float = 0.7
+        self, embedding_service: Any, taxonomy_dao: Any, confidence_threshold: float = 0.7
     ):
         """
         Initialize semantic classifier
@@ -218,7 +218,7 @@ class SemanticClassifier:
 class TaxonomyDAO:
     """Data Access Object for taxonomy operations"""
 
-    def __init__(self, db_session) -> None:
+    def __init__(self, db_session: Any) -> None:
         """Initialize with database session"""
         self.db_session = db_session
 
