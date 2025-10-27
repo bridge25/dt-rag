@@ -141,7 +141,7 @@ class AgentTaskQueue:
                     logger.warning("Redis manager not available")
                     continue
 
-                items = await self.job_queue.redis_manager.lrange(queue_key, 0, -1)
+                items = await self.job_queue.redis_manager.lrange(queue_key, 0, -1)  # type: ignore[attr-defined]
 
                 if not items:
                     continue
@@ -160,7 +160,7 @@ class AgentTaskQueue:
                                 logger.warning("Redis manager not available for lrem")
                                 continue
 
-                            removed_count = await self.job_queue.redis_manager.lrem(
+                            removed_count = await self.job_queue.redis_manager.lrem(  # type: ignore[attr-defined]
                                 queue_key,
                                 1,
                                 (

@@ -20,7 +20,7 @@ from apps.api.agent_dao import AgentDAO
 from apps.api.background.agent_task_queue import AgentTaskQueue
 from apps.api.background.coverage_history_dao import CoverageHistoryDAO
 from apps.api.database import SearchDAO, TaxonomyNode
-from apps.api.models import BackgroundTask
+from apps.api.models import BackgroundTask  # type: ignore[attr-defined]
 from apps.api.deps import verify_api_key
 from apps.api.schemas.agent_schemas import (
     AgentCreateRequest,

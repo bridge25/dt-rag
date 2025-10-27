@@ -95,7 +95,7 @@ class MLClassifier:
                 )[0][0]
                 similarities[path] = float(similarity)
 
-            best_path = max(similarities, key=similarities.get)
+            best_path = max(similarities, key=similarities.get)  # type: ignore[arg-type]
             best_score = similarities[best_path]
 
             confidence = min(0.95, best_score)
