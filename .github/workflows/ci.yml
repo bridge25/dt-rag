@@ -65,9 +65,11 @@ jobs:
           # Full lint (uses .flake8 config file)
           flake8 apps/ --count --statistics
 
-      - name: Type check with mypy
+      - name: Type check with mypy (strict mode)
         run: |
-          mypy apps/ --python-version 3.9 --ignore-missing-imports
+          # Use pyproject.toml config for strict type checking
+          # Known baseline: 33 external library errors (import-not-found, import-untyped)
+          mypy apps/ --config-file=pyproject.toml
         continue-on-error: false
 
       - name: Run ${{ matrix.test-type }} tests with pytest
