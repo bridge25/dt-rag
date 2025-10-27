@@ -14,6 +14,7 @@ from unittest.mock import Mock, patch
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
+
 # Mock data and utility functions for testing
 def validate_uuid_format(value: str) -> bool:
     """Validate UUID format"""
@@ -23,25 +24,31 @@ def validate_uuid_format(value: str) -> bool:
     except ValueError:
         return False
 
+
 def calculate_hash(data: str) -> str:
     """Calculate SHA-256 hash of data"""
     return hashlib.sha256(data.encode()).hexdigest()
+
 
 def format_timestamp(dt: datetime) -> str:
     """Format datetime to ISO string"""
     return dt.isoformat()
 
+
 def parse_timestamp(timestamp_str: str) -> datetime:
     """Parse ISO timestamp string to datetime"""
-    return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+    return datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+
 
 def sanitize_filename(filename: str) -> str:
     """Sanitize filename for safe file operations"""
     import re
+
     # Remove dangerous characters
-    safe_filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    safe_filename = re.sub(r'[<>:"/\\|?*]', "_", filename)
     # Limit length
     return safe_filename[:255]
+
 
 def calculate_similarity(text1: str, text2: str) -> float:
     """Calculate simple text similarity score"""
@@ -58,6 +65,7 @@ def calculate_similarity(text1: str, text2: str) -> float:
 
     return intersection / union if union > 0 else 0.0
 
+
 def format_file_size(size_bytes: int) -> str:
     """Format file size in human-readable format"""
     if size_bytes == 0:
@@ -73,9 +81,11 @@ def format_file_size(size_bytes: int) -> str:
 
     return f"{size:.1f} {size_names[i]}"
 
+
 def parse_query_string(query_string: str) -> Dict[str, Any]:
     """Parse query string into dictionary"""
     from urllib.parse import parse_qs
+
     parsed = parse_qs(query_string, keep_blank_values=True)
 
     # Convert single-item lists to strings
@@ -88,8 +98,10 @@ def parse_query_string(query_string: str) -> Dict[str, Any]:
 
     return result
 
+
 def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
     """Decorator for retrying functions on failure"""
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             for attempt in range(max_retries):
@@ -98,9 +110,11 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
                 except Exception as e:
                     if attempt == max_retries - 1:
                         raise
-                    time.sleep(delay * (2 ** attempt))  # Exponential backoff
+                    time.sleep(delay * (2**attempt))  # Exponential backoff
             return None
+
         return wrapper
+
     return decorator
 
 
@@ -145,7 +159,7 @@ class TestUtilityFunctions:
 
         assert hash1 == hash2
         assert len(hash1) == 64  # SHA-256 hex length
-        assert all(c in '0123456789abcdef' for c in hash1)
+        assert all(c in "0123456789abcdef" for c in hash1)
 
     @pytest.mark.unit
     def test_calculate_hash_different_data(self):
@@ -165,7 +179,10 @@ class TestUtilityFunctions:
         empty_hash = calculate_hash("")
 
         assert len(empty_hash) == 64
-        assert empty_hash == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        assert (
+            empty_hash
+            == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        )
 
     @pytest.mark.unit
     def test_format_timestamp(self):
@@ -271,7 +288,7 @@ class TestUtilityFunctions:
         similarity = calculate_similarity(text1, text2)
 
         assert 0.0 < similarity < 1.0
-        assert similarity == 2/4  # "machine" and "learning" are common
+        assert similarity == 2 / 4  # "machine" and "learning" are common
 
     @pytest.mark.unit
     def test_calculate_similarity_empty_texts(self):
@@ -374,6 +391,7 @@ class TestUtilityFunctions:
     @pytest.mark.unit
     def test_retry_on_failure_decorator_success_first_try(self):
         """Test retry decorator when function succeeds on first try"""
+
         @retry_on_failure(max_retries=3)
         def successful_function():
             return "success"
@@ -403,6 +421,7 @@ class TestUtilityFunctions:
     @pytest.mark.unit
     def test_retry_on_failure_decorator_all_attempts_fail(self):
         """Test retry decorator when all attempts fail"""
+
         @retry_on_failure(max_retries=2, delay=0.01)
         def always_failing_function():
             raise ValueError("Always fails")
@@ -417,44 +436,33 @@ class TestDataStructureHelpers:
     @pytest.mark.unit
     def test_deep_merge_dictionaries(self):
         """Test deep merging of dictionaries"""
+
         def deep_merge(dict1: Dict[str, Any], dict2: Dict[str, Any]) -> Dict[str, Any]:
             """Deep merge two dictionaries"""
             result = dict1.copy()
 
             for key, value in dict2.items():
-                if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                if (
+                    key in result
+                    and isinstance(result[key], dict)
+                    and isinstance(value, dict)
+                ):
                     result[key] = deep_merge(result[key], value)
                 else:
                     result[key] = value
 
             return result
 
-        dict1 = {
-            "a": 1,
-            "b": {
-                "c": 2,
-                "d": 3
-            }
-        }
+        dict1 = {"a": 1, "b": {"c": 2, "d": 3}}
 
-        dict2 = {
-            "b": {
-                "d": 4,
-                "e": 5
-            },
-            "f": 6
-        }
+        dict2 = {"b": {"d": 4, "e": 5}, "f": 6}
 
         merged = deep_merge(dict1, dict2)
 
         expected = {
             "a": 1,
-            "b": {
-                "c": 2,
-                "d": 4,  # Overwritten
-                "e": 5   # Added
-            },
-            "f": 6
+            "b": {"c": 2, "d": 4, "e": 5},  # Overwritten  # Added
+            "f": 6,
         }
 
         assert merged == expected
@@ -462,7 +470,10 @@ class TestDataStructureHelpers:
     @pytest.mark.unit
     def test_flatten_dictionary(self):
         """Test flattening nested dictionaries"""
-        def flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Any]:
+
+        def flatten_dict(
+            d: Dict[str, Any], parent_key: str = "", sep: str = "."
+        ) -> Dict[str, Any]:
             """Flatten nested dictionary"""
             items = []
             for k, v in d.items():
@@ -473,31 +484,18 @@ class TestDataStructureHelpers:
                     items.append((new_key, v))
             return dict(items)
 
-        nested_dict = {
-            "a": 1,
-            "b": {
-                "c": 2,
-                "d": {
-                    "e": 3
-                }
-            },
-            "f": 4
-        }
+        nested_dict = {"a": 1, "b": {"c": 2, "d": {"e": 3}}, "f": 4}
 
         flattened = flatten_dict(nested_dict)
 
-        expected = {
-            "a": 1,
-            "b.c": 2,
-            "b.d.e": 3,
-            "f": 4
-        }
+        expected = {"a": 1, "b.c": 2, "b.d.e": 3, "f": 4}
 
         assert flattened == expected
 
     @pytest.mark.unit
     def test_filter_dict_by_keys(self):
         """Test filtering dictionary by keys"""
+
         def filter_dict_by_keys(d: Dict[str, Any], keys: List[str]) -> Dict[str, Any]:
             """Filter dictionary to only include specified keys"""
             return {k: v for k, v in d.items() if k in keys}
@@ -507,17 +505,13 @@ class TestDataStructureHelpers:
             "age": 30,
             "email": "john@example.com",
             "password": "secret123",
-            "internal_id": "xyz789"
+            "internal_id": "xyz789",
         }
 
         public_keys = ["name", "age", "email"]
         filtered = filter_dict_by_keys(original_dict, public_keys)
 
-        expected = {
-            "name": "John",
-            "age": 30,
-            "email": "john@example.com"
-        }
+        expected = {"name": "John", "age": 30, "email": "john@example.com"}
 
         assert filtered == expected
         assert "password" not in filtered
@@ -526,7 +520,10 @@ class TestDataStructureHelpers:
     @pytest.mark.unit
     def test_group_by_key(self):
         """Test grouping list of dictionaries by key"""
-        def group_by_key(items: List[Dict[str, Any]], key: str) -> Dict[str, List[Dict[str, Any]]]:
+
+        def group_by_key(
+            items: List[Dict[str, Any]], key: str
+        ) -> Dict[str, List[Dict[str, Any]]]:
             """Group list of dictionaries by specified key"""
             grouped = {}
             for item in items:
@@ -556,10 +553,12 @@ class TestValidationHelpers:
     @pytest.mark.unit
     def test_validate_email_format(self):
         """Test email format validation"""
+
         def validate_email(email: str) -> bool:
             """Simple email validation"""
             import re
-            pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+            pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
             return bool(re.match(pattern, email))
 
         valid_emails = [
@@ -585,15 +584,14 @@ class TestValidationHelpers:
     @pytest.mark.unit
     def test_validate_json_structure(self):
         """Test JSON structure validation"""
-        def validate_json_structure(data: Dict[str, Any], required_keys: List[str]) -> bool:
+
+        def validate_json_structure(
+            data: Dict[str, Any], required_keys: List[str]
+        ) -> bool:
             """Validate that dictionary has required keys"""
             return all(key in data for key in required_keys)
 
-        test_data = {
-            "name": "Test",
-            "age": 25,
-            "email": "test@example.com"
-        }
+        test_data = {"name": "Test", "age": 25, "email": "test@example.com"}
 
         assert validate_json_structure(test_data, ["name", "email"]) is True
         assert validate_json_structure(test_data, ["name", "age", "email"]) is True
@@ -603,6 +601,7 @@ class TestValidationHelpers:
     @pytest.mark.unit
     def test_validate_range(self):
         """Test numeric range validation"""
+
         def validate_range(value: float, min_val: float, max_val: float) -> bool:
             """Validate that value is within range"""
             return min_val <= value <= max_val
@@ -625,11 +624,13 @@ class TestCacheHelpers:
 
         def simple_cache(func):
             """Simple cache decorator"""
+
             def wrapper(*args, **kwargs):
                 key = str(args) + str(sorted(kwargs.items()))
                 if key not in cache:
                     cache[key] = func(*args, **kwargs)
                 return cache[key]
+
             return wrapper
 
         call_count = 0
@@ -658,6 +659,7 @@ class TestCacheHelpers:
     @pytest.mark.unit
     def test_ttl_cache_expiration(self):
         """Test TTL (time-to-live) cache behavior"""
+
         def create_ttl_cache(ttl_seconds: float = 1.0):
             cache = {}
 
@@ -674,7 +676,9 @@ class TestCacheHelpers:
                     result = func(*args, **kwargs)
                     cache[key] = (result, current_time)
                     return result
+
                 return wrapper
+
             return ttl_cache
 
         call_count = 0

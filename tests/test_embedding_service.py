@@ -56,13 +56,18 @@ class TestHealthCheckExpansion:
 
             assert "api_key_configured" in result
             assert "warning" in result
-            assert "invalid" in result["warning"].lower() or "format" in result["warning"].lower()
+            assert (
+                "invalid" in result["warning"].lower()
+                or "format" in result["warning"].lower()
+            )
 
     @pytest.mark.unit
     def test_health_check_degraded_mode(self):
         """Test health_check() returns degraded status when using Sentence Transformers fallback"""
         with patch.dict(os.environ, {"OPENAI_API_KEY": ""}, clear=True):
-            with patch("apps.api.embedding_service.SENTENCE_TRANSFORMERS_AVAILABLE", True):
+            with patch(
+                "apps.api.embedding_service.SENTENCE_TRANSFORMERS_AVAILABLE", True
+            ):
                 from apps.api.embedding_service import EmbeddingService
 
                 service = EmbeddingService()
@@ -84,7 +89,12 @@ class TestHealthCheckExpansion:
                 service = EmbeddingService()
                 result = service.health_check()
 
-                required_fields = ["status", "model_name", "target_dimensions", "api_key_configured"]
+                required_fields = [
+                    "status",
+                    "model_name",
+                    "target_dimensions",
+                    "api_key_configured",
+                ]
                 for field in required_fields:
                     assert field in result, f"Missing required field: {field}"
 
@@ -103,10 +113,11 @@ class Test401ErrorHandling:
                 mock_openai.return_value = mock_client
 
                 from openai import AuthenticationError
+
                 mock_client.embeddings.create.side_effect = AuthenticationError(
                     message="Incorrect API key provided",
                     response=MagicMock(status_code=401),
-                    body=None
+                    body=None,
                 )
 
                 with patch("apps.api.embedding_service.logger") as mock_logger:
@@ -133,10 +144,11 @@ class Test401ErrorHandling:
                 mock_openai.return_value = mock_client
 
                 from openai import AuthenticationError
+
                 mock_client.embeddings.create.side_effect = AuthenticationError(
                     message="Incorrect API key provided",
                     response=MagicMock(status_code=401),
-                    body=None
+                    body=None,
                 )
 
                 from apps.api.embedding_service import EmbeddingService

@@ -86,7 +86,7 @@ class TestVectorSimilaritySearch:
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(
                 vector_similarity_search(mock_session, query_embedding, timeout=0.1),
-                timeout=0.1
+                timeout=0.1,
             )
 
     @pytest.mark.asyncio

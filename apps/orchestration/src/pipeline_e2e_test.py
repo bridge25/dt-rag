@@ -2,6 +2,7 @@
 B-O3: E2E 테스트 30건 실행 시스템
 파이프라인 품질 검증을 위한 종합 테스트
 """
+
 # @CODE:MYPY-001:PHASE2:BATCH5 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 
 import asyncio
@@ -9,7 +10,7 @@ import logging
 import os
 import time
 import tracemalloc
-from typing import Any, Dict, List, Union, cast
+from typing import Any, Dict, List, Union
 
 import psutil  # type: ignore[import-untyped]
 from langgraph_pipeline import LangGraphPipeline, PipelineRequest  # type: ignore[import-not-found]
@@ -245,7 +246,9 @@ class PipelineE2ETest:
         )
         return result
 
-    def _validate_response(self, response: Any, expected: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_response(
+        self, response: Any, expected: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """응답 검증"""
         validation = {}
 

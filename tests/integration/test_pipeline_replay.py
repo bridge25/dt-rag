@@ -19,9 +19,11 @@ async def test_pipeline_experience_replay_on():
         PipelineRequest,
     )
 
-    with patch("apps.api.env_manager.get_env_manager") as mock_env, \
-         patch("apps.orchestration.src.langgraph_pipeline.get_search_engine"), \
-         patch("apps.orchestration.src.langgraph_pipeline.get_llm_service_cached"):
+    with (
+        patch("apps.api.env_manager.get_env_manager") as mock_env,
+        patch("apps.orchestration.src.langgraph_pipeline.get_search_engine"),
+        patch("apps.orchestration.src.langgraph_pipeline.get_llm_service_cached"),
+    ):
 
         mock_mgr = MagicMock()
         mock_mgr.get_feature_flags.return_value = {"experience_replay": True}
@@ -29,7 +31,7 @@ async def test_pipeline_experience_replay_on():
 
         pipeline = LangGraphPipeline()
 
-        assert hasattr(pipeline, 'replay_buffer')
+        assert hasattr(pipeline, "replay_buffer")
         assert len(pipeline.replay_buffer) == 0
 
 
@@ -47,5 +49,5 @@ async def test_pipeline_experience_replay_off():
 
         pipeline = LangGraphPipeline()
 
-        assert hasattr(pipeline, 'replay_buffer')
+        assert hasattr(pipeline, "replay_buffer")
         assert len(pipeline.replay_buffer) == 0

@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from apps.api.database import TaxonomyNode
 from apps.core.db_session import async_session
 
+
 @pytest.mark.asyncio
 async def test_node_id_query_success(setup_taxonomy_nodes):
     """정상 taxonomy_path → node_id 변환"""
@@ -24,6 +25,7 @@ async def test_node_id_query_success(setup_taxonomy_nodes):
     assert node_id is not None, f"node_id not found for path {taxonomy_path}"
     assert isinstance(node_id, uuid.UUID)
 
+
 @pytest.mark.asyncio
 async def test_node_id_query_not_found(setup_taxonomy_nodes):
     """존재하지 않는 taxonomy_path 에러 처리"""
@@ -37,6 +39,7 @@ async def test_node_id_query_not_found(setup_taxonomy_nodes):
         node_id = result.scalar_one_or_none()
 
     assert node_id is None, "Should return None for non-existent path"
+
 
 @pytest.mark.asyncio
 async def test_node_id_query_performance(setup_taxonomy_nodes):

@@ -28,7 +28,7 @@ class TestReflectionAPI:
         response = await async_client.post(
             "/reflection/analyze",
             json={"case_id": "test-case-001", "limit": 100},
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         assert response.status_code == 200
@@ -54,7 +54,7 @@ class TestReflectionAPI:
         response = await async_client.post(
             "/reflection/analyze",
             json={"case_id": "nonexistent-case", "limit": 100},
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         assert response.status_code == 500
@@ -69,8 +69,7 @@ class TestReflectionAPI:
         Then: Returns 403 Forbidden
         """
         response = await async_client.post(
-            "/reflection/analyze",
-            json={"case_id": "test-case-001", "limit": 100}
+            "/reflection/analyze", json={"case_id": "test-case-001", "limit": 100}
         )
 
         assert response.status_code == 403
@@ -86,8 +85,7 @@ class TestReflectionAPI:
         Then: Returns 200 with batch analysis results
         """
         response = await async_client.post(
-            "/reflection/batch",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/reflection/batch", headers={"X-API-Key": "test_api_key_for_testing"}
         )
 
         assert response.status_code == 200
@@ -108,8 +106,7 @@ class TestReflectionAPI:
         Then: Returns 200 with zero analyzed cases
         """
         response = await async_client.post(
-            "/reflection/batch",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/reflection/batch", headers={"X-API-Key": "test_api_key_for_testing"}
         )
 
         assert response.status_code == 200
@@ -141,7 +138,7 @@ class TestReflectionAPI:
         response = await async_client.post(
             "/reflection/suggestions",
             json={"case_id": "test-case-002"},
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         assert response.status_code == 200
@@ -164,7 +161,7 @@ class TestReflectionAPI:
         response = await async_client.post(
             "/reflection/suggestions",
             json={"case_id": "nonexistent-case"},
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         assert response.status_code == 500
@@ -179,8 +176,7 @@ class TestReflectionAPI:
         Then: Returns 403 Forbidden
         """
         response = await async_client.post(
-            "/reflection/suggestions",
-            json={"case_id": "test-case-001"}
+            "/reflection/suggestions", json={"case_id": "test-case-001"}
         )
 
         assert response.status_code == 403
@@ -218,7 +214,7 @@ class TestReflectionAPI:
         response = await async_client.post(
             "/reflection/analyze",
             json={"case_id": "test-case-001", "limit": 100},
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
         elapsed_ms = (time.time() - start_time) * 1000
 
@@ -239,8 +235,7 @@ class TestReflectionAPI:
 
         start_time = time.time()
         response = await async_client.post(
-            "/reflection/batch",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/reflection/batch", headers={"X-API-Key": "test_api_key_for_testing"}
         )
         elapsed_ms = (time.time() - start_time) * 1000
 

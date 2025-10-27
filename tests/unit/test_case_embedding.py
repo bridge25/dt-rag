@@ -24,7 +24,9 @@ class TestCaseEmbedding:
         """TEST-EMBED-001: 정상 임베딩 생성 (1536차원)"""
         cbr = CBRSystem(data_dir="test_data/cbr_embed")
 
-        with patch("apps.orchestration.src.main.CBRSystem.generate_case_embedding") as mock_gen:
+        with patch(
+            "apps.orchestration.src.main.CBRSystem.generate_case_embedding"
+        ) as mock_gen:
             # Mock successful embedding generation
             mock_gen.return_value = [0.1] * 1536
 
@@ -39,7 +41,9 @@ class TestCaseEmbedding:
         """TEST-EMBED-002: API 실패 시 더미 벡터 + 경고 로그"""
         cbr = CBRSystem(data_dir="test_data/cbr_embed")
 
-        with patch("apps.orchestration.src.main.CBRSystem.generate_case_embedding") as mock_gen:
+        with patch(
+            "apps.orchestration.src.main.CBRSystem.generate_case_embedding"
+        ) as mock_gen:
             # Mock API failure - returns dummy vector
             mock_gen.return_value = [0.0] * 1536
 
@@ -55,7 +59,9 @@ class TestCaseEmbedding:
         """TEST-EMBED-003: add_case() 호출 시 query_vector 저장 확인"""
         cbr = CBRSystem(data_dir="test_data/cbr_embed")
 
-        with patch("apps.orchestration.src.main.CBRSystem.generate_case_embedding") as mock_gen:
+        with patch(
+            "apps.orchestration.src.main.CBRSystem.generate_case_embedding"
+        ) as mock_gen:
             mock_gen.return_value = [0.1] * 1536
 
             case_data = {
@@ -64,7 +70,7 @@ class TestCaseEmbedding:
                 "category_path": ["test", "category"],
                 "content": "test content",
                 "quality_score": 0.8,
-                "metadata": {}
+                "metadata": {},
             }
 
             # Call add_case() which should generate and store embedding

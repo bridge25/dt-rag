@@ -61,7 +61,9 @@ class LevelingService:
             latency_seconds = latency_ms / 1000.0
             speed_bonus = max(0, 1 - latency_seconds / 5.0) * 0.3 * base_xp
 
-            new_coverage = query_result.get("coverage_percent", agent.coverage_percent or 0.0)
+            new_coverage = query_result.get(
+                "coverage_percent", agent.coverage_percent or 0.0
+            )
             old_coverage = agent.coverage_percent or 0.0
             coverage_delta = (new_coverage - old_coverage) / 100.0
             coverage_bonus = coverage_delta * 0.2 * base_xp
@@ -77,13 +79,15 @@ class LevelingService:
             }
 
             await AgentDAO.update_xp_and_level(
-                self.session,
-                UUID(agent_id),
-                xp_delta=total_xp_earned
+                self.session, UUID(agent_id), xp_delta=total_xp_earned
             )
 
             updated_agent = await AgentDAO.get_agent(self.session, UUID(agent_id))
-            new_total_xp = updated_agent.current_xp if updated_agent else agent.current_xp + total_xp_earned
+            new_total_xp = (
+                updated_agent.current_xp
+                if updated_agent
+                else agent.current_xp + total_xp_earned
+            )
 
             logger.debug(
                 f"Agent {agent_id} earned {total_xp_earned:.2f} XP "
@@ -101,7 +105,9 @@ class LevelingService:
             )
 
         except Exception as e:
-            logger.error(f"XP calculation failed for agent {agent_id}: {e}", exc_info=True)
+            logger.error(
+                f"XP calculation failed for agent {agent_id}: {e}", exc_info=True
+            )
             return None
 
     async def check_level_up(self, agent_id: str) -> Optional[LevelUpResult]:
@@ -121,10 +127,7 @@ class LevelingService:
 
             if new_level > current_level:
                 await AgentDAO.update_xp_and_level(
-                    self.session,
-                    UUID(agent_id),
-                    xp_delta=0.0,
-                    level=new_level
+                    self.session, UUID(agent_id), xp_delta=0.0, level=new_level
                 )
 
                 unlocked = await self.unlock_features(agent_id, new_level)
@@ -144,7 +147,9 @@ class LevelingService:
             return None
 
         except Exception as e:
-            logger.error(f"Level up check failed for agent {agent_id}: {e}", exc_info=True)
+            logger.error(
+                f"Level up check failed for agent {agent_id}: {e}", exc_info=True
+            )
             return None
 
     async def unlock_features(self, agent_id: str, new_level: int) -> List[str]:
@@ -160,14 +165,11 @@ class LevelingService:
             merged_config = {**existing_config, **new_features}
 
             await AgentDAO.update_agent(
-                self.session,
-                UUID(agent_id),
-                features_config=merged_config
+                self.session, UUID(agent_id), features_config=merged_config
             )
 
             unlocked = [
-                k for k, v in new_features.items()
-                if v and not existing_config.get(k)
+                k for k, v in new_features.items() if v and not existing_config.get(k)
             ]
 
             logger.debug(f"Agent {agent_id} unlocked features: {unlocked}")
@@ -175,7 +177,9 @@ class LevelingService:
             return unlocked
 
         except Exception as e:
-            logger.error(f"Feature unlock failed for agent {agent_id}: {e}", exc_info=True)
+            logger.error(
+                f"Feature unlock failed for agent {agent_id}: {e}", exc_info=True
+            )
             return []
 
     async def calculate_xp_and_level_up(
@@ -187,6 +191,5 @@ class LevelingService:
                 await self.check_level_up(agent_id)
         except Exception as e:
             logger.error(
-                f"XP/Level up pipeline failed for agent {agent_id}: {e}",
-                exc_info=True
+                f"XP/Level up pipeline failed for agent {agent_id}: {e}", exc_info=True
             )

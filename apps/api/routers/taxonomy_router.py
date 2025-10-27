@@ -19,12 +19,15 @@ from pydantic import BaseModel, Field
 try:
     from ..deps import verify_api_key
 except ImportError:
+
     def verify_api_key():
         return None
+
 
 # Import common schemas
 import sys
 from pathlib import Path as PathLib
+
 sys.path.append(str(PathLib(__file__).parent.parent.parent.parent))
 
 from packages.common_schemas.common_schemas.models import TaxonomyNode
@@ -37,9 +40,13 @@ taxonomy_router = APIRouter(prefix="/taxonomy", tags=["Taxonomy"])
 
 # Request/Response Models
 
+
 class TaxonomyVersion(BaseModel):
     """Taxonomy version information"""
-    version: str = Field(..., pattern=r'^\d+\.\d+\.\d+$', description="Semantic version")
+
+    version: str = Field(
+        ..., pattern=r"^\d+\.\d+\.\d+$", description="Semantic version"
+    )
     created_at: datetime = Field(..., description="Version creation timestamp")
     created_by: str = Field(..., description="Version creator")
     change_summary: str = Field(..., description="Summary of changes in this version")
@@ -47,8 +54,10 @@ class TaxonomyVersion(BaseModel):
     node_count: int = Field(..., description="Total number of nodes in this version")
     depth: int = Field(..., description="Maximum tree depth")
 
+
 class TaxonomyStatistics(BaseModel):
     """Taxonomy statistics"""
+
     total_nodes: int
     leaf_nodes: int
     internal_nodes: int
@@ -56,47 +65,59 @@ class TaxonomyStatistics(BaseModel):
     avg_depth: float
     categories_distribution: Dict[str, int]
 
+
 class VersionComparison(BaseModel):
     """Version comparison result"""
+
     base_version: str
     target_version: str
     changes: Dict[str, Any]
     summary: Dict[str, int]
 
+
 class NodeCreateRequest(BaseModel):
     """Request to create a new taxonomy node"""
+
     name: str = Field(..., min_length=1, max_length=100)
     parent_path: Optional[List[str]] = Field(None, description="Parent node path")
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+
 class NodeUpdateRequest(BaseModel):
     """Request to update an existing taxonomy node"""
+
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     metadata: Optional[Dict[str, Any]] = None
 
+
 class ValidationResult(BaseModel):
     """Taxonomy validation result"""
+
     is_valid: bool
     errors: List[str]
     warnings: List[str]
     suggestions: List[str]
 
+
 # Real taxonomy service implementation
 from ..services.taxonomy_service import TaxonomyService  # noqa: E402
+
 
 # Dependency injection
 async def get_taxonomy_service() -> TaxonomyService:
     """Get taxonomy service instance"""
     return TaxonomyService()
 
+
 # API Endpoints
+
 
 @taxonomy_router.get("/versions", response_model=Dict[str, Any])
 async def list_taxonomy_versions(
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """
     List all available taxonomy versions with pagination
@@ -121,8 +142,8 @@ async def list_taxonomy_versions(
                 "limit": limit,
                 "total": total_count,
                 "has_next": has_next,
-                "has_previous": has_previous
-            }
+                "has_previous": has_previous,
+            },
         }
 
         if has_next:
@@ -136,16 +157,19 @@ async def list_taxonomy_versions(
         logger.error(f"Failed to list taxonomy versions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve taxonomy versions"
+            detail="Failed to retrieve taxonomy versions",
         )
+
 
 @taxonomy_router.get("/{version}/tree", response_model=Dict[str, Any])
 async def get_taxonomy_tree(
     version: str = Path(..., description="Taxonomy version"),
-    expand_level: int = Query(-1, ge=-1, description="Tree expansion level (-1 for full tree)"),
+    expand_level: int = Query(
+        -1, ge=-1, description="Tree expansion level (-1 for full tree)"
+    ),
     filter_path: Optional[str] = Query(None, description="Filter by path prefix"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """
     Retrieve complete taxonomy tree for specified version
@@ -162,7 +186,7 @@ async def get_taxonomy_tree(
         if not tree_data or not tree_data.get("nodes"):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Taxonomy version '{version}' not found"
+                detail=f"Taxonomy version '{version}' not found",
             )
 
         nodes = tree_data["nodes"]
@@ -172,15 +196,16 @@ async def get_taxonomy_tree(
         if filter_path:
             filter_parts = filter_path.split("/")
             nodes = [
-                node for node in nodes
-                if node.get("canonical_path", [])[:len(filter_parts)] == filter_parts
+                node
+                for node in nodes
+                if node.get("canonical_path", [])[: len(filter_parts)] == filter_parts
             ]
 
         return {
             "nodes": nodes,
             "edges": edges,
             "version": version,
-            "metadata": tree_data.get("metadata", {})
+            "metadata": tree_data.get("metadata", {}),
         }
 
     except HTTPException:
@@ -189,14 +214,15 @@ async def get_taxonomy_tree(
         logger.error(f"Failed to get taxonomy tree: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve taxonomy tree"
+            detail="Failed to retrieve taxonomy tree",
         )
+
 
 @taxonomy_router.get("/{version}/statistics", response_model=TaxonomyStatistics)
 async def get_taxonomy_statistics(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """
     Get comprehensive statistics for taxonomy version
@@ -217,14 +243,15 @@ async def get_taxonomy_statistics(
         logger.error(f"Failed to get taxonomy statistics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve taxonomy statistics"
+            detail="Failed to retrieve taxonomy statistics",
         )
+
 
 @taxonomy_router.get("/{version}/validate", response_model=ValidationResult)
 async def validate_taxonomy(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """
     Validate taxonomy structure and consistency
@@ -245,15 +272,18 @@ async def validate_taxonomy(
         logger.error(f"Failed to validate taxonomy: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to validate taxonomy"
+            detail="Failed to validate taxonomy",
         )
 
-@taxonomy_router.get("/{base_version}/compare/{target_version}", response_model=VersionComparison)
+
+@taxonomy_router.get(
+    "/{base_version}/compare/{target_version}", response_model=VersionComparison
+)
 async def compare_taxonomy_versions(
     base_version: str = Path(..., description="Base version for comparison"),
     target_version: str = Path(..., description="Target version for comparison"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """
     Compare two taxonomy versions and show differences
@@ -271,13 +301,13 @@ async def compare_taxonomy_versions(
         if base_tree is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Base taxonomy version '{base_version}' not found"
+                detail=f"Base taxonomy version '{base_version}' not found",
             )
 
         if target_tree is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Target taxonomy version '{target_version}' not found"
+                detail=f"Target taxonomy version '{target_version}' not found",
             )
 
         comparison = await service.compare_versions(base_version, target_version)
@@ -289,8 +319,9 @@ async def compare_taxonomy_versions(
         logger.error(f"Failed to compare taxonomy versions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to compare taxonomy versions"
+            detail="Failed to compare taxonomy versions",
         )
+
 
 @taxonomy_router.get("/{version}/search", response_model=List[TaxonomyNode])
 async def search_taxonomy_nodes(
@@ -298,7 +329,7 @@ async def search_taxonomy_nodes(
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
     service: TaxonomyService = Depends(get_taxonomy_service),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """
     Search taxonomy nodes by name or metadata
@@ -314,7 +345,7 @@ async def search_taxonomy_nodes(
         if tree is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Taxonomy version '{version}' not found"
+                detail=f"Taxonomy version '{version}' not found",
             )
 
         # Simple search implementation (would be more sophisticated in practice)
@@ -322,8 +353,9 @@ async def search_taxonomy_nodes(
         matching_nodes = []
 
         for node in tree:
-            if (query_lower in node.label.lower() or
-                any(query_lower in path_part.lower() for path_part in node.canonical_path)):
+            if query_lower in node.label.lower() or any(
+                query_lower in path_part.lower() for path_part in node.canonical_path
+            ):
                 matching_nodes.append(node)
 
             if len(matching_nodes) >= limit:
@@ -337,8 +369,9 @@ async def search_taxonomy_nodes(
         logger.error(f"Failed to search taxonomy nodes: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to search taxonomy nodes"
+            detail="Failed to search taxonomy nodes",
         )
+
 
 # Export router
 __all__ = ["taxonomy_router"]

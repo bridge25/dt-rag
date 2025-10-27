@@ -2,6 +2,7 @@
 E2E test for HITL (Human-in-the-Loop) workflow
 Tests the complete flow from task retrieval to review submission
 """
+
 import pytest
 from httpx import AsyncClient, ASGITransport
 from apps.api.main import app
@@ -32,7 +33,7 @@ async def test_hitl_get_tasks():
         response = await client.get(
             "/api/v1/classify/hitl/tasks",
             params={"limit": 10},
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         assert response.status_code == 200
@@ -68,7 +69,7 @@ async def test_hitl_submit_review():
         get_response = await client.get(
             "/api/v1/classify/hitl/tasks",
             params={"limit": 1},
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         assert get_response.status_code == 200
@@ -85,13 +86,13 @@ async def test_hitl_submit_review():
         review_data = {
             "chunk_id": chunk_id,
             "approved_path": approved_path,
-            "reviewer_notes": "E2E test review - approved suggested classification"
+            "reviewer_notes": "E2E test review - approved suggested classification",
         }
 
         review_response = await client.post(
             "/api/v1/classify/hitl/review",
             json=review_data,
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         assert review_response.status_code == 200
@@ -110,7 +111,7 @@ async def test_hitl_submit_review():
         verify_response = await client.get(
             "/api/v1/classify/hitl/tasks",
             params={"limit": 100},
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         assert verify_response.status_code == 200
@@ -118,7 +119,9 @@ async def test_hitl_submit_review():
 
         # Check that the reviewed task is not in the list
         remaining_chunk_ids = [t["chunk_id"] for t in remaining_tasks]
-        assert chunk_id not in remaining_chunk_ids, "Reviewed task should be removed from queue"
+        assert (
+            chunk_id not in remaining_chunk_ids
+        ), "Reviewed task should be removed from queue"
 
         print("✅ Verified task removed from queue")
 
@@ -132,7 +135,7 @@ async def test_hitl_priority_filter():
         all_response = await client.get(
             "/api/v1/classify/hitl/tasks",
             params={"limit": 50},
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         assert all_response.status_code == 200
@@ -141,7 +144,7 @@ async def test_hitl_priority_filter():
         high_response = await client.get(
             "/api/v1/classify/hitl/tasks",
             params={"limit": 50, "priority": "high"},
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         assert high_response.status_code == 200
@@ -164,13 +167,13 @@ async def test_hitl_invalid_chunk_id():
         review_data = {
             "chunk_id": "00000000-0000-0000-0000-000000000000",
             "approved_path": ["Technology", "AI/ML"],
-            "reviewer_notes": "Test with invalid chunk_id"
+            "reviewer_notes": "Test with invalid chunk_id",
         }
 
         response = await client.post(
             "/api/v1/classify/hitl/review",
             json=review_data,
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         # Should return 500 (database update fails)
@@ -187,7 +190,7 @@ async def test_hitl_empty_approved_path():
         get_response = await client.get(
             "/api/v1/classify/hitl/tasks",
             params={"limit": 1},
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         if len(get_response.json()) == 0:
@@ -198,13 +201,13 @@ async def test_hitl_empty_approved_path():
         review_data = {
             "chunk_id": task["chunk_id"],
             "approved_path": [],  # Empty path
-            "reviewer_notes": "Test with empty path"
+            "reviewer_notes": "Test with empty path",
         }
 
         response = await client.post(
             "/api/v1/classify/hitl/review",
             json=review_data,
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         # Should return 400 (validation error)
@@ -220,7 +223,7 @@ async def test_hitl_confidence_threshold():
         response = await client.get(
             "/api/v1/classify/hitl/tasks",
             params={"limit": 100},
-            headers={"X-API-Key": TEST_API_KEY}
+            headers={"X-API-Key": TEST_API_KEY},
         )
 
         assert response.status_code == 200
@@ -231,7 +234,9 @@ async def test_hitl_confidence_threshold():
 
         # All tasks should have confidence < 0.70 (HITL threshold)
         for task in tasks:
-            assert task["confidence"] < 0.70, f"Task {task['task_id']} has confidence {task['confidence']} >= 0.70"
+            assert (
+                task["confidence"] < 0.70
+            ), f"Task {task['task_id']} has confidence {task['confidence']} >= 0.70"
 
         print(f"✅ All {len(tasks)} tasks below confidence threshold (< 0.70)")
         avg_confidence = sum(t["confidence"] for t in tasks) / len(tasks)

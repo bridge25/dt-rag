@@ -6,9 +6,8 @@ Processes tasks from Redis queue with timeout, cancellation, and progress tracki
 """
 
 import asyncio
-import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from uuid import UUID
 from datetime import datetime
 
@@ -50,7 +49,9 @@ class AgentTaskWorker:
         self.running = False
         self.task_queue = AgentTaskQueue()
         self.worker_task = None
-        logger.info(f"AgentTaskWorker initialized: worker_id={worker_id}, timeout={timeout}s")
+        logger.info(
+            f"AgentTaskWorker initialized: worker_id={worker_id}, timeout={timeout}s"
+        )
 
     async def start(self):
         """Start worker loop"""
@@ -84,8 +85,8 @@ class AgentTaskWorker:
                 job = await self.task_queue.job_queue.dequeue_job()
 
                 if job:
-                    task_id = job['data']['task_id']
-                    job_data = job['data']
+                    task_id = job["data"]["task_id"]
+                    job_data = job["data"]
 
                     logger.info(f"Worker {self.worker_id} processing task: {task_id}")
                     await self._process_coverage_task(task_id, job_data)
@@ -130,24 +131,26 @@ class AgentTaskWorker:
                 # Check cancellation before starting
                 if task.cancellation_requested:
                     logger.info(f"Task cancelled before start: {task_id}")
-                    task.status = 'cancelled'
+                    task.status = "cancelled"
                     task.completed_at = datetime.utcnow()
                     await session.commit()
                     return
 
                 # Update status to running
-                task.status = 'running'
+                task.status = "running"
                 task.started_at = datetime.utcnow()
                 task.progress_percentage = 0.0
                 await session.commit()
 
-                logger.info(f"Task {task_id} started: agent_id={job_data.get('agent_id')}")
+                logger.info(
+                    f"Task {task_id} started: agent_id={job_data.get('agent_id')}"
+                )
 
                 try:
                     # Calculate coverage with timeout
                     result = await asyncio.wait_for(
                         self._calculate_coverage(session, task, job_data),
-                        timeout=self.timeout
+                        timeout=self.timeout,
                     )
 
                     # Update progress to 100%
@@ -155,23 +158,23 @@ class AgentTaskWorker:
                     await session.commit()
 
                     # Insert coverage history
-                    agent_id = UUID(job_data['agent_id'])
+                    agent_id = UUID(job_data["agent_id"])
                     await CoverageHistoryDAO.insert_history(
                         session=session,
                         agent_id=agent_id,
                         overall_coverage=result.coverage_percent,
                         total_documents=result.total_documents,
                         total_chunks=result.total_chunks,
-                        version=job_data['taxonomy_version']
+                        version=job_data["taxonomy_version"],
                     )
 
                     # Update task status to completed
-                    task.status = 'completed'
+                    task.status = "completed"
                     task.completed_at = datetime.utcnow()
                     task.result = {
-                        'coverage_percent': result.coverage_percent,
-                        'total_documents': result.total_documents,
-                        'total_chunks': result.total_chunks
+                        "coverage_percent": result.coverage_percent,
+                        "total_documents": result.total_documents,
+                        "total_chunks": result.total_chunks,
                     }
                     await session.commit()
 
@@ -180,32 +183,31 @@ class AgentTaskWorker:
                     )
 
                     # Send webhook notification
-                    webhook_url = job_data.get('webhook_url')
+                    webhook_url = job_data.get("webhook_url")
                     if webhook_url:
                         await self._send_webhook(task, job_data, webhook_url)
 
                 except asyncio.TimeoutError:
                     logger.warning(f"Task {task_id} timed out after {self.timeout}s")
-                    task.status = 'timeout'
-                    task.error = f'Task timeout after {self.timeout} seconds'
+                    task.status = "timeout"
+                    task.error = f"Task timeout after {self.timeout} seconds"
                     task.completed_at = datetime.utcnow()
                     await session.commit()
 
                 except Exception as e:
                     logger.error(f"Task {task_id} failed: {e}", exc_info=True)
-                    task.status = 'failed'
+                    task.status = "failed"
                     task.error = str(e)
                     task.completed_at = datetime.utcnow()
                     await session.commit()
 
             except Exception as e:
-                logger.error(f"Fatal error processing task {task_id}: {e}", exc_info=True)
+                logger.error(
+                    f"Fatal error processing task {task_id}: {e}", exc_info=True
+                )
 
     async def _calculate_coverage(
-        self,
-        session,
-        task: BackgroundTask,
-        job_data: Dict[str, Any]
+        self, session, task: BackgroundTask, job_data: Dict[str, Any]
     ):
         """
         Calculate coverage with cancellation checks
@@ -222,7 +224,7 @@ class AgentTaskWorker:
             asyncio.CancelledError: If task cancelled during execution
         """
         # Get agent
-        agent_id = UUID(job_data['agent_id'])
+        agent_id = UUID(job_data["agent_id"])
         agent = await AgentDAO.get_agent(session, agent_id)
 
         if not agent:
@@ -236,7 +238,7 @@ class AgentTaskWorker:
         result = await CoverageMeterService.calculate_coverage(
             session=session,
             taxonomy_node_ids=agent.taxonomy_node_ids,
-            taxonomy_version=agent.taxonomy_version
+            taxonomy_version=agent.taxonomy_version,
         )
 
         # Update progress
@@ -246,10 +248,7 @@ class AgentTaskWorker:
         return result
 
     async def _send_webhook(
-        self,
-        task: BackgroundTask,
-        job_data: Dict[str, Any],
-        webhook_url: str
+        self, task: BackgroundTask, job_data: Dict[str, Any], webhook_url: str
     ):
         """
         Send webhook notification
@@ -263,11 +262,13 @@ class AgentTaskWorker:
             webhook_service = WebhookService()
 
             payload = {
-                'task_id': task.task_id,
-                'agent_id': job_data['agent_id'],
-                'status': task.status,
-                'result': task.result,
-                'completed_at': task.completed_at.isoformat() if task.completed_at else None
+                "task_id": task.task_id,
+                "agent_id": job_data["agent_id"],
+                "status": task.status,
+                "result": task.result,
+                "completed_at": (
+                    task.completed_at.isoformat() if task.completed_at else None
+                ),
             }
 
             success = await webhook_service.send_webhook(webhook_url, payload)

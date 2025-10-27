@@ -7,7 +7,7 @@ OpenAI, Anthropic, Azure OpenAI, and embedding services with fallback handling.
 
 import os
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, TypedDict
 from dataclasses import dataclass
 from enum import Enum
 
@@ -15,8 +15,18 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 
+class ValidationResult(TypedDict):
+    """Type definition for validation results"""
+
+    is_valid: bool
+    warnings: List[str]
+    errors: List[str]
+    recommendations: List[str]
+
+
 class LLMProvider(Enum):
     """Supported LLM providers"""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     AZURE_OPENAI = "azure_openai"
@@ -25,6 +35,7 @@ class LLMProvider(Enum):
 
 class EmbeddingProvider(Enum):
     """Supported embedding providers"""
+
     OPENAI = "openai"
     AZURE_OPENAI = "azure_openai"
     DUMMY = "dummy"  # For testing/development without API keys
@@ -33,6 +44,7 @@ class EmbeddingProvider(Enum):
 @dataclass
 class LLMServiceConfig:
     """Configuration for LLM service"""
+
     provider: LLMProvider
     model: str
     api_key: Optional[str] = None
@@ -46,6 +58,7 @@ class LLMServiceConfig:
 @dataclass
 class EmbeddingServiceConfig:
     """Configuration for embedding service"""
+
     provider: EmbeddingProvider
     model: str
     api_key: Optional[str] = None
@@ -58,7 +71,7 @@ class EmbeddingServiceConfig:
 class LLMConfigManager:
     """Manages LLM and embedding service configuration"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.llm_config = self._configure_llm_service()
         self.embedding_config = self._configure_embedding_service()
 
@@ -74,7 +87,7 @@ class LLMConfigManager:
                 api_key=openai_key,
                 max_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "1000")),
                 temperature=float(os.getenv("OPENAI_TEMPERATURE", "0.7")),
-                is_dummy=False
+                is_dummy=False,
             )
 
         # Try Anthropic
@@ -86,7 +99,7 @@ class LLMConfigManager:
                 api_key=anthropic_key,
                 max_tokens=int(os.getenv("ANTHROPIC_MAX_TOKENS", "1000")),
                 temperature=float(os.getenv("ANTHROPIC_TEMPERATURE", "0.7")),
-                is_dummy=False
+                is_dummy=False,
             )
 
         # Try Azure OpenAI
@@ -101,15 +114,13 @@ class LLMConfigManager:
                 api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2023-12-01-preview"),
                 max_tokens=int(os.getenv("AZURE_OPENAI_MAX_TOKENS", "1000")),
                 temperature=float(os.getenv("AZURE_OPENAI_TEMPERATURE", "0.7")),
-                is_dummy=False
+                is_dummy=False,
             )
 
         # Fallback to dummy service
         logger.warning("No LLM API keys found, using dummy service")
         return LLMServiceConfig(
-            provider=LLMProvider.DUMMY,
-            model="dummy-model",
-            is_dummy=True
+            provider=LLMProvider.DUMMY, model="dummy-model", is_dummy=True
         )
 
     def _configure_embedding_service(self) -> EmbeddingServiceConfig:
@@ -123,7 +134,7 @@ class LLMConfigManager:
                 model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002"),
                 api_key=openai_key,
                 dimensions=int(os.getenv("OPENAI_EMBEDDING_DIMENSIONS", "1536")),
-                is_dummy=False
+                is_dummy=False,
             )
 
         # Try Azure OpenAI embeddings
@@ -132,12 +143,14 @@ class LLMConfigManager:
         if azure_key and azure_endpoint:
             return EmbeddingServiceConfig(
                 provider=EmbeddingProvider.AZURE_OPENAI,
-                model=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"),
+                model=os.getenv(
+                    "AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002"
+                ),
                 api_key=azure_key,
                 base_url=azure_endpoint,
                 api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2023-12-01-preview"),
                 dimensions=int(os.getenv("AZURE_OPENAI_EMBEDDING_DIMENSIONS", "1536")),
-                is_dummy=False
+                is_dummy=False,
             )
 
         # Fallback to dummy service
@@ -146,7 +159,7 @@ class LLMConfigManager:
             provider=EmbeddingProvider.DUMMY,
             model="dummy-embedding",
             dimensions=1536,  # Standard dimension for compatibility
-            is_dummy=True
+            is_dummy=True,
         )
 
     def get_llm_config(self) -> LLMServiceConfig:
@@ -164,50 +177,64 @@ class LLMConfigManager:
                 "provider": self.llm_config.provider.value,
                 "model": self.llm_config.model,
                 "is_dummy": self.llm_config.is_dummy,
-                "configured": not self.llm_config.is_dummy
+                "configured": not self.llm_config.is_dummy,
             },
             "embedding_service": {
                 "provider": self.embedding_config.provider.value,
                 "model": self.embedding_config.model,
                 "is_dummy": self.embedding_config.is_dummy,
-                "configured": not self.embedding_config.is_dummy
+                "configured": not self.embedding_config.is_dummy,
             },
-            "system_operational": not (self.llm_config.is_dummy and self.embedding_config.is_dummy)
+            "system_operational": not (
+                self.llm_config.is_dummy and self.embedding_config.is_dummy
+            ),
         }
 
-    def validate_configuration(self) -> Dict[str, Any]:
+    def validate_configuration(self) -> ValidationResult:
         """Validate current LLM configuration"""
-        validation_result = {
+        validation_result: ValidationResult = {
             "is_valid": True,
             "warnings": [],
             "errors": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Check LLM service
         if self.llm_config.is_dummy:
             validation_result["warnings"].append("LLM service is using dummy provider")
-            validation_result["recommendations"].append("Configure OPENAI_API_KEY or ANTHROPIC_API_KEY for AI responses")
+            validation_result["recommendations"].append(
+                "Configure OPENAI_API_KEY or ANTHROPIC_API_KEY for AI responses"
+            )
 
         # Check embedding service
         if self.embedding_config.is_dummy:
-            validation_result["warnings"].append("Embedding service is using dummy provider")
-            validation_result["recommendations"].append("Configure OPENAI_API_KEY for semantic search functionality")
+            validation_result["warnings"].append(
+                "Embedding service is using dummy provider"
+            )
+            validation_result["recommendations"].append(
+                "Configure OPENAI_API_KEY for semantic search functionality"
+            )
 
         # Check for API key security
         for key_name in ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "AZURE_OPENAI_API_KEY"]:
             key_value = os.getenv(key_name)
             if key_value:
                 if len(key_value) < 20:
-                    validation_result["warnings"].append(f"{key_name} appears to be too short")
+                    validation_result["warnings"].append(
+                        f"{key_name} appears to be too short"
+                    )
                 if key_value.startswith("sk-") and key_name != "OPENAI_API_KEY":
-                    validation_result["warnings"].append(f"{key_name} format may be incorrect")
+                    validation_result["warnings"].append(
+                        f"{key_name} format may be incorrect"
+                    )
 
         # Environment-specific recommendations
         environment = os.getenv("ENVIRONMENT", "development")
         if environment == "production":
             if self.llm_config.is_dummy or self.embedding_config.is_dummy:
-                validation_result["errors"].append("Dummy services should not be used in production")
+                validation_result["errors"].append(
+                    "Dummy services should not be used in production"
+                )
                 validation_result["is_valid"] = False
 
         return validation_result
@@ -221,18 +248,14 @@ class LLMConfigManager:
                 "gpt-3.5-turbo",
                 "text-embedding-ada-002",
                 "text-embedding-3-small",
-                "text-embedding-3-large"
+                "text-embedding-3-large",
             ],
             "anthropic": [
                 "claude-3-opus-20240229",
                 "claude-3-sonnet-20240229",
-                "claude-3-haiku-20240307"
+                "claude-3-haiku-20240307",
             ],
-            "azure_openai": [
-                "gpt-4",
-                "gpt-35-turbo",
-                "text-embedding-ada-002"
-            ]
+            "azure_openai": ["gpt-4", "gpt-35-turbo", "text-embedding-ada-002"],
         }
 
     def update_llm_config(self, config_updates: Dict[str, Any]) -> LLMServiceConfig:
@@ -250,7 +273,9 @@ class LLMConfigManager:
         self.llm_config = current_config
         return current_config
 
-    def update_embedding_config(self, config_updates: Dict[str, Any]) -> EmbeddingServiceConfig:
+    def update_embedding_config(
+        self, config_updates: Dict[str, Any]
+    ) -> EmbeddingServiceConfig:
         """Update embedding configuration (for runtime configuration changes)"""
         current_config = self.embedding_config
 
@@ -282,5 +307,5 @@ __all__ = [
     "LLMServiceConfig",
     "EmbeddingServiceConfig",
     "LLMConfigManager",
-    "get_llm_config"
+    "get_llm_config",
 ]

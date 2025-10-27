@@ -77,9 +77,7 @@ class ReplayBuffer:
             else:
                 logger.debug(f"Experience added (buffer_size={len(self.buffer)})")
 
-    async def sample(
-        self, batch_size: int = 32
-    ) -> List[Tuple[str, int, float, str]]:
+    async def sample(self, batch_size: int = 32) -> List[Tuple[str, int, float, str]]:
         """
         Sample random batch from buffer.
 

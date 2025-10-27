@@ -39,9 +39,9 @@ class TestToolExecutionIntegration:
             input_schema=ToolSchema(
                 type="object",
                 properties={"a": {"type": "number"}, "b": {"type": "number"}},
-                required=[]
+                required=[],
             ),
-            execute=calculator_fn
+            execute=calculator_fn,
         )
 
         registry.register(tool)
@@ -52,10 +52,7 @@ class TestToolExecutionIntegration:
         # Create state with plan.tools
         state = PipelineState(
             query="What is 1 + 2?",
-            plan={
-                "tools": ["calculator"],
-                "calculator_input": {"a": 1, "b": 2}
-            }
+            plan={"tools": ["calculator"], "calculator_input": {"a": 1, "b": 2}},
         )
 
         # Execute step4
@@ -77,29 +74,29 @@ class TestToolExecutionIntegration:
         if "FEATURE_MCP_TOOLS" in os.environ:
             del os.environ["FEATURE_MCP_TOOLS"]
 
-        state = PipelineState(
-            query="Test query",
-            plan={"tools": ["calculator"]}
-        )
+        state = PipelineState(query="Test query", plan={"tools": ["calculator"]})
 
         result_state = await step4_tools_debate(state)
 
         # Verify state is unchanged
-        assert not hasattr(result_state, "tool_results") or len(result_state.tool_results) == 0
+        assert (
+            not hasattr(result_state, "tool_results")
+            or len(result_state.tool_results) == 0
+        )
 
     async def test_step4_no_tools_in_plan(self):
         """TEST-TOOLS-016: step4 skips when plan.tools is empty"""
         os.environ["FEATURE_MCP_TOOLS"] = "true"
 
-        state = PipelineState(
-            query="Test query",
-            plan={"tools": []}
-        )
+        state = PipelineState(query="Test query", plan={"tools": []})
 
         result_state = await step4_tools_debate(state)
 
         # Verify no tools executed
-        assert not hasattr(result_state, "tool_results") or len(result_state.tool_results) == 0
+        assert (
+            not hasattr(result_state, "tool_results")
+            or len(result_state.tool_results) == 0
+        )
 
         # Clean up
         del os.environ["FEATURE_MCP_TOOLS"]
@@ -115,7 +112,7 @@ class TestToolExecutionIntegration:
             name="web_search",
             description="Search web",
             input_schema=ToolSchema(type="object", properties={}, required=[]),
-            execute=web_search_fn
+            execute=web_search_fn,
         )
 
         registry.register(tool)
@@ -126,8 +123,7 @@ class TestToolExecutionIntegration:
         os.environ["TOOL_WHITELIST"] = "calculator"  # web_search not allowed
 
         state = PipelineState(
-            query="Search for something",
-            plan={"tools": ["web_search"]}
+            query="Search for something", plan={"tools": ["web_search"]}
         )
 
         result_state = await step4_tools_debate(state)
@@ -156,14 +152,14 @@ class TestToolExecutionIntegration:
             name="good_tool",
             description="Works",
             input_schema=ToolSchema(type="object", properties={}, required=[]),
-            execute=good_tool_fn
+            execute=good_tool_fn,
         )
 
         bad_tool = Tool(
             name="bad_tool",
             description="Fails",
             input_schema=ToolSchema(type="object", properties={}, required=[]),
-            execute=bad_tool_fn
+            execute=bad_tool_fn,
         )
 
         registry.register(good_tool)
@@ -171,10 +167,7 @@ class TestToolExecutionIntegration:
 
         os.environ["FEATURE_MCP_TOOLS"] = "true"
 
-        state = PipelineState(
-            query="Test",
-            plan={"tools": ["good_tool", "bad_tool"]}
-        )
+        state = PipelineState(query="Test", plan={"tools": ["good_tool", "bad_tool"]})
 
         result_state = await step4_tools_debate(state)
 

@@ -61,9 +61,7 @@ class TestDebateAgent:
             mock_service = MagicMock()
             mock_response = MagicMock()
             mock_response.text = "Boiler failures are caused by maintenance issues, corrosion, and overheating. [Sources: 1, 2]"
-            mock_service.model.generate_content = MagicMock(
-                return_value=mock_response
-            )
+            mock_service.model.generate_content = MagicMock(return_value=mock_response)
             mock_llm.return_value = mock_service
 
             answer = await agent.generate_answer(
@@ -75,9 +73,7 @@ class TestDebateAgent:
             assert "maintenance" in answer.lower() or "corrosion" in answer.lower()
 
     @pytest.mark.asyncio
-    async def test_critical_agent_round1_generation(
-        self, sample_query, sample_context
-    ):
+    async def test_critical_agent_round1_generation(self, sample_query, sample_context):
         """TEST-DEBATE-001-002: Critical agent generates skeptical answer in Round 1"""
         from apps.orchestration.src.debate.debate_engine import DebateAgent
 
@@ -89,9 +85,7 @@ class TestDebateAgent:
             mock_service = MagicMock()
             mock_response = MagicMock()
             mock_response.text = "However, the evidence is incomplete. Other factors like installation quality may be important."
-            mock_service.model.generate_content = MagicMock(
-                return_value=mock_response
-            )
+            mock_service.model.generate_content = MagicMock(return_value=mock_response)
             mock_llm.return_value = mock_service
 
             answer = await agent.generate_answer(
@@ -109,7 +103,9 @@ class TestDebateAgent:
         from apps.orchestration.src.debate.debate_engine import DebateAgent
 
         agent = DebateAgent(role="affirmative", max_tokens=500)
-        opponent_answer = "The evidence is limited and doesn't cover installation quality."
+        opponent_answer = (
+            "The evidence is limited and doesn't cover installation quality."
+        )
 
         with patch(
             "apps.orchestration.src.debate.debate_engine.get_llm_service_cached"
@@ -117,9 +113,7 @@ class TestDebateAgent:
             mock_service = MagicMock()
             mock_response = MagicMock()
             mock_response.text = "You're right about installation quality. However, maintenance remains the top cause according to multiple sources."
-            mock_service.model.generate_content = MagicMock(
-                return_value=mock_response
-            )
+            mock_service.model.generate_content = MagicMock(return_value=mock_response)
             mock_llm.return_value = mock_service
 
             improved_answer = await agent.generate_answer(
@@ -146,9 +140,7 @@ class TestDebateAgent:
             long_answer = " ".join(["word"] * 1000)
             mock_response = MagicMock()
             mock_response.text = long_answer
-            mock_service.model.generate_content = MagicMock(
-                return_value=mock_response
-            )
+            mock_service.model.generate_content = MagicMock(return_value=mock_response)
             mock_llm.return_value = mock_service
 
             answer = await agent.generate_answer(
@@ -175,9 +167,7 @@ class TestDebateEngine:
             mock_service = MagicMock()
             mock_response = MagicMock()
             mock_response.text = "Mocked answer"
-            mock_service.model.generate_content = MagicMock(
-                return_value=mock_response
-            )
+            mock_service.model.generate_content = MagicMock(return_value=mock_response)
             mock_llm.return_value = mock_service
 
             result = await engine.run_debate(
@@ -203,6 +193,7 @@ class TestDebateEngine:
 
             def slow_llm(*args, **kwargs):
                 import time
+
                 time.sleep(15)
                 mock_response = MagicMock()
                 mock_response.text = "Too late"
@@ -256,9 +247,7 @@ class TestDebateEngine:
             mock_service = MagicMock()
             mock_response = MagicMock()
             mock_response.text = "Answer"
-            mock_service.model.generate_content = MagicMock(
-                return_value=mock_response
-            )
+            mock_service.model.generate_content = MagicMock(return_value=mock_response)
             mock_llm.return_value = mock_service
 
             result = await engine.run_debate(

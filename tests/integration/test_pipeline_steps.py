@@ -13,7 +13,11 @@ Tests 7-step pipeline functionality:
 import pytest
 from unittest.mock import patch
 from apps.orchestration.src.langgraph_pipeline import (
-    LangGraphPipeline, PipelineRequest, step3_plan, step4_tools_debate, step6_cite
+    LangGraphPipeline,
+    PipelineRequest,
+    step3_plan,
+    step4_tools_debate,
+    step6_cite,
 )
 
 
@@ -25,11 +29,13 @@ class TestPipelineSteps:
         """TEST-STEP-001: meta_planner=False 시 step3 스킵"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {"meta_planner": False}
             mock_env_mgr.return_value = mock_mgr
 
             from apps.orchestration.src.langgraph_pipeline import PipelineState
+
             state = PipelineState(query="test")
 
             result = await step3_plan(state)
@@ -42,18 +48,22 @@ class TestPipelineSteps:
         """TEST-STEP-002: meta_planner=True 시 step3 실행"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {"meta_planner": True}
             mock_env_mgr.return_value = mock_mgr
 
-            with patch("apps.orchestration.src.meta_planner.generate_plan") as mock_gen_plan:
+            with patch(
+                "apps.orchestration.src.meta_planner.generate_plan"
+            ) as mock_gen_plan:
                 mock_gen_plan.return_value = {
                     "tools": ["case_search"],
                     "steps": ["retrieve", "compose"],
-                    "strategy": "simple"
+                    "strategy": "simple",
                 }
 
                 from apps.orchestration.src.langgraph_pipeline import PipelineState
+
                 state = PipelineState(query="test")
 
                 result = await step3_plan(state)
@@ -66,14 +76,16 @@ class TestPipelineSteps:
         """TEST-STEP-003: debate_mode=False, tools_policy=False 시 step4 스킵"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {
                 "debate_mode": False,
-                "tools_policy": False
+                "tools_policy": False,
             }
             mock_env_mgr.return_value = mock_mgr
 
             from apps.orchestration.src.langgraph_pipeline import PipelineState
+
             state = PipelineState(query="test")
 
             result = await step4_tools_debate(state)
@@ -86,14 +98,16 @@ class TestPipelineSteps:
         """TEST-STEP-004: debate_mode=True 시 step4 실행"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {
                 "debate_mode": True,
-                "tools_policy": False
+                "tools_policy": False,
             }
             mock_env_mgr.return_value = mock_mgr
 
             from apps.orchestration.src.langgraph_pipeline import PipelineState
+
             state = PipelineState(query="test")
 
             result = await step4_tools_debate(state)
@@ -105,6 +119,7 @@ class TestPipelineSteps:
     async def test_step6_cite_executes(self):
         """TEST-STEP-005: step6_cite always executes"""
         from apps.orchestration.src.langgraph_pipeline import PipelineState
+
         state = PipelineState(query="test")
 
         result = await step6_cite(state)
@@ -117,19 +132,29 @@ class TestPipelineSteps:
         """TEST-STEP-006: 7-step 순차 실행 검증"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {
                 "meta_planner": False,
                 "debate_mode": False,
-                "tools_policy": False
+                "tools_policy": False,
             }
             mock_env_mgr.return_value = mock_mgr
 
-            with patch("apps.orchestration.src.langgraph_pipeline.step1_intent") as mock_step1, \
-                 patch("apps.orchestration.src.langgraph_pipeline.step2_retrieve") as mock_step2, \
-                 patch("apps.orchestration.src.langgraph_pipeline.step5_compose") as mock_step5, \
-                 patch("apps.orchestration.src.langgraph_pipeline.step7_respond") as mock_step7:
-
+            with (
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step1_intent"
+                ) as mock_step1,
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step2_retrieve"
+                ) as mock_step2,
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step5_compose"
+                ) as mock_step5,
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step7_respond"
+                ) as mock_step7,
+            ):
 
                 async def passthrough(state):
                     return state
@@ -164,19 +189,29 @@ class TestPipelineSteps:
         """TEST-STEP-007: 기존 4-step 파이프라인 100% 동작 확인"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {
                 "meta_planner": False,
                 "debate_mode": False,
-                "tools_policy": False
+                "tools_policy": False,
             }
             mock_env_mgr.return_value = mock_mgr
 
-            with patch("apps.orchestration.src.langgraph_pipeline.step1_intent") as mock_step1, \
-                 patch("apps.orchestration.src.langgraph_pipeline.step2_retrieve") as mock_step2, \
-                 patch("apps.orchestration.src.langgraph_pipeline.step5_compose") as mock_step5, \
-                 patch("apps.orchestration.src.langgraph_pipeline.step7_respond") as mock_step7:
-
+            with (
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step1_intent"
+                ) as mock_step1,
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step2_retrieve"
+                ) as mock_step2,
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step5_compose"
+                ) as mock_step5,
+                patch(
+                    "apps.orchestration.src.langgraph_pipeline.step7_respond"
+                ) as mock_step7,
+            ):
 
                 async def passthrough(state):
                     return state
@@ -204,18 +239,22 @@ class TestPipelineSteps:
         """TEST-PLANNER-001-010: step3_plan() 실제 실행 시 plan 필드 추가"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {"meta_planner": True}
             mock_env_mgr.return_value = mock_mgr
 
-            with patch("apps.orchestration.src.meta_planner.generate_plan") as mock_gen_plan:
+            with patch(
+                "apps.orchestration.src.meta_planner.generate_plan"
+            ) as mock_gen_plan:
                 mock_gen_plan.return_value = {
                     "tools": ["case_search"],
                     "steps": ["retrieve", "compose"],
-                    "strategy": "simple"
+                    "strategy": "simple",
                 }
 
                 from apps.orchestration.src.langgraph_pipeline import PipelineState
+
                 state = PipelineState(query="보일러 고장 사례")
 
                 result = await step3_plan(state)
@@ -228,11 +267,13 @@ class TestPipelineSteps:
         """TEST-PLANNER-001-011: meta_planner=False 시 plan 필드 미추가"""
         with patch("apps.api.env_manager.get_env_manager") as mock_env_mgr:
             from unittest.mock import MagicMock
+
             mock_mgr = MagicMock()
             mock_mgr.get_feature_flags.return_value = {"meta_planner": False}
             mock_env_mgr.return_value = mock_mgr
 
             from apps.orchestration.src.langgraph_pipeline import PipelineState
+
             state = PipelineState(query="test")
 
             result = await step3_plan(state)

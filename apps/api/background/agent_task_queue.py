@@ -38,7 +38,7 @@ class AgentTaskQueue:
         """
         self.job_queue = job_queue or JobQueue()
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize underlying JobQueue"""
         await self.job_queue.initialize()
 
@@ -59,7 +59,7 @@ class AgentTaskQueue:
         agent_id: UUID,
         taxonomy_node_ids: List[UUID],
         taxonomy_version: str,
-        webhook_url: Optional[str] = None
+        webhook_url: Optional[str] = None,
     ) -> str:
         """
         Enqueue coverage refresh task
@@ -81,14 +81,11 @@ class AgentTaskQueue:
             "taxonomy_node_ids": [str(nid) for nid in taxonomy_node_ids],
             "taxonomy_version": taxonomy_version,
             "task_type": "coverage_refresh",
-            "webhook_url": webhook_url
+            "webhook_url": webhook_url,
         }
 
         await self.job_queue.enqueue_job(
-            job_id=task_id,
-            command_id=task_id,
-            job_data=job_data,
-            priority=5
+            job_id=task_id, command_id=task_id, job_data=job_data, priority=5
         )
 
         logger.info(
@@ -139,7 +136,7 @@ class AgentTaskQueue:
             queue_key = self._get_queue_key(priority)
 
             try:
-                items = await self.job_queue.redis_manager.lrange(queue_key, 0, -1)
+                items = await self.job_queue.redis_manager.lrange(queue_key, 0, -1)  # type: ignore[union-attr]
 
                 if not items:
                     continue
@@ -147,30 +144,42 @@ class AgentTaskQueue:
                 for item in items:
                     try:
                         if isinstance(item, bytes):
-                            item_str = item.decode('utf-8')
+                            item_str = item.decode("utf-8")
                         else:
                             item_str = item
 
                         job_payload = json.loads(item_str)
 
                         if job_payload.get("job_id") == task_id:
-                            removed_count = await self.job_queue.redis_manager.lrem(
-                                queue_key, 1, item_str.encode('utf-8') if isinstance(item_str, str) else item
+                            removed_count = await self.job_queue.redis_manager.lrem(  # type: ignore[union-attr]
+                                queue_key,
+                                1,
+                                (
+                                    item_str.encode("utf-8")
+                                    if isinstance(item_str, str)
+                                    else item
+                                ),
                             )
 
                             if removed_count > 0:
-                                logger.info(f"Task removed: task_id={task_id}, queue={priority}")
+                                logger.info(
+                                    f"Task removed: task_id={task_id}, queue={priority}"
+                                )
                                 return True
 
                     except json.JSONDecodeError as e:
                         logger.warning(f"Failed to parse job payload: {e}")
                         continue
                     except Exception as e:
-                        logger.warning(f"Error processing item in {priority} queue: {e}")
+                        logger.warning(
+                            f"Error processing item in {priority} queue: {e}"
+                        )
                         continue
 
             except Exception as e:
-                logger.error(f"Failed to remove job {task_id} from {priority} queue: {e}")
+                logger.error(
+                    f"Failed to remove job {task_id} from {priority} queue: {e}"
+                )
                 continue
 
         logger.warning(f"Task not found in any queue: task_id={task_id}")

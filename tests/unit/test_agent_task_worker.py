@@ -28,7 +28,7 @@ class TestAgentTaskWorker:
         """
         worker = AgentTaskWorker(worker_id=0)
 
-        with patch.object(worker, '_worker_loop', new_callable=AsyncMock) as mock_loop:
+        with patch.object(worker, "_worker_loop", new_callable=AsyncMock) as mock_loop:
             mock_loop.side_effect = asyncio.CancelledError()
 
             worker_task = asyncio.create_task(worker.start())
@@ -63,15 +63,22 @@ class TestAgentTaskWorker:
                 "agent_id": str(uuid.uuid4()),
                 "taxonomy_node_ids": [str(uuid.uuid4())],
                 "taxonomy_version": "1.0.0",
-                "task_type": "coverage_refresh"
+                "task_type": "coverage_refresh",
             },
-            "priority": 5
+            "priority": 5,
         }
 
-        with patch.object(worker.task_queue.job_queue, 'dequeue_job', new_callable=AsyncMock) as mock_dequeue:
-            mock_dequeue.side_effect = [mock_job_payload, None]  # Return job once, then None
+        with patch.object(
+            worker.task_queue.job_queue, "dequeue_job", new_callable=AsyncMock
+        ) as mock_dequeue:
+            mock_dequeue.side_effect = [
+                mock_job_payload,
+                None,
+            ]  # Return job once, then None
 
-            with patch.object(worker, '_process_coverage_task', new_callable=AsyncMock) as mock_process:
+            with patch.object(
+                worker, "_process_coverage_task", new_callable=AsyncMock
+            ) as mock_process:
                 worker_task = asyncio.create_task(worker._worker_loop())
 
                 await asyncio.sleep(0.2)
@@ -106,7 +113,7 @@ class TestAgentTaskWorker:
             "agent_id": str(agent_id),
             "taxonomy_node_ids": [str(uuid.uuid4())],
             "taxonomy_version": "1.0.0",
-            "task_type": "coverage_refresh"
+            "task_type": "coverage_refresh",
         }
 
         mock_session = AsyncMock()
@@ -132,19 +139,34 @@ class TestAgentTaskWorker:
         mock_coverage_result.total_documents = 100
         mock_coverage_result.total_chunks = 500
 
-        with patch('apps.api.background.agent_task_worker.async_session', return_value=mock_session):
-            with patch('apps.api.background.agent_task_worker.AgentDAO.get_agent', new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.background.agent_task_worker.async_session",
+            return_value=mock_session,
+        ):
+            with patch(
+                "apps.api.background.agent_task_worker.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent:
                 mock_get_agent.return_value = mock_agent
 
-                with patch('apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage', new_callable=AsyncMock) as mock_calculate:
+                with patch(
+                    "apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage",
+                    new_callable=AsyncMock,
+                ) as mock_calculate:
                     mock_calculate.return_value = mock_coverage_result
 
                     await worker._process_coverage_task(task_id, job_data)
 
-                    assert mock_task.status == "completed", "Task status should be 'completed'"
+                    assert (
+                        mock_task.status == "completed"
+                    ), "Task status should be 'completed'"
                     assert mock_task.started_at is not None, "started_at should be set"
-                    assert mock_task.completed_at is not None, "completed_at should be set"
-                    assert mock_task.result is not None, "result should contain coverage data"
+                    assert (
+                        mock_task.completed_at is not None
+                    ), "completed_at should be set"
+                    assert (
+                        mock_task.result is not None
+                    ), "result should contain coverage data"
 
                     mock_session.commit.assert_called()
 
@@ -167,7 +189,7 @@ class TestAgentTaskWorker:
             "agent_id": str(agent_id),
             "taxonomy_node_ids": [str(uuid.uuid4())],
             "taxonomy_version": "1.0.0",
-            "task_type": "coverage_refresh"
+            "task_type": "coverage_refresh",
         }
 
         mock_session = AsyncMock()
@@ -188,17 +210,30 @@ class TestAgentTaskWorker:
         async def slow_calculation(*args, **kwargs):
             await asyncio.sleep(10)  # Exceed timeout
 
-        with patch('apps.api.background.agent_task_worker.async_session', return_value=mock_session):
-            with patch('apps.api.background.agent_task_worker.AgentDAO.get_agent', new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.background.agent_task_worker.async_session",
+            return_value=mock_session,
+        ):
+            with patch(
+                "apps.api.background.agent_task_worker.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent:
                 mock_get_agent.return_value = mock_agent
 
-                with patch('apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage', new_callable=AsyncMock) as mock_calculate:
+                with patch(
+                    "apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage",
+                    new_callable=AsyncMock,
+                ) as mock_calculate:
                     mock_calculate.side_effect = slow_calculation
 
                     await worker._process_coverage_task(task_id, job_data)
 
-                    assert mock_task.status == "timeout", "Task status should be 'timeout'"
-                    assert "timeout" in mock_task.error.lower(), "Error message should mention timeout"
+                    assert (
+                        mock_task.status == "timeout"
+                    ), "Task status should be 'timeout'"
+                    assert (
+                        "timeout" in mock_task.error.lower()
+                    ), "Error message should mention timeout"
                     mock_session.commit.assert_called()
 
     @pytest.mark.asyncio
@@ -219,7 +254,7 @@ class TestAgentTaskWorker:
             "agent_id": str(agent_id),
             "taxonomy_node_ids": [str(uuid.uuid4())],
             "taxonomy_version": "1.0.0",
-            "task_type": "coverage_refresh"
+            "task_type": "coverage_refresh",
         }
 
         mock_session = AsyncMock()
@@ -234,7 +269,10 @@ class TestAgentTaskWorker:
         mock_session.get = AsyncMock(return_value=mock_task)
         mock_session.commit = AsyncMock()
 
-        with patch('apps.api.background.agent_task_worker.async_session', return_value=mock_session):
+        with patch(
+            "apps.api.background.agent_task_worker.async_session",
+            return_value=mock_session,
+        ):
             await worker._process_coverage_task(task_id, job_data)
 
             assert mock_task.status == "cancelled", "Task status should be 'cancelled'"
@@ -259,7 +297,7 @@ class TestAgentTaskWorker:
             "agent_id": str(agent_id),
             "taxonomy_node_ids": [str(uuid.uuid4())],
             "taxonomy_version": "1.0.0",
-            "task_type": "coverage_refresh"
+            "task_type": "coverage_refresh",
         }
 
         mock_session = AsyncMock()
@@ -280,6 +318,7 @@ class TestAgentTaskWorker:
         mock_session.get = AsyncMock(return_value=mock_task)
 
         original_commit = AsyncMock()
+
         async def commit_with_tracking(*args, **kwargs):
             track_progress()
             return await original_commit(*args, **kwargs)
@@ -296,17 +335,28 @@ class TestAgentTaskWorker:
         mock_coverage_result.total_documents = 100
         mock_coverage_result.total_chunks = 500
 
-        with patch('apps.api.background.agent_task_worker.async_session', return_value=mock_session):
-            with patch('apps.api.background.agent_task_worker.AgentDAO.get_agent', new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.background.agent_task_worker.async_session",
+            return_value=mock_session,
+        ):
+            with patch(
+                "apps.api.background.agent_task_worker.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent:
                 mock_get_agent.return_value = mock_agent
 
-                with patch('apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage', new_callable=AsyncMock) as mock_calculate:
+                with patch(
+                    "apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage",
+                    new_callable=AsyncMock,
+                ) as mock_calculate:
                     mock_calculate.return_value = mock_coverage_result
 
                     await worker._process_coverage_task(task_id, job_data)
 
                     assert len(progress_values) > 0, "Progress should be tracked"
-                    assert any(p > 0.0 for p in progress_values), "Progress should increase"
+                    assert any(
+                        p > 0.0 for p in progress_values
+                    ), "Progress should increase"
 
     @pytest.mark.asyncio
     async def test_process_coverage_task_inserts_coverage_history(self):
@@ -326,7 +376,7 @@ class TestAgentTaskWorker:
             "agent_id": str(agent_id),
             "taxonomy_node_ids": [str(uuid.uuid4())],
             "taxonomy_version": "1.0.0",
-            "task_type": "coverage_refresh"
+            "task_type": "coverage_refresh",
         }
 
         mock_session = AsyncMock()
@@ -351,24 +401,46 @@ class TestAgentTaskWorker:
         mock_coverage_result.total_documents = 90
         mock_coverage_result.total_chunks = 450
 
-        with patch('apps.api.background.agent_task_worker.async_session', return_value=mock_session):
-            with patch('apps.api.background.agent_task_worker.AgentDAO.get_agent', new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.background.agent_task_worker.async_session",
+            return_value=mock_session,
+        ):
+            with patch(
+                "apps.api.background.agent_task_worker.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent:
                 mock_get_agent.return_value = mock_agent
 
-                with patch('apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage', new_callable=AsyncMock) as mock_calculate:
+                with patch(
+                    "apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage",
+                    new_callable=AsyncMock,
+                ) as mock_calculate:
                     mock_calculate.return_value = mock_coverage_result
 
-                    with patch('apps.api.background.agent_task_worker.CoverageHistoryDAO.insert_history', new_callable=AsyncMock) as mock_insert:
+                    with patch(
+                        "apps.api.background.agent_task_worker.CoverageHistoryDAO.insert_history",
+                        new_callable=AsyncMock,
+                    ) as mock_insert:
                         await worker._process_coverage_task(task_id, job_data)
 
                         mock_insert.assert_called_once()
 
                         call_args = mock_insert.call_args
-                        assert call_args.kwargs['agent_id'] == agent_id, "agent_id should match"
-                        assert call_args.kwargs['overall_coverage'] == 75.0, "overall_coverage should match"
-                        assert call_args.kwargs['total_documents'] == 90, "total_documents should match"
-                        assert call_args.kwargs['total_chunks'] == 450, "total_chunks should match"
-                        assert call_args.kwargs['version'] == "1.0.0", "version should match"
+                        assert (
+                            call_args.kwargs["agent_id"] == agent_id
+                        ), "agent_id should match"
+                        assert (
+                            call_args.kwargs["overall_coverage"] == 75.0
+                        ), "overall_coverage should match"
+                        assert (
+                            call_args.kwargs["total_documents"] == 90
+                        ), "total_documents should match"
+                        assert (
+                            call_args.kwargs["total_chunks"] == 450
+                        ), "total_chunks should match"
+                        assert (
+                            call_args.kwargs["version"] == "1.0.0"
+                        ), "version should match"
 
     @pytest.mark.asyncio
     async def test_process_coverage_task_sends_webhook(self):
@@ -391,7 +463,7 @@ class TestAgentTaskWorker:
             "taxonomy_node_ids": [str(uuid.uuid4())],
             "taxonomy_version": "1.0.0",
             "task_type": "coverage_refresh",
-            "webhook_url": webhook_url
+            "webhook_url": webhook_url,
         }
 
         mock_session = AsyncMock()
@@ -417,14 +489,26 @@ class TestAgentTaskWorker:
         mock_coverage_result.total_documents = 110
         mock_coverage_result.total_chunks = 550
 
-        with patch('apps.api.background.agent_task_worker.async_session', return_value=mock_session):
-            with patch('apps.api.background.agent_task_worker.AgentDAO.get_agent', new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.background.agent_task_worker.async_session",
+            return_value=mock_session,
+        ):
+            with patch(
+                "apps.api.background.agent_task_worker.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent:
                 mock_get_agent.return_value = mock_agent
 
-                with patch('apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage', new_callable=AsyncMock) as mock_calculate:
+                with patch(
+                    "apps.api.background.agent_task_worker.CoverageMeterService.calculate_coverage",
+                    new_callable=AsyncMock,
+                ) as mock_calculate:
                     mock_calculate.return_value = mock_coverage_result
 
-                    with patch('apps.api.background.agent_task_worker.WebhookService.send_webhook', new_callable=AsyncMock) as mock_webhook:
+                    with patch(
+                        "apps.api.background.agent_task_worker.WebhookService.send_webhook",
+                        new_callable=AsyncMock,
+                    ) as mock_webhook:
                         mock_webhook.return_value = True
 
                         await worker._process_coverage_task(task_id, job_data)
@@ -435,8 +519,16 @@ class TestAgentTaskWorker:
                         assert call_args.args[0] == webhook_url, "URL should match"
 
                         payload = call_args.args[1]
-                        assert payload['task_id'] == task_id, "Payload should include task_id"
-                        assert payload['agent_id'] == str(agent_id), "Payload should include agent_id"
-                        assert payload['status'] == "completed", "Payload should include status"
-                        assert 'result' in payload, "Payload should include result"
-                        assert 'completed_at' in payload, "Payload should include completed_at"
+                        assert (
+                            payload["task_id"] == task_id
+                        ), "Payload should include task_id"
+                        assert payload["agent_id"] == str(
+                            agent_id
+                        ), "Payload should include agent_id"
+                        assert (
+                            payload["status"] == "completed"
+                        ), "Payload should include status"
+                        assert "result" in payload, "Payload should include result"
+                        assert (
+                            "completed_at" in payload
+                        ), "Payload should include completed_at"

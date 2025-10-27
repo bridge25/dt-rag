@@ -46,7 +46,7 @@ Final sentence number fourteen for completion."""
         "parsing": {
             "input_size_bytes": len(file_content),
             "output_size_chars": len(parsed_text),
-            "success": len(parsed_text) > 0
+            "success": len(parsed_text) > 0,
         },
         "chunking": {
             "total_chunks": len(chunks),
@@ -54,29 +54,40 @@ Final sentence number fourteen for completion."""
             "max_tokens_in_chunk": max(c.token_count for c in chunks),
             "min_tokens_in_chunk": min(c.token_count for c in chunks),
             "sentence_boundary_preservation_rate": boundary_rate,
-            "chunks_preserving_boundaries": sum(1 for c in chunks if c.sentence_boundary_preserved),
+            "chunks_preserving_boundaries": sum(
+                1 for c in chunks if c.sentence_boundary_preserved
+            ),
             "configured_chunk_size": chunker.chunk_size,
-            "configured_overlap": chunker.overlap_size
+            "configured_overlap": chunker.overlap_size,
         },
         "pii_detection": {
             "total_pii_found": len(pii_matches),
             "unique_pii_types": len(set(m.pii_type for m in pii_matches)),
             "pii_types_detected": [m.pii_type.value for m in pii_matches],
-            "phone_numbers_detected": sum(1 for m in pii_matches if m.pii_type == PIIType.PHONE_NUMBER),
-            "emails_detected": sum(1 for m in pii_matches if m.pii_type == PIIType.EMAIL),
-            "masking_successful": "010-1234-5678" not in masked_text and "user@example.com" not in masked_text
+            "phone_numbers_detected": sum(
+                1 for m in pii_matches if m.pii_type == PIIType.PHONE_NUMBER
+            ),
+            "emails_detected": sum(
+                1 for m in pii_matches if m.pii_type == PIIType.EMAIL
+            ),
+            "masking_successful": "010-1234-5678" not in masked_text
+            and "user@example.com" not in masked_text,
         },
         "performance": {
             "total_processing_time_ms": processing_time,
-            "throughput_bytes_per_sec": (len(file_content) / processing_time) * 1000 if processing_time > 0 else 0
-        }
+            "throughput_bytes_per_sec": (
+                (len(file_content) / processing_time) * 1000
+                if processing_time > 0
+                else 0
+            ),
+        },
     }
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("INGESTION PIPELINE METRICS REPORT")
-    print("="*80)
+    print("=" * 80)
     print(json.dumps(metrics, indent=2))
-    print("="*80)
+    print("=" * 80)
 
     assert metrics["parsing"]["success"]
     assert metrics["chunking"]["total_chunks"] > 0
@@ -95,18 +106,22 @@ def test_chunking_boundary_preservation_detailed():
         {
             "name": "Short text (single chunk)",
             "text": "This is a short text. It has only two sentences.",
-            "expected_chunks": 1
+            "expected_chunks": 1,
         },
         {
             "name": "Medium text (multiple chunks)",
-            "text": ". ".join([f"Sentence number {i} with some content" for i in range(20)]),
-            "expected_chunks": ">=1"
+            "text": ". ".join(
+                [f"Sentence number {i} with some content" for i in range(20)]
+            ),
+            "expected_chunks": ">=1",
         },
         {
             "name": "Text with long sentence",
-            "text": "Short sentence. " + " ".join(["word"] * 200) + ". Another short sentence.",
-            "expected_chunks": ">=1"
-        }
+            "text": "Short sentence. "
+            + " ".join(["word"] * 200)
+            + ". Another short sentence.",
+            "expected_chunks": ">=1",
+        },
     ]
 
     results = []
@@ -124,10 +139,10 @@ def test_chunking_boundary_preservation_detailed():
                 {
                     "tokens": c.token_count,
                     "boundary_preserved": c.sentence_boundary_preserved,
-                    "text_preview": c.text[:50] + "..." if len(c.text) > 50 else c.text
+                    "text_preview": c.text[:50] + "..." if len(c.text) > 50 else c.text,
                 }
                 for c in chunks
-            ]
+            ],
         }
 
         results.append(result)
@@ -135,11 +150,11 @@ def test_chunking_boundary_preservation_detailed():
         assert len(chunks) > 0
         assert all(c.token_count <= 500 for c in chunks)
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("CHUNKING BOUNDARY PRESERVATION DETAILED REPORT")
-    print("="*80)
+    print("=" * 80)
     print(json.dumps(results, indent=2))
-    print("="*80)
+    print("=" * 80)
 
 
 def test_pii_detection_accuracy():
@@ -151,26 +166,26 @@ def test_pii_detection_accuracy():
             "name": "Phone number (Korean format)",
             "text": "Contact: 010-1234-5678",
             "expected_pii_types": [PIIType.PHONE_NUMBER],
-            "should_mask": "010-1234-5678"
+            "should_mask": "010-1234-5678",
         },
         {
             "name": "Email address",
             "text": "Send to: test@example.com",
             "expected_pii_types": [PIIType.EMAIL],
-            "should_mask": "test@example.com"
+            "should_mask": "test@example.com",
         },
         {
             "name": "Multiple PII types",
             "text": "Contact 010-1111-2222 or test@test.com",
             "expected_pii_types": [PIIType.PHONE_NUMBER, PIIType.EMAIL],
-            "should_mask": "010-1111-2222"
+            "should_mask": "010-1111-2222",
         },
         {
             "name": "No PII",
             "text": "This is clean text without any personal information",
             "expected_pii_types": [],
-            "should_mask": None
-        }
+            "should_mask": None,
+        },
     ]
 
     results = []
@@ -187,22 +202,28 @@ def test_pii_detection_accuracy():
             "pii_found": len(matches),
             "detected_types": [t.value for t in detected_types],
             "masked_text": masked_text,
-            "masking_successful": test_case["should_mask"] not in masked_text if test_case["should_mask"] else True
+            "masking_successful": (
+                test_case["should_mask"] not in masked_text
+                if test_case["should_mask"]
+                else True
+            ),
         }
 
         results.append(result)
 
         for expected_type in test_case["expected_pii_types"]:
-            assert expected_type in detected_types, f"Expected {expected_type} not found in {detected_types}"
+            assert (
+                expected_type in detected_types
+            ), f"Expected {expected_type} not found in {detected_types}"
 
         if test_case["should_mask"]:
             assert test_case["should_mask"] not in masked_text
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("PII DETECTION ACCURACY REPORT")
-    print("="*80)
+    print("=" * 80)
     print(json.dumps(results, indent=2))
-    print("="*80)
+    print("=" * 80)
 
 
 if __name__ == "__main__":

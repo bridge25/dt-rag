@@ -54,19 +54,22 @@ def mock_agent():
         features_config={},
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
-        last_query_at=None
+        last_query_at=None,
     )
 
 
 def test_create_agent_success(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.validate_taxonomy_nodes", new_callable=AsyncMock) as mock_validate:
-        with patch("apps.api.routers.agent_router.AgentDAO.create_agent", new_callable=AsyncMock, return_value=mock_agent):
+    with patch(
+        "apps.api.routers.agent_router.validate_taxonomy_nodes", new_callable=AsyncMock
+    ) as mock_validate:
+        with patch(
+            "apps.api.routers.agent_router.AgentDAO.create_agent",
+            new_callable=AsyncMock,
+            return_value=mock_agent,
+        ):
             response = test_client.post(
                 "/api/v1/agents/from-taxonomy",
-                json={
-                    "name": "Test Agent",
-                    "taxonomy_node_ids": [str(uuid4())]
-                }
+                json={"name": "Test Agent", "taxonomy_node_ids": [str(uuid4())]},
             )
 
             assert response.status_code == 201
@@ -76,13 +79,13 @@ def test_create_agent_success(test_client, mock_agent):
 
 
 def test_create_agent_invalid_taxonomy_nodes(test_client):
-    with patch("apps.api.routers.agent_router.validate_taxonomy_nodes", side_effect=ValueError("Invalid taxonomy node IDs")):
+    with patch(
+        "apps.api.routers.agent_router.validate_taxonomy_nodes",
+        side_effect=ValueError("Invalid taxonomy node IDs"),
+    ):
         response = test_client.post(
             "/api/v1/agents/from-taxonomy",
-            json={
-                "name": "Test Agent",
-                "taxonomy_node_ids": [str(uuid4())]
-            }
+            json={"name": "Test Agent", "taxonomy_node_ids": [str(uuid4())]},
         )
 
         assert response.status_code == 400
@@ -92,10 +95,7 @@ def test_create_agent_invalid_taxonomy_nodes(test_client):
 def test_create_agent_empty_name(test_client):
     response = test_client.post(
         "/api/v1/agents/from-taxonomy",
-        json={
-            "name": "",
-            "taxonomy_node_ids": [str(uuid4())]
-        }
+        json={"name": "", "taxonomy_node_ids": [str(uuid4())]},
     )
 
     assert response.status_code == 422
@@ -104,17 +104,18 @@ def test_create_agent_empty_name(test_client):
 def test_create_agent_missing_api_key(test_client_no_auth):
     response = test_client_no_auth.post(
         "/api/v1/agents/from-taxonomy",
-        json={
-            "name": "Test Agent",
-            "taxonomy_node_ids": [str(uuid4())]
-        }
+        json={"name": "Test Agent", "taxonomy_node_ids": [str(uuid4())]},
     )
 
     assert response.status_code == 403
 
 
 def test_get_agent_success(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
         response = test_client.get(f"/api/v1/agents/{mock_agent.agent_id}")
 
         assert response.status_code == 200
@@ -123,7 +124,11 @@ def test_get_agent_success(test_client, mock_agent):
 
 
 def test_get_agent_not_found(test_client):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=None):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         response = test_client.get(f"/api/v1/agents/{uuid4()}")
 
         assert response.status_code == 404
@@ -137,7 +142,11 @@ def test_get_agent_invalid_uuid(test_client):
 
 
 def test_list_agents_no_filters(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.list_agents", new_callable=AsyncMock, return_value=[mock_agent]):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.list_agents",
+        new_callable=AsyncMock,
+        return_value=[mock_agent],
+    ):
         response = test_client.get("/api/v1/agents")
 
         assert response.status_code == 200
@@ -147,7 +156,11 @@ def test_list_agents_no_filters(test_client, mock_agent):
 
 
 def test_list_agents_with_level_filter(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.list_agents", new_callable=AsyncMock, return_value=[mock_agent]):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.list_agents",
+        new_callable=AsyncMock,
+        return_value=[mock_agent],
+    ):
         response = test_client.get("/api/v1/agents?level=1")
 
         assert response.status_code == 200
@@ -167,13 +180,31 @@ def test_get_agent_coverage_success(test_client, mock_agent):
         total_documents=100,
         total_chunks=500,
         coverage_percent=75.0,
-        node_coverage={str(mock_agent.taxonomy_node_ids[0]): {"document_count": 50, "chunk_count": 250}}
+        node_coverage={
+            str(mock_agent.taxonomy_node_ids[0]): {
+                "document_count": 50,
+                "chunk_count": 250,
+            }
+        },
     )
 
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        with patch("apps.api.routers.agent_router.CoverageMeterService.calculate_coverage", new_callable=AsyncMock, return_value=coverage_metrics):
-            with patch("apps.api.routers.agent_router.AgentDAO.update_agent", new_callable=AsyncMock):
-                response = test_client.get(f"/api/v1/agents/{mock_agent.agent_id}/coverage")
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        with patch(
+            "apps.api.routers.agent_router.CoverageMeterService.calculate_coverage",
+            new_callable=AsyncMock,
+            return_value=coverage_metrics,
+        ):
+            with patch(
+                "apps.api.routers.agent_router.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ):
+                response = test_client.get(
+                    f"/api/v1/agents/{mock_agent.agent_id}/coverage"
+                )
 
                 assert response.status_code == 200
                 data = response.json()
@@ -186,7 +217,12 @@ def test_detect_coverage_gaps_success(test_client, mock_agent):
         total_documents=100,
         total_chunks=500,
         coverage_percent=30.0,
-        node_coverage={str(mock_agent.taxonomy_node_ids[0]): {"document_count": 30, "chunk_count": 150}}
+        node_coverage={
+            str(mock_agent.taxonomy_node_ids[0]): {
+                "document_count": 30,
+                "chunk_count": 150,
+            }
+        },
     )
 
     gaps_list = [
@@ -195,14 +231,28 @@ def test_detect_coverage_gaps_success(test_client, mock_agent):
             current_coverage=30.0,
             target_coverage=50.0,
             missing_docs=20,
-            recommendation="Collect 20 more documents"
+            recommendation="Collect 20 more documents",
         )
     ]
 
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        with patch("apps.api.routers.agent_router.CoverageMeterService.calculate_coverage", new_callable=AsyncMock, return_value=coverage_metrics):
-            with patch("apps.api.routers.agent_router.CoverageMeterService.detect_gaps", new_callable=AsyncMock, return_value=gaps_list):
-                response = test_client.get(f"/api/v1/agents/{mock_agent.agent_id}/gaps?threshold=0.5")
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        with patch(
+            "apps.api.routers.agent_router.CoverageMeterService.calculate_coverage",
+            new_callable=AsyncMock,
+            return_value=coverage_metrics,
+        ):
+            with patch(
+                "apps.api.routers.agent_router.CoverageMeterService.detect_gaps",
+                new_callable=AsyncMock,
+                return_value=gaps_list,
+            ):
+                response = test_client.get(
+                    f"/api/v1/agents/{mock_agent.agent_id}/gaps?threshold=0.5"
+                )
 
                 assert response.status_code == 200
                 data = response.json()
@@ -222,16 +272,27 @@ def test_query_agent_success(test_client, mock_agent):
             "chunk_id": str(uuid4()),
             "text": "Test content",
             "score": 0.9,
-            "metadata": {"title": "Test Document"}
+            "metadata": {"title": "Test Document"},
         }
     ]
 
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        with patch("apps.api.routers.agent_router.SearchDAO.hybrid_search", new_callable=AsyncMock, return_value=search_results):
-            with patch("apps.api.routers.agent_router.AgentDAO.update_agent", new_callable=AsyncMock):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        with patch(
+            "apps.api.routers.agent_router.SearchDAO.hybrid_search",
+            new_callable=AsyncMock,
+            return_value=search_results,
+        ):
+            with patch(
+                "apps.api.routers.agent_router.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ):
                 response = test_client.post(
                     f"/api/v1/agents/{mock_agent.agent_id}/query",
-                    json={"query": "test query"}
+                    json={"query": "test query"},
                 )
 
                 assert response.status_code == 200
@@ -241,19 +302,19 @@ def test_query_agent_success(test_client, mock_agent):
 
 
 def test_query_agent_empty_query(test_client):
-    response = test_client.post(
-        f"/api/v1/agents/{uuid4()}/query",
-        json={"query": ""}
-    )
+    response = test_client.post(f"/api/v1/agents/{uuid4()}/query", json={"query": ""})
 
     assert response.status_code == 422
 
 
 def test_query_agent_not_found(test_client):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=None):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         response = test_client.post(
-            f"/api/v1/agents/{uuid4()}/query",
-            json={"query": "test query"}
+            f"/api/v1/agents/{uuid4()}/query", json={"query": "test query"}
         )
 
         assert response.status_code == 404

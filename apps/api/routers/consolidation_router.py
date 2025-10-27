@@ -10,7 +10,7 @@ import os
 # Import ConsolidationPolicy
 import sys
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field

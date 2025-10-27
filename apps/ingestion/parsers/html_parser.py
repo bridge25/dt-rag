@@ -3,6 +3,7 @@ from .base import BaseParser, ParserError
 
 try:
     from bs4 import BeautifulSoup
+
     BS4_AVAILABLE = True
 except ImportError:
     BS4_AVAILABLE = False

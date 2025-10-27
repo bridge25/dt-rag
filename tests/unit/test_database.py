@@ -4,6 +4,7 @@ Unit tests for database module (apps.api.database)
 This test module provides comprehensive coverage for database-related functionality
 including connection management, data access objects, and search operations.
 """
+
 # @TEST:EMBED-001 | SPEC: .moai/specs/SPEC-EMBED-001/spec.md
 
 import pytest
@@ -26,7 +27,7 @@ from apps.api.database import (
     init_database,
     test_database_connection,
     setup_search_system,
-    get_search_performance_metrics
+    get_search_performance_metrics,
 )
 
 
@@ -41,7 +42,7 @@ class TestDatabaseManager:
     @pytest.mark.unit
     async def test_init_database_success(self, db_manager):
         """Test successful database initialization"""
-        with patch.object(db_manager.engine, 'begin') as mock_begin:
+        with patch.object(db_manager.engine, "begin") as mock_begin:
             mock_conn = AsyncMock()
             mock_begin.return_value.__aenter__.return_value = mock_conn
 
@@ -53,7 +54,7 @@ class TestDatabaseManager:
     @pytest.mark.unit
     async def test_init_database_failure(self, db_manager):
         """Test database initialization failure"""
-        with patch.object(db_manager.engine, 'begin') as mock_begin:
+        with patch.object(db_manager.engine, "begin") as mock_begin:
             mock_begin.side_effect = Exception("Connection failed")
 
             result = await db_manager.init_database()
@@ -71,7 +72,7 @@ class TestDatabaseManager:
     @pytest.mark.unit
     async def test_test_connection_success(self, db_manager):
         """Test successful database connection test"""
-        with patch.object(db_manager, 'async_session') as mock_session_factory:
+        with patch.object(db_manager, "async_session") as mock_session_factory:
             mock_session = AsyncMock()
             mock_session_factory.return_value.__aenter__.return_value = mock_session
             mock_session.execute.return_value = Mock()
@@ -84,7 +85,7 @@ class TestDatabaseManager:
     @pytest.mark.unit
     async def test_test_connection_failure(self, db_manager):
         """Test database connection test failure"""
-        with patch.object(db_manager, 'async_session') as mock_session_factory:
+        with patch.object(db_manager, "async_session") as mock_session_factory:
             mock_session_factory.side_effect = Exception("Connection failed")
 
             result = await db_manager.test_connection()
@@ -104,11 +105,14 @@ class TestTaxonomyDAO:
         mock_result.fetchall.return_value = [
             (1, "AI", ["AI"], 1),
             (2, "RAG", ["AI", "RAG"], 1),
-            (3, "ML", ["AI", "ML"], 1)
+            (3, "ML", ["AI", "ML"], 1),
         ]
         mock_session.execute.return_value = mock_result
 
-        with patch('apps.api.database.db_manager.async_session', return_value=mock_async_session):
+        with patch(
+            "apps.api.database.db_manager.async_session",
+            return_value=mock_async_session,
+        ):
             tree = await TaxonomyDAO.get_tree("1")
 
             assert len(tree) == 3
@@ -128,7 +132,7 @@ class TestTaxonomyDAO:
         mock_result_with_data = Mock()
         mock_result_with_data.fetchall.return_value = [
             (1, "AI", ["AI"], 1),
-            (2, "RAG", ["AI", "RAG"], 1)
+            (2, "RAG", ["AI", "RAG"], 1),
         ]
 
         mock_session.execute.side_effect = [
@@ -138,10 +142,13 @@ class TestTaxonomyDAO:
             None,
             None,
             None,
-            mock_result_with_data  # Second query (with data)
+            mock_result_with_data,  # Second query (with data)
         ]
 
-        with patch('apps.api.database.db_manager.async_session', return_value=mock_async_session):
+        with patch(
+            "apps.api.database.db_manager.async_session",
+            return_value=mock_async_session,
+        ):
             tree = await TaxonomyDAO.get_tree("1")
 
             assert len(tree) >= 1
@@ -153,7 +160,10 @@ class TestTaxonomyDAO:
         mock_session = mock_async_session.return_value
         mock_session.execute.side_effect = Exception("Database error")
 
-        with patch('apps.api.database.db_manager.async_session', return_value=mock_async_session):
+        with patch(
+            "apps.api.database.db_manager.async_session",
+            return_value=mock_async_session,
+        ):
             tree = await TaxonomyDAO.get_tree("1")
 
             # Should return fallback tree
@@ -177,7 +187,7 @@ class TestEmbeddingService:
     @pytest.mark.unit
     async def test_generate_embedding_no_api_key(self):
         """Test embedding generation without API key (falls back to dummy)"""
-        with patch('apps.api.database.OPENAI_API_KEY', None):
+        with patch("apps.api.database.OPENAI_API_KEY", None):
             embedding = await EmbeddingService.generate_embedding("test text")
 
             assert isinstance(embedding, list)
@@ -188,14 +198,16 @@ class TestEmbeddingService:
         """Test successful embedding generation via API"""
         mock_embedding = [0.1] * 1536
 
-        with patch('apps.api.database.OPENAI_API_KEY', 'test-key'):
-            with patch('httpx.AsyncClient') as mock_client:
+        with patch("apps.api.database.OPENAI_API_KEY", "test-key"):
+            with patch("httpx.AsyncClient") as mock_client:
                 mock_response = Mock()
                 mock_response.status_code = 200
                 mock_response.json.return_value = {
                     "data": [{"embedding": mock_embedding}]
                 }
-                mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
+                mock_client.return_value.__aenter__.return_value.post.return_value = (
+                    mock_response
+                )
 
                 embedding = await EmbeddingService.generate_embedding("test text")
 
@@ -204,11 +216,13 @@ class TestEmbeddingService:
     @pytest.mark.unit
     async def test_generate_embedding_api_failure(self):
         """Test embedding generation API failure (falls back to dummy)"""
-        with patch('apps.api.database.OPENAI_API_KEY', 'test-key'):
-            with patch('httpx.AsyncClient') as mock_client:
+        with patch("apps.api.database.OPENAI_API_KEY", "test-key"):
+            with patch("httpx.AsyncClient") as mock_client:
                 mock_response = Mock()
                 mock_response.status_code = 500
-                mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
+                mock_client.return_value.__aenter__.return_value.post.return_value = (
+                    mock_response
+                )
 
                 embedding = await EmbeddingService.generate_embedding("test text")
 
@@ -220,14 +234,12 @@ class TestEmbeddingService:
         """Test batch embedding generation"""
         texts = ["text 1", "text 2", "text 3"]
 
-        with patch.object(EmbeddingService, 'generate_embedding') as mock_generate:
-            mock_generate.side_effect = [
-                [0.1] * 1536,
-                [0.2] * 1536,
-                [0.3] * 1536
-            ]
+        with patch.object(EmbeddingService, "generate_embedding") as mock_generate:
+            mock_generate.side_effect = [[0.1] * 1536, [0.2] * 1536, [0.3] * 1536]
 
-            embeddings = await EmbeddingService.generate_batch_embeddings(texts, batch_size=2)
+            embeddings = await EmbeddingService.generate_batch_embeddings(
+                texts, batch_size=2
+            )
 
             assert len(embeddings) == 3
             assert mock_generate.call_count == 3
@@ -280,7 +292,7 @@ class TestBM25Scorer:
         corpus_stats = {
             "avg_doc_length": 10,
             "total_docs": 100,
-            "term_doc_freq": {"test": 20, "document": 30}
+            "term_doc_freq": {"test": 20, "document": 30},
         }
 
         score = BM25Scorer.calculate_bm25_score(query_tokens, doc_tokens, corpus_stats)
@@ -293,11 +305,7 @@ class TestBM25Scorer:
         """Test BM25 score calculation with no matching terms"""
         query_tokens = ["nonexistent", "terms"]
         doc_tokens = ["completely", "different", "words"]
-        corpus_stats = {
-            "avg_doc_length": 10,
-            "total_docs": 100,
-            "term_doc_freq": {}
-        }
+        corpus_stats = {"avg_doc_length": 10, "total_docs": 100, "term_doc_freq": {}}
 
         score = BM25Scorer.calculate_bm25_score(query_tokens, doc_tokens, corpus_stats)
 
@@ -326,16 +334,16 @@ class TestCrossEncoderReranker:
         search_results = [
             {
                 "text": "This is a test document about queries",
-                "metadata": {"bm25_score": 0.8, "vector_score": 0.6}
+                "metadata": {"bm25_score": 0.8, "vector_score": 0.6},
             },
             {
                 "text": "Another document",
-                "metadata": {"bm25_score": 0.3, "vector_score": 0.9}
+                "metadata": {"bm25_score": 0.3, "vector_score": 0.9},
             },
             {
                 "text": "Test query document with matching terms",
-                "metadata": {"bm25_score": 0.5, "vector_score": 0.7}
-            }
+                "metadata": {"bm25_score": 0.5, "vector_score": 0.7},
+            },
         ]
 
         reranked = CrossEncoderReranker.rerank_results(query, search_results, top_k=2)
@@ -395,7 +403,7 @@ class TestSearchDAO:
         mock_optimizer.execute_parallel_search.return_value = (
             [{"chunk_id": "1", "text": "bm25 result"}],  # bm25_results
             [{"chunk_id": "2", "text": "vector result"}],  # vector_results
-            Mock(total_time=0.1, parallel_time=0.05, memory_usage=100)  # metrics
+            Mock(total_time=0.1, parallel_time=0.05, memory_usage=100),  # metrics
         )
         mock_optimizer.execute_fusion_with_concurrency_control.return_value = [
             {"chunk_id": "1", "text": "combined result", "score": 0.8}
@@ -404,32 +412,50 @@ class TestSearchDAO:
             {"chunk_id": "1", "text": "final result", "score": 0.9, "metadata": {}}
         ]
 
-        with patch('apps.api.database.get_async_optimizer', return_value=mock_optimizer):
-            with patch('apps.api.database.get_gc_optimizer') as mock_gc:
-                with patch('apps.api.database.get_concurrency_controller') as mock_cc:
-                    mock_gc.return_value.optimized_gc_context.return_value.__aenter__ = AsyncMock()
-                    mock_gc.return_value.optimized_gc_context.return_value.__aexit__ = AsyncMock()
-                    mock_cc.return_value.controlled_execution.return_value.__aenter__ = AsyncMock()
-                    mock_cc.return_value.controlled_execution.return_value.__aexit__ = AsyncMock()
+        with patch(
+            "apps.api.database.get_async_optimizer", return_value=mock_optimizer
+        ):
+            with patch("apps.api.database.get_gc_optimizer") as mock_gc:
+                with patch("apps.api.database.get_concurrency_controller") as mock_cc:
+                    mock_gc.return_value.optimized_gc_context.return_value.__aenter__ = (
+                        AsyncMock()
+                    )
+                    mock_gc.return_value.optimized_gc_context.return_value.__aexit__ = (
+                        AsyncMock()
+                    )
+                    mock_cc.return_value.controlled_execution.return_value.__aenter__ = (
+                        AsyncMock()
+                    )
+                    mock_cc.return_value.controlled_execution.return_value.__aexit__ = (
+                        AsyncMock()
+                    )
 
-                    with patch('apps.api.database.db_manager.async_session') as mock_session_factory:
+                    with patch(
+                        "apps.api.database.db_manager.async_session"
+                    ) as mock_session_factory:
                         mock_session = AsyncMock()
-                        mock_session_factory.return_value.__aenter__.return_value = mock_session
+                        mock_session_factory.return_value.__aenter__.return_value = (
+                            mock_session
+                        )
 
                         results = await SearchDAO.hybrid_search(query, filters)
 
                         assert len(results) >= 0
                         if results:
                             assert "metadata" in results[0]
-                            assert results[0]["metadata"]["optimization_enabled"] is True
+                            assert (
+                                results[0]["metadata"]["optimization_enabled"] is True
+                            )
 
     @pytest.mark.unit
     async def test_hybrid_search_fallback_to_legacy(self):
         """Test hybrid search fallback to legacy mode"""
         query = "test search query"
 
-        with patch('apps.api.database.get_async_optimizer', side_effect=ImportError()):
-            with patch.object(SearchDAO, '_execute_legacy_hybrid_search') as mock_legacy:
+        with patch("apps.api.database.get_async_optimizer", side_effect=ImportError()):
+            with patch.object(
+                SearchDAO, "_execute_legacy_hybrid_search"
+            ) as mock_legacy:
                 mock_legacy.return_value = [{"chunk_id": "1", "text": "legacy result"}]
 
                 results = await SearchDAO.hybrid_search(query)
@@ -473,20 +499,20 @@ class TestSearchDAO:
             {
                 "chunk_id": "1",
                 "text": "bm25 result",
-                "metadata": {"bm25_score": 0.8, "vector_score": 0.0}
+                "metadata": {"bm25_score": 0.8, "vector_score": 0.0},
             }
         ]
         vector_results = [
             {
                 "chunk_id": "1",
                 "text": "same result",
-                "metadata": {"bm25_score": 0.0, "vector_score": 0.7}
+                "metadata": {"bm25_score": 0.0, "vector_score": 0.7},
             },
             {
                 "chunk_id": "2",
                 "text": "vector only",
-                "metadata": {"bm25_score": 0.0, "vector_score": 0.6}
-            }
+                "metadata": {"bm25_score": 0.0, "vector_score": 0.6},
+            },
         ]
 
         combined = SearchDAO._combine_search_results(bm25_results, vector_results, 10)
@@ -501,8 +527,12 @@ class TestSearchDAO:
     @pytest.mark.unit
     def test_combine_search_results_no_overlap(self):
         """Test combining results with no overlap"""
-        bm25_results = [{"chunk_id": "1", "metadata": {"bm25_score": 0.8, "vector_score": 0.0}}]
-        vector_results = [{"chunk_id": "2", "metadata": {"bm25_score": 0.0, "vector_score": 0.7}}]
+        bm25_results = [
+            {"chunk_id": "1", "metadata": {"bm25_score": 0.8, "vector_score": 0.0}}
+        ]
+        vector_results = [
+            {"chunk_id": "2", "metadata": {"bm25_score": 0.0, "vector_score": 0.7}}
+        ]
 
         combined = SearchDAO._combine_search_results(bm25_results, vector_results, 10)
 
@@ -581,16 +611,19 @@ class TestClassifyDAO:
     async def test_classify_text_error_handling(self):
         """Test classification error handling"""
         # Simulate an error in classification
-        with patch('apps.api.database.logger') as mock_logger:
+        with patch("apps.api.database.logger") as mock_logger:
             # Force an error by patching a method that will be called
-            with patch.object(str, 'lower', side_effect=Exception("Test error")):
+            with patch.object(str, "lower", side_effect=Exception("Test error")):
                 result = await ClassifyDAO.classify_text("test text")
 
                 # Should return fallback classification
                 assert result["canonical"] == ["AI", "General"]
                 assert result["label"] == "General AI"
                 assert result["confidence"] == 0.5
-                assert any("분류 오류로 인한 기본 분류" in reason for reason in result["reasoning"])
+                assert any(
+                    "분류 오류로 인한 기본 분류" in reason
+                    for reason in result["reasoning"]
+                )
                 mock_logger.error.assert_called_once()
 
 
@@ -647,7 +680,7 @@ class TestSearchMetrics:
         assert metrics["total_searches"] == 3
         assert "search_counts" in metrics
         assert "error_rate" in metrics
-        assert metrics["error_rate"] == 1/3
+        assert metrics["error_rate"] == 1 / 3
         assert "period_start" in metrics
 
     @pytest.mark.unit
@@ -681,7 +714,7 @@ class TestUtilityFunctions:
     @pytest.mark.unit
     async def test_init_database_success(self):
         """Test database initialization utility function"""
-        with patch('apps.api.database.db_manager.init_database') as mock_init:
+        with patch("apps.api.database.db_manager.init_database") as mock_init:
             mock_init.return_value = True
 
             result = await init_database()
@@ -692,7 +725,7 @@ class TestUtilityFunctions:
     @pytest.mark.unit
     async def test_test_database_connection_success(self):
         """Test database connection test utility function"""
-        with patch('apps.api.database.db_manager.test_connection') as mock_test:
+        with patch("apps.api.database.db_manager.test_connection") as mock_test:
             mock_test.return_value = True
 
             result = await test_database_connection()
@@ -703,16 +736,27 @@ class TestUtilityFunctions:
     @pytest.mark.unit
     async def test_setup_search_system_success(self):
         """Test search system setup success"""
-        with patch('apps.api.database.db_manager.async_session') as mock_session_factory:
+        with patch(
+            "apps.api.database.db_manager.async_session"
+        ) as mock_session_factory:
             mock_session = AsyncMock()
             mock_session_factory.return_value.__aenter__.return_value = mock_session
 
-            with patch('apps.api.database.init_database', return_value=True):
-                with patch.object(SearchDAO, 'optimize_search_indices') as mock_optimize:
-                    mock_optimize.return_value = {"success": True, "indices_created": ["idx1", "idx2"]}
+            with patch("apps.api.database.init_database", return_value=True):
+                with patch.object(
+                    SearchDAO, "optimize_search_indices"
+                ) as mock_optimize:
+                    mock_optimize.return_value = {
+                        "success": True,
+                        "indices_created": ["idx1", "idx2"],
+                    }
 
-                    with patch.object(SearchDAO, 'get_search_analytics') as mock_analytics:
-                        mock_analytics.return_value = {"statistics": {"total_chunks": 10}}
+                    with patch.object(
+                        SearchDAO, "get_search_analytics"
+                    ) as mock_analytics:
+                        mock_analytics.return_value = {
+                            "statistics": {"total_chunks": 10}
+                        }
 
                         result = await setup_search_system()
 
@@ -722,7 +766,7 @@ class TestUtilityFunctions:
     @pytest.mark.unit
     async def test_setup_search_system_failure(self):
         """Test search system setup failure"""
-        with patch('apps.api.database.init_database', return_value=False):
+        with patch("apps.api.database.init_database", return_value=False):
             result = await setup_search_system()
 
             assert result is False
@@ -735,15 +779,19 @@ class TestUtilityFunctions:
                 "total_chunks": 100,
                 "embedded_chunks": 80,
                 "total_docs": 50,
-                "taxonomy_mappings": 30
+                "taxonomy_mappings": 30,
             }
         }
 
-        with patch('apps.api.database.db_manager.async_session') as mock_session_factory:
+        with patch(
+            "apps.api.database.db_manager.async_session"
+        ) as mock_session_factory:
             mock_session = AsyncMock()
             mock_session_factory.return_value.__aenter__.return_value = mock_session
 
-            with patch.object(SearchDAO, 'get_search_analytics', return_value=mock_analytics):
+            with patch.object(
+                SearchDAO, "get_search_analytics", return_value=mock_analytics
+            ):
                 result = await get_search_performance_metrics()
 
                 assert "performance" in result
@@ -756,7 +804,9 @@ class TestUtilityFunctions:
     @pytest.mark.unit
     async def test_get_search_performance_metrics_failure(self):
         """Test getting search performance metrics with database error"""
-        with patch('apps.api.database.db_manager.async_session') as mock_session_factory:
+        with patch(
+            "apps.api.database.db_manager.async_session"
+        ) as mock_session_factory:
             mock_session_factory.side_effect = Exception("Database error")
 
             result = await get_search_performance_metrics()
@@ -793,7 +843,7 @@ class TestAgentModel:
             total_queries=0,
             successful_queries=0,
             avg_faithfulness=0.0,
-            avg_response_time_ms=0.0
+            avg_response_time_ms=0.0,
         )
 
         assert agent.agent_id == agent_id
@@ -824,7 +874,7 @@ class TestAgentModel:
             level=3,
             current_xp=150,
             coverage_percent=75.5,
-            retrieval_config={"top_k": 10, "strategy": "semantic"}
+            retrieval_config={"top_k": 10, "strategy": "semantic"},
         )
 
         assert agent.level == 3
@@ -845,10 +895,7 @@ class TestDatabaseIntegration:
 
         # Create mock search results that would use this embedding
         mock_results = [
-            {
-                "text": text,
-                "metadata": {"bm25_score": 0.7, "vector_score": 0.8}
-            }
+            {"text": text, "metadata": {"bm25_score": 0.7, "vector_score": 0.8}}
         ]
 
         # Test reranking with the results
@@ -868,7 +915,9 @@ class TestDatabaseIntegration:
 
         # Verify classification format matches taxonomy expectations
         assert isinstance(classification["canonical"], list)
-        assert len(classification["canonical"]) >= 2  # Should have at least AI + subcategory
+        assert (
+            len(classification["canonical"]) >= 2
+        )  # Should have at least AI + subcategory
         assert classification["canonical"][0] == "AI"  # Root should be AI
 
         # Test that the classification can be used as a taxonomy path
@@ -885,16 +934,20 @@ class TestDatabaseIntegration:
 
         # Calculate BM25 score
         corpus_stats = {"avg_doc_length": 10, "total_docs": 100, "term_doc_freq": {}}
-        bm25_score = BM25Scorer.calculate_bm25_score(["machine", "learning"], tokens, corpus_stats)
+        bm25_score = BM25Scorer.calculate_bm25_score(
+            ["machine", "learning"], tokens, corpus_stats
+        )
 
         # Create search result with BM25 score
         search_result = {
             "text": text,
-            "metadata": {"bm25_score": bm25_score, "vector_score": 0.8}
+            "metadata": {"bm25_score": bm25_score, "vector_score": 0.8},
         }
 
         # Test reranking
-        reranked = CrossEncoderReranker.rerank_results("machine learning", [search_result])
+        reranked = CrossEncoderReranker.rerank_results(
+            "machine learning", [search_result]
+        )
 
         assert len(reranked) == 1
         assert "score" in reranked[0]

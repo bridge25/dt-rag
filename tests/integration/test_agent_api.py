@@ -33,7 +33,7 @@ async def test_taxonomy_node(test_session):
         label="Test Node",
         canonical_path=["AI", "Test"],
         version="1.0.0",
-        confidence=1.0
+        confidence=1.0,
     )
     test_session.add(node)
     await test_session.commit()
@@ -50,15 +50,16 @@ async def test_create_agent_e2e(test_session, test_taxonomy_node):
             json={
                 "name": "E2E Test Agent",
                 "taxonomy_node_ids": [str(test_taxonomy_node.node_id)],
-                "taxonomy_version": "1.0.0"
+                "taxonomy_version": "1.0.0",
             },
-            headers={"X-API-Key": "test-api-key"}
+            headers={"X-API-Key": "test-api-key"},
         )
 
         assert response.status_code == 201
         agent_id = response.json()["agent_id"]
 
         from sqlalchemy import select
+
         result = await test_session.execute(
             select(Agent).where(Agent.agent_id == agent_id)
         )
@@ -75,16 +76,15 @@ async def test_agent_coverage_updates(test_session, test_taxonomy_node):
             json={
                 "name": "Coverage Test Agent",
                 "taxonomy_node_ids": [str(test_taxonomy_node.node_id)],
-                "taxonomy_version": "1.0.0"
+                "taxonomy_version": "1.0.0",
             },
-            headers={"X-API-Key": "test-api-key"}
+            headers={"X-API-Key": "test-api-key"},
         )
 
         agent_id = create_response.json()["agent_id"]
 
         coverage_response = await client.get(
-            f"/api/v1/agents/{agent_id}/coverage",
-            headers={"X-API-Key": "test-api-key"}
+            f"/api/v1/agents/{agent_id}/coverage", headers={"X-API-Key": "test-api-key"}
         )
 
         assert coverage_response.status_code == 200
@@ -101,9 +101,9 @@ async def test_agent_query_increments_total_queries(test_session, test_taxonomy_
             json={
                 "name": "Query Test Agent",
                 "taxonomy_node_ids": [str(test_taxonomy_node.node_id)],
-                "taxonomy_version": "1.0.0"
+                "taxonomy_version": "1.0.0",
             },
-            headers={"X-API-Key": "test-api-key"}
+            headers={"X-API-Key": "test-api-key"},
         )
 
         agent_id = create_response.json()["agent_id"]
@@ -111,12 +111,13 @@ async def test_agent_query_increments_total_queries(test_session, test_taxonomy_
         query_response = await client.post(
             f"/api/v1/agents/{agent_id}/query",
             json={"query": "test query"},
-            headers={"X-API-Key": "test-api-key"}
+            headers={"X-API-Key": "test-api-key"},
         )
 
         assert query_response.status_code == 200
 
         from sqlalchemy import select
+
         result = await test_session.execute(
             select(Agent).where(Agent.agent_id == agent_id)
         )
@@ -135,14 +136,13 @@ async def test_list_agents_with_filters(test_session, test_taxonomy_node):
                 json={
                     "name": f"Filter Test Agent {i}",
                     "taxonomy_node_ids": [str(test_taxonomy_node.node_id)],
-                    "taxonomy_version": "1.0.0"
+                    "taxonomy_version": "1.0.0",
                 },
-                headers={"X-API-Key": "test-api-key"}
+                headers={"X-API-Key": "test-api-key"},
             )
 
         list_response = await client.get(
-            "/api/v1/agents?level=1",
-            headers={"X-API-Key": "test-api-key"}
+            "/api/v1/agents?level=1", headers={"X-API-Key": "test-api-key"}
         )
 
         assert list_response.status_code == 200

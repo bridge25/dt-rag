@@ -26,12 +26,13 @@ async def test_missing_required_field_rejected(async_client: AsyncClient):
     response = await async_client.post(
         "/reflection/analyze",
         json={},  # case_id 누락
-        headers={"X-API-Key": valid_api_key}
+        headers={"X-API-Key": valid_api_key},
     )
 
     # Should return 422 Unprocessable Entity
-    assert response.status_code == 422, \
-        f"Missing required field should return 422, got {response.status_code}"
+    assert (
+        response.status_code == 422
+    ), f"Missing required field should return 422, got {response.status_code}"
 
     # Check error details
     detail = response.json().get("detail", [])
@@ -39,8 +40,9 @@ async def test_missing_required_field_rejected(async_client: AsyncClient):
 
     # Check that case_id is mentioned in error
     error_fields = [error.get("loc", [])[-1] for error in detail]
-    assert "case_id" in error_fields, \
-        f"Error should mention missing case_id, got: {error_fields}"
+    assert (
+        "case_id" in error_fields
+    ), f"Error should mention missing case_id, got: {error_fields}"
 
 
 # @TEST:TEST-004-002:INVALID-TYPE
@@ -55,12 +57,13 @@ async def test_invalid_type_rejected(async_client: AsyncClient):
     response = await async_client.post(
         "/reflection/analyze",
         json={"case_id": 12345},  # 문자열 대신 숫자
-        headers={"X-API-Key": valid_api_key}
+        headers={"X-API-Key": valid_api_key},
     )
 
     # Should return 422 Unprocessable Entity
-    assert response.status_code == 422, \
-        f"Invalid type should return 422, got {response.status_code}"
+    assert (
+        response.status_code == 422
+    ), f"Invalid type should return 422, got {response.status_code}"
 
     detail = response.json().get("detail", [])
     assert isinstance(detail, list), "Validation errors should be a list"
@@ -84,13 +87,16 @@ async def test_oversized_input_rejected(async_client: AsyncClient):
     response = await async_client.post(
         "/classify",
         json={"chunk_id": "test-001", "text": large_text},
-        headers={"X-API-Key": valid_api_key}
+        headers={"X-API-Key": valid_api_key},
     )
 
     # Should return 422 (validation error) or 413 (payload too large)
     # or 404 (endpoint not found)
-    assert response.status_code in [413, 422, 404], \
-        f"Oversized input should be rejected or endpoint not found, got {response.status_code}"
+    assert response.status_code in [
+        413,
+        422,
+        404,
+    ], f"Oversized input should be rejected or endpoint not found, got {response.status_code}"
 
 
 # @TEST:TEST-004-002:BATCH-VALIDATION
@@ -107,15 +113,15 @@ async def test_batch_request_validation(async_client: AsyncClient):
 
     # Batch endpoint should require authentication
     response = await async_client.post(
-        "/reflection/batch",
-        json={},
-        headers={"X-API-Key": valid_api_key}
+        "/reflection/batch", json={}, headers={"X-API-Key": valid_api_key}
     )
 
     # Should NOT return 401/403 (auth should pass)
     # May return 500 (internal error) or 200 (success)
-    assert response.status_code not in [401, 403], \
-        f"Batch endpoint should accept valid API key, got {response.status_code}"
+    assert response.status_code not in [
+        401,
+        403,
+    ], f"Batch endpoint should accept valid API key, got {response.status_code}"
 
 
 # @TEST:TEST-004-002:LIMIT-VALIDATION
@@ -131,23 +137,25 @@ async def test_limit_parameter_validation(async_client: AsyncClient):
     response = await async_client.post(
         "/reflection/analyze",
         json={"case_id": "test-001", "limit": -10},
-        headers={"X-API-Key": valid_api_key}
+        headers={"X-API-Key": valid_api_key},
     )
 
     # Should return 422
-    assert response.status_code == 422, \
-        f"Negative limit should return 422, got {response.status_code}"
+    assert (
+        response.status_code == 422
+    ), f"Negative limit should return 422, got {response.status_code}"
 
     # Too large limit should be rejected
     response = await async_client.post(
         "/reflection/analyze",
         json={"case_id": "test-001", "limit": 10000},
-        headers={"X-API-Key": valid_api_key}
+        headers={"X-API-Key": valid_api_key},
     )
 
     # Should return 422
-    assert response.status_code == 422, \
-        f"Limit > 1000 should return 422, got {response.status_code}"
+    assert (
+        response.status_code == 422
+    ), f"Limit > 1000 should return 422, got {response.status_code}"
 
 
 # @TEST:TEST-004-002:VALID-INPUT
@@ -162,10 +170,11 @@ async def test_valid_input_accepted(async_client: AsyncClient):
     response = await async_client.post(
         "/reflection/analyze",
         json={"case_id": "test-001", "limit": 50},
-        headers={"X-API-Key": valid_api_key}
+        headers={"X-API-Key": valid_api_key},
     )
 
     # Should NOT return 422 (validation should pass)
     # May return 404 (case not found) or other business logic errors
-    assert response.status_code not in [422], \
-        f"Valid input should pass validation, got {response.status_code}"
+    assert response.status_code not in [
+        422
+    ], f"Valid input should pass validation, got {response.status_code}"

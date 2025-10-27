@@ -36,11 +36,15 @@ async def test_dispatcher_attribute_exists():
     orchestrator = JobOrchestrator(
         job_queue=mock_job_queue,
         embedding_service=mock_embedding_service,
-        max_workers=10
+        max_workers=10,
     )
 
-    assert hasattr(orchestrator, 'internal_queue'), "JobOrchestrator should have internal_queue attribute"
-    assert hasattr(orchestrator, 'dispatcher_task'), "JobOrchestrator should have dispatcher_task attribute"
+    assert hasattr(
+        orchestrator, "internal_queue"
+    ), "JobOrchestrator should have internal_queue attribute"
+    assert hasattr(
+        orchestrator, "dispatcher_task"
+    ), "JobOrchestrator should have dispatcher_task attribute"
 
 
 @pytest.mark.asyncio
@@ -62,12 +66,14 @@ async def test_dispatcher_task_created_on_start():
     orchestrator = JobOrchestrator(
         job_queue=mock_job_queue,
         embedding_service=mock_embedding_service,
-        max_workers=2
+        max_workers=2,
     )
 
     await orchestrator.start()
 
-    assert orchestrator.dispatcher_task is not None, "Dispatcher task should be created after start()"
+    assert (
+        orchestrator.dispatcher_task is not None
+    ), "Dispatcher task should be created after start()"
     assert not orchestrator.dispatcher_task.done(), "Dispatcher task should be running"
 
     await orchestrator.stop()
@@ -91,12 +97,15 @@ async def test_worker_uses_internal_queue():
     orchestrator = JobOrchestrator(
         job_queue=mock_job_queue,
         embedding_service=mock_embedding_service,
-        max_workers=1
+        max_workers=1,
     )
 
     import inspect
+
     worker_source = inspect.getsource(orchestrator._worker)
 
-    assert 'internal_queue' in worker_source, "Worker should use internal_queue"
-    assert 'internal_queue.get' in worker_source or 'self.internal_queue.get' in worker_source, \
-        "Worker should call get() on internal_queue"
+    assert "internal_queue" in worker_source, "Worker should use internal_queue"
+    assert (
+        "internal_queue.get" in worker_source
+        or "self.internal_queue.get" in worker_source
+    ), "Worker should call get() on internal_queue"

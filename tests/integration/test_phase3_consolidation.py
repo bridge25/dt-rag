@@ -31,9 +31,9 @@ class TestConsolidationAPI:
                 "dry_run": True,
                 "threshold": 30.0,
                 "similarity_threshold": 0.95,
-                "inactive_days": 90
+                "inactive_days": 90,
             },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         assert response.status_code == 200
@@ -63,9 +63,9 @@ class TestConsolidationAPI:
                 "dry_run": False,
                 "threshold": 30.0,
                 "similarity_threshold": 0.95,
-                "inactive_days": 90
+                "inactive_days": 90,
             },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         assert response.status_code == 200
@@ -86,10 +86,7 @@ class TestConsolidationAPI:
         When: POST /consolidation/run
         Then: Returns 403 Forbidden
         """
-        response = await async_client.post(
-            "/consolidation/run",
-            json={"dry_run": True}
-        )
+        response = await async_client.post("/consolidation/run", json={"dry_run": True})
 
         assert response.status_code == 403
 
@@ -104,8 +101,7 @@ class TestConsolidationAPI:
         Then: Returns 200 with simulation results
         """
         response = await async_client.post(
-            "/consolidation/dry-run",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/consolidation/dry-run", headers={"X-API-Key": "test_api_key_for_testing"}
         )
 
         assert response.status_code == 200
@@ -130,17 +126,14 @@ class TestConsolidationAPI:
 
     # @TEST:TEST-002:CONSOL-006 | SPEC: SPEC-TEST-002.md
     @pytest.mark.asyncio
-    async def test_consolidation_summary_success(
-        self, async_client, sample_case_bank
-    ):
+    async def test_consolidation_summary_success(self, async_client, sample_case_bank):
         """
         Given: Cases exist in database
         When: GET /consolidation/summary
         Then: Returns 200 with consolidation candidate statistics
         """
         response = await async_client.get(
-            "/consolidation/summary",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/consolidation/summary", headers={"X-API-Key": "test_api_key_for_testing"}
         )
 
         assert response.status_code == 200
@@ -199,7 +192,7 @@ class TestConsolidationAPI:
         response = await async_client.post(
             "/consolidation/run",
             json={"dry_run": True},
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
         elapsed_ms = (time.time() - start_time) * 1000
 
@@ -220,8 +213,7 @@ class TestConsolidationAPI:
 
         start_time = time.time()
         response = await async_client.get(
-            "/consolidation/summary",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/consolidation/summary", headers={"X-API-Key": "test_api_key_for_testing"}
         )
         elapsed_ms = (time.time() - start_time) * 1000
 
@@ -248,9 +240,9 @@ class TestConsolidationAPI:
                 "dry_run": False,
                 "threshold": 30.0,
                 "similarity_threshold": 0.95,
-                "inactive_days": 90
+                "inactive_days": 90,
             },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         assert response.status_code == 200
@@ -276,9 +268,9 @@ class TestConsolidationAPI:
                 "dry_run": True,
                 "threshold": 150.0,  # Invalid: > 100
                 "similarity_threshold": 0.95,
-                "inactive_days": 90
+                "inactive_days": 90,
             },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
 
         # Should return validation error (422) or internal error (500)

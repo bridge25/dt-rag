@@ -2,6 +2,7 @@
 ML Classifier Integration Tests
 Tests sentence-transformers based classification
 """
+
 import pytest
 import asyncio
 
@@ -54,8 +55,7 @@ class TestMLClassifierIntegration:
 
             # With hint
             result_with_hint = await classifier.classify_text(
-                text,
-                hint_paths=[["AI", "RAG"]]
+                text, hint_paths=[["AI", "RAG"]]
             )
 
             assert "confidence" in result_no_hint
@@ -88,9 +88,11 @@ class TestMLClassifierIntegration:
                 # Check if expected domain appears in canonical path
                 canonical_str = "/".join(result["canonical"])
                 # Flexible check - domain might be uppercase or lowercase
-                assert expected_domain.upper() in canonical_str.upper() or \
-                       expected_domain.lower() in canonical_str.lower() or \
-                       "AI" in result["canonical"]  # Fallback to AI is acceptable
+                assert (
+                    expected_domain.upper() in canonical_str.upper()
+                    or expected_domain.lower() in canonical_str.lower()
+                    or "AI" in result["canonical"]
+                )  # Fallback to AI is acceptable
 
         except ImportError:
             pytest.skip("ML classifier not available")
@@ -104,15 +106,13 @@ class TestMLClassifierIntegration:
 
             # Unrelated text
             result = await classifier.classify_text(
-                "The quick brown fox jumps over the lazy dog",
-                confidence_threshold=0.7
+                "The quick brown fox jumps over the lazy dog", confidence_threshold=0.7
             )
 
             assert "canonical" in result
             # Should fallback to General AI
             if result["confidence"] < 0.7:
-                assert "General" in result["canonical"] or \
-                       result["confidence"] >= 0.5
+                assert "General" in result["canonical"] or result["confidence"] >= 0.5
 
         except ImportError:
             pytest.skip("ML classifier not available")
@@ -184,8 +184,7 @@ class TestClassifyDAOIntegration:
         from database import ClassifyDAO
 
         result = await ClassifyDAO.classify_text(
-            "Neural network architectures",
-            hint_paths=[["AI", "ML"]]
+            "Neural network architectures", hint_paths=[["AI", "ML"]]
         )
 
         assert "canonical" in result

@@ -21,6 +21,7 @@ class TestFeatureFlags:
         """Setup for each test - clear env manager cache"""
         global _env_manager
         from apps.api import env_manager as em_module
+
         em_module._env_manager = None
 
     def test_new_flags_exist(self):
@@ -60,6 +61,7 @@ class TestFeatureFlags:
         monkeypatch.setenv("FEATURE_DEBATE_MODE", "true")
 
         from apps.api import env_manager as em_module
+
         em_module._env_manager = None
 
         env_mgr = get_env_manager()
@@ -72,6 +74,7 @@ class TestFeatureFlags:
         monkeypatch.setenv("FEATURE_META_PLANNER", "1")
 
         from apps.api import env_manager as em_module
+
         em_module._env_manager = None
 
         env_mgr = get_env_manager()
@@ -84,6 +87,7 @@ class TestFeatureFlags:
         monkeypatch.setenv("FEATURE_DEBATE_MODE", "false")
 
         from apps.api import env_manager as em_module
+
         em_module._env_manager = None
 
         env_mgr = get_env_manager()
@@ -105,7 +109,7 @@ class TestFeatureFlags:
             "enable_request_logging",
             "enable_error_tracking",
             "enable_debug_toolbar",
-            "enable_profiling"
+            "enable_profiling",
         ]
 
         for flag in expected_existing:
@@ -118,6 +122,7 @@ class TestFeatureFlags:
         monkeypatch.setenv("FEATURE_META_PLANNER", "1")
 
         from apps.api import env_manager as em_module
+
         em_module._env_manager = None
 
         env_mgr = get_env_manager()

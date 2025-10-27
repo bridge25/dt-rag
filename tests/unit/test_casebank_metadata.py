@@ -5,7 +5,18 @@ import pytest
 import asyncio
 import os
 from datetime import datetime
-from sqlalchemy import select, update, Table, Column, Integer, String, Float, DateTime, Text, MetaData
+from sqlalchemy import (
+    select,
+    update,
+    Table,
+    Column,
+    Integer,
+    String,
+    Float,
+    DateTime,
+    Text,
+    MetaData,
+)
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
 from sqlalchemy import func
@@ -26,22 +37,26 @@ class TestCaseBank(TestBase):
     quality_score: Mapped[float | None] = mapped_column(Float)
     usage_count: Mapped[int | None] = mapped_column(Integer)
     success_rate: Mapped[float | None] = mapped_column(Float)
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    status: Mapped[str] = mapped_column(String(50), default='active', nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False
+        nullable=False,
     )
 
 
 test_engine = create_async_engine("sqlite+aiosqlite:///test_casebank.db", echo=False)
-test_async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+test_async_session = async_sessionmaker(
+    test_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -62,7 +77,9 @@ async def setup_database():
 async def cleanup_table():
     yield
     async with test_async_session() as session:
-        await session.execute(select(TestCaseBank).where(TestCaseBank.case_id.like("test-%")))
+        await session.execute(
+            select(TestCaseBank).where(TestCaseBank.case_id.like("test-%"))
+        )
         await session.commit()
 
 
@@ -75,13 +92,13 @@ async def test_casebank_version_field():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()
         await session.refresh(case)
 
-        assert hasattr(case, 'version')
+        assert hasattr(case, "version")
         assert case.version == 1
 
 
@@ -95,13 +112,13 @@ async def test_casebank_updated_by_field():
             response_text="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
-            updated_by="user@example.com"
+            updated_by="user@example.com",
         )
         session.add(case)
         await session.commit()
         await session.refresh(case)
 
-        assert hasattr(case, 'updated_by')
+        assert hasattr(case, "updated_by")
         assert case.updated_by == "user@example.com"
 
 
@@ -114,13 +131,13 @@ async def test_casebank_updated_by_nullable():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()
         await session.refresh(case)
 
-        assert hasattr(case, 'updated_by')
+        assert hasattr(case, "updated_by")
         assert case.updated_by is None
 
 
@@ -133,14 +150,14 @@ async def test_casebank_status_field():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()
         await session.refresh(case)
 
-        assert hasattr(case, 'status')
-        assert case.status == 'active'
+        assert hasattr(case, "status")
+        assert case.status == "active"
 
 
 @pytest.mark.asyncio
@@ -153,7 +170,7 @@ async def test_casebank_status_custom_value():
             response_text="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
-            status="archived"
+            status="archived",
         )
         session.add(case)
         await session.commit()
@@ -171,13 +188,13 @@ async def test_casebank_updated_at_field():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()
         await session.refresh(case)
 
-        assert hasattr(case, 'updated_at')
+        assert hasattr(case, "updated_at")
         assert isinstance(case.updated_at, datetime)
         assert case.updated_at is not None
 
@@ -191,7 +208,7 @@ async def test_casebank_version_increment():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()
@@ -208,7 +225,9 @@ async def test_casebank_version_increment():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(TestCaseBank.case_id == "test-version-increment-001")
+        stmt = select(TestCaseBank).where(
+            TestCaseBank.case_id == "test-version-increment-001"
+        )
         result = await session.execute(stmt)
         updated_case = result.scalar_one()
 
@@ -225,7 +244,7 @@ async def test_casebank_status_transitions():
             response_text="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
-            status="active"
+            status="active",
         )
         session.add(case)
         await session.commit()
@@ -241,7 +260,9 @@ async def test_casebank_status_transitions():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(TestCaseBank.case_id == "test-status-transition-001")
+        stmt = select(TestCaseBank).where(
+            TestCaseBank.case_id == "test-status-transition-001"
+        )
         result = await session.execute(stmt)
         case = result.scalar_one()
         assert case.status == "archived"
@@ -254,7 +275,9 @@ async def test_casebank_status_transitions():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(TestCaseBank.case_id == "test-status-transition-001")
+        stmt = select(TestCaseBank).where(
+            TestCaseBank.case_id == "test-status-transition-001"
+        )
         result = await session.execute(stmt)
         case = result.scalar_one()
         assert case.status == "deprecated"
@@ -269,7 +292,7 @@ async def test_casebank_updated_at_trigger():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()
@@ -287,7 +310,9 @@ async def test_casebank_updated_at_trigger():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(TestCaseBank.case_id == "test-updated-at-trigger-001")
+        stmt = select(TestCaseBank).where(
+            TestCaseBank.case_id == "test-updated-at-trigger-001"
+        )
         result = await session.execute(stmt)
         updated_case = result.scalar_one()
 

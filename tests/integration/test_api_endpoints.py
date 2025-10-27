@@ -2,6 +2,7 @@
 API Endpoints Integration Tests
 Tests all FastAPI endpoints with real database
 """
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,16 +13,14 @@ class TestHealthEndpoint:
     def test_health_check_returns_200(self, api_client: TestClient):
         """Test health endpoint returns 200 OK"""
         response = api_client.get(
-            "/healthz",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/healthz", headers={"X-API-Key": "test_api_key_for_testing"}
         )
         assert response.status_code == 200
 
     def test_health_check_returns_json(self, api_client: TestClient):
         """Test health endpoint returns valid JSON"""
         response = api_client.get(
-            "/healthz",
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            "/healthz", headers={"X-API-Key": "test_api_key_for_testing"}
         )
         data = response.json()
 
@@ -37,11 +36,8 @@ class TestClassifyEndpoint:
         """Test classify endpoint is accessible"""
         response = api_client.post(
             "/classify",
-            json={
-                "chunk_id": "test-001",
-                "text": sample_text
-            },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            json={"chunk_id": "test-001", "text": sample_text},
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
         assert response.status_code in [200, 422]  # 200 OK or 422 Validation Error
 
@@ -51,8 +47,8 @@ class TestClassifyEndpoint:
             "/classify",
             json={
                 "chunk_id": "rag-001",
-                "text": "Retrieval-Augmented Generation uses vector databases for semantic search"
-            }
+                "text": "Retrieval-Augmented Generation uses vector databases for semantic search",
+            },
         )
 
         if response.status_code == 200:
@@ -69,8 +65,8 @@ class TestClassifyEndpoint:
             "/classify",
             json={
                 "chunk_id": "ml-001",
-                "text": "Machine learning models use neural networks for classification tasks"
-            }
+                "text": "Machine learning models use neural networks for classification tasks",
+            },
         )
 
         if response.status_code == 200:
@@ -85,8 +81,8 @@ class TestClassifyEndpoint:
             json={
                 "chunk_id": "hint-001",
                 "text": "Neural network architectures",
-                "hint_paths": [["AI", "ML"]]
-            }
+                "hint_paths": [["AI", "ML"]],
+            },
         )
 
         if response.status_code == 200:
@@ -101,23 +97,14 @@ class TestSearchEndpoint:
         """Test search endpoint is accessible"""
         response = api_client.post(
             "/search",
-            json={
-                "q": "machine learning",
-                "final_topk": 5
-            },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            json={"q": "machine learning", "final_topk": 5},
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
         assert response.status_code in [200, 422]
 
     def test_search_returns_hits(self, api_client: TestClient):
         """Test search returns hits array"""
-        response = api_client.post(
-            "/search",
-            json={
-                "q": "RAG system",
-                "final_topk": 3
-            }
-        )
+        response = api_client.post("/search", json={"q": "RAG system", "final_topk": 3})
 
         if response.status_code == 200:
             data = response.json()
@@ -131,8 +118,8 @@ class TestSearchEndpoint:
             json={
                 "q": "neural networks",
                 "filters": {"taxonomy_path": ["AI", "ML"]},
-                "final_topk": 5
-            }
+                "final_topk": 5,
+            },
         )
 
         if response.status_code == 200:
@@ -158,7 +145,7 @@ class TestTaxonomyEndpoint:
         for version in versions:
             response = api_client.get(
                 f"/taxonomy/{version}/tree",
-                headers={"X-API-Key": "test_api_key_for_testing"}
+                headers={"X-API-Key": "test_api_key_for_testing"},
             )
             assert response.status_code in [200, 404]  # OK or Not Found
 
@@ -174,7 +161,7 @@ class TestErrorHandling:
                 "chunk_id": "missing-001"
                 # text field missing
             },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
         assert response.status_code == 422  # Validation Error
 
@@ -186,7 +173,7 @@ class TestErrorHandling:
                 "final_topk": 5
                 # q field missing
             },
-            headers={"X-API-Key": "test_api_key_for_testing"}
+            headers={"X-API-Key": "test_api_key_for_testing"},
         )
         assert response.status_code == 422
 

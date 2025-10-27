@@ -82,9 +82,7 @@ class ConsolidationPolicy:
 
         return results
 
-    async def remove_low_performance_cases(
-        self, threshold: float = 30.0
-    ) -> List[str]:
+    async def remove_low_performance_cases(self, threshold: float = 30.0) -> List[str]:
         """
         Remove (archive) low-performance cases.
 
@@ -289,9 +287,7 @@ class ConsolidationPolicy:
             logger.warning(f"Failed to parse vector: {vector_str}")
             return None
 
-    def _calculate_similarity(
-        self, vec1: List[float], vec2: List[float]
-    ) -> float:
+    def _calculate_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         """
         Calculate cosine similarity between two vectors.
 

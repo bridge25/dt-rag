@@ -20,24 +20,25 @@ class AgentDAO:
         taxonomy_version: str = "1.0.0",
         scope_description: Optional[str] = None,
         retrieval_config: Optional[Dict[str, Any]] = None,
-        features_config: Optional[Dict[str, Any]] = None
+        features_config: Optional[Dict[str, Any]] = None,
     ) -> Agent:
         node_ids_str = [str(nid) for nid in taxonomy_node_ids]
 
         query = select(TaxonomyNode.node_id).where(
             TaxonomyNode.node_id.in_(taxonomy_node_ids),
-            TaxonomyNode.version == taxonomy_version
+            TaxonomyNode.version == taxonomy_version,
         )
         result = await session.execute(query)
         existing_nodes = result.scalars().all()
 
         if len(existing_nodes) != len(taxonomy_node_ids):
-            raise ValueError(f"Some taxonomy nodes do not exist for version {taxonomy_version}")
+            raise ValueError(
+                f"Some taxonomy nodes do not exist for version {taxonomy_version}"
+            )
 
         coverage_service = CoverageMeterService(session_factory=lambda: session)
         metrics = await coverage_service.calculate_coverage(
-            taxonomy_version=taxonomy_version,
-            node_ids=node_ids_str
+            taxonomy_version=taxonomy_version, node_ids=node_ids_str
         )
 
         default_retrieval_config = {"top_k": 5, "strategy": "hybrid"}
@@ -62,7 +63,7 @@ class AgentDAO:
             features_config=features_config or default_features_config,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
-            last_query_at=None
+            last_query_at=None,
         )
 
         session.add(agent)
@@ -84,11 +85,7 @@ class AgentDAO:
 
     # @IMPL:AGENT-GROWTH-001:0.3.3
     @staticmethod
-    async def update_agent(
-        session: AsyncSession,
-        agent_id: UUID,
-        **kwargs
-    ) -> Agent:
+    async def update_agent(session: AsyncSession, agent_id: UUID, **kwargs) -> Agent:
         query = select(Agent).where(Agent.agent_id == agent_id)
         result = await session.execute(query)
         agent = result.scalar_one_or_none()
@@ -132,7 +129,7 @@ class AgentDAO:
         session: AsyncSession,
         level: Optional[int] = None,
         min_coverage: Optional[float] = None,
-        max_results: int = 50
+        max_results: int = 50,
     ) -> List[Agent]:
         query = select(Agent).order_by(Agent.created_at.desc())
 
@@ -155,15 +152,12 @@ class AgentDAO:
         session: AsyncSession,
         agent_id: UUID,
         xp_delta: float,
-        level: Optional[int] = None
+        level: Optional[int] = None,
     ) -> Optional[Agent]:
         stmt = (
             update(Agent)
             .where(Agent.agent_id == agent_id)
-            .values(
-                current_xp=Agent.current_xp + xp_delta,
-                updated_at=func.now()
-            )
+            .values(current_xp=Agent.current_xp + xp_delta, updated_at=func.now())
         )
 
         if level is not None:

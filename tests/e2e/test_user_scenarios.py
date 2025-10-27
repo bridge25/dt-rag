@@ -21,6 +21,7 @@ os.environ["TESTING"] = "true"
 
 try:
     from apps.api.main import app
+
     COMPONENTS_AVAILABLE = True
 except ImportError as e:
     COMPONENTS_AVAILABLE = False
@@ -37,7 +38,9 @@ class TestUserScenarios:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Required components not available")
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             yield client
 
     async def test_new_user_discovery_scenario(self, client: AsyncClient):
@@ -79,16 +82,17 @@ class TestUserScenarios:
 
             # Step 5: User tries basic search without any data
             print("Step 5: Testing basic search...")
-            search_response = await client.post("/search", json={
-                "query": "test search",
-                "limit": 5
-            })
+            search_response = await client.post(
+                "/search", json={"query": "test search", "limit": 5}
+            )
 
             if search_response.status_code == 404:
                 print("✓ Search endpoint not available yet")
             elif search_response.status_code == 200:
                 search_data = search_response.json()
-                result_count = len(search_data.get("results", search_data.get("documents", [])))
+                result_count = len(
+                    search_data.get("results", search_data.get("documents", []))
+                )
                 print(f"✓ Search returned {result_count} results")
 
             print("=== New User Discovery Completed Successfully ===\n")
@@ -124,8 +128,8 @@ class TestUserScenarios:
                         "tags": ["transformer", "attention", "neural networks", "NLP"],
                         "authors": ["Vaswani et al."],
                         "year": 2017,
-                        "source": "research_paper"
-                    }
+                        "source": "research_paper",
+                    },
                 },
                 {
                     "title": "BERT: Pre-training Deep Bidirectional Transformers",
@@ -142,17 +146,21 @@ class TestUserScenarios:
                     """,
                     "metadata": {
                         "category": "NLP",
-                        "tags": ["BERT", "transformer", "pre-training", "bidirectional"],
+                        "tags": [
+                            "BERT",
+                            "transformer",
+                            "pre-training",
+                            "bidirectional",
+                        ],
                         "authors": ["Devlin et al."],
                         "year": 2018,
-                        "source": "research_paper"
-                    }
-                }
+                        "source": "research_paper",
+                    },
+                },
             ]
 
             upload_response = await client.post(
-                "/ingestion/upload",
-                json={"documents": research_documents}
+                "/ingestion/upload", json={"documents": research_documents}
             )
 
             if upload_response.status_code == 404:
@@ -163,11 +171,14 @@ class TestUserScenarios:
 
             # Step 2: Researcher searches for transformer-related papers
             print("Step 2: Searching for transformer architecture papers...")
-            transformer_search = await client.post("/search", json={
-                "query": "transformer attention mechanism neural networks",
-                "filters": {"category": "NLP"},
-                "limit": 10
-            })
+            transformer_search = await client.post(
+                "/search",
+                json={
+                    "query": "transformer attention mechanism neural networks",
+                    "filters": {"category": "NLP"},
+                    "limit": 10,
+                },
+            )
 
             if transformer_search.status_code == 404:
                 print("⚠ Search not available, skipping search validation")
@@ -184,10 +195,10 @@ class TestUserScenarios:
             fine-tuning, using only in-context learning with few-shot examples.
             """
 
-            classification_response = await client.post("/classify", json={
-                "text": new_abstract,
-                "context": {"type": "research_abstract"}
-            })
+            classification_response = await client.post(
+                "/classify",
+                json={"text": new_abstract, "context": {"type": "research_abstract"}},
+            )
 
             if classification_response.status_code == 404:
                 print("⚠ Classification not available, skipping classification")
@@ -256,8 +267,8 @@ class TestUserScenarios:
                         "tags": ["data science", "guidelines", "best practices"],
                         "department": "Data Science",
                         "access_level": "internal",
-                        "document_type": "policy"
-                    }
+                        "document_type": "policy",
+                    },
                 },
                 {
                     "title": "Machine Learning Model Deployment Process",
@@ -278,14 +289,13 @@ class TestUserScenarios:
                         "tags": ["ML", "deployment", "process", "SOP"],
                         "department": "MLOps",
                         "access_level": "internal",
-                        "document_type": "procedure"
-                    }
-                }
+                        "document_type": "procedure",
+                    },
+                },
             ]
 
             batch_upload = await client.post(
-                "/ingestion/upload",
-                json={"documents": corporate_documents}
+                "/ingestion/upload", json={"documents": corporate_documents}
             )
 
             if batch_upload.status_code == 404:
@@ -296,30 +306,37 @@ class TestUserScenarios:
 
             # Step 4: Content manager searches for specific policies
             print("Step 4: Searching for internal guidelines...")
-            policy_search = await client.post("/search", json={
-                "query": "data science guidelines best practices",
-                "filters": {
-                    "category": "Internal/Guidelines",
-                    "access_level": "internal"
+            policy_search = await client.post(
+                "/search",
+                json={
+                    "query": "data science guidelines best practices",
+                    "filters": {
+                        "category": "Internal/Guidelines",
+                        "access_level": "internal",
+                    },
+                    "limit": 10,
                 },
-                "limit": 10
-            })
+            )
 
             if policy_search.status_code == 404:
                 print("⚠ Policy search not available")
             elif policy_search.status_code == 200:
                 search_results = policy_search.json()
-                results = search_results.get("results", search_results.get("documents", []))
+                results = search_results.get(
+                    "results", search_results.get("documents", [])
+                )
                 print(f"✓ Found {len(results)} policy documents")
 
             # Step 5: Content manager checks document organization
             print("Step 5: Reviewing document categorization...")
-            sample_content = "This document describes the process for model validation and testing."
+            sample_content = (
+                "This document describes the process for model validation and testing."
+            )
 
-            categorization = await client.post("/classify", json={
-                "text": sample_content,
-                "context": {"document_type": "internal"}
-            })
+            categorization = await client.post(
+                "/classify",
+                json={"text": sample_content, "context": {"document_type": "internal"}},
+            )
 
             if categorization.status_code == 404:
                 print("⚠ Categorization not available")
@@ -361,14 +378,16 @@ class TestUserScenarios:
             if rate_limit_info.status_code == 200:
                 rate_data = rate_limit_info.json()
                 limits = rate_data.get("limits", {})
-                print(f"✓ Rate limits: {limits.get('requests_per_minute', 'unlimited')} per minute")
+                print(
+                    f"✓ Rate limits: {limits.get('requests_per_minute', 'unlimited')} per minute"
+                )
 
             # Step 4: Developer tests error handling
             print("Step 4: Testing error handling...")
             error_test_cases = [
                 {"endpoint": "/search", "data": {"invalid_field": "value"}},
                 {"endpoint": "/classify", "data": {}},
-                {"endpoint": "/nonexistent", "data": None}
+                {"endpoint": "/nonexistent", "data": None},
             ]
 
             for test_case in error_test_cases:
@@ -376,7 +395,9 @@ class TestUserScenarios:
                     if test_case["data"] is None:
                         response = await client.get(test_case["endpoint"])
                     else:
-                        response = await client.post(test_case["endpoint"], json=test_case["data"])
+                        response = await client.post(
+                            test_case["endpoint"], json=test_case["data"]
+                        )
 
                     # Should handle errors gracefully
                     assert response.status_code in [200, 400, 404, 422, 500]
@@ -398,17 +419,17 @@ class TestUserScenarios:
                 concurrent_tasks.append(task)
 
             responses = await asyncio.gather(*concurrent_tasks, return_exceptions=True)
-            successful_responses = [r for r in responses if hasattr(r, 'status_code') and r.status_code == 200]
+            successful_responses = [
+                r
+                for r in responses
+                if hasattr(r, "status_code") and r.status_code == 200
+            ]
 
             print(f"✓ {len(successful_responses)}/3 concurrent requests succeeded")
 
             # Step 6: Developer validates response formats
             print("Step 6: Validating response formats...")
-            format_tests = [
-                "/health",
-                "/",
-                "/api/versions"
-            ]
+            format_tests = ["/health", "/", "/api/versions"]
 
             for endpoint in format_tests:
                 try:
@@ -454,17 +475,21 @@ class TestUserScenarios:
                     """,
                     "metadata": {
                         "category": "Experiment",
-                        "tags": ["A/B test", "model comparison", "random forest", "gradient boosting"],
+                        "tags": [
+                            "A/B test",
+                            "model comparison",
+                            "random forest",
+                            "gradient boosting",
+                        ],
                         "experiment_id": "EXP-2024-001",
                         "scientist": "Data Science Team",
-                        "date": "2024-01-15"
-                    }
+                        "date": "2024-01-15",
+                    },
                 }
             ]
 
             upload_response = await client.post(
-                "/ingestion/upload",
-                json={"documents": experiment_docs}
+                "/ingestion/upload", json={"documents": experiment_docs}
             )
 
             if upload_response.status_code == 404:
@@ -474,11 +499,14 @@ class TestUserScenarios:
 
             # Step 2: Data scientist searches for related experiments
             print("Step 2: Searching for similar experiments...")
-            search_response = await client.post("/search", json={
-                "query": "model comparison A/B test machine learning performance",
-                "filters": {"category": "Experiment"},
-                "limit": 5
-            })
+            search_response = await client.post(
+                "/search",
+                json={
+                    "query": "model comparison A/B test machine learning performance",
+                    "filters": {"category": "Experiment"},
+                    "limit": 5,
+                },
+            )
 
             if search_response.status_code == 404:
                 print("⚠ Search not available")
@@ -495,10 +523,13 @@ class TestUserScenarios:
             reduction using PCA helped reduce overfitting while maintaining predictive power.
             """
 
-            classification_response = await client.post("/classify", json={
-                "text": analysis_text,
-                "context": {"analysis_type": "experimental_results"}
-            })
+            classification_response = await client.post(
+                "/classify",
+                json={
+                    "text": analysis_text,
+                    "context": {"analysis_type": "experimental_results"},
+                },
+            )
 
             if classification_response.status_code == 404:
                 print("⚠ Classification not available")
@@ -518,17 +549,22 @@ class TestUserScenarios:
 
             # Step 5: Data scientist searches for methodology documentation
             print("Step 5: Searching for methodological guidance...")
-            methodology_search = await client.post("/search", json={
-                "query": "statistical significance testing experimental design",
-                "filters": {"tags": ["methodology", "statistics"]},
-                "limit": 5
-            })
+            methodology_search = await client.post(
+                "/search",
+                json={
+                    "query": "statistical significance testing experimental design",
+                    "filters": {"tags": ["methodology", "statistics"]},
+                    "limit": 5,
+                },
+            )
 
             if methodology_search.status_code == 404:
                 print("⚠ Methodology search not available")
             elif methodology_search.status_code == 200:
                 method_results = methodology_search.json()
-                results = method_results.get("results", method_results.get("documents", []))
+                results = method_results.get(
+                    "results", method_results.get("documents", [])
+                )
                 print(f"✓ Found {len(results)} methodology resources")
 
             print("=== Data Scientist Analysis Scenario Completed Successfully ===\n")
@@ -538,7 +574,7 @@ class TestUserScenarios:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_PERFORMANCE_SCENARIOS"),
-        reason="Performance scenarios only run when TEST_PERFORMANCE_SCENARIOS is set"
+        reason="Performance scenarios only run when TEST_PERFORMANCE_SCENARIOS is set",
     )
     async def test_high_load_user_scenario(self, client: AsyncClient):
         """
@@ -551,19 +587,23 @@ class TestUserScenarios:
             user_tasks = []
 
             # User 1: Researcher searching
-            user1_task = client.post("/search", json={
-                "query": "machine learning algorithms",
-                "limit": 10
-            })
+            user1_task = client.post(
+                "/search", json={"query": "machine learning algorithms", "limit": 10}
+            )
             user_tasks.append(("User1_Search", user1_task))
 
             # User 2: Content manager uploading
-            user2_task = client.post("/ingestion/upload", json={
-                "documents": [{
-                    "title": "Test Document",
-                    "content": "Test content for concurrent upload"
-                }]
-            })
+            user2_task = client.post(
+                "/ingestion/upload",
+                json={
+                    "documents": [
+                        {
+                            "title": "Test Document",
+                            "content": "Test content for concurrent upload",
+                        }
+                    ]
+                },
+            )
             user_tasks.append(("User2_Upload", user2_task))
 
             # User 3: Developer checking health
@@ -571,18 +611,18 @@ class TestUserScenarios:
             user_tasks.append(("User3_Health", user3_task))
 
             # User 4: Classification request
-            user4_task = client.post("/classify", json={
-                "text": "This is a test document for classification"
-            })
+            user4_task = client.post(
+                "/classify", json={"text": "This is a test document for classification"}
+            )
             user_tasks.append(("User4_Classify", user4_task))
 
             # Execute all tasks concurrently
             import time
+
             start_time = time.time()
 
             results = await asyncio.gather(
-                *[task for _, task in user_tasks],
-                return_exceptions=True
+                *[task for _, task in user_tasks], return_exceptions=True
             )
 
             end_time = time.time()
@@ -592,12 +632,19 @@ class TestUserScenarios:
             successful_requests = 0
             failed_requests = 0
 
-            for i, (user_name, result) in enumerate(zip([name for name, _ in user_tasks], results)):
+            for i, (user_name, result) in enumerate(
+                zip([name for name, _ in user_tasks], results)
+            ):
                 if isinstance(result, Exception):
                     failed_requests += 1
                     print(f"⚠ {user_name}: Failed with exception")
-                elif hasattr(result, 'status_code'):
-                    if result.status_code in [200, 201, 202, 404]:  # 404 is acceptable for non-implemented endpoints
+                elif hasattr(result, "status_code"):
+                    if result.status_code in [
+                        200,
+                        201,
+                        202,
+                        404,
+                    ]:  # 404 is acceptable for non-implemented endpoints
                         successful_requests += 1
                         print(f"✓ {user_name}: Success ({result.status_code})")
                     else:

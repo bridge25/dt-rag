@@ -10,12 +10,17 @@ from unittest.mock import AsyncMock, MagicMock
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///test_reflection_engine.db"
 
 import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from apps.api.database import ExecutionLog, CaseBank
 from apps.orchestration.src.reflection_engine import ReflectionEngine
 
-test_engine = create_async_engine("sqlite+aiosqlite:///test_reflection_engine.db", echo=False)
-test_async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+test_engine = create_async_engine(
+    "sqlite+aiosqlite:///test_reflection_engine.db", echo=False
+)
+test_async_session = async_sessionmaker(
+    test_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -38,7 +43,9 @@ async def setup_database():
 async def cleanup_table():
     yield
     async with test_async_session() as session:
-        await session.execute(select(ExecutionLog).where(ExecutionLog.case_id.like("test-%")))
+        await session.execute(
+            select(ExecutionLog).where(ExecutionLog.case_id.like("test-%"))
+        )
         await session.execute(select(CaseBank).where(CaseBank.case_id.like("test-%")))
         await session.commit()
 
@@ -61,7 +68,7 @@ async def test_analyze_case_performance():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
@@ -70,7 +77,7 @@ async def test_analyze_case_performance():
             log = ExecutionLog(
                 case_id="test-case-perf-001",
                 success=(i < 7),
-                execution_time_ms=100 + i * 10
+                execution_time_ms=100 + i * 10,
             )
             session.add(log)
         await session.commit()
@@ -96,18 +103,20 @@ async def test_error_pattern_analysis():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
 
-        error_types = ["ValidationError"] * 5 + ["TimeoutError"] * 3 + ["NetworkError"] * 2
+        error_types = (
+            ["ValidationError"] * 5 + ["TimeoutError"] * 3 + ["NetworkError"] * 2
+        )
         for i, error_type in enumerate(error_types):
             log = ExecutionLog(
                 case_id="test-case-error-001",
                 success=False,
                 error_type=error_type,
-                error_message=f"Error {i}"
+                error_message=f"Error {i}",
             )
             session.add(log)
         await session.commit()
@@ -133,7 +142,7 @@ async def test_avg_execution_time():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
@@ -141,9 +150,7 @@ async def test_avg_execution_time():
         execution_times = [100, 200, 300, 400, 500]
         for time_ms in execution_times:
             log = ExecutionLog(
-                case_id="test-case-time-001",
-                success=True,
-                execution_time_ms=time_ms
+                case_id="test-case-time-001", success=True, execution_time_ms=time_ms
             )
             session.add(log)
         await session.commit()
@@ -165,7 +172,7 @@ async def test_success_rate_zero_logs():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
@@ -191,7 +198,7 @@ async def test_generate_improvement_suggestions_low_performance():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
@@ -201,7 +208,7 @@ async def test_generate_improvement_suggestions_low_performance():
                 case_id="test-case-low-perf-001",
                 success=(i < 3),
                 error_type="ValidationError" if i >= 3 else None,
-                execution_time_ms=200
+                execution_time_ms=200,
             )
             session.add(log)
         await session.commit()
@@ -209,13 +216,17 @@ async def test_generate_improvement_suggestions_low_performance():
         mock_llm = AsyncMock()
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
-        mock_response.choices[0].message.content = """1. Improve input validation
+        mock_response.choices[
+            0
+        ].message.content = """1. Improve input validation
 2. Add better error handling
 3. Optimize execution time"""
         mock_llm.chat.completions.create = AsyncMock(return_value=mock_response)
 
         engine = ReflectionEngine(session, llm_client=mock_llm)
-        suggestions = await engine.generate_improvement_suggestions("test-case-low-perf-001")
+        suggestions = await engine.generate_improvement_suggestions(
+            "test-case-low-perf-001"
+        )
 
         assert len(suggestions) > 0
         assert any("validation" in s.lower() for s in suggestions)
@@ -233,7 +244,7 @@ async def test_generate_improvement_suggestions_high_performance():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
@@ -242,14 +253,16 @@ async def test_generate_improvement_suggestions_high_performance():
             log = ExecutionLog(
                 case_id="test-case-high-perf-001",
                 success=(i < 9),
-                execution_time_ms=100
+                execution_time_ms=100,
             )
             session.add(log)
         await session.commit()
 
         mock_llm = AsyncMock()
         engine = ReflectionEngine(session, llm_client=mock_llm)
-        suggestions = await engine.generate_improvement_suggestions("test-case-high-perf-001")
+        suggestions = await engine.generate_improvement_suggestions(
+            "test-case-high-perf-001"
+        )
 
         assert suggestions == []
         mock_llm.chat.completions.create.assert_not_called()
@@ -261,7 +274,9 @@ async def test_run_reflection_batch():
     async with test_async_session() as session:
         from sqlalchemy import delete
 
-        await session.execute(delete(ExecutionLog).where(ExecutionLog.case_id.like("test-%")))
+        await session.execute(
+            delete(ExecutionLog).where(ExecutionLog.case_id.like("test-%"))
+        )
         await session.execute(delete(CaseBank).where(CaseBank.case_id.like("test-%")))
         await session.commit()
 
@@ -273,7 +288,7 @@ async def test_run_reflection_batch():
                 category_path=["AI", "Test"],
                 query_vector=[0.1, 0.2, 0.3],
                 status="active",
-                version=1
+                version=1,
             )
             session.add(case)
             await session.commit()
@@ -283,7 +298,7 @@ async def test_run_reflection_batch():
                 log = ExecutionLog(
                     case_id=f"test-case-batch-{case_num:03d}",
                     success=(i < success_count),
-                    execution_time_ms=100
+                    execution_time_ms=100,
                 )
                 session.add(log)
         await session.commit()
@@ -307,7 +322,7 @@ async def test_update_case_success_rate():
             query_vector=[0.1, 0.2, 0.3],
             status="active",
             version=1,
-            success_rate=None
+            success_rate=None,
         )
         session.add(case)
         await session.commit()

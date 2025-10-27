@@ -23,6 +23,7 @@ os.environ["TESTING"] = "true"
 
 try:
     from apps.api.main import app
+
     COMPONENTS_AVAILABLE = True
 except ImportError as e:
     COMPONENTS_AVAILABLE = False
@@ -39,7 +40,9 @@ class TestCompleteWorkflow:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Required components not available")
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
             yield client
 
     @pytest.fixture
@@ -67,8 +70,8 @@ class TestCompleteWorkflow:
                     "tags": ["machine learning", "AI", "algorithms"],
                     "author": "AI Research Team",
                     "created_at": "2024-01-01T00:00:00Z",
-                    "source": "internal_docs"
-                }
+                    "source": "internal_docs",
+                },
             },
             {
                 "title": "Deep Learning with Neural Networks",
@@ -93,8 +96,8 @@ class TestCompleteWorkflow:
                     "tags": ["deep learning", "neural networks", "CNN", "RNN"],
                     "author": "Deep Learning Lab",
                     "created_at": "2024-01-02T00:00:00Z",
-                    "source": "research_papers"
-                }
+                    "source": "research_papers",
+                },
             },
             {
                 "title": "Data Science Fundamentals",
@@ -122,9 +125,9 @@ class TestCompleteWorkflow:
                     "tags": ["data science", "statistics", "analysis", "Python"],
                     "author": "Data Science Team",
                     "created_at": "2024-01-03T00:00:00Z",
-                    "source": "training_materials"
-                }
-            }
+                    "source": "training_materials",
+                },
+            },
         ]
 
     @pytest.fixture
@@ -134,30 +137,30 @@ class TestCompleteWorkflow:
             {
                 "query": "machine learning algorithms",
                 "expected_categories": ["AI/ML"],
-                "expected_tags": ["machine learning", "algorithms"]
+                "expected_tags": ["machine learning", "algorithms"],
             },
             {
                 "query": "neural networks deep learning",
                 "expected_categories": ["AI/ML"],
-                "expected_tags": ["deep learning", "neural networks"]
+                "expected_tags": ["deep learning", "neural networks"],
             },
             {
                 "query": "data analysis Python tools",
                 "expected_categories": ["Data Science"],
-                "expected_tags": ["Python", "analysis"]
+                "expected_tags": ["Python", "analysis"],
             },
             {
                 "query": "supervised learning classification",
                 "expected_categories": ["AI/ML"],
-                "expected_tags": ["machine learning"]
-            }
+                "expected_tags": ["machine learning"],
+            },
         ]
 
     async def test_complete_document_ingestion_to_search_workflow(
         self,
         client: AsyncClient,
         sample_documents: List[Dict[str, Any]],
-        search_queries: List[Dict[str, Any]]
+        search_queries: List[Dict[str, Any]],
     ):
         """
         Test complete workflow: Document upload → Processing → Indexing → Search
@@ -165,8 +168,7 @@ class TestCompleteWorkflow:
         try:
             # Step 1: Upload documents
             upload_response = await client.post(
-                "/ingestion/upload",
-                json={"documents": sample_documents}
+                "/ingestion/upload", json={"documents": sample_documents}
             )
 
             if upload_response.status_code == 404:
@@ -194,11 +196,14 @@ class TestCompleteWorkflow:
 
             # Step 3: Test search functionality
             for i, query_test in enumerate(search_queries):
-                search_response = await client.post("/search", json={
-                    "query": query_test["query"],
-                    "limit": 5,
-                    "include_metadata": True
-                })
+                search_response = await client.post(
+                    "/search",
+                    json={
+                        "query": query_test["query"],
+                        "limit": 5,
+                        "include_metadata": True,
+                    },
+                )
 
                 if search_response.status_code == 404:
                     pytest.skip("Search endpoint not available")
@@ -225,9 +230,7 @@ class TestCompleteWorkflow:
             pytest.skip(f"Complete workflow test failed: {e}")
 
     async def test_document_classification_workflow(
-        self,
-        client: AsyncClient,
-        sample_documents: List[Dict[str, Any]]
+        self, client: AsyncClient, sample_documents: List[Dict[str, Any]]
     ):
         """
         Test document classification workflow
@@ -235,11 +238,14 @@ class TestCompleteWorkflow:
         try:
             for doc in sample_documents:
                 # Test document classification
-                classification_response = await client.post("/classify", json={
-                    "text": doc["content"],
-                    "title": doc.get("title"),
-                    "metadata": doc.get("metadata", {})
-                })
+                classification_response = await client.post(
+                    "/classify",
+                    json={
+                        "text": doc["content"],
+                        "title": doc.get("title"),
+                        "metadata": doc.get("metadata", {}),
+                    },
+                )
 
                 if classification_response.status_code == 404:
                     pytest.skip("Classification endpoint not available")
@@ -251,23 +257,31 @@ class TestCompleteWorkflow:
                 assert isinstance(classification_data, dict)
 
                 # Should contain prediction/category information
-                prediction_keys = ["predictions", "category", "classification", "categories"]
-                has_prediction = any(key in classification_data for key in prediction_keys)
+                prediction_keys = [
+                    "predictions",
+                    "category",
+                    "classification",
+                    "categories",
+                ]
+                has_prediction = any(
+                    key in classification_data for key in prediction_keys
+                )
 
                 if has_prediction:
                     # Verify classification makes sense for document content
                     if "AI" in doc["content"] or "machine learning" in doc["content"]:
                         # AI/ML documents should be classified appropriately
                         classification_str = str(classification_data).lower()
-                        assert "ai" in classification_str or "ml" in classification_str or "machine" in classification_str
+                        assert (
+                            "ai" in classification_str
+                            or "ml" in classification_str
+                            or "machine" in classification_str
+                        )
 
         except Exception as e:
             pytest.skip(f"Classification workflow test failed: {e}")
 
-    async def test_taxonomy_integration_workflow(
-        self,
-        client: AsyncClient
-    ):
+    async def test_taxonomy_integration_workflow(self, client: AsyncClient):
         """
         Test taxonomy management and integration workflow
         """
@@ -296,10 +310,7 @@ class TestCompleteWorkflow:
         except Exception as e:
             pytest.skip(f"Taxonomy workflow test failed: {e}")
 
-    async def test_monitoring_and_health_workflow(
-        self,
-        client: AsyncClient
-    ):
+    async def test_monitoring_and_health_workflow(self, client: AsyncClient):
         """
         Test system monitoring and health check workflow
         """
@@ -312,7 +323,9 @@ class TestCompleteWorkflow:
             assert health_data["status"] == "healthy"
 
             # Step 2: Comprehensive health check (if available)
-            comprehensive_health_response = await client.get("/api/v1/monitoring/health")
+            comprehensive_health_response = await client.get(
+                "/api/v1/monitoring/health"
+            )
 
             if comprehensive_health_response.status_code != 404:
                 assert comprehensive_health_response.status_code == 200
@@ -334,10 +347,7 @@ class TestCompleteWorkflow:
         except Exception as e:
             pytest.skip(f"Monitoring workflow test failed: {e}")
 
-    async def test_error_handling_workflow(
-        self,
-        client: AsyncClient
-    ):
+    async def test_error_handling_workflow(self, client: AsyncClient):
         """
         Test error handling across the complete system
         """
@@ -346,12 +356,20 @@ class TestCompleteWorkflow:
             error_scenarios = [
                 # Invalid endpoints
                 {"method": "GET", "url": "/nonexistent/endpoint", "expected": [404]},
-
                 # Invalid request data
-                {"method": "POST", "url": "/search", "json": {"invalid": "data"}, "expected": [400, 422, 500]},
-
+                {
+                    "method": "POST",
+                    "url": "/search",
+                    "json": {"invalid": "data"},
+                    "expected": [400, 422, 500],
+                },
                 # Malformed JSON (if endpoint expects JSON)
-                {"method": "POST", "url": "/classify", "json": {}, "expected": [400, 422, 500]},
+                {
+                    "method": "POST",
+                    "url": "/classify",
+                    "json": {},
+                    "expected": [400, 422, 500],
+                },
             ]
 
             for scenario in error_scenarios:
@@ -359,7 +377,9 @@ class TestCompleteWorkflow:
                     if scenario["method"] == "GET":
                         response = await client.get(scenario["url"])
                     elif scenario["method"] == "POST":
-                        response = await client.post(scenario["url"], json=scenario.get("json"))
+                        response = await client.post(
+                            scenario["url"], json=scenario.get("json")
+                        )
 
                     # Should handle errors gracefully
                     assert response.status_code in scenario["expected"]
@@ -383,12 +403,10 @@ class TestCompleteWorkflow:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_E2E_COMPREHENSIVE"),
-        reason="Comprehensive E2E tests only run when TEST_E2E_COMPREHENSIVE is set"
+        reason="Comprehensive E2E tests only run when TEST_E2E_COMPREHENSIVE is set",
     )
     async def test_performance_workflow(
-        self,
-        client: AsyncClient,
-        sample_documents: List[Dict[str, Any]]
+        self, client: AsyncClient, sample_documents: List[Dict[str, Any]]
     ):
         """
         Test system performance under load
@@ -401,10 +419,9 @@ class TestCompleteWorkflow:
 
             # Create multiple search tasks
             for i in range(5):
-                task = client.post("/search", json={
-                    "query": f"test query {i}",
-                    "limit": 5
-                })
+                task = client.post(
+                    "/search", json={"query": f"test query {i}", "limit": 5}
+                )
                 concurrent_tasks.append(task)
 
             # Execute concurrent requests
@@ -414,34 +431,33 @@ class TestCompleteWorkflow:
 
             # Measure performance
             total_time = end_time - start_time
-            successful_responses = [r for r in responses if not isinstance(r, Exception) and hasattr(r, 'status_code')]
+            successful_responses = [
+                r
+                for r in responses
+                if not isinstance(r, Exception) and hasattr(r, "status_code")
+            ]
 
             # Performance assertions
             assert total_time < 10.0  # Should complete within 10 seconds
-            assert len(successful_responses) > 0  # At least some requests should succeed
+            assert (
+                len(successful_responses) > 0
+            )  # At least some requests should succeed
 
             # Test individual response times
             for response in successful_responses:
-                if hasattr(response, 'status_code'):
+                if hasattr(response, "status_code"):
                     assert response.status_code in [200, 404, 400, 422]
 
         except Exception as e:
             pytest.skip(f"Performance workflow test failed: {e}")
 
-    async def test_data_consistency_workflow(
-        self,
-        client: AsyncClient
-    ):
+    async def test_data_consistency_workflow(self, client: AsyncClient):
         """
         Test data consistency across multiple operations
         """
         try:
             # Test that multiple calls to the same endpoint return consistent results
-            endpoint_tests = [
-                "/health",
-                "/api/versions",
-                "/taxonomy/latest/tree"
-            ]
+            endpoint_tests = ["/health", "/api/versions", "/taxonomy/latest/tree"]
 
             for endpoint in endpoint_tests:
                 responses = []
@@ -458,20 +474,21 @@ class TestCompleteWorkflow:
                     first_response = responses[0]
                     for other_response in responses[1:]:
                         # Core data should be consistent
-                        if isinstance(first_response, dict) and isinstance(other_response, dict):
+                        if isinstance(first_response, dict) and isinstance(
+                            other_response, dict
+                        ):
                             # Check that static fields are the same
                             static_fields = ["version", "name", "status"]
                             for field in static_fields:
                                 if field in first_response and field in other_response:
-                                    assert first_response[field] == other_response[field]
+                                    assert (
+                                        first_response[field] == other_response[field]
+                                    )
 
         except Exception as e:
             pytest.skip(f"Data consistency workflow test failed: {e}")
 
-    async def test_api_documentation_workflow(
-        self,
-        client: AsyncClient
-    ):
+    async def test_api_documentation_workflow(self, client: AsyncClient):
         """
         Test API documentation endpoints
         """

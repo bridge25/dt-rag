@@ -42,19 +42,19 @@ class APIKeyValidator:
 
     # Regex patterns for validation
     PATTERNS = {
-        'base64': re.compile(r'^[A-Za-z0-9+/=]{32,}$'),
-        'hex': re.compile(r'^[0-9a-fA-F]{32,}$'),
-        'alphanumeric': re.compile(r'^[A-Za-z0-9_\-\.]{32,}$'),
-        'secure': re.compile(r'^[A-Za-z0-9+/=_\-\.!@#$%^&*()]{32,}$')
+        "base64": re.compile(r"^[A-Za-z0-9+/=]{32,}$"),
+        "hex": re.compile(r"^[0-9a-fA-F]{32,}$"),
+        "alphanumeric": re.compile(r"^[A-Za-z0-9_\-\.]{32,}$"),
+        "secure": re.compile(r"^[A-Za-z0-9+/=_\-\.!@#$%^&*()]{32,}$"),
     }
 
     # Common weak patterns to reject
     WEAK_PATTERNS = [
-        r'(.)\1{3,}',  # Repeated characters (4+ times)
-        r'012345|123456|234567|345678|456789',  # Sequential numbers
-        r'abcdef|bcdefg|cdefgh|defghi|efghij',  # Sequential letters
-        r'qwerty|asdfgh|zxcvbn',  # Keyboard patterns
-        r'password|secret|admin|test|demo|example',  # Common words
+        r"(.)\1{3,}",  # Repeated characters (4+ times)
+        r"012345|123456|234567|345678|456789",  # Sequential numbers
+        r"abcdef|bcdefg|cdefgh|defghi|efghij",  # Sequential letters
+        r"qwerty|asdfgh|zxcvbn",  # Keyboard patterns
+        r"password|secret|admin|test|demo|example",  # Common words
     ]
 
     @classmethod
@@ -70,6 +70,7 @@ class APIKeyValidator:
 
         # Calculate entropy
         import math
+
         entropy = 0.0
         length = len(key)
 
@@ -89,13 +90,13 @@ class APIKeyValidator:
         char_types = 0
 
         # Check different character types
-        if re.search(r'[a-z]', key):
+        if re.search(r"[a-z]", key):
             char_types += 1
-        if re.search(r'[A-Z]', key):
+        if re.search(r"[A-Z]", key):
             char_types += 1
-        if re.search(r'[0-9]', key):
+        if re.search(r"[0-9]", key):
             char_types += 1
-        if re.search(r'[+/=_\-\.!@#$%^&*()]', key):
+        if re.search(r"[+/=_\-\.!@#$%^&*()]", key):
             char_types += 1
 
         return char_types >= cls.REQUIRED_CHAR_TYPES
@@ -140,11 +141,15 @@ class APIKeyValidator:
         # Format validation
         key_format = cls.validate_format(key)
         if key_format == "invalid":
-            errors.append("API key format is invalid. Use base64, hex, or secure alphanumeric format")
+            errors.append(
+                "API key format is invalid. Use base64, hex, or secure alphanumeric format"
+            )
 
         # Character composition
         if not cls.validate_character_composition(key):
-            errors.append(f"API key must contain at least {cls.REQUIRED_CHAR_TYPES} different character types")
+            errors.append(
+                f"API key must contain at least {cls.REQUIRED_CHAR_TYPES} different character types"
+            )
 
         # Entropy check
         entropy = cls.calculate_entropy(key)
@@ -156,7 +161,9 @@ class APIKeyValidator:
 
         # Weak pattern check
         if not cls.check_weak_patterns(key):
-            errors.append("API key contains weak patterns (repeated characters, sequences, or common words)")
+            errors.append(
+                "API key contains weak patterns (repeated characters, sequences, or common words)"
+            )
 
         return len(errors) == 0, errors
 
@@ -168,7 +175,8 @@ def _check_rate_limit(client_ip: str, api_key: str) -> bool:
     # Clean old attempts (older than 1 minute)
     cutoff_time = current_time - 60
     _api_key_attempts[client_ip] = [
-        attempt_time for attempt_time in _api_key_attempts[client_ip]
+        attempt_time
+        for attempt_time in _api_key_attempts[client_ip]
         if attempt_time > cutoff_time
     ]
 
@@ -215,7 +223,7 @@ def _log_security_event(event_type: str, api_key: str, client_ip: str, details: 
 async def verify_api_key(
     request: Request,
     x_api_key: Optional[str] = Header(None),
-    db: AsyncSession = Depends(lambda: None)  # Will be injected by FastAPI
+    db: AsyncSession = Depends(lambda: None),  # Will be injected by FastAPI
 ):
     """
     Production-ready API key validation with comprehensive security checks
@@ -247,10 +255,11 @@ async def verify_api_key(
 
     # Check if API key is provided
     if not x_api_key:
-        _log_security_event("MISSING_API_KEY", "", client_ip, "No API key provided in X-API-Key header")
+        _log_security_event(
+            "MISSING_API_KEY", "", client_ip, "No API key provided in X-API-Key header"
+        )
         raise HTTPException(
-            status_code=403,
-            detail="API key required. Include 'X-API-Key' header."
+            status_code=403, detail="API key required. Include 'X-API-Key' header."
         )
 
     # Development mode: Allow test API keys (env variable controlled)
@@ -273,18 +282,18 @@ async def verify_api_key(
             "7geU8-mQTM01zSG5pm6gLpdv4Tg25zbSk8cHm6Um62Y": {
                 "scope": "write",
                 "name": "Test Frontend Key",
-                "key_id": "test_key_001"
+                "key_id": "test_key_001",
             },
             "admin_X4RzsowY0qgfwqqwbo1UnP25zQjOoOxX5FUXmDHR9sPc8HT7-a570": {
                 "scope": "write",
                 "name": "Legacy Frontend Key",
-                "key_id": "test_key_002"
+                "key_id": "test_key_002",
             },
             "test_admin_9Kx7pLmN4qR2vW8bZhYdF3jC6tGsE5uA1nX0iO": {
                 "scope": "admin",
                 "name": "Test Admin Key",
-                "key_id": "test_admin_001"
-            }
+                "key_id": "test_admin_001",
+            },
         }
 
     if ENABLE_TEST_KEYS and x_api_key in ALLOWED_TEST_KEYS:
@@ -292,7 +301,7 @@ async def verify_api_key(
             "VALID_API_KEY",
             x_api_key,
             client_ip,
-            f"Test API key accepted ({CURRENT_ENV} mode)"
+            f"Test API key accepted ({CURRENT_ENV} mode)",
         )
         from .security.api_key_storage import APIKeyInfo
 
@@ -310,20 +319,23 @@ async def verify_api_key(
             created_at=datetime.now(timezone.utc),
             last_used_at=None,
             total_requests=0,
-            failed_requests=0
+            failed_requests=0,
         )
 
     # Rate limiting check (basic validation attempts)
     if not _check_rate_limit(client_ip, x_api_key):
-        _log_security_event("RATE_LIMITED", x_api_key, client_ip, "Too many validation attempts")
+        _log_security_event(
+            "RATE_LIMITED", x_api_key, client_ip, "Too many validation attempts"
+        )
         raise HTTPException(
             status_code=429,
-            detail="Too many API key validation attempts. Please try again later."
+            detail="Too many API key validation attempts. Please try again later.",
         )
 
     # Get database session
     if db is None:
         from .database import async_session
+
         async with async_session() as session:
             db = session
 
@@ -338,11 +350,16 @@ async def verify_api_key(
             plaintext_key=x_api_key,
             client_ip=client_ip,
             endpoint=request.url.path,
-            method=request.method
+            method=request.method,
         )
 
         if key_info:
-            _log_security_event("VALID_API_KEY", x_api_key, client_ip, f"Database verification successful: {key_info.name}")
+            _log_security_event(
+                "VALID_API_KEY",
+                x_api_key,
+                client_ip,
+                f"Database verification successful: {key_info.name}",
+            )
             return key_info
 
         # If not found in database, perform comprehensive format validation for better error message
@@ -361,25 +378,28 @@ async def verify_api_key(
                         "min_length": APIKeyValidator.MIN_LENGTH,
                         "min_entropy_bits": APIKeyValidator.MIN_ENTROPY_BITS,
                         "required_char_types": APIKeyValidator.REQUIRED_CHAR_TYPES,
-                        "allowed_formats": list(APIKeyValidator.PATTERNS.keys())
-                    }
-                }
+                        "allowed_formats": list(APIKeyValidator.PATTERNS.keys()),
+                    },
+                },
             )
 
         # Format is valid but key not found in database
-        _log_security_event("INVALID_KEY", x_api_key, client_ip, "API key not found in database")
+        _log_security_event(
+            "INVALID_KEY", x_api_key, client_ip, "API key not found in database"
+        )
         raise HTTPException(
             status_code=403,
-            detail="Invalid API key. The key may be expired, revoked, or not found."
+            detail="Invalid API key. The key may be expired, revoked, or not found.",
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        _log_security_event("DB_ERROR", x_api_key, client_ip, f"Database error: {str(e)}")
+        _log_security_event(
+            "DB_ERROR", x_api_key, client_ip, f"Database error: {str(e)}"
+        )
         raise HTTPException(
-            status_code=500,
-            detail="API key validation failed due to internal error"
+            status_code=500, detail="API key validation failed due to internal error"
         )
 
 
@@ -404,7 +424,7 @@ def _get_required_scope(endpoint: str, method: str) -> str:
         "POST": "write",
         "PUT": "write",
         "PATCH": "write",
-        "DELETE": "admin"
+        "DELETE": "admin",
     }
 
     return scope_map.get((method, endpoint), method_defaults.get(method, "read"))

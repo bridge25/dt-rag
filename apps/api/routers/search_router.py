@@ -23,7 +23,6 @@ from ..deps import verify_api_key
 from ..security.api_key_storage import APIKeyInfo
 
 # Import rate limiting
-from ..middleware.rate_limiter import RATE_LIMIT_READ, RATE_LIMIT_WRITE
 
 # Import metrics tracking
 from ..monitoring.metrics import get_metrics_collector
@@ -41,7 +40,10 @@ if str(packages_path) not in sys.path:
 # Import common schemas (실제 확인된 경로: ./packages/common_schemas/common_schemas/models.py)
 sys.path.insert(0, str(project_root))
 from packages.common_schemas.common_schemas.models import (  # noqa: E402
-    SearchRequest, SearchResponse, SearchHit, SourceMeta
+    SearchRequest,
+    SearchResponse,
+    SearchHit,
+    SourceMeta,
 )
 
 # Configure logging
@@ -52,45 +54,60 @@ search_router = APIRouter(prefix="/search", tags=["Search"])
 
 # Additional models for search operations
 
+
 class SearchAnalytics(BaseModel):
     """Search analytics and statistics"""
+
     total_searches: int
     avg_latency_ms: float
     avg_results_count: float
     top_queries: List[Dict[str, Any]]
     search_patterns: Dict[str, int]
 
+
 class SearchConfig(BaseModel):
     """Search configuration"""
+
     bm25_weight: float = Field(0.5, ge=0.0, le=1.0)
     vector_weight: float = Field(0.5, ge=0.0, le=1.0)
     rerank_threshold: float = Field(0.7, ge=0.0, le=1.0)
     max_candidates: int = Field(100, ge=10, le=500)
     embedding_model: str = "text-embedding-ada-002"
 
+
 class ReindexRequest(BaseModel):
     """Request to reindex search corpus"""
+
     taxonomy_version: Optional[str] = None
     incremental: bool = False
     force: bool = False
 
+
 # Import the hybrid search engine
 try:
     from ...search.hybrid_search_engine import (
-        hybrid_search, keyword_search, vector_search,
-        get_search_engine_config, update_search_engine_config,
-        clear_search_cache, get_search_statistics
+        hybrid_search,
+        keyword_search,
+        vector_search,
+        get_search_engine_config,
+        update_search_engine_config,
+        clear_search_cache,
+        get_search_statistics,
     )
+
     HYBRID_SEARCH_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Hybrid search engine not available: {e}")
     HYBRID_SEARCH_AVAILABLE = False
 
+
 # Real search service implementation
 class SearchService:
     """Production search service with hybrid BM25 + vector search"""
 
-    async def search(self, request: SearchRequest, correlation_id: Optional[str] = None) -> SearchResponse:
+    async def search(
+        self, request: SearchRequest, correlation_id: Optional[str] = None
+    ) -> SearchResponse:
         """
         Perform hybrid search using BM25 + vector similarity + reranking
 
@@ -104,37 +121,48 @@ class SearchService:
         try:
             # Check neural case selector feature flag
             from ..env_manager import get_env_manager
+
             env_manager = get_env_manager()
             flags = env_manager.get_feature_flags()
-            neural_enabled = request.use_neural and flags.get("neural_case_selector", False)
+            neural_enabled = request.use_neural and flags.get(
+                "neural_case_selector", False
+            )
 
             # If neural search disabled, use existing hybrid search
             if not neural_enabled:
-                return await self._legacy_hybrid_search(request, request_id, correlation_id, start_time)
+                return await self._legacy_hybrid_search(
+                    request, request_id, correlation_id, start_time
+                )
 
             # Neural search enabled - use CaseBank vector search
             try:
-                return await self._neural_search(request, request_id, correlation_id, start_time)
+                return await self._neural_search(
+                    request, request_id, correlation_id, start_time
+                )
             except Exception as e:
                 logger.warning(f"Neural search failed, falling back to BM25: {e}")
-                return await self._bm25_fallback_search(request, request_id, correlation_id, start_time)
+                return await self._bm25_fallback_search(
+                    request, request_id, correlation_id, start_time
+                )
 
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"Search operation failed: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail="Search operation failed"
-            )
+            raise HTTPException(status_code=500, detail="Search operation failed")
 
-    async def _legacy_hybrid_search(self, request: SearchRequest, request_id: str,
-                                    correlation_id: str, start_time: float) -> SearchResponse:
+    async def _legacy_hybrid_search(
+        self,
+        request: SearchRequest,
+        request_id: str,
+        correlation_id: str,
+        start_time: float,
+    ) -> SearchResponse:
         """Legacy hybrid search (existing implementation)"""
         if not HYBRID_SEARCH_AVAILABLE:
             raise HTTPException(
                 status_code=503,
-                detail="Search service unavailable - hybrid search engine not initialized"
+                detail="Search service unavailable - hybrid search engine not initialized",
             )
 
         # Prepare search parameters
@@ -147,7 +175,7 @@ class SearchService:
             filters=search_filters,
             bm25_candidates=min(100, request.max_results * 4),
             vector_candidates=min(100, request.max_results * 4),
-            correlation_id=correlation_id
+            correlation_id=correlation_id,
         )
 
         # Convert to SearchHit objects
@@ -160,9 +188,9 @@ class SearchService:
                 source=SourceMeta(
                     url=result["source_url"] or "",
                     title=result["title"] or "Untitled",
-                    date=result.get("metadata", {}).get("date", "")
+                    date=result.get("metadata", {}).get("date", ""),
                 ),
-                taxonomy_path=result["taxonomy_path"]
+                taxonomy_path=result["taxonomy_path"],
             )
             hits.append(hit)
 
@@ -173,15 +201,20 @@ class SearchService:
             hits=hits,
             latency=total_latency,
             request_id=request_id,
-            total_candidates=search_metrics.get("candidates_found", {}).get("bm25", 0) +
-                            search_metrics.get("candidates_found", {}).get("vector", 0),
+            total_candidates=search_metrics.get("candidates_found", {}).get("bm25", 0)
+            + search_metrics.get("candidates_found", {}).get("vector", 0),
             sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
             taxonomy_version="1.8.1",
-            mode="bm25"  # Legacy mode
+            mode="bm25",  # Legacy mode
         )
 
-    async def _neural_search(self, request: SearchRequest, request_id: str,
-                            correlation_id: str, start_time: float) -> SearchResponse:
+    async def _neural_search(
+        self,
+        request: SearchRequest,
+        request_id: str,
+        correlation_id: str,
+        start_time: float,
+    ) -> SearchResponse:
         """
         Neural search using CaseBank vector similarity
 
@@ -200,12 +233,16 @@ class SearchService:
             )
 
             # BM25 search (fallback to simple if needed)
-            bm25_results = await self._simple_bm25_search(session, request.q, request.max_results)
+            bm25_results = await self._simple_bm25_search(
+                session, request.q, request.max_results
+            )
 
             # Combine using hybrid scores
             if vector_results and bm25_results:
                 vector_scores = [r["score"] for r in vector_results]
-                bm25_scores = [r.get("score", 0.5) for r in bm25_results[:len(vector_scores)]]
+                bm25_scores = [
+                    r.get("score", 0.5) for r in bm25_results[: len(vector_scores)]
+                ]
 
                 hybrid_scores = calculate_hybrid_score(
                     vector_scores, bm25_scores, vector_weight=0.7, bm25_weight=0.3
@@ -213,10 +250,14 @@ class SearchService:
 
                 # Merge and re-rank
                 for i, result in enumerate(vector_results):
-                    result["score"] = hybrid_scores[i] if i < len(hybrid_scores) else result["score"]
+                    result["score"] = (
+                        hybrid_scores[i] if i < len(hybrid_scores) else result["score"]
+                    )
 
                 # Sort by hybrid score
-                combined_results = sorted(vector_results, key=lambda x: x["score"], reverse=True)
+                combined_results = sorted(
+                    vector_results, key=lambda x: x["score"], reverse=True
+                )
                 search_mode = "hybrid"
             else:
                 combined_results = vector_results or bm25_results
@@ -224,7 +265,7 @@ class SearchService:
 
             # Convert to SearchHit objects
             hits = []
-            for result in combined_results[:request.max_results]:
+            for result in combined_results[: request.max_results]:
                 hit = SearchHit(
                     chunk_id=result.get("case_id", "unknown"),
                     score=result["score"],
@@ -232,9 +273,9 @@ class SearchService:
                     source=SourceMeta(
                         url="casebank://case",
                         title=result.get("query", "Case"),
-                        date=""
+                        date="",
                     ),
-                    taxonomy_path=result.get("category_path", [])
+                    taxonomy_path=result.get("category_path", []),
                 )
                 hits.append(hit)
 
@@ -247,16 +288,23 @@ class SearchService:
                 total_candidates=len(vector_results) + len(bm25_results),
                 sources_count=len(hits),
                 taxonomy_version="1.8.1",
-                mode=search_mode
+                mode=search_mode,
             )
 
-    async def _bm25_fallback_search(self, request: SearchRequest, request_id: str,
-                                    correlation_id: str, start_time: float) -> SearchResponse:
+    async def _bm25_fallback_search(
+        self,
+        request: SearchRequest,
+        request_id: str,
+        correlation_id: str,
+        start_time: float,
+    ) -> SearchResponse:
         """BM25 fallback search when neural search fails"""
         from ..database import async_session
 
         async with async_session() as session:
-            bm25_results = await self._simple_bm25_search(session, request.q, request.max_results)
+            bm25_results = await self._simple_bm25_search(
+                session, request.q, request.max_results
+            )
 
             hits = []
             for result in bm25_results:
@@ -265,11 +313,9 @@ class SearchService:
                     score=result.get("score", 0.5),
                     text=result.get("text", ""),
                     source=SourceMeta(
-                        url="casebank://case",
-                        title="Fallback Result",
-                        date=""
+                        url="casebank://case", title="Fallback Result", date=""
                     ),
-                    taxonomy_path=[]
+                    taxonomy_path=[],
                 )
                 hits.append(hit)
 
@@ -282,25 +328,28 @@ class SearchService:
                 total_candidates=len(bm25_results),
                 sources_count=len(hits),
                 taxonomy_version="1.8.1",
-                mode="bm25_fallback"
+                mode="bm25_fallback",
             )
 
-    async def _simple_bm25_search(self, session, query: str, limit: int) -> List[Dict[str, Any]]:
+    async def _simple_bm25_search(
+        self, session, query: str, limit: int
+    ) -> List[Dict[str, Any]]:
         """Simple BM25 search on CaseBank"""
         from sqlalchemy import text
 
         # Simple text search on CaseBank
-        bm25_query = text("""
+        bm25_query = text(
+            """
             SELECT case_id, query, response_text, category_path
             FROM case_bank
             WHERE query LIKE :search_pattern OR response_text LIKE :search_pattern
             LIMIT :limit
-        """)
+        """
+        )
 
-        result = await session.execute(bm25_query, {
-            "search_pattern": f"%{query}%",
-            "limit": limit
-        })
+        result = await session.execute(
+            bm25_query, {"search_pattern": f"%{query}%", "limit": limit}
+        )
 
         rows = result.fetchall()
 
@@ -310,7 +359,7 @@ class SearchService:
                 "query": row[1],
                 "text": row[2],
                 "category_path": row[3],
-                "score": 0.5  # Static score for simple search
+                "score": 0.5,  # Static score for simple search
             }
             for row in rows
         ]
@@ -320,7 +369,7 @@ class SearchService:
         filters = {}
 
         # Taxonomy filtering
-        if hasattr(request, 'taxonomy_filter') and request.taxonomy_filter:
+        if hasattr(request, "taxonomy_filter") and request.taxonomy_filter:
             filters["taxonomy_paths"] = request.taxonomy_filter
 
         # Add other filters as needed
@@ -348,14 +397,14 @@ class SearchService:
                         {"query": "neural networks", "count": 134},
                         {"query": "data analysis", "count": 98},
                         {"query": "artificial intelligence", "count": 87},
-                        {"query": "deep learning", "count": 76}
+                        {"query": "deep learning", "count": 76},
                     ],
                     search_patterns={
                         "AI": int(db_stats.get("total_chunks", 0) * 0.4),
                         "ML": int(db_stats.get("total_chunks", 0) * 0.3),
                         "RAG": int(db_stats.get("total_chunks", 0) * 0.2),
-                        "General": int(db_stats.get("total_chunks", 0) * 0.1)
-                    }
+                        "General": int(db_stats.get("total_chunks", 0) * 0.1),
+                    },
                 )
             else:
                 # Fallback analytics
@@ -366,13 +415,9 @@ class SearchService:
                     top_queries=[
                         {"query": "machine learning algorithms", "count": 234},
                         {"query": "deep learning neural networks", "count": 198},
-                        {"query": "natural language processing", "count": 156}
+                        {"query": "natural language processing", "count": 156},
                     ],
-                    search_patterns={
-                        "Technology": 45,
-                        "Science": 32,
-                        "Business": 23
-                    }
+                    search_patterns={"Technology": 45, "Science": 32, "Business": 23},
                 )
         except Exception as e:
             logger.error(f"Failed to get analytics: {e}")
@@ -382,7 +427,7 @@ class SearchService:
                 avg_latency_ms=0.0,
                 avg_results_count=0.0,
                 top_queries=[],
-                search_patterns={}
+                search_patterns={},
             )
 
     async def get_config(self) -> SearchConfig:
@@ -396,8 +441,8 @@ class SearchService:
                     bm25_weight=engine_config.get("bm25_weight", 0.5),
                     vector_weight=engine_config.get("vector_weight", 0.5),
                     rerank_threshold=0.7,  # Static for now
-                    max_candidates=100,    # Static for now
-                    embedding_model="sentence-transformers/all-mpnet-base-v2"
+                    max_candidates=100,  # Static for now
+                    embedding_model="sentence-transformers/all-mpnet-base-v2",
                 )
             else:
                 # Return default configuration
@@ -414,10 +459,12 @@ class SearchService:
                 update_search_engine_config(
                     bm25_weight=config.bm25_weight,
                     vector_weight=config.vector_weight,
-                    normalization="min_max"  # Could be made configurable
+                    normalization="min_max",  # Could be made configurable
                 )
 
-                logger.info(f"Search configuration updated: BM25={config.bm25_weight}, Vector={config.vector_weight}")
+                logger.info(
+                    f"Search configuration updated: BM25={config.bm25_weight}, Vector={config.vector_weight}"
+                )
 
             return config
         except Exception as e:
@@ -430,22 +477,25 @@ class SearchService:
             "job_id": str(uuid.uuid4()),
             "status": "started",
             "estimated_duration_minutes": 15,
-            "incremental": request.incremental
+            "incremental": request.incremental,
         }
+
 
 # Dependency injection
 async def get_search_service() -> SearchService:
     """Get search service instance"""
     return SearchService()
 
+
 # API Endpoints
+
 
 @search_router.post("", response_model=SearchResponse)
 async def search_documents(
     request: Request,
     search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Perform hybrid search using BM25 and vector search with reranking
@@ -465,22 +515,20 @@ async def search_documents(
         # Validate search request
         if not search_request.q.strip():
             metrics_collector.increment_counter(
-                "search_requests_error",
-                {"error_type": "empty_query"}
+                "search_requests_error", {"error_type": "empty_query"}
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Search query cannot be empty"
+                detail="Search query cannot be empty",
             )
 
         if search_request.max_results > 100:
             metrics_collector.increment_counter(
-                "search_requests_error",
-                {"error_type": "invalid_max_results"}
+                "search_requests_error", {"error_type": "invalid_max_results"}
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Maximum results limit is 100"
+                detail="Maximum results limit is 100",
             )
 
         # Perform search with correlation tracking
@@ -491,14 +539,10 @@ async def search_documents(
         metrics_collector.record_latency(
             "search_operation",
             latency_ms,
-            {
-                "search_type": "hybrid",
-                "correlation_id": correlation_id
-            }
+            {"search_type": "hybrid", "correlation_id": correlation_id},
         )
         metrics_collector.increment_counter(
-            "search_requests_success",
-            {"search_type": "hybrid"}
+            "search_requests_success", {"search_type": "hybrid"}
         )
 
         # Get p95 latency
@@ -510,13 +554,10 @@ async def search_documents(
             "X-Search-Latency": str(result.latency),
             "X-Request-ID": result.request_id,
             "X-Total-Candidates": str(result.total_candidates or 0),
-            "X-P95-Latency": str(latency_stats["p95"])
+            "X-P95-Latency": str(latency_stats["p95"]),
         }
 
-        return JSONResponse(
-            content=result.dict(),
-            headers=headers
-        )
+        return JSONResponse(content=result.dict(), headers=headers)
 
     except HTTPException:
         raise
@@ -524,14 +565,15 @@ async def search_documents(
         logger.error(f"Search failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Search operation failed"
+            detail="Search operation failed",
         )
+
 
 @search_router.get("/analytics", response_model=SearchAnalytics)
 async def get_search_analytics(
     request: Request,
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Get search analytics and performance metrics
@@ -550,14 +592,15 @@ async def get_search_analytics(
         logger.error(f"Failed to get search analytics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search analytics"
+            detail="Failed to retrieve search analytics",
         )
+
 
 @search_router.get("/config", response_model=SearchConfig)
 async def get_search_config(
     request: Request,
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Get current search configuration
@@ -575,15 +618,16 @@ async def get_search_config(
         logger.error(f"Failed to get search configuration: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search configuration"
+            detail="Failed to retrieve search configuration",
         )
+
 
 @search_router.put("/config", response_model=SearchConfig)
 async def update_search_config(
     request: Request,
     config: SearchConfig,
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Update search configuration
@@ -598,7 +642,7 @@ async def update_search_config(
         if abs(config.bm25_weight + config.vector_weight - 1.0) > 0.01:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="BM25 and vector weights must sum to 1.0"
+                detail="BM25 and vector weights must sum to 1.0",
             )
 
         updated_config = await service.update_config(config)
@@ -610,15 +654,16 @@ async def update_search_config(
         logger.error(f"Failed to update search configuration: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update search configuration"
+            detail="Failed to update search configuration",
         )
+
 
 @search_router.post("/reindex")
 async def reindex_search_corpus(
     request: Request,
     reindex_request: ReindexRequest,
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Trigger search index rebuild
@@ -636,13 +681,13 @@ async def reindex_search_corpus(
         logger.error(f"Reindexing failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to start reindexing operation"
+            detail="Failed to start reindexing operation",
         )
+
 
 @search_router.get("/status")
 async def get_search_status(
-    request: Request,
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Get search system status and health
@@ -660,20 +705,20 @@ async def get_search_status(
                 "total_documents": 125847,
                 "total_chunks": 1567234,
                 "last_updated": "2025-01-14T10:30:00Z",
-                "index_size_mb": 2456.7
+                "index_size_mb": 2456.7,
             },
             "performance": {
                 "avg_search_latency_ms": 45.2,
                 "p95_search_latency_ms": 89.5,
                 "searches_per_minute": 237,
-                "cache_hit_rate": 0.73
+                "cache_hit_rate": 0.73,
             },
             "health_checks": {
                 "bm25_index": "healthy",
                 "vector_index": "healthy",
                 "reranker": "healthy",
-                "cache": "healthy"
-            }
+                "cache": "healthy",
+            },
         }
 
         return status_info
@@ -682,8 +727,9 @@ async def get_search_status(
         logger.error(f"Failed to get search status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search status"
+            detail="Failed to retrieve search status",
         )
+
 
 @search_router.post("/suggest")
 async def search_suggestions(
@@ -691,7 +737,7 @@ async def search_suggestions(
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
     limit: int = Query(5, ge=1, le=20, description="Maximum suggestions"),
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Get search query suggestions and autocompletion
@@ -708,30 +754,28 @@ async def search_suggestions(
             f"{query} tutorial",
             f"{query} examples",
             f"{query} best practices",
-            f"{query} applications"
+            f"{query} applications",
         ][:limit]
 
-        return {
-            "query": query,
-            "suggestions": suggestions,
-            "total": len(suggestions)
-        }
+        return {"query": query, "suggestions": suggestions, "total": len(suggestions)}
 
     except Exception as e:
         logger.error(f"Failed to get search suggestions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search suggestions"
+            detail="Failed to retrieve search suggestions",
         )
 
+
 # New specialized search endpoints
+
 
 @search_router.post("/keyword", response_model=SearchResponse)
 async def search_documents_keyword_only(
     request: Request,
     search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Perform BM25 keyword search only (no vector similarity)
@@ -746,7 +790,7 @@ async def search_documents_keyword_only(
         if not search_request.q.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Search query cannot be empty"
+                detail="Search query cannot be empty",
             )
 
         if HYBRID_SEARCH_AVAILABLE:
@@ -757,7 +801,7 @@ async def search_documents_keyword_only(
             search_results, search_metrics = await keyword_search(
                 query=search_request.q,
                 top_k=search_request.max_results,
-                filters=search_filters
+                filters=search_filters,
             )
 
             # Convert to SearchHit objects
@@ -770,9 +814,9 @@ async def search_documents_keyword_only(
                     source=SourceMeta(
                         url=result["source_url"] or "",
                         title=result["title"] or "Untitled",
-                        date=result.get("metadata", {}).get("date", "")
+                        date=result.get("metadata", {}).get("date", ""),
                     ),
-                    taxonomy_path=result["taxonomy_path"]
+                    taxonomy_path=result["taxonomy_path"],
                 )
                 hits.append(hit)
 
@@ -783,13 +827,15 @@ async def search_documents_keyword_only(
                 latency=total_latency,
                 request_id=request_id,
                 total_candidates=len(search_results),
-                sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
-                taxonomy_version="1.8.1"
+                sources_count=len(
+                    set(hit.source.url for hit in hits if hit.source.url)
+                ),
+                taxonomy_version="1.8.1",
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Keyword search service unavailable - hybrid search engine not initialized"
+                detail="Keyword search service unavailable - hybrid search engine not initialized",
             )
 
     except HTTPException:
@@ -798,7 +844,7 @@ async def search_documents_keyword_only(
         logger.error(f"Keyword search failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Keyword search operation failed"
+            detail="Keyword search operation failed",
         )
 
 
@@ -807,7 +853,7 @@ async def search_documents_vector_only(
     request: Request,
     search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    api_key: APIKeyInfo = Depends(verify_api_key),
 ):
     """
     Perform vector similarity search only (no BM25 keyword matching)
@@ -822,7 +868,7 @@ async def search_documents_vector_only(
         if not search_request.q.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Search query cannot be empty"
+                detail="Search query cannot be empty",
             )
 
         if HYBRID_SEARCH_AVAILABLE:
@@ -833,7 +879,7 @@ async def search_documents_vector_only(
             search_results, search_metrics = await vector_search(
                 query=search_request.q,
                 top_k=search_request.max_results,
-                filters=search_filters
+                filters=search_filters,
             )
 
             # Convert to SearchHit objects
@@ -846,9 +892,9 @@ async def search_documents_vector_only(
                     source=SourceMeta(
                         url=result["source_url"] or "",
                         title=result["title"] or "Untitled",
-                        date=result.get("metadata", {}).get("date", "")
+                        date=result.get("metadata", {}).get("date", ""),
                     ),
-                    taxonomy_path=result["taxonomy_path"]
+                    taxonomy_path=result["taxonomy_path"],
                 )
                 hits.append(hit)
 
@@ -859,13 +905,15 @@ async def search_documents_vector_only(
                 latency=total_latency,
                 request_id=request_id,
                 total_candidates=len(search_results),
-                sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
-                taxonomy_version="1.8.1"
+                sources_count=len(
+                    set(hit.source.url for hit in hits if hit.source.url)
+                ),
+                taxonomy_version="1.8.1",
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Vector search service unavailable - hybrid search engine not initialized"
+                detail="Vector search service unavailable - hybrid search engine not initialized",
             )
 
     except HTTPException:
@@ -874,14 +922,13 @@ async def search_documents_vector_only(
         logger.error(f"Vector search failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Vector search operation failed"
+            detail="Vector search operation failed",
         )
 
 
 @search_router.post("/cache/clear")
 async def clear_search_cache(
-    request: Request,
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Clear search result cache
@@ -899,14 +946,13 @@ async def clear_search_cache(
         logger.error(f"Failed to clear search cache: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to clear search cache"
+            detail="Failed to clear search cache",
         )
 
 
 @search_router.get("/performance")
 async def get_search_performance(
-    request: Request,
-    api_key: APIKeyInfo = Depends(verify_api_key)
+    request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
 ):
     """
     Get detailed search performance metrics
@@ -923,45 +969,54 @@ async def get_search_performance(
                 "database_statistics": stats.get("database_stats", {}),
                 "engine_configuration": stats.get("engine_config", {}),
                 "performance_metrics": stats.get("performance_metrics", {}),
-                "recommendations": []
+                "recommendations": [],
             }
 
             # Add performance recommendations
             db_stats = stats.get("database_stats", {}).get("statistics", {})
-            embedding_coverage = stats.get("database_stats", {}).get("embedding_coverage", 0)
+            embedding_coverage = stats.get("database_stats", {}).get(
+                "embedding_coverage", 0
+            )
 
             if embedding_coverage < 100:
-                performance_data["recommendations"].append({
-                    "type": "embedding_coverage",
-                    "message": f"Embedding coverage is {embedding_coverage:.1f}%. Consider running embedding update.",
-                    "priority": "high" if embedding_coverage < 50 else "medium"
-                })
+                performance_data["recommendations"].append(
+                    {
+                        "type": "embedding_coverage",
+                        "message": f"Embedding coverage is {embedding_coverage:.1f}%. Consider running embedding update.",
+                        "priority": "high" if embedding_coverage < 50 else "medium",
+                    }
+                )
 
             if db_stats.get("total_chunks", 0) == 0:
-                performance_data["recommendations"].append({
-                    "type": "data_availability",
-                    "message": "No documents found in search index. Add content to enable search.",
-                    "priority": "critical"
-                })
+                performance_data["recommendations"].append(
+                    {
+                        "type": "data_availability",
+                        "message": "No documents found in search index. Add content to enable search.",
+                        "priority": "critical",
+                    }
+                )
 
             return performance_data
         else:
             return {
                 "search_engine_status": "disabled",
                 "message": "Hybrid search engine not available",
-                "recommendations": [{
-                    "type": "engine_status",
-                    "message": "Enable hybrid search engine for full functionality",
-                    "priority": "high"
-                }]
+                "recommendations": [
+                    {
+                        "type": "engine_status",
+                        "message": "Enable hybrid search engine for full functionality",
+                        "priority": "high",
+                    }
+                ],
             }
 
     except Exception as e:
         logger.error(f"Failed to get search performance: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve search performance metrics"
+            detail="Failed to retrieve search performance metrics",
         )
+
 
 # Export router
 __all__ = ["search_router"]

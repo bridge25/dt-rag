@@ -33,23 +33,34 @@ router = APIRouter()
 
 class TaxonomyNodeCreate(BaseModel):
     """Request model for creating a taxonomy node"""
+
     node_name: str = Field(..., min_length=1, max_length=255, description="Node name")
     parent_node_id: Optional[int] = Field(None, description="Parent node ID")
     description: str = Field("", max_length=1000, description="Node description")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class TaxonomyNodeMove(BaseModel):
     """Request model for moving a taxonomy node"""
-    new_parent_id: Optional[int] = Field(None, description="New parent node ID (null for root)")
+
+    new_parent_id: Optional[int] = Field(
+        None, description="New parent node ID (null for root)"
+    )
     reason: str = Field("", max_length=500, description="Reason for moving")
 
 
 class TaxonomyRollback(BaseModel):
     """Request model for taxonomy rollback"""
+
     target_version: int = Field(..., gt=0, description="Target version to rollback to")
-    reason: str = Field(..., min_length=1, max_length=1000, description="Rollback reason")
-    performed_by: str = Field(..., min_length=1, max_length=255, description="User performing rollback")
+    reason: str = Field(
+        ..., min_length=1, max_length=1000, description="Rollback reason"
+    )
+    performed_by: str = Field(
+        ..., min_length=1, max_length=255, description="User performing rollback"
+    )
 
 
 def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
@@ -74,16 +85,16 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
                             "version": "1.8.1",
                             "node_id": "ai_rag_dynamic_001",
                             "canonical_path": ["AI", "RAG", "Dynamic"],
-                            "children": []
+                            "children": [],
                         },
                         {
                             "label": "Static",
                             "version": "1.8.1",
                             "node_id": "ai_rag_static_001",
                             "canonical_path": ["AI", "RAG", "Static"],
-                            "children": []
-                        }
-                    ]
+                            "children": [],
+                        },
+                    ],
                 },
                 {
                     "label": "ML",
@@ -96,16 +107,16 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
                             "version": "1.8.1",
                             "node_id": "ai_ml_classification_001",
                             "canonical_path": ["AI", "ML", "Classification"],
-                            "children": []
+                            "children": [],
                         },
                         {
                             "label": "Clustering",
                             "version": "1.8.1",
                             "node_id": "ai_ml_clustering_001",
                             "canonical_path": ["AI", "ML", "Clustering"],
-                            "children": []
-                        }
-                    ]
+                            "children": [],
+                        },
+                    ],
                 },
                 {
                     "label": "Taxonomy",
@@ -118,33 +129,32 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
                             "version": "1.8.1",
                             "node_id": "ai_taxonomy_hierarchical_001",
                             "canonical_path": ["AI", "Taxonomy", "Hierarchical"],
-                            "children": []
+                            "children": [],
                         },
                         {
                             "label": "Flat",
                             "version": "1.8.1",
                             "node_id": "ai_taxonomy_flat_001",
                             "canonical_path": ["AI", "Taxonomy", "Flat"],
-                            "children": []
-                        }
-                    ]
+                            "children": [],
+                        },
+                    ],
                 },
                 {
                     "label": "General",
                     "version": "1.8.1",
                     "node_id": "ai_general_001",
                     "canonical_path": ["AI", "General"],
-                    "children": []
-                }
-            ]
+                    "children": [],
+                },
+            ],
         }
     ]
 
 
 @router.get("/taxonomy/{version}/tree")
 async def get_taxonomy_tree_endpoint(
-    version: str,
-    api_key: str = Depends(verify_api_key)
+    version: str, api_key: str = Depends(verify_api_key)
 ):
     """
     Bridge Pack 스펙: GET /taxonomy/{version}/tree
@@ -156,7 +166,7 @@ async def get_taxonomy_tree_endpoint(
         if version not in ["1.8.1", "latest"]:
             raise HTTPException(
                 status_code=404,
-                detail=f"Taxonomy version '{version}' not found. Available: 1.8.1, latest"
+                detail=f"Taxonomy version '{version}' not found. Available: 1.8.1, latest",
             )
 
         # 실제 데이터베이스에서 분류체계 조회
@@ -172,10 +182,7 @@ async def get_taxonomy_tree_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Taxonomy tree error: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Taxonomy tree error: {str(e)}")
 
 
 @router.get("/taxonomy/versions")
@@ -189,11 +196,11 @@ def get_taxonomy_versions(api_key: str = Depends(verify_api_key)):
                 "version": "1.8.1",
                 "status": "stable",
                 "description": "Production stable version",
-                "created_at": "2025-09-05T00:00:00Z"
+                "created_at": "2025-09-05T00:00:00Z",
             }
         ],
         "current": "1.8.1",
-        "latest": "1.8.1"
+        "latest": "1.8.1",
     }
 
 
@@ -211,10 +218,12 @@ async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)):
                 "success": True,
                 "message": "Taxonomy DAG system initialized successfully",
                 "current_version": taxonomy_dag_manager.current_version,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
         else:
-            raise HTTPException(status_code=500, detail="Failed to initialize taxonomy DAG system")
+            raise HTTPException(
+                status_code=500, detail="Failed to initialize taxonomy DAG system"
+            )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -222,8 +231,10 @@ async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)):
 
 @router.get("/taxonomy/validate")
 async def validate_taxonomy_structure(
-    version: Optional[int] = Query(None, description="Version to validate (default: current)"),
-    api_key: str = Depends(verify_api_key)
+    version: Optional[int] = Query(
+        None, description="Version to validate (default: current)"
+    ),
+    api_key: str = Depends(verify_api_key),
 ):
     """Validate taxonomy DAG structure for cycles and consistency"""
     try:
@@ -236,7 +247,7 @@ async def validate_taxonomy_structure(
             "cycles": validation_result.cycles,
             "orphaned_nodes": validation_result.orphaned_nodes,
             "validation_timestamp": datetime.utcnow().isoformat(),
-            "version": version or taxonomy_dag_manager.current_version
+            "version": version or taxonomy_dag_manager.current_version,
         }
 
     except Exception as e:
@@ -245,8 +256,10 @@ async def validate_taxonomy_structure(
 
 @router.get("/taxonomy/dag/tree")
 async def get_taxonomy_dag_tree(
-    version: Optional[int] = Query(None, description="Version to retrieve (default: current)"),
-    api_key: str = Depends(verify_api_key)
+    version: Optional[int] = Query(
+        None, description="Version to retrieve (default: current)"
+    ),
+    api_key: str = Depends(verify_api_key),
 ):
     """Get taxonomy tree from DAG system with enhanced metadata"""
     try:
@@ -258,7 +271,7 @@ async def get_taxonomy_dag_tree(
         return {
             "tree": tree,
             "version": version or taxonomy_dag_manager.current_version,
-            "retrieved_at": datetime.utcnow().isoformat()
+            "retrieved_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -267,8 +280,7 @@ async def get_taxonomy_dag_tree(
 
 @router.post("/taxonomy/nodes")
 async def create_taxonomy_node(
-    node_data: TaxonomyNodeCreate,
-    api_key: str = Depends(verify_api_key)
+    node_data: TaxonomyNodeCreate, api_key: str = Depends(verify_api_key)
 ):
     """Create a new taxonomy node with DAG validation"""
     try:
@@ -276,14 +288,14 @@ async def create_taxonomy_node(
             node_name=node_data.node_name,
             parent_node_id=node_data.parent_node_id,
             description=node_data.description,
-            metadata=node_data.metadata
+            metadata=node_data.metadata,
         )
 
         return {
             "success": success,
             "node_id": node_id if success else None,
             "message": message,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -294,21 +306,21 @@ async def create_taxonomy_node(
 async def move_taxonomy_node_endpoint(
     node_id: int = Path(..., description="Node ID to move"),
     move_data: TaxonomyNodeMove = Body(...),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Move a taxonomy node to a new parent with cycle detection"""
     try:
         success, message = await move_taxonomy_node(
             node_id=node_id,
             new_parent_id=move_data.new_parent_id,
-            reason=move_data.reason
+            reason=move_data.reason,
         )
 
         return {
             "success": success,
             "node_id": node_id if success else None,
             "message": message,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -319,7 +331,7 @@ async def move_taxonomy_node_endpoint(
 async def get_node_ancestry_endpoint(
     node_id: int = Path(..., description="Node ID"),
     version: Optional[int] = Query(None, description="Version (default: current)"),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key),
 ):
     """Get complete ancestry path for a taxonomy node"""
     try:
@@ -330,7 +342,7 @@ async def get_node_ancestry_endpoint(
             "version": version or taxonomy_dag_manager.current_version,
             "ancestry": ancestry,
             "path_length": len(ancestry),
-            "retrieved_at": datetime.utcnow().isoformat()
+            "retrieved_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -339,22 +351,21 @@ async def get_node_ancestry_endpoint(
 
 @router.post("/taxonomy/rollback")
 async def rollback_taxonomy_version(
-    rollback_data: TaxonomyRollback,
-    api_key: str = Depends(verify_api_key)
+    rollback_data: TaxonomyRollback, api_key: str = Depends(verify_api_key)
 ):
     """Rollback taxonomy to a specific version (TTR ≤ 15분)"""
     try:
         success, message = await rollback_taxonomy(
             target_version=rollback_data.target_version,
             reason=rollback_data.reason,
-            performed_by=rollback_data.performed_by
+            performed_by=rollback_data.performed_by,
         )
 
         return {
             "success": success,
             "target_version": rollback_data.target_version if success else None,
             "message": message,
-            "rollback_timestamp": datetime.utcnow().isoformat()
+            "rollback_timestamp": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -371,7 +382,7 @@ async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)):
             "history": history,
             "total_versions": len(history),
             "current_version": taxonomy_dag_manager.current_version,
-            "retrieved_at": datetime.utcnow().isoformat()
+            "retrieved_at": datetime.utcnow().isoformat(),
         }
 
     except Exception as e:
@@ -399,31 +410,31 @@ async def get_taxonomy_system_status(api_key: str = Depends(verify_api_key)):
                 "is_operational": True,
                 "current_version": current_version,
                 "dag_valid": validation_result.is_valid,
-                "last_check": datetime.utcnow().isoformat()
+                "last_check": datetime.utcnow().isoformat(),
             },
             "structure_metrics": {
                 "total_nodes": tree.get("total_nodes", 0),
                 "total_edges": tree.get("total_edges", 0),
                 "root_nodes": len(tree.get("roots", [])),
-                "max_depth": None  # TODO: Calculate max depth
+                "max_depth": None,  # TODO: Calculate max depth
             },
             "quality_metrics": {
                 "has_errors": len(validation_result.errors) > 0,
                 "has_warnings": len(validation_result.warnings) > 0,
                 "has_cycles": len(validation_result.cycles) > 0,
-                "orphaned_nodes_count": len(validation_result.orphaned_nodes)
+                "orphaned_nodes_count": len(validation_result.orphaned_nodes),
             },
             "version_metrics": {
                 "total_versions": len(history),
                 "last_migration": history[0]["applied_at"] if history else None,
                 "rollback_capability": "enabled",
-                "migration_history_depth": len(history)
+                "migration_history_depth": len(history),
             },
             "performance_metrics": {
                 "rollback_ttr_target": "≤ 15분",
                 "validation_speed": "< 1초 (for <10k nodes)",
-                "api_response_time": "< 100ms (typical)"
-            }
+                "api_response_time": "< 100ms (typical)",
+            },
         }
 
         return status

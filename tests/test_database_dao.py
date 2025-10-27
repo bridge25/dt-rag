@@ -5,20 +5,23 @@ Unit tests for Database DAO classes (Phase 1-3)
 
 Tests the database access objects including TaxonomyDAO, SearchDAO, and ClassifyDAO.
 """
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 import sys
 import os
 
 # Set test DATABASE_URL before importing database module
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/dt_rag_test"
+os.environ["DATABASE_URL"] = (
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/dt_rag_test"
+)
 
 from apps.api.database import (
     TaxonomyDAO,
     SearchDAO,
     ClassifyDAO,
     DatabaseManager,
-    db_manager
+    db_manager,
 )
 
 
@@ -41,7 +44,7 @@ class TestTaxonomyDAO:
     """Test TaxonomyDAO methods"""
 
     @pytest.mark.asyncio
-    @patch('apps.api.database.db_manager')
+    @patch("apps.api.database.db_manager")
     async def test_get_tree_returns_structure(self, mock_db):
         """Should return taxonomy tree structure"""
         # Mock database session
@@ -82,7 +85,7 @@ class TestSearchDAO:
     """Test SearchDAO methods"""
 
     @pytest.mark.asyncio
-    @patch('apps.api.database.db_manager')
+    @patch("apps.api.database.db_manager")
     async def test_hybrid_search_returns_hits(self, mock_db):
         """Should return search hits from hybrid search"""
         # Mock database session
@@ -206,12 +209,7 @@ class TestClassifyDAO:
     @pytest.mark.asyncio
     async def test_classify_returns_valid_confidence_range(self):
         """Should return confidence between 0 and 1"""
-        texts = [
-            "RAG vector search",
-            "machine learning model",
-            "random text",
-            ""
-        ]
+        texts = ["RAG vector search", "machine learning model", "random text", ""]
 
         for text in texts:
             if text:  # Skip empty string for actual classify
@@ -233,7 +231,7 @@ class TestDatabaseInitialization:
     """Test database initialization functions"""
 
     @pytest.mark.asyncio
-    @patch('apps.api.database.db_manager')
+    @patch("apps.api.database.db_manager")
     async def test_init_database_calls_manager(self, mock_db):
         """Should call database manager init_database"""
         from apps.api.database import init_database
@@ -245,7 +243,7 @@ class TestDatabaseInitialization:
         mock_db.init_database.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch('apps.api.database.db_manager')
+    @patch("apps.api.database.db_manager")
     async def test_test_database_connection_calls_manager(self, mock_db):
         """Should call database manager test_connection"""
         from apps.api.database import test_database_connection
@@ -269,9 +267,7 @@ class TestDataAccessPatterns:
 
         # Perform search with taxonomy filter
         hits = await SearchDAO.hybrid_search(
-            query="test",
-            filters={"taxonomy_path": tree[0]["canonical_path"]},
-            topk=5
+            query="test", filters={"taxonomy_path": tree[0]["canonical_path"]}, topk=5
         )
         assert isinstance(hits, list)
 
@@ -286,8 +282,6 @@ class TestDataAccessPatterns:
 
         # Search within classified category
         hits = await SearchDAO.hybrid_search(
-            query="RAG",
-            filters={"taxonomy_path": classification["canonical"]},
-            topk=5
+            query="RAG", filters={"taxonomy_path": classification["canonical"]}, topk=5
         )
         assert isinstance(hits, list)

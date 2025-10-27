@@ -32,9 +32,9 @@ class TestToolRegistry:
             input_schema=ToolSchema(
                 type="object",
                 properties={"query": {"type": "string"}},
-                required=["query"]
+                required=["query"],
             ),
-            execute=lambda x: {"result": "search result"}
+            execute=lambda x: {"result": "search result"},
         )
 
         registry.register(tool)
@@ -54,7 +54,7 @@ class TestToolRegistry:
                 name=f"tool_{i}",
                 description=f"Tool {i}",
                 input_schema=ToolSchema(type="object", properties={}, required=[]),
-                execute=lambda x: {}
+                execute=lambda x: {},
             )
             registry.register(tool)
 
@@ -121,7 +121,7 @@ class TestToolRegistry:
             name="test_tool",
             description="Test",
             input_schema=ToolSchema(type="object", properties={}, required=[]),
-            execute=lambda x: {}
+            execute=lambda x: {},
         )
 
         registry1.register(tool)

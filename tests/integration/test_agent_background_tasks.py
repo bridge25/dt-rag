@@ -39,7 +39,7 @@ class TestAgentBackgroundTasksE2E:
                 taxonomy_version="1.0.0",
                 scope_description="Agent for E2E background task testing",
                 retrieval_config={"top_k": 5, "strategy": "hybrid"},
-                features_config={}
+                features_config={},
             )
             yield agent
 
@@ -54,11 +54,7 @@ class TestAgentBackgroundTasksE2E:
         yield queue
 
     @pytest.mark.asyncio
-    async def test_end_to_end_coverage_refresh(
-        self,
-        test_agent,
-        task_queue
-    ):
+    async def test_end_to_end_coverage_refresh(self, test_agent, task_queue):
         """
         Given: Agent exists with taxonomy scope
         When: Enqueue coverage refresh → Worker processes → Coverage updated
@@ -76,7 +72,7 @@ class TestAgentBackgroundTasksE2E:
         task_id = await task_queue.enqueue_coverage_task(
             agent_id=test_agent.agent_id,
             taxonomy_node_ids=test_agent.taxonomy_node_ids,
-            taxonomy_version=test_agent.taxonomy_version
+            taxonomy_version=test_agent.taxonomy_version,
         )
 
         assert task_id.startswith("agent-coverage-")
@@ -104,7 +100,9 @@ class TestAgentBackgroundTasksE2E:
             # 4. Verify task completed
             async with async_session() as session:
                 task = await session.get(BackgroundTask, task_id)
-                assert task.status == "completed", f"Expected 'completed', got '{task.status}'"
+                assert (
+                    task.status == "completed"
+                ), f"Expected 'completed', got '{task.status}'"
                 assert task.result is not None
                 assert "coverage_percent" in task.result
                 assert task.completed_at is not None
@@ -112,11 +110,11 @@ class TestAgentBackgroundTasksE2E:
             # 5. Verify coverage history created
             async with async_session() as session:
                 history = await CoverageHistoryDAO.query_history(
-                    session=session,
-                    agent_id=test_agent.agent_id,
-                    limit=10
+                    session=session, agent_id=test_agent.agent_id, limit=10
                 )
-                assert len(history) >= 1, "Coverage history should have at least 1 entry"
+                assert (
+                    len(history) >= 1
+                ), "Coverage history should have at least 1 entry"
 
         finally:
             # Cleanup: stop worker
@@ -124,11 +122,7 @@ class TestAgentBackgroundTasksE2E:
             await worker_task
 
     @pytest.mark.asyncio
-    async def test_task_cancellation_pending(
-        self,
-        test_agent,
-        task_queue
-    ):
+    async def test_task_cancellation_pending(self, test_agent, task_queue):
         """
         Given: Task in pending status
         When: Cancel task (DELETE /tasks/{task_id})
@@ -144,7 +138,7 @@ class TestAgentBackgroundTasksE2E:
         task_id = await task_queue.enqueue_coverage_task(
             agent_id=test_agent.agent_id,
             taxonomy_node_ids=test_agent.taxonomy_node_ids,
-            taxonomy_version=test_agent.taxonomy_version
+            taxonomy_version=test_agent.taxonomy_version,
         )
 
         # 2. Remove job from queue
@@ -169,11 +163,7 @@ class TestAgentBackgroundTasksE2E:
         # Note: queue_size may be 0 or contain other tasks, but removed task should not be there
 
     @pytest.mark.asyncio
-    async def test_task_timeout(
-        self,
-        test_agent,
-        task_queue
-    ):
+    async def test_task_timeout(self, test_agent, task_queue):
         """
         Given: Coverage calculation takes > timeout seconds
         When: Worker processes task
@@ -186,7 +176,7 @@ class TestAgentBackgroundTasksE2E:
         4. Task status updated to 'timeout'
         """
         # 1. Mock coverage calculation to timeout
-        with patch.object(CoverageMeterService, 'calculate_coverage') as mock_calc:
+        with patch.object(CoverageMeterService, "calculate_coverage") as mock_calc:
             # Make calculate_coverage sleep longer than timeout
             async def slow_coverage(*args, **kwargs):
                 await asyncio.sleep(61)
@@ -197,7 +187,7 @@ class TestAgentBackgroundTasksE2E:
             task_id = await task_queue.enqueue_coverage_task(
                 agent_id=test_agent.agent_id,
                 taxonomy_node_ids=test_agent.taxonomy_node_ids,
-                taxonomy_version=test_agent.taxonomy_version
+                taxonomy_version=test_agent.taxonomy_version,
             )
 
             # 3. Start worker with short timeout
@@ -211,7 +201,9 @@ class TestAgentBackgroundTasksE2E:
                 # 5. Verify task status
                 async with async_session() as session:
                     task = await session.get(BackgroundTask, task_id)
-                    assert task.status == "timeout", f"Expected 'timeout', got '{task.status}'"
+                    assert (
+                        task.status == "timeout"
+                    ), f"Expected 'timeout', got '{task.status}'"
                     assert "timeout" in task.error.lower()
 
             finally:
@@ -220,11 +212,7 @@ class TestAgentBackgroundTasksE2E:
                 await worker_task
 
     @pytest.mark.asyncio
-    async def test_task_cancellation_running(
-        self,
-        test_agent,
-        task_queue
-    ):
+    async def test_task_cancellation_running(self, test_agent, task_queue):
         """
         Given: Task in running status
         When: Set cancellation_requested=true
@@ -237,7 +225,8 @@ class TestAgentBackgroundTasksE2E:
         4. Task status updated to 'cancelled'
         """
         # 1. Mock coverage calculation with cancellation check simulation
-        with patch.object(CoverageMeterService, 'calculate_coverage') as mock_calc:
+        with patch.object(CoverageMeterService, "calculate_coverage") as mock_calc:
+
             async def cancellable_coverage(*args, **kwargs):
                 # Simulate long-running task that checks cancellation
                 for _ in range(10):
@@ -250,7 +239,7 @@ class TestAgentBackgroundTasksE2E:
             task_id = await task_queue.enqueue_coverage_task(
                 agent_id=test_agent.agent_id,
                 taxonomy_node_ids=test_agent.taxonomy_node_ids,
-                taxonomy_version=test_agent.taxonomy_version
+                taxonomy_version=test_agent.taxonomy_version,
             )
 
             # 3. Start worker
@@ -287,11 +276,7 @@ class TestAgentBackgroundTasksE2E:
                 await worker_task
 
     @pytest.mark.asyncio
-    async def test_webhook_delivery_on_completion(
-        self,
-        test_agent,
-        task_queue
-    ):
+    async def test_webhook_delivery_on_completion(self, test_agent, task_queue):
         """
         Given: Task enqueued with webhook_url
         When: Task completes successfully
@@ -308,7 +293,10 @@ class TestAgentBackgroundTasksE2E:
         webhook_payload = None
 
         # Mock WebhookService.send_webhook
-        with patch('apps.api.background.webhook_service.WebhookService.send_webhook') as mock_webhook:
+        with patch(
+            "apps.api.background.webhook_service.WebhookService.send_webhook"
+        ) as mock_webhook:
+
             async def capture_webhook(url, payload):
                 nonlocal webhook_called, webhook_payload
                 webhook_called = True
@@ -322,7 +310,7 @@ class TestAgentBackgroundTasksE2E:
                 agent_id=test_agent.agent_id,
                 taxonomy_node_ids=test_agent.taxonomy_node_ids,
                 taxonomy_version=test_agent.taxonomy_version,
-                webhook_url=webhook_url
+                webhook_url=webhook_url,
             )
 
             # Start worker
@@ -342,7 +330,9 @@ class TestAgentBackgroundTasksE2E:
                 # Verify webhook called
                 await asyncio.sleep(2)  # Allow time for webhook delivery
 
-                assert webhook_called is True, "Webhook should be called on task completion"
+                assert (
+                    webhook_called is True
+                ), "Webhook should be called on task completion"
                 assert webhook_payload is not None
                 assert webhook_payload["task_id"] == task_id
                 assert webhook_payload["status"] == "completed"
@@ -353,10 +343,7 @@ class TestAgentBackgroundTasksE2E:
                 await worker_task
 
     @pytest.mark.asyncio
-    async def test_concurrent_coverage_requests(
-        self,
-        task_queue
-    ):
+    async def test_concurrent_coverage_requests(self, task_queue):
         """
         Given: Multiple agents exist
         When: Enqueue 10 coverage refresh tasks concurrently
@@ -379,7 +366,7 @@ class TestAgentBackgroundTasksE2E:
                     taxonomy_version="1.0.0",
                     scope_description=f"Agent {i} for concurrent test",
                     retrieval_config={"top_k": 5},
-                    features_config={}
+                    features_config={},
                 )
                 agents.append(agent)
 
@@ -390,7 +377,7 @@ class TestAgentBackgroundTasksE2E:
                 task = task_queue.enqueue_coverage_task(
                     agent_id=agent.agent_id,
                     taxonomy_node_ids=agent.taxonomy_node_ids,
-                    taxonomy_version=agent.taxonomy_version
+                    taxonomy_version=agent.taxonomy_version,
                 )
                 tasks.append(task)
 

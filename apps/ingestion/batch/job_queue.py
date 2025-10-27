@@ -44,13 +44,17 @@ class JobQueue:
             logger.error(f"Failed to check idempotency key {idempotency_key}: {e}")
             return None
 
-    async def store_idempotency_key(self, idempotency_key: str, job_id: str, ttl: int = 3600) -> bool:
+    async def store_idempotency_key(
+        self, idempotency_key: str, job_id: str, ttl: int = 3600
+    ) -> bool:
         await self.initialize()
 
         try:
             key = self._get_idempotency_key(idempotency_key)
             await self.redis_manager.set(key, job_id, ttl=ttl)
-            logger.info(f"Stored idempotency key {idempotency_key} for job {job_id} with TTL {ttl}s")
+            logger.info(
+                f"Stored idempotency key {idempotency_key} for job {job_id} with TTL {ttl}s"
+            )
             return True
         except Exception as e:
             logger.error(f"Failed to store idempotency key {idempotency_key}: {e}")
@@ -70,10 +74,16 @@ class JobQueue:
             if idempotency_key:
                 existing_job_id = await self.check_idempotency_key(idempotency_key)
                 if existing_job_id:
-                    logger.warning(f"Duplicate idempotency key {idempotency_key} detected (existing job: {existing_job_id})")
-                    raise ValueError(f"Duplicate request with idempotency key: {idempotency_key}")
+                    logger.warning(
+                        f"Duplicate idempotency key {idempotency_key} detected (existing job: {existing_job_id})"
+                    )
+                    raise ValueError(
+                        f"Duplicate request with idempotency key: {idempotency_key}"
+                    )
 
-            priority_level = "high" if priority <= 3 else ("medium" if priority <= 7 else "low")
+            priority_level = (
+                "high" if priority <= 3 else ("medium" if priority <= 7 else "low")
+            )
 
             queue_key = self._get_queue_key(priority_level)
 
@@ -120,7 +130,9 @@ class JobQueue:
                     _, job_payload_bytes = result
                     job_payload = json.loads(job_payload_bytes.decode("utf-8"))
 
-                    logger.info(f"Dequeued job {job_payload['job_id']} from {priority} priority")
+                    logger.info(
+                        f"Dequeued job {job_payload['job_id']} from {priority} priority"
+                    )
                     return job_payload
 
             return None
@@ -236,7 +248,7 @@ class JobQueue:
         job_id: str,
         command_id: str,
         job_data: Dict[str, Any],
-        priority: str = "medium"
+        priority: str = "medium",
     ) -> bool:
         await self.initialize()
 
@@ -253,8 +265,10 @@ class JobQueue:
                 logger.error(f"Job {job_id} exceeded max retries ({max_retries})")
                 return False
 
-            delay_seconds = 2 ** retry_count
-            next_retry_at = (datetime.utcnow() + timedelta(seconds=delay_seconds)).isoformat()
+            delay_seconds = 2**retry_count
+            next_retry_at = (
+                datetime.utcnow() + timedelta(seconds=delay_seconds)
+            ).isoformat()
 
             await self.set_job_status(
                 job_id=job_id,
@@ -265,7 +279,7 @@ class JobQueue:
                 retry_count=retry_count,
                 max_retries=max_retries,
                 last_attempt_at=datetime.utcnow().isoformat(),
-                next_retry_at=next_retry_at
+                next_retry_at=next_retry_at,
             )
 
             await asyncio.sleep(delay_seconds)
@@ -277,10 +291,12 @@ class JobQueue:
                 command_id=command_id,
                 job_data=job_data,
                 priority=priority,
-                idempotency_key=idempotency_key
+                idempotency_key=idempotency_key,
             )
 
-            logger.info(f"Retrying job {job_id} (attempt {retry_count}/{max_retries}) after {delay_seconds}s with idempotency_key={idempotency_key}")
+            logger.info(
+                f"Retrying job {job_id} (attempt {retry_count}/{max_retries}) after {delay_seconds}s with idempotency_key={idempotency_key}"
+            )
             return True
 
         except Exception as e:

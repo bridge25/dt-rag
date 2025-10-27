@@ -70,7 +70,9 @@ class PipelineState(BaseModel):
     start_time: float = Field(default_factory=time.time)
     step_timings: Dict[str, float] = Field(default_factory=dict)
     plan: Optional[Dict[str, Any]] = None  # Meta-planner output
-    tool_results: List[Dict[str, Any]] = Field(default_factory=list)  # Tool execution results
+    tool_results: List[Dict[str, Any]] = Field(
+        default_factory=list
+    )  # Tool execution results
     debate_result: Optional[Any] = None  # Debate result (DEBATE-001)
 
 
@@ -489,6 +491,7 @@ def get_global_replay_buffer():
     global _global_replay_buffer
     if _global_replay_buffer is None:
         from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
+
         _global_replay_buffer = ReplayBuffer(max_size=10000)
     return _global_replay_buffer
 
@@ -501,7 +504,9 @@ class LangGraphPipeline:
 
         self.name = "DT-RAG-7Step-Pipeline"
         self.replay_buffer = ReplayBuffer(max_size=10000)
-        logger.info("LangGraph pipeline initialized (7-step pipeline with replay buffer)")
+        logger.info(
+            "LangGraph pipeline initialized (7-step pipeline with replay buffer)"
+        )
 
     def _encode_state(self, state: PipelineState) -> str:
         """

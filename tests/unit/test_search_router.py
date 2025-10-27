@@ -19,7 +19,7 @@ from apps.api.routers.search_router import (
     SearchAnalytics,
     SearchConfig,
     ReindexRequest,
-    get_search_service
+    get_search_service,
 )
 
 # Import common schemas
@@ -35,20 +35,29 @@ if str(packages_path) not in sys.path:
 try:
     # Try importing from packages directory in sys.path
     from common_schemas.common_schemas.models import (
-        SearchRequest, SearchResponse, SearchHit, SourceMeta
+        SearchRequest,
+        SearchResponse,
+        SearchHit,
+        SourceMeta,
     )
 except ImportError:
     try:
         # Try with direct packages path
         sys.path.insert(0, str(project_root / "packages"))
         from common_schemas.common_schemas.models import (
-            SearchRequest, SearchResponse, SearchHit, SourceMeta
+            SearchRequest,
+            SearchResponse,
+            SearchHit,
+            SourceMeta,
         )
     except ImportError:
         # Final fallback: direct path import
         sys.path.insert(0, str(project_root))
         from packages.common_schemas.common_schemas.models import (
-            SearchRequest, SearchResponse, SearchHit, SourceMeta
+            SearchRequest,
+            SearchResponse,
+            SearchHit,
+            SourceMeta,
         )
 
 
@@ -64,9 +73,7 @@ class TestSearchService:
     async def test_search_basic(self, search_service):
         """Test basic search functionality"""
         request = SearchRequest(
-            q="machine learning",
-            max_results=10,
-            canonical_in=[["Technology", "AI"]]
+            q="machine learning", max_results=10, canonical_in=[["Technology", "AI"]]
         )
 
         response = await search_service.search(request)
@@ -137,7 +144,7 @@ class TestSearchService:
             vector_weight=0.4,
             rerank_threshold=0.8,
             max_candidates=150,
-            embedding_model="text-embedding-3-small"
+            embedding_model="text-embedding-3-small",
         )
 
         updated_config = await search_service.update_config(new_config)
@@ -151,9 +158,7 @@ class TestSearchService:
     async def test_reindex_incremental(self, search_service):
         """Test incremental reindex operation"""
         request = ReindexRequest(
-            taxonomy_version="1.8.1",
-            incremental=True,
-            force=False
+            taxonomy_version="1.8.1", incremental=True, force=False
         )
 
         result = await search_service.reindex(request)
@@ -168,10 +173,7 @@ class TestSearchService:
     @pytest.mark.unit
     async def test_reindex_full(self, search_service):
         """Test full reindex operation"""
-        request = ReindexRequest(
-            incremental=False,
-            force=True
-        )
+        request = ReindexRequest(incremental=False, force=True)
 
         result = await search_service.reindex(request)
 
@@ -208,10 +210,7 @@ class TestSearchConfig:
     def test_search_config_validation_valid(self):
         """Test SearchConfig validation with valid values"""
         config = SearchConfig(
-            bm25_weight=0.3,
-            vector_weight=0.7,
-            rerank_threshold=0.9,
-            max_candidates=200
+            bm25_weight=0.3, vector_weight=0.7, rerank_threshold=0.9, max_candidates=200
         )
 
         assert config.bm25_weight == 0.3
@@ -268,11 +267,7 @@ class TestReindexRequest:
     @pytest.mark.unit
     def test_reindex_request_with_values(self):
         """Test ReindexRequest with explicit values"""
-        request = ReindexRequest(
-            taxonomy_version="1.8.2",
-            incremental=True,
-            force=True
-        )
+        request = ReindexRequest(taxonomy_version="1.8.2", incremental=True, force=True)
 
         assert request.taxonomy_version == "1.8.2"
         assert request.incremental is True
@@ -306,7 +301,7 @@ class TestSearchRouterEndpoints:
         request_data = {
             "q": "machine learning algorithms",
             "max_results": 10,
-            "canonical_in": [["Technology", "AI"]]
+            "canonical_in": [["Technology", "AI"]],
         }
 
         response = client.post("/search/", json=request_data)
@@ -326,10 +321,7 @@ class TestSearchRouterEndpoints:
     @pytest.mark.unit
     def test_search_documents_empty_query(self, client):
         """Test search with empty query"""
-        request_data = {
-            "q": "",
-            "max_results": 10
-        }
+        request_data = {"q": "", "max_results": 10}
 
         response = client.post("/search/", json=request_data)
 
@@ -339,10 +331,7 @@ class TestSearchRouterEndpoints:
     @pytest.mark.unit
     def test_search_documents_whitespace_query(self, client):
         """Test search with whitespace-only query"""
-        request_data = {
-            "q": "   ",
-            "max_results": 10
-        }
+        request_data = {"q": "   ", "max_results": 10}
 
         response = client.post("/search/", json=request_data)
 
@@ -352,10 +341,7 @@ class TestSearchRouterEndpoints:
     @pytest.mark.unit
     def test_search_documents_max_results_exceeded(self, client):
         """Test search with max results exceeded"""
-        request_data = {
-            "q": "test query",
-            "max_results": 150  # Exceeds limit of 100
-        }
+        request_data = {"q": "test query", "max_results": 150}  # Exceeds limit of 100
 
         response = client.post("/search/", json=request_data)
 
@@ -365,9 +351,7 @@ class TestSearchRouterEndpoints:
     @pytest.mark.unit
     def test_search_documents_minimal_request(self, client):
         """Test search with minimal valid request"""
-        request_data = {
-            "q": "test"
-        }
+        request_data = {"q": "test"}
 
         response = client.post("/search/", json=request_data)
 
@@ -384,8 +368,8 @@ class TestSearchRouterEndpoints:
             "max_results": 20,
             "canonical_in": [
                 ["Technology", "AI", "Machine Learning"],
-                ["Science", "Computer Science"]
-            ]
+                ["Science", "Computer Science"],
+            ],
         }
 
         response = client.post("/search/", json=request_data)
@@ -432,7 +416,7 @@ class TestSearchRouterEndpoints:
             "vector_weight": 0.4,
             "rerank_threshold": 0.8,
             "max_candidates": 150,
-            "embedding_model": "text-embedding-3-large"
+            "embedding_model": "text-embedding-3-large",
         }
 
         response = client.put("/search/config", json=config_data)
@@ -447,10 +431,7 @@ class TestSearchRouterEndpoints:
     @pytest.mark.unit
     def test_update_search_config_invalid_weights(self, client):
         """Test updating search configuration with invalid weights"""
-        config_data = {
-            "bm25_weight": 1.5,  # Invalid: > 1.0
-            "vector_weight": 0.4
-        }
+        config_data = {"bm25_weight": 1.5, "vector_weight": 0.4}  # Invalid: > 1.0
 
         response = client.put("/search/config", json=config_data)
 
@@ -462,7 +443,7 @@ class TestSearchRouterEndpoints:
         request_data = {
             "taxonomy_version": "1.8.2",
             "incremental": True,
-            "force": False
+            "force": False,
         }
 
         response = client.post("/search/reindex", json=request_data)
@@ -477,10 +458,7 @@ class TestSearchRouterEndpoints:
     @pytest.mark.unit
     def test_trigger_reindex_full(self, client):
         """Test triggering full reindex"""
-        request_data = {
-            "incremental": False,
-            "force": True
-        }
+        request_data = {"incremental": False, "force": True}
 
         response = client.post("/search/reindex", json=request_data)
 
@@ -533,18 +511,16 @@ class TestSearchRouterWithMocks:
                     score=0.95,
                     text="Test search result",
                     source=SourceMeta(
-                        url="https://test.com",
-                        title="Test Document",
-                        date="2024-01-01"
+                        url="https://test.com", title="Test Document", date="2024-01-01"
                     ),
-                    taxonomy_path=["Test", "Category"]
+                    taxonomy_path=["Test", "Category"],
                 )
             ],
             latency=0.025,
             request_id="test-request-id",
             total_candidates=25,
             sources_count=5,
-            taxonomy_version="test-version"
+            taxonomy_version="test-version",
         )
         service.search.return_value = mock_response
 
@@ -554,7 +530,7 @@ class TestSearchRouterWithMocks:
             avg_latency_ms=30.0,
             avg_results_count=7.5,
             top_queries=[{"query": "test", "count": 100}],
-            search_patterns={"Test": 50}
+            search_patterns={"Test": 50},
         )
         service.get_analytics.return_value = mock_analytics
 
@@ -568,7 +544,7 @@ class TestSearchRouterWithMocks:
             "job_id": "test-job-id",
             "status": "started",
             "estimated_duration_minutes": 5,
-            "incremental": False
+            "incremental": False,
         }
         service.reindex.return_value = mock_reindex
 
@@ -577,10 +553,7 @@ class TestSearchRouterWithMocks:
     @pytest.mark.unit
     def test_search_with_mock_service(self, client_with_mock, mock_search_service):
         """Test search endpoint with mocked service"""
-        request_data = {
-            "q": "test query",
-            "max_results": 5
-        }
+        request_data = {"q": "test query", "max_results": 5}
 
         response = client_with_mock.post("/search/", json=request_data)
 
@@ -601,9 +574,7 @@ class TestSearchRouterWithMocks:
         # Configure mock to raise exception
         mock_search_service.search.side_effect = Exception("Database connection failed")
 
-        request_data = {
-            "q": "test query"
-        }
+        request_data = {"q": "test query"}
 
         response = client_with_mock.post("/search/", json=request_data)
 
@@ -622,7 +593,9 @@ class TestSearchRouterWithMocks:
         mock_search_service.get_analytics.assert_called_once()
 
     @pytest.mark.unit
-    def test_config_endpoints_with_mock_service(self, client_with_mock, mock_search_service):
+    def test_config_endpoints_with_mock_service(
+        self, client_with_mock, mock_search_service
+    ):
         """Test config endpoints with mocked service"""
         # Test GET config
         response = client_with_mock.get("/search/config")

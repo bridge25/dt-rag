@@ -13,7 +13,9 @@ class TestChunkingPerformanceBenchmark:
         )
 
         chunks = self.chunker.chunk_text(text)
-        boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(chunks)
+        boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(
+            chunks
+        )
 
         print(f"\n100 chars test:")
         print(f"  Text length: {len(text)} chars")
@@ -22,7 +24,9 @@ class TestChunkingPerformanceBenchmark:
         print(f"  Target: ≥90%")
         print(f"  Status: {'PASS' if boundary_rate >= 0.90 else 'FAIL'}")
 
-        assert boundary_rate >= 0.90, f"Boundary rate {boundary_rate * 100:.2f}% below target 90%"
+        assert (
+            boundary_rate >= 0.90
+        ), f"Boundary rate {boundary_rate * 100:.2f}% below target 90%"
 
     def test_chunking_1000_chars(self):
         text = (
@@ -49,7 +53,9 @@ class TestChunkingPerformanceBenchmark:
         )
 
         chunks = self.chunker.chunk_text(text)
-        boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(chunks)
+        boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(
+            chunks
+        )
 
         print(f"\n1000 chars test:")
         print(f"  Text length: {len(text)} chars")
@@ -58,7 +64,9 @@ class TestChunkingPerformanceBenchmark:
         print(f"  Target: ≥90%")
         print(f"  Status: {'PASS' if boundary_rate >= 0.90 else 'FAIL'}")
 
-        assert boundary_rate >= 0.90, f"Boundary rate {boundary_rate * 100:.2f}% below target 90%"
+        assert (
+            boundary_rate >= 0.90
+        ), f"Boundary rate {boundary_rate * 100:.2f}% below target 90%"
 
     def test_chunking_10000_chars(self):
         text = (
@@ -172,7 +180,9 @@ class TestChunkingPerformanceBenchmark:
         )
 
         chunks = self.chunker.chunk_text(text)
-        boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(chunks)
+        boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(
+            chunks
+        )
 
         print(f"\n10000 chars test:")
         print(f"  Text length: {len(text)} chars")
@@ -181,43 +191,55 @@ class TestChunkingPerformanceBenchmark:
         print(f"  Target: ≥90%")
         print(f"  Status: {'PASS' if boundary_rate >= 0.90 else 'FAIL'}")
 
-        assert boundary_rate >= 0.90, f"Boundary rate {boundary_rate * 100:.2f}% below target 90%"
+        assert (
+            boundary_rate >= 0.90
+        ), f"Boundary rate {boundary_rate * 100:.2f}% below target 90%"
 
     def test_summary_table(self):
         test_cases = [
-            ("100 chars",
-             "This is a short test. It has multiple sentences. "
-             "Each sentence is separated properly. This is the fourth sentence."),
-            ("1000 chars",
-             "Natural language processing is a field of artificial intelligence. "
-             "It focuses on the interaction between computers and humans. "
-             "Through natural language, we can communicate effectively. "
-             "The development of NLP has been significant. "
-             "Many applications use NLP today. "
-             "Voice assistants are one example. "
-             "Machine translation is another important application. "
-             "Sentiment analysis helps understand customer feedback. "
-             "Text summarization saves time for users. "
-             "Named entity recognition identifies important information. "
-             "Part of speech tagging analyzes grammatical structure. "
-             "Dependency parsing reveals relationships between words. "
-             "Topic modeling discovers themes in documents. "
-             "Text classification organizes content automatically. "
-             "Question answering systems provide quick information. "
-             "Chatbots engage users in conversation. "
-             "Information extraction finds structured data. "
-             "Text generation creates human-like content. "
-             "Language models predict word sequences. "
-             "Deep learning has revolutionized NLP."),
+            (
+                "100 chars",
+                "This is a short test. It has multiple sentences. "
+                "Each sentence is separated properly. This is the fourth sentence.",
+            ),
+            (
+                "1000 chars",
+                "Natural language processing is a field of artificial intelligence. "
+                "It focuses on the interaction between computers and humans. "
+                "Through natural language, we can communicate effectively. "
+                "The development of NLP has been significant. "
+                "Many applications use NLP today. "
+                "Voice assistants are one example. "
+                "Machine translation is another important application. "
+                "Sentiment analysis helps understand customer feedback. "
+                "Text summarization saves time for users. "
+                "Named entity recognition identifies important information. "
+                "Part of speech tagging analyzes grammatical structure. "
+                "Dependency parsing reveals relationships between words. "
+                "Topic modeling discovers themes in documents. "
+                "Text classification organizes content automatically. "
+                "Question answering systems provide quick information. "
+                "Chatbots engage users in conversation. "
+                "Information extraction finds structured data. "
+                "Text generation creates human-like content. "
+                "Language models predict word sequences. "
+                "Deep learning has revolutionized NLP.",
+            ),
         ]
 
         print("\n\n=== Chunking Performance Summary ===")
-        print(f"{'Text Length':<15} | {'Chunks':<8} | {'Boundary Rate':<15} | {'Target':<8} | {'Status':<8}")
+        print(
+            f"{'Text Length':<15} | {'Chunks':<8} | {'Boundary Rate':<15} | {'Target':<8} | {'Status':<8}"
+        )
         print("-" * 75)
 
         for name, text in test_cases:
             chunks = self.chunker.chunk_text(text)
-            boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(chunks)
+            boundary_rate = self.chunker.calculate_sentence_boundary_preservation_rate(
+                chunks
+            )
             status = "PASS" if boundary_rate >= 0.90 else "FAIL"
 
-            print(f"{name:<15} | {len(chunks):<8} | {boundary_rate * 100:.2f}%{'':<10} | {'≥90%':<8} | {status:<8}")
+            print(
+                f"{name:<15} | {len(chunks):<8} | {boundary_rate * 100:.2f}%{'':<10} | {'≥90%':<8} | {status:<8}"
+            )

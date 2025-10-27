@@ -11,9 +11,7 @@ class TestSQLInjectionPrevention:
     def test_build_filter_clause_taxonomy_injection(self):
         engine = HybridSearchEngine(enable_caching=False, enable_reranking=False)
 
-        malicious_filters = {
-            "taxonomy_paths": [["; DROP TABLE chunks; --"]]
-        }
+        malicious_filters = {"taxonomy_paths": [["; DROP TABLE chunks; --"]]}
 
         filter_clause, params = engine._build_filter_clause(malicious_filters)
 
@@ -24,9 +22,7 @@ class TestSQLInjectionPrevention:
     def test_build_filter_clause_content_type_injection(self):
         engine = HybridSearchEngine(enable_caching=False, enable_reranking=False)
 
-        malicious_filters = {
-            "content_types": ["text' OR '1'='1"]
-        }
+        malicious_filters = {"content_types": ["text' OR '1'='1"]}
 
         filter_clause, params = engine._build_filter_clause(malicious_filters)
 
@@ -36,11 +32,7 @@ class TestSQLInjectionPrevention:
     def test_build_filter_clause_date_injection(self):
         engine = HybridSearchEngine(enable_caching=False, enable_reranking=False)
 
-        malicious_filters = {
-            "date_range": {
-                "start": "2024-01-01' OR 1=1; --"
-            }
-        }
+        malicious_filters = {"date_range": {"start": "2024-01-01' OR 1=1; --"}}
 
         filter_clause, params = engine._build_filter_clause(malicious_filters)
 
@@ -55,8 +47,8 @@ class TestSQLInjectionPrevention:
             "content_types": ["text' UNION SELECT * FROM users--"],
             "date_range": {
                 "start": "2024-01-01' OR '1'='1",
-                "end": "2024-12-31'; DROP TABLE embeddings; --"
-            }
+                "end": "2024-12-31'; DROP TABLE embeddings; --",
+            },
         }
 
         filter_clause, params = engine._build_filter_clause(malicious_filters)
@@ -64,7 +56,10 @@ class TestSQLInjectionPrevention:
         assert "DELETE" not in filter_clause
         assert "UNION" not in filter_clause
         assert "DROP" not in filter_clause
-        assert len([p for p in params.values() if "DROP" in str(p) or "DELETE" in str(p)]) == 0
+        assert (
+            len([p for p in params.values() if "DROP" in str(p) or "DELETE" in str(p)])
+            == 0
+        )
 
     def test_build_filter_clause_valid_filters(self):
         engine = HybridSearchEngine(enable_caching=False, enable_reranking=False)
@@ -72,9 +67,7 @@ class TestSQLInjectionPrevention:
         valid_filters = {
             "taxonomy_paths": [["AI", "Machine_Learning"]],
             "content_types": ["article"],
-            "date_range": {
-                "start": "2024-01-01T00:00:00"
-            }
+            "date_range": {"start": "2024-01-01T00:00:00"},
         }
 
         filter_clause, params = engine._build_filter_clause(valid_filters)
@@ -91,7 +84,7 @@ class TestSQLInjectionPrevention:
             "content_types": [
                 "application/x-executable",
                 "text/plain; DROP TABLE",
-                "../../etc/passwd"
+                "../../etc/passwd",
             ]
         }
 
@@ -107,7 +100,7 @@ class TestSQLInjectionPrevention:
             "taxonomy_paths": [
                 ["../../../etc/passwd"],
                 ["'; DROP TABLE chunks--"],
-                ["'; DELETE FROM documents WHERE '1'='1"]
+                ["'; DELETE FROM documents WHERE '1'='1"],
             ]
         }
 
@@ -123,7 +116,7 @@ class TestSQLInjectionPrevention:
         mixed_filters = {
             "taxonomy_paths": [
                 ["valid_path", "'; DROP TABLE--"],
-                ["AI", "Machine_Learning"]
+                ["AI", "Machine_Learning"],
             ]
         }
 
@@ -142,15 +135,11 @@ class TestSQLInjectionPrevention:
             "2024-13-45",
             "'; DROP TABLE--",
             "2024-01-01' OR '1'='1",
-            "../../../etc/passwd"
+            "../../../etc/passwd",
         ]
 
         for invalid_date in invalid_dates:
-            filters = {
-                "date_range": {
-                    "start": invalid_date
-                }
-            }
+            filters = {"date_range": {"start": invalid_date}}
 
             filter_clause, params = engine._build_filter_clause(filters)
 
@@ -163,7 +152,7 @@ class TestSQLInjectionPrevention:
         filters = {
             "taxonomy_paths": [["AI", "ML"]],
             "content_types": ["article"],
-            "date_range": {"start": "2024-01-01T00:00:00"}
+            "date_range": {"start": "2024-01-01T00:00:00"},
         }
 
         filter_clause, params = engine._build_filter_clause(filters)

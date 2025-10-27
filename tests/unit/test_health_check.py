@@ -17,7 +17,7 @@ from apps.api.monitoring.health_check import (
     HealthStatus,
     ComponentHealth,
     SystemHealth,
-    HealthChecker
+    HealthChecker,
 )
 
 
@@ -45,10 +45,7 @@ class TestComponentHealth:
     @pytest.mark.unit
     def test_component_health_creation_minimal(self):
         """Test ComponentHealth creation with minimal parameters"""
-        health = ComponentHealth(
-            name="test_component",
-            status=HealthStatus.HEALTHY
-        )
+        health = ComponentHealth(name="test_component", status=HealthStatus.HEALTHY)
 
         assert health.name == "test_component"
         assert health.status == HealthStatus.HEALTHY
@@ -69,7 +66,7 @@ class TestComponentHealth:
             response_time_ms=125.5,
             last_check=timestamp,
             error_message="Connection timeout",
-            metadata=metadata
+            metadata=metadata,
         )
 
         assert health.name == "database"
@@ -88,7 +85,7 @@ class TestComponentHealth:
             status=HealthStatus.HEALTHY,
             response_time_ms=50.0,
             last_check=timestamp,
-            metadata={"version": "1.0"}
+            metadata={"version": "1.0"},
         )
 
         result = health.to_dict()
@@ -103,10 +100,7 @@ class TestComponentHealth:
     @pytest.mark.unit
     def test_component_health_to_dict_no_timestamp(self):
         """Test ComponentHealth to_dict without timestamp"""
-        health = ComponentHealth(
-            name="cache",
-            status=HealthStatus.UNHEALTHY
-        )
+        health = ComponentHealth(name="cache", status=HealthStatus.UNHEALTHY)
 
         result = health.to_dict()
 
@@ -124,7 +118,7 @@ class TestSystemHealth:
         return [
             ComponentHealth("database", HealthStatus.HEALTHY, response_time_ms=25.0),
             ComponentHealth("cache", HealthStatus.DEGRADED, response_time_ms=150.0),
-            ComponentHealth("storage", HealthStatus.HEALTHY, response_time_ms=10.0)
+            ComponentHealth("storage", HealthStatus.HEALTHY, response_time_ms=10.0),
         ]
 
     @pytest.mark.unit
@@ -138,7 +132,7 @@ class TestSystemHealth:
             components=sample_components,
             timestamp=timestamp,
             uptime_seconds=uptime,
-            version="1.8.1"
+            version="1.8.1",
         )
 
         assert health.overall_status == HealthStatus.DEGRADED
@@ -155,7 +149,7 @@ class TestSystemHealth:
             overall_status=HealthStatus.HEALTHY,
             components=sample_components,
             timestamp=timestamp,
-            uptime_seconds=1800.0
+            uptime_seconds=1800.0,
         )
 
         result = health.to_dict()
@@ -177,7 +171,7 @@ class TestSystemHealth:
             overall_status=HealthStatus.HEALTHY,
             components=sample_components,
             timestamp=datetime.now(),
-            uptime_seconds=1000.0
+            uptime_seconds=1000.0,
         )
 
         assert health.version == "1.8.1"
@@ -189,14 +183,14 @@ class TestHealthChecker:
     @pytest.fixture
     def health_checker(self):
         """Create HealthChecker instance for testing"""
-        with patch.object(HealthChecker, '_register_default_checks'):
+        with patch.object(HealthChecker, "_register_default_checks"):
             checker = HealthChecker()
             return checker
 
     @pytest.mark.unit
     def test_health_checker_init(self):
         """Test HealthChecker initialization"""
-        with patch.object(HealthChecker, '_register_default_checks') as mock_register:
+        with patch.object(HealthChecker, "_register_default_checks") as mock_register:
             start_time = datetime.now()
 
             checker = HealthChecker()
@@ -211,6 +205,7 @@ class TestHealthChecker:
     @pytest.mark.unit
     def test_register_check(self, health_checker):
         """Test registering a health check function"""
+
         def dummy_check():
             return ComponentHealth("dummy", HealthStatus.HEALTHY)
 
@@ -232,10 +227,10 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_system_health_success(self, health_checker):
         """Test successful system health check"""
-        with patch('psutil.cpu_percent', return_value=25.0):
-            with patch('psutil.virtual_memory') as mock_memory:
+        with patch("psutil.cpu_percent", return_value=25.0):
+            with patch("psutil.virtual_memory") as mock_memory:
                 mock_memory.return_value.percent = 60.0
-                with patch('psutil.disk_usage') as mock_disk:
+                with patch("psutil.disk_usage") as mock_disk:
                     mock_disk.return_value.percent = 45.0
 
                     result = await health_checker._check_system_health()
@@ -254,10 +249,10 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_system_health_degraded(self, health_checker):
         """Test system health check with degraded performance"""
-        with patch('psutil.cpu_percent', return_value=85.0):  # High CPU
-            with patch('psutil.virtual_memory') as mock_memory:
+        with patch("psutil.cpu_percent", return_value=85.0):  # High CPU
+            with patch("psutil.virtual_memory") as mock_memory:
                 mock_memory.return_value.percent = 90.0  # High memory
-                with patch('psutil.disk_usage') as mock_disk:
+                with patch("psutil.disk_usage") as mock_disk:
                     mock_disk.return_value.percent = 50.0
 
                     result = await health_checker._check_system_health()
@@ -267,10 +262,10 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_system_health_unhealthy(self, health_checker):
         """Test system health check with unhealthy conditions"""
-        with patch('psutil.cpu_percent', return_value=95.0):  # Very high CPU
-            with patch('psutil.virtual_memory') as mock_memory:
+        with patch("psutil.cpu_percent", return_value=95.0):  # Very high CPU
+            with patch("psutil.virtual_memory") as mock_memory:
                 mock_memory.return_value.percent = 98.0  # Very high memory
-                with patch('psutil.disk_usage') as mock_disk:
+                with patch("psutil.disk_usage") as mock_disk:
                     mock_disk.return_value.percent = 95.0  # Very high disk
 
                     result = await health_checker._check_system_health()
@@ -280,7 +275,7 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_system_health_exception(self, health_checker):
         """Test system health check with exception"""
-        with patch('psutil.cpu_percent', side_effect=Exception("CPU check failed")):
+        with patch("psutil.cpu_percent", side_effect=Exception("CPU check failed")):
             result = await health_checker._check_system_health()
 
             assert result.status == HealthStatus.UNKNOWN
@@ -290,7 +285,9 @@ class TestHealthChecker:
     async def test_check_database_health_success(self, health_checker):
         """Test successful database health check"""
         # Mock database connection and operations
-        with patch('apps.api.monitoring.health_check.test_database_connection') as mock_db_test:
+        with patch(
+            "apps.api.monitoring.health_check.test_database_connection"
+        ) as mock_db_test:
             mock_db_test.return_value = True
 
             result = await health_checker._check_database_health()
@@ -302,7 +299,9 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_database_health_failure(self, health_checker):
         """Test database health check failure"""
-        with patch('apps.api.monitoring.health_check.test_database_connection') as mock_db_test:
+        with patch(
+            "apps.api.monitoring.health_check.test_database_connection"
+        ) as mock_db_test:
             mock_db_test.side_effect = Exception("Database connection failed")
 
             result = await health_checker._check_database_health()
@@ -314,14 +313,19 @@ class TestHealthChecker:
     async def test_check_cache_health_redis_available(self, health_checker):
         """Test cache health check when Redis is available"""
         mock_redis_manager = Mock()
-        mock_redis_manager.health_check = AsyncMock(return_value={
-            'status': 'healthy',
-            'connected': True,
-            'ping_success': True,
-            'response_time_ms': 15.0
-        })
+        mock_redis_manager.health_check = AsyncMock(
+            return_value={
+                "status": "healthy",
+                "connected": True,
+                "ping_success": True,
+                "response_time_ms": 15.0,
+            }
+        )
 
-        with patch('apps.api.monitoring.health_check.RedisManager', return_value=mock_redis_manager):
+        with patch(
+            "apps.api.monitoring.health_check.RedisManager",
+            return_value=mock_redis_manager,
+        ):
             result = await health_checker._check_cache_health()
 
             assert result.name == "cache"
@@ -331,7 +335,7 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_cache_health_redis_unavailable(self, health_checker):
         """Test cache health check when Redis is unavailable"""
-        with patch('apps.api.monitoring.health_check.REDIS_AVAILABLE', False):
+        with patch("apps.api.monitoring.health_check.REDIS_AVAILABLE", False):
             result = await health_checker._check_cache_health()
 
             assert result.name == "cache"
@@ -341,9 +345,9 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_storage_health_success(self, health_checker):
         """Test successful storage health check"""
-        with patch('os.path.exists', return_value=True):
-            with patch('os.access', return_value=True):
-                with patch('psutil.disk_usage') as mock_disk_usage:
+        with patch("os.path.exists", return_value=True):
+            with patch("os.access", return_value=True):
+                with patch("psutil.disk_usage") as mock_disk_usage:
                     mock_disk_usage.return_value.free = 10 * 1024**3  # 10GB free
 
                     result = await health_checker._check_storage_health()
@@ -356,21 +360,26 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_storage_health_low_space(self, health_checker):
         """Test storage health check with low disk space"""
-        with patch('os.path.exists', return_value=True):
-            with patch('os.access', return_value=True):
-                with patch('psutil.disk_usage') as mock_disk_usage:
-                    mock_disk_usage.return_value.free = 0.5 * 1024**3  # 0.5GB free (low)
+        with patch("os.path.exists", return_value=True):
+            with patch("os.access", return_value=True):
+                with patch("psutil.disk_usage") as mock_disk_usage:
+                    mock_disk_usage.return_value.free = (
+                        0.5 * 1024**3
+                    )  # 0.5GB free (low)
 
                     result = await health_checker._check_storage_health()
 
                     assert result.name == "storage"
-                    assert result.status in [HealthStatus.DEGRADED, HealthStatus.UNHEALTHY]
+                    assert result.status in [
+                        HealthStatus.DEGRADED,
+                        HealthStatus.UNHEALTHY,
+                    ]
 
     @pytest.mark.unit
     async def test_check_storage_health_no_access(self, health_checker):
         """Test storage health check without write access"""
-        with patch('os.path.exists', return_value=True):
-            with patch('os.access', return_value=False):  # No write access
+        with patch("os.path.exists", return_value=True):
+            with patch("os.access", return_value=False):  # No write access
                 result = await health_checker._check_storage_health()
 
                 assert result.name == "storage"
@@ -422,6 +431,7 @@ class TestHealthChecker:
     @pytest.mark.unit
     async def test_check_all_health_with_timeout(self, health_checker):
         """Test health check with timeout handling"""
+
         # Mock one health check to timeout
         async def slow_check():
             await asyncio.sleep(10)  # Longer than timeout
@@ -435,14 +445,21 @@ class TestHealthChecker:
         # Should still complete with timeout handling
         assert isinstance(system_health, SystemHealth)
         # Check that slow component has timeout status
-        slow_component = next((c for c in system_health.components if c.name == "slow"), None)
+        slow_component = next(
+            (c for c in system_health.components if c.name == "slow"), None
+        )
         if slow_component:
-            assert slow_component.status in [HealthStatus.UNKNOWN, HealthStatus.UNHEALTHY]
+            assert slow_component.status in [
+                HealthStatus.UNKNOWN,
+                HealthStatus.UNHEALTHY,
+            ]
 
     @pytest.mark.unit
     async def test_check_specific_component_success(self, health_checker):
         """Test checking specific component health"""
-        mock_result = ComponentHealth("system", HealthStatus.HEALTHY, response_time_ms=50.0)
+        mock_result = ComponentHealth(
+            "system", HealthStatus.HEALTHY, response_time_ms=50.0
+        )
         health_checker._check_system_health = AsyncMock(return_value=mock_result)
 
         result = await health_checker.check_component_health("system")
@@ -462,7 +479,9 @@ class TestHealthChecker:
     def test_get_uptime(self, health_checker):
         """Test getting system uptime"""
         # Set a known start time
-        health_checker.start_time = datetime.now() - timedelta(seconds=3600)  # 1 hour ago
+        health_checker.start_time = datetime.now() - timedelta(
+            seconds=3600
+        )  # 1 hour ago
 
         uptime = health_checker.get_uptime()
 
@@ -475,7 +494,7 @@ class TestHealthChecker:
         components = [
             ComponentHealth("comp1", HealthStatus.HEALTHY),
             ComponentHealth("comp2", HealthStatus.HEALTHY),
-            ComponentHealth("comp3", HealthStatus.HEALTHY)
+            ComponentHealth("comp3", HealthStatus.HEALTHY),
         ]
 
         status = health_checker._determine_overall_status(components)
@@ -488,7 +507,7 @@ class TestHealthChecker:
         components = [
             ComponentHealth("comp1", HealthStatus.HEALTHY),
             ComponentHealth("comp2", HealthStatus.DEGRADED),
-            ComponentHealth("comp3", HealthStatus.HEALTHY)
+            ComponentHealth("comp3", HealthStatus.HEALTHY),
         ]
 
         status = health_checker._determine_overall_status(components)
@@ -501,7 +520,7 @@ class TestHealthChecker:
         components = [
             ComponentHealth("comp1", HealthStatus.HEALTHY),
             ComponentHealth("comp2", HealthStatus.DEGRADED),
-            ComponentHealth("comp3", HealthStatus.UNHEALTHY)
+            ComponentHealth("comp3", HealthStatus.UNHEALTHY),
         ]
 
         status = health_checker._determine_overall_status(components)
@@ -547,7 +566,9 @@ class TestHealthCheckerIntegration:
         checker = HealthChecker()
 
         async def custom_health_check():
-            return ComponentHealth("custom", HealthStatus.HEALTHY, response_time_ms=25.0)
+            return ComponentHealth(
+                "custom", HealthStatus.HEALTHY, response_time_ms=25.0
+            )
 
         # Register custom check
         checker.register_check("custom", custom_health_check)
@@ -573,20 +594,20 @@ class TestHealthCheckerIntegration:
                 status=HealthStatus.HEALTHY,
                 response_time_ms=45.2,
                 last_check=datetime.now(),
-                metadata={"version": "1.0", "requests_per_second": 150}
+                metadata={"version": "1.0", "requests_per_second": 150},
             ),
             ComponentHealth(
                 name="worker",
                 status=HealthStatus.DEGRADED,
-                error_message="High queue size"
-            )
+                error_message="High queue size",
+            ),
         ]
 
         system_health = SystemHealth(
             overall_status=HealthStatus.DEGRADED,
             components=components,
             timestamp=datetime.now(),
-            uptime_seconds=7200.5
+            uptime_seconds=7200.5,
         )
 
         # Test serialization

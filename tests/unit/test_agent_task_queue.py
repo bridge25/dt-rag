@@ -27,7 +27,7 @@ class TestAgentTaskQueue:
     @pytest.fixture
     def mock_job_queue(self, mock_redis_manager):
         """Mock JobQueue instance"""
-        with patch('apps.api.background.agent_task_queue.JobQueue') as MockJobQueue:
+        with patch("apps.api.background.agent_task_queue.JobQueue") as MockJobQueue:
             mock_instance = AsyncMock()
             mock_instance.redis_manager = mock_redis_manager
             mock_instance.initialize = AsyncMock()
@@ -47,20 +47,25 @@ class TestAgentTaskQueue:
         """
         task_queue = AgentTaskQueue()
 
-        assert hasattr(task_queue, 'QUEUE_KEY_PREFIX'), "AgentTaskQueue should have QUEUE_KEY_PREFIX"
-        assert task_queue.QUEUE_KEY_PREFIX == "agent:queue", (
-            f"Expected namespace 'agent:queue', got '{task_queue.QUEUE_KEY_PREFIX}'"
-        )
+        assert hasattr(
+            task_queue, "QUEUE_KEY_PREFIX"
+        ), "AgentTaskQueue should have QUEUE_KEY_PREFIX"
+        assert (
+            task_queue.QUEUE_KEY_PREFIX == "agent:queue"
+        ), f"Expected namespace 'agent:queue', got '{task_queue.QUEUE_KEY_PREFIX}'"
 
         # Verify it's different from ingestion namespace
         from apps.ingestion.batch.job_queue import JobQueue
+
         ingestion_prefix = JobQueue.QUEUE_KEY_PREFIX
-        assert task_queue.QUEUE_KEY_PREFIX != ingestion_prefix, (
-            "Agent queue namespace should be separate from ingestion namespace"
-        )
+        assert (
+            task_queue.QUEUE_KEY_PREFIX != ingestion_prefix
+        ), "Agent queue namespace should be separate from ingestion namespace"
 
     @pytest.mark.asyncio
-    async def test_enqueue_coverage_task_creates_task_with_correct_prefix(self, mock_job_queue):
+    async def test_enqueue_coverage_task_creates_task_with_correct_prefix(
+        self, mock_job_queue
+    ):
         """
         RED Test: Verify enqueue_coverage_task() generates task_id with 'agent-coverage-' prefix
 
@@ -78,13 +83,13 @@ class TestAgentTaskQueue:
         task_id = await task_queue.enqueue_coverage_task(
             agent_id=agent_id,
             taxonomy_node_ids=taxonomy_node_ids,
-            taxonomy_version=taxonomy_version
+            taxonomy_version=taxonomy_version,
         )
 
         assert task_id is not None, "enqueue_coverage_task should return task_id"
-        assert task_id.startswith("agent-coverage-"), (
-            f"Task ID should start with 'agent-coverage-', got '{task_id}'"
-        )
+        assert task_id.startswith(
+            "agent-coverage-"
+        ), f"Task ID should start with 'agent-coverage-', got '{task_id}'"
 
         # Verify UUID format
         uuid_part = task_id.replace("agent-coverage-", "")
@@ -94,7 +99,9 @@ class TestAgentTaskQueue:
             pytest.fail(f"Task ID should contain valid UUID, got '{uuid_part}'")
 
     @pytest.mark.asyncio
-    async def test_enqueue_coverage_task_calls_job_queue_with_priority_5(self, mock_job_queue):
+    async def test_enqueue_coverage_task_calls_job_queue_with_priority_5(
+        self, mock_job_queue
+    ):
         """
         RED Test: Verify coverage tasks are enqueued with priority=5 (medium queue)
 
@@ -114,7 +121,7 @@ class TestAgentTaskQueue:
             agent_id=agent_id,
             taxonomy_node_ids=taxonomy_node_ids,
             taxonomy_version=taxonomy_version,
-            webhook_url=webhook_url
+            webhook_url=webhook_url,
         )
 
         # Verify JobQueue.enqueue_job was called
@@ -125,18 +132,26 @@ class TestAgentTaskQueue:
         assert call_args is not None, "enqueue_job should be called"
 
         # Verify priority=5
-        assert call_args.kwargs.get('priority') == 5, (
-            f"Expected priority=5, got {call_args.kwargs.get('priority')}"
-        )
+        assert (
+            call_args.kwargs.get("priority") == 5
+        ), f"Expected priority=5, got {call_args.kwargs.get('priority')}"
 
         # Verify job_data contains required fields
-        job_data = call_args.kwargs.get('job_data', {})
-        assert str(agent_id) in job_data.get('agent_id', ''), "job_data should contain agent_id"
-        assert job_data.get('task_type') == 'coverage_refresh', "task_type should be 'coverage_refresh'"
-        assert job_data.get('webhook_url') == webhook_url, "job_data should contain webhook_url"
+        job_data = call_args.kwargs.get("job_data", {})
+        assert str(agent_id) in job_data.get(
+            "agent_id", ""
+        ), "job_data should contain agent_id"
+        assert (
+            job_data.get("task_type") == "coverage_refresh"
+        ), "task_type should be 'coverage_refresh'"
+        assert (
+            job_data.get("webhook_url") == webhook_url
+        ), "job_data should contain webhook_url"
 
     @pytest.mark.asyncio
-    async def test_get_queue_position_calculates_position_from_redis(self, mock_job_queue):
+    async def test_get_queue_position_calculates_position_from_redis(
+        self, mock_job_queue
+    ):
         """
         RED Test: Verify get_queue_position() calculates position from Redis LLEN
 
@@ -161,7 +176,9 @@ class TestAgentTaskQueue:
         assert isinstance(position, int), "Position should be integer"
         # Position should be in range [1, total_queue_size]
         # High priority (2) + current position in medium (1-8)
-        assert 1 <= position <= 10, f"Position should be between 1 and 10, got {position}"
+        assert (
+            1 <= position <= 10
+        ), f"Position should be between 1 and 10, got {position}"
 
     @pytest.mark.asyncio
     async def test_remove_job_removes_task_from_redis_queue(self, mock_job_queue):
@@ -186,16 +203,16 @@ class TestAgentTaskQueue:
             "data": {
                 "task_id": task_id,
                 "agent_id": "test-agent-123",
-                "task_type": "coverage_refresh"
+                "task_type": "coverage_refresh",
             },
             "priority": 5,
-            "enqueued_at": "2025-10-12T00:00:00"
+            "enqueued_at": "2025-10-12T00:00:00",
         }
         job_payload_str = json.dumps(job_payload)
 
         # Mock Redis lrange to return the job payload
         mock_redis = mock_job_queue.redis_manager
-        mock_redis.lrange = AsyncMock(return_value=[job_payload_str.encode('utf-8')])
+        mock_redis.lrange = AsyncMock(return_value=[job_payload_str.encode("utf-8")])
         mock_redis.lrem = AsyncMock(return_value=1)  # 1 item removed
 
         removed = await task_queue.remove_job(task_id)
@@ -207,8 +224,10 @@ class TestAgentTaskQueue:
         call_args = mock_redis.lrem.call_args
 
         # Verify queue key contains agent namespace
-        queue_key = call_args.args[0] if call_args.args else call_args.kwargs.get('key')
-        assert 'agent:queue' in queue_key, f"Queue key should contain 'agent:queue', got '{queue_key}'"
+        queue_key = call_args.args[0] if call_args.args else call_args.kwargs.get("key")
+        assert (
+            "agent:queue" in queue_key
+        ), f"Queue key should contain 'agent:queue', got '{queue_key}'"
 
     @pytest.mark.asyncio
     async def test_enqueue_coverage_task_includes_taxonomy_data(self, mock_job_queue):
@@ -233,23 +252,27 @@ class TestAgentTaskQueue:
         await task_queue.enqueue_coverage_task(
             agent_id=agent_id,
             taxonomy_node_ids=taxonomy_node_ids,
-            taxonomy_version=taxonomy_version
+            taxonomy_version=taxonomy_version,
         )
 
         # Extract job_data from call
         call_args = mock_job_queue.enqueue_job.call_args
-        job_data = call_args.kwargs.get('job_data', {})
+        job_data = call_args.kwargs.get("job_data", {})
 
         # Verify all fields present
-        assert job_data.get('agent_id') == str(agent_id), "agent_id should match"
+        assert job_data.get("agent_id") == str(agent_id), "agent_id should match"
 
-        taxonomy_ids = job_data.get('taxonomy_node_ids', [])
+        taxonomy_ids = job_data.get("taxonomy_node_ids", [])
         assert len(taxonomy_ids) == 2, "Should have 2 taxonomy node IDs"
         assert str(node_id_1) in taxonomy_ids, "Should contain node_id_1"
         assert str(node_id_2) in taxonomy_ids, "Should contain node_id_2"
 
-        assert job_data.get('taxonomy_version') == "2.0.0", "taxonomy_version should match"
-        assert job_data.get('task_type') == 'coverage_refresh', "task_type should be coverage_refresh"
+        assert (
+            job_data.get("taxonomy_version") == "2.0.0"
+        ), "taxonomy_version should match"
+        assert (
+            job_data.get("task_type") == "coverage_refresh"
+        ), "task_type should be coverage_refresh"
 
     @pytest.mark.asyncio
     async def test_remove_job_returns_false_when_task_not_found(self, mock_job_queue):

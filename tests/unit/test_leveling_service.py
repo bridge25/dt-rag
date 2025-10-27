@@ -31,8 +31,16 @@ class TestLevelingServiceXPCalculation:
             taxonomy_version="1.0.0",
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -70,8 +78,16 @@ class TestLevelingServiceXPCalculation:
             taxonomy_version="1.0.0",
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -106,8 +122,16 @@ class TestLevelingServiceXPCalculation:
             taxonomy_version="1.0.0",
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -140,8 +164,16 @@ class TestLevelingServiceXPCalculation:
             taxonomy_version="1.0.0",
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -173,8 +205,16 @@ class TestLevelingServiceXPCalculation:
             taxonomy_version="1.0.0",
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -208,8 +248,16 @@ class TestLevelingServiceXPCalculation:
             taxonomy_version="1.0.0",
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -222,7 +270,9 @@ class TestLevelingServiceXPCalculation:
 
         assert result is not None
         expected_coverage_penalty = (65.0 - 70.0) / 100.0 * 0.2 * 10.0
-        assert abs(result.breakdown["coverage_bonus"] - expected_coverage_penalty) < 0.01
+        assert (
+            abs(result.breakdown["coverage_bonus"] - expected_coverage_penalty) < 0.01
+        )
         assert result.breakdown["coverage_bonus"] < 0
 
 
@@ -246,7 +296,10 @@ class TestLevelingServiceLevelUp:
             taxonomy_version="1.0.0",
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.services.leveling_service.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+        ) as mock_get_agent:
             mock_get_agent.return_value = mock_agent
 
             result = await service.check_level_up(str(agent_id))
@@ -272,8 +325,16 @@ class TestLevelingServiceLevelUp:
             features_config={"debate": False, "tools": False, "bandit": False},
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -303,8 +364,16 @@ class TestLevelingServiceLevelUp:
             features_config={"debate": True, "tools": False, "bandit": False},
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -334,8 +403,16 @@ class TestLevelingServiceLevelUp:
             features_config={"debate": True, "tools": True, "bandit": True},
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -368,8 +445,16 @@ class TestLevelingServiceFeatureUnlocking:
             features_config={"debate": False, "tools": False, "bandit": False},
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent_before
             mock_update_agent.return_value = mock_agent_before
 
@@ -398,8 +483,16 @@ class TestLevelingServiceFeatureUnlocking:
             features_config={"debate": True, "tools": True, "bandit": True},
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent_before
             mock_update_agent.return_value = mock_agent_before
 
@@ -431,8 +524,16 @@ class TestLevelingServiceFeatureUnlocking:
             },
         )
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent_before
             mock_update_agent.return_value = mock_agent_before
 
@@ -453,7 +554,10 @@ class TestLevelingServiceEdgeCases:
 
         agent_id = str(uuid.uuid4())
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.services.leveling_service.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+        ) as mock_get_agent:
             mock_get_agent.return_value = None
 
             query_result = {
@@ -488,8 +592,16 @@ class TestLevelingServiceEdgeCases:
             "coverage_percent": 55.0,
         }
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent, \
-             patch("apps.api.services.leveling_service.AgentDAO.update_agent", new_callable=AsyncMock) as mock_update_agent:
+        with (
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.get_agent",
+                new_callable=AsyncMock,
+            ) as mock_get_agent,
+            patch(
+                "apps.api.services.leveling_service.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ) as mock_update_agent,
+        ):
             mock_get_agent.return_value = mock_agent
             mock_update_agent.return_value = mock_agent
 
@@ -508,7 +620,10 @@ class TestLevelingServiceEdgeCases:
 
         agent_id = str(uuid.uuid4())
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.services.leveling_service.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+        ) as mock_get_agent:
             mock_get_agent.side_effect = Exception("Database error")
 
             query_result = {
@@ -527,7 +642,10 @@ class TestLevelingServiceEdgeCases:
 
         agent_id = str(uuid.uuid4())
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.services.leveling_service.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+        ) as mock_get_agent:
             mock_get_agent.side_effect = Exception("Database error")
 
             result = await service.check_level_up(agent_id)
@@ -541,7 +659,10 @@ class TestLevelingServiceEdgeCases:
 
         agent_id = str(uuid.uuid4())
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.services.leveling_service.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+        ) as mock_get_agent:
             mock_get_agent.side_effect = Exception("Database error")
 
             unlocked = await service.unlock_features(agent_id, 2)
@@ -555,7 +676,10 @@ class TestLevelingServiceEdgeCases:
 
         agent_id = str(uuid.uuid4())
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.services.leveling_service.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+        ) as mock_get_agent:
             mock_get_agent.return_value = None
 
             result = await service.check_level_up(agent_id)
@@ -569,7 +693,10 @@ class TestLevelingServiceEdgeCases:
 
         agent_id = str(uuid.uuid4())
 
-        with patch("apps.api.services.leveling_service.AgentDAO.get_agent", new_callable=AsyncMock) as mock_get_agent:
+        with patch(
+            "apps.api.services.leveling_service.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+        ) as mock_get_agent:
             mock_get_agent.return_value = None
 
             unlocked = await service.unlock_features(agent_id, 2)
@@ -588,8 +715,14 @@ class TestLevelingServiceEdgeCases:
             "coverage_percent": 60.0,
         }
 
-        with patch.object(service, "calculate_xp", new_callable=AsyncMock) as mock_calc_xp, \
-             patch.object(service, "check_level_up", new_callable=AsyncMock) as mock_level_up:
+        with (
+            patch.object(
+                service, "calculate_xp", new_callable=AsyncMock
+            ) as mock_calc_xp,
+            patch.object(
+                service, "check_level_up", new_callable=AsyncMock
+            ) as mock_level_up,
+        ):
             mock_calc_xp.return_value = XPResult(
                 agent_id=str(agent_id),
                 xp_earned=10.0,
@@ -599,7 +732,9 @@ class TestLevelingServiceEdgeCases:
                 level_after=1,
             )
 
-            await service.calculate_xp_and_level_up(session, str(agent_id), query_result)
+            await service.calculate_xp_and_level_up(
+                session, str(agent_id), query_result
+            )
 
         mock_calc_xp.assert_called_once()
         mock_level_up.assert_called_once()
@@ -616,8 +751,14 @@ class TestLevelingServiceEdgeCases:
             "coverage_percent": 60.0,
         }
 
-        with patch.object(service, "calculate_xp", new_callable=AsyncMock) as mock_calc_xp, \
-             patch.object(service, "check_level_up", new_callable=AsyncMock) as mock_level_up:
+        with (
+            patch.object(
+                service, "calculate_xp", new_callable=AsyncMock
+            ) as mock_calc_xp,
+            patch.object(
+                service, "check_level_up", new_callable=AsyncMock
+            ) as mock_level_up,
+        ):
             mock_calc_xp.return_value = None
 
             await service.calculate_xp_and_level_up(session, agent_id, query_result)
@@ -637,7 +778,9 @@ class TestLevelingServiceEdgeCases:
             "coverage_percent": 60.0,
         }
 
-        with patch.object(service, "calculate_xp", new_callable=AsyncMock) as mock_calc_xp:
+        with patch.object(
+            service, "calculate_xp", new_callable=AsyncMock
+        ) as mock_calc_xp:
             mock_calc_xp.side_effect = Exception("Unexpected error")
 
             await service.calculate_xp_and_level_up(session, agent_id, query_result)

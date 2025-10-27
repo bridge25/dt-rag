@@ -2,6 +2,7 @@
 Sentry + Langfuse integration test
 Check for conflicts between monitoring tools
 """
+
 import os
 import sys
 import asyncio
@@ -10,8 +11,9 @@ from pathlib import Path
 # Windows console encoding fix
 if sys.platform == "win32":
     import codecs
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
-    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, "strict")
+    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, "strict")
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -23,17 +25,14 @@ def test_sentry_initialization():
     try:
         from apps.api.monitoring.sentry_reporter import (
             report_search_failure,
-            add_search_breadcrumb
+            add_search_breadcrumb,
         )
 
         print("✅ Sentry 모듈 import 성공")
 
         # Breadcrumb 추가 테스트
         add_search_breadcrumb(
-            query="test query",
-            search_type="hybrid",
-            top_k=5,
-            has_filters=False
+            query="test query", search_type="hybrid", top_k=5, has_filters=False
         )
         print("✅ Sentry breadcrumb 추가 성공")
 

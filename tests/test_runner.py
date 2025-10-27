@@ -15,10 +15,10 @@ from typing import List, Dict, Any, Optional
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 class TestRunner:
     """Intelligent test runner with environment awareness"""
@@ -34,7 +34,7 @@ class TestRunner:
             "has_database": self._check_database_available(),
             "has_redis": self._check_redis_available(),
             "has_openai": self._check_openai_available(),
-            "has_network": self._check_network_available()
+            "has_network": self._check_network_available(),
         }
 
         logger.info("Environment detection results:")
@@ -46,8 +46,13 @@ class TestRunner:
     def _is_ci_environment(self) -> bool:
         """Check if running in CI environment"""
         ci_indicators = [
-            "CI", "CONTINUOUS_INTEGRATION", "GITHUB_ACTIONS",
-            "GITLAB_CI", "JENKINS_URL", "TRAVIS", "CIRCLECI"
+            "CI",
+            "CONTINUOUS_INTEGRATION",
+            "GITHUB_ACTIONS",
+            "GITLAB_CI",
+            "JENKINS_URL",
+            "TRAVIS",
+            "CIRCLECI",
         ]
         return any(os.getenv(indicator) for indicator in ci_indicators)
 
@@ -87,10 +92,7 @@ class TestRunner:
 
     def _check_openai_available(self) -> bool:
         """Check if OpenAI API is available"""
-        return bool(
-            os.getenv("OPENAI_API_KEY") and
-            os.getenv("TEST_WITH_OPENAI")
-        )
+        return bool(os.getenv("OPENAI_API_KEY") and os.getenv("TEST_WITH_OPENAI"))
 
     def _check_network_available(self) -> bool:
         """Check if network access is available"""
@@ -99,27 +101,21 @@ class TestRunner:
 
         try:
             import socket
+
             socket.create_connection(("8.8.8.8", 53), timeout=3)
             return True
         except Exception:
             return False
 
     def get_pytest_args(
-        self,
-        test_type: str = "all",
-        environment: Optional[Dict[str, bool]] = None
+        self, test_type: str = "all", environment: Optional[Dict[str, bool]] = None
     ) -> List[str]:
         """Generate pytest arguments based on test type and environment"""
 
         if environment is None:
             environment = self.detect_environment()
 
-        base_args = [
-            "python", "-m", "pytest",
-            "--tb=short",
-            "--strict-markers",
-            "-v"
-        ]
+        base_args = ["python", "-m", "pytest", "--tb=short", "--strict-markers", "-v"]
 
         # Test type specific arguments
         if test_type == "unit":
@@ -128,30 +124,22 @@ class TestRunner:
         elif test_type == "integration":
             if environment["is_ci"]:
                 # CI-safe integration tests
-                base_args.extend([
-                    "-m", "integration and ci_safe",
-                    "tests/integration/"
-                ])
+                base_args.extend(
+                    ["-m", "integration and ci_safe", "tests/integration/"]
+                )
             else:
                 base_args.extend(["-m", "integration", "tests/integration/"])
 
         elif test_type == "e2e":
             if environment["is_ci"]:
                 # Limited E2E tests for CI
-                base_args.extend([
-                    "-m", "e2e and ci_safe",
-                    "tests/e2e/"
-                ])
+                base_args.extend(["-m", "e2e and ci_safe", "tests/e2e/"])
             else:
                 base_args.extend(["-m", "e2e", "tests/e2e/"])
 
         elif test_type == "ci":
             # CI-optimized test suite
-            base_args.extend([
-                "-m", "ci_safe or unit",
-                "--maxfail=10",
-                "--timeout=300"
-            ])
+            base_args.extend(["-m", "ci_safe or unit", "--maxfail=10", "--timeout=300"])
 
         elif test_type == "local":
             # Full local test suite
@@ -159,11 +147,7 @@ class TestRunner:
 
         elif test_type == "quick":
             # Quick test suite (unit tests only)
-            base_args.extend([
-                "-m", "unit and not slow",
-                "tests/unit/",
-                "--maxfail=3"
-            ])
+            base_args.extend(["-m", "unit and not slow", "tests/unit/", "--maxfail=3"])
 
         elif test_type == "all":
             # Full test suite with environment awareness
@@ -195,27 +179,25 @@ class TestRunner:
 
         # Coverage reporting (only for comprehensive runs)
         if test_type in ["all", "local"] and not environment["is_ci"]:
-            base_args.extend([
-                "--cov=apps",
-                "--cov-report=html:htmlcov",
-                "--cov-report=term-missing",
-                "--cov-fail-under=70"
-            ])
+            base_args.extend(
+                [
+                    "--cov=apps",
+                    "--cov-report=html:htmlcov",
+                    "--cov-report=term-missing",
+                    "--cov-fail-under=70",
+                ]
+            )
 
         # Environment-specific settings
         if environment["is_ci"]:
-            base_args.extend([
-                "--disable-warnings",
-                "-x"  # Stop on first failure in CI
-            ])
+            base_args.extend(
+                ["--disable-warnings", "-x"]  # Stop on first failure in CI
+            )
 
         return base_args
 
     def run_tests(
-        self,
-        test_type: str = "all",
-        dry_run: bool = False,
-        verbose: bool = False
+        self, test_type: str = "all", dry_run: bool = False, verbose: bool = False
     ) -> int:
         """Run tests with specified configuration"""
 
@@ -234,25 +216,21 @@ class TestRunner:
 
         # Set environment variables
         env = os.environ.copy()
-        env.update({
-            "TESTING": "true",
-            "PYTHONPATH": str(self.project_root)
-        })
+        env.update({"TESTING": "true", "PYTHONPATH": str(self.project_root)})
 
         if environment["is_ci"]:
-            env.update({
-                "CI_ENVIRONMENT": "true",
-                "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
-                "REDIS_ENABLED": "false"
-            })
+            env.update(
+                {
+                    "CI_ENVIRONMENT": "true",
+                    "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
+                    "REDIS_ENABLED": "false",
+                }
+            )
 
         # Execute tests
         try:
             result = subprocess.run(
-                pytest_args,
-                cwd=self.project_root,
-                env=env,
-                check=False
+                pytest_args, cwd=self.project_root, env=env, check=False
             )
             return result.returncode
 
@@ -273,7 +251,7 @@ class TestRunner:
             "ci": "CI-optimized test suite (safe for automated environments)",
             "local": "Full local test suite with all features",
             "quick": "Quick test suite (unit tests only, no slow tests)",
-            "all": "Complete test suite with environment-aware filtering"
+            "all": "Complete test suite with environment-aware filtering",
         }
 
     def check_dependencies(self) -> Dict[str, bool]:
@@ -283,6 +261,7 @@ class TestRunner:
         # Check pytest and plugins
         try:
             import pytest
+
             dependencies["pytest"] = True
         except ImportError:
             dependencies["pytest"] = False
@@ -290,6 +269,7 @@ class TestRunner:
         # Check coverage plugin
         try:
             import pytest_cov
+
             dependencies["pytest-cov"] = True
         except ImportError:
             dependencies["pytest-cov"] = False
@@ -297,6 +277,7 @@ class TestRunner:
         # Check async support
         try:
             import pytest_asyncio
+
             dependencies["pytest-asyncio"] = True
         except ImportError:
             dependencies["pytest-asyncio"] = False
@@ -304,6 +285,7 @@ class TestRunner:
         # Check mock support
         try:
             from unittest import mock
+
             dependencies["mock"] = True
         except ImportError:
             dependencies["mock"] = False
@@ -311,6 +293,7 @@ class TestRunner:
         # Check httpx for API testing
         try:
             import httpx
+
             dependencies["httpx"] = True
         except ImportError:
             dependencies["httpx"] = False
@@ -331,32 +314,24 @@ def main():
         nargs="?",
         default="all",
         choices=list(runner.list_test_types().keys()),
-        help="Type of tests to run"
+        help="Type of tests to run",
     )
 
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Show what would be executed without running tests"
+        help="Show what would be executed without running tests",
     )
 
     parser.add_argument(
-        "--list-types",
-        action="store_true",
-        help="List available test types"
+        "--list-types", action="store_true", help="List available test types"
     )
 
     parser.add_argument(
-        "--check-env",
-        action="store_true",
-        help="Check environment and dependencies"
+        "--check-env", action="store_true", help="Check environment and dependencies"
     )
 
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -383,9 +358,7 @@ def main():
 
     # Run tests
     exit_code = runner.run_tests(
-        test_type=args.test_type,
-        dry_run=args.dry_run,
-        verbose=args.verbose
+        test_type=args.test_type, dry_run=args.dry_run, verbose=args.verbose
     )
 
     return exit_code

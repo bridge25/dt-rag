@@ -22,16 +22,14 @@ import networkx as nx
 from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .database import (
-    TaxonomyNode, TaxonomyEdge, TaxonomyMigration,
-    async_session
-)
+from .database import TaxonomyNode, TaxonomyEdge, TaxonomyMigration, async_session
 
 logger = logging.getLogger(__name__)
 
 
 class MigrationType(Enum):
     """Migration operation types"""
+
     CREATE_NODE = "create_node"
     UPDATE_NODE = "update_node"
     DELETE_NODE = "delete_node"
@@ -44,6 +42,7 @@ class MigrationType(Enum):
 
 class VersionType(Enum):
     """Semantic version types"""
+
     MAJOR = "major"  # Breaking changes
     MINOR = "minor"  # New features
     PATCH = "patch"  # Bug fixes
@@ -52,6 +51,7 @@ class VersionType(Enum):
 @dataclass
 class ValidationResult:
     """DAG validation result"""
+
     is_valid: bool
     errors: List[str]
     warnings: List[str]
@@ -62,6 +62,7 @@ class ValidationResult:
 @dataclass
 class MigrationOperation:
     """Single migration operation"""
+
     operation_type: MigrationType
     target_nodes: List[int]
     parameters: Dict[str, Any]
@@ -71,6 +72,7 @@ class MigrationOperation:
 @dataclass
 class MigrationPlan:
     """Complete migration plan"""
+
     from_version: int
     to_version: int
     operations: List[MigrationOperation]
@@ -92,7 +94,9 @@ class TaxonomyDAGManager:
             async with async_session() as session:
                 # Check for existing version
                 result = await session.execute(
-                    select(TaxonomyNode.version).order_by(TaxonomyNode.version.desc()).limit(1)
+                    select(TaxonomyNode.version)
+                    .order_by(TaxonomyNode.version.desc())
+                    .limit(1)
                 )
                 latest_version = result.scalar()
 
@@ -103,7 +107,9 @@ class TaxonomyDAGManager:
                     await self._create_default_taxonomy(session)
                     await session.commit()
 
-                logger.info(f"Taxonomy DAG initialized with version {self.current_version}")
+                logger.info(
+                    f"Taxonomy DAG initialized with version {self.current_version}"
+                )
                 return True
 
         except Exception as e:
@@ -124,10 +130,12 @@ class TaxonomyDAGManager:
             # 1. Cycle detection using DFS
             if not nx.is_directed_acyclic_graph(graph):
                 try:
-                    cycle = nx.find_cycle(graph, orientation='original')
+                    cycle = nx.find_cycle(graph, orientation="original")
                     cycle_nodes = [node for node, _ in cycle]
                     cycles.append(cycle_nodes)
-                    errors.append(f"Cycle detected: {' -> '.join(map(str, cycle_nodes))}")
+                    errors.append(
+                        f"Cycle detected: {' -> '.join(map(str, cycle_nodes))}"
+                    )
                 except nx.NetworkXNoCycle:
                     pass
 
@@ -141,7 +149,9 @@ class TaxonomyDAGManager:
             if not nx.is_weakly_connected(graph):
                 components = list(nx.weakly_connected_components(graph))
                 if len(components) > 1:
-                    warnings.append(f"Disconnected components found: {len(components)} components")
+                    warnings.append(
+                        f"Disconnected components found: {len(components)} components"
+                    )
 
             # 4. Validate semantic consistency
             semantic_errors = await self._validate_semantic_consistency(version)
@@ -158,7 +168,7 @@ class TaxonomyDAGManager:
                 errors=errors,
                 warnings=warnings,
                 cycles=cycles,
-                orphaned_nodes=orphaned_nodes
+                orphaned_nodes=orphaned_nodes,
             )
 
         except Exception as e:
@@ -168,7 +178,7 @@ class TaxonomyDAGManager:
                 errors=[f"Validation error: {str(e)}"],
                 warnings=[],
                 cycles=[],
-                orphaned_nodes=[]
+                orphaned_nodes=[],
             )
 
     async def create_version(
@@ -176,7 +186,7 @@ class TaxonomyDAGManager:
         version_type: VersionType,
         changes: List[MigrationOperation],
         description: str,
-        created_by: str
+        created_by: str,
     ) -> Tuple[bool, int, str]:
         """Create new taxonomy version with atomic operations"""
 
@@ -192,7 +202,11 @@ class TaxonomyDAGManager:
                         )
 
                         if not validation_result.is_valid:
-                            return False, -1, f"Validation failed: {validation_result.errors}"
+                            return (
+                                False,
+                                -1,
+                                f"Validation failed: {validation_result.errors}",
+                            )
 
                         # 2. Create rollback data
                         rollback_data = await self._create_rollback_data(
@@ -213,24 +227,30 @@ class TaxonomyDAGManager:
                             to_version=new_version,
                             migration_type=version_type.value,
                             changes={
-                                "operations": [self._serialize_operation(op) for op in changes],
+                                "operations": [
+                                    self._serialize_operation(op) for op in changes
+                                ],
                                 "rollback_data": rollback_data,
-                                "description": description
+                                "description": description,
                             },
-                            applied_by=created_by
+                            applied_by=created_by,
                         )
                         session.add(migration)
 
                         # 5. Final validation
                         final_validation = await self.validate_dag(new_version)
                         if not final_validation.is_valid:
-                            raise Exception(f"Post-migration validation failed: {final_validation.errors}")
+                            raise Exception(
+                                f"Post-migration validation failed: {final_validation.errors}"
+                            )
 
                         # 6. Update current version
                         self.current_version = new_version
                         self._invalidate_cache()
 
-                        logger.info(f"Successfully created version {new_version} ({version_type.value})")
+                        logger.info(
+                            f"Successfully created version {new_version} ({version_type.value})"
+                        )
                         return True, new_version, "Version created successfully"
 
             except Exception as e:
@@ -238,10 +258,7 @@ class TaxonomyDAGManager:
                 return False, -1, str(e)
 
     async def rollback_to_version(
-        self,
-        target_version: int,
-        reason: str,
-        performed_by: str
+        self, target_version: int, reason: str, performed_by: str
     ) -> Tuple[bool, str]:
         """Rollback to specific version with TTR ≤ 15분 guarantee"""
 
@@ -260,9 +277,13 @@ class TaxonomyDAGManager:
                         )
 
                         # 2. Estimate rollback time
-                        estimated_duration = self._estimate_rollback_duration(rollback_plan)
+                        estimated_duration = self._estimate_rollback_duration(
+                            rollback_plan
+                        )
                         if estimated_duration > 900:  # 15 minutes
-                            logger.warning(f"Rollback may exceed 15 minutes: {estimated_duration}s")
+                            logger.warning(
+                                f"Rollback may exceed 15 minutes: {estimated_duration}s"
+                            )
 
                         # 3. Execute rollback operations
                         success, error_msg = await self._execute_rollback_plan(
@@ -275,7 +296,9 @@ class TaxonomyDAGManager:
                         # 4. Validate rolled back state
                         validation_result = await self.validate_dag(target_version)
                         if not validation_result.is_valid:
-                            raise Exception(f"Post-rollback validation failed: {validation_result.errors}")
+                            raise Exception(
+                                f"Post-rollback validation failed: {validation_result.errors}"
+                            )
 
                         # 5. Record rollback migration
                         rollback_migration = TaxonomyMigration(
@@ -285,9 +308,11 @@ class TaxonomyDAGManager:
                             changes={
                                 "reason": reason,
                                 "rollback_plan": rollback_plan,
-                                "duration_seconds": (datetime.utcnow() - start_time).total_seconds()
+                                "duration_seconds": (
+                                    datetime.utcnow() - start_time
+                                ).total_seconds(),
                             },
-                            applied_by=performed_by
+                            applied_by=performed_by,
                         )
                         session.add(rollback_migration)
 
@@ -296,9 +321,14 @@ class TaxonomyDAGManager:
                         self._invalidate_cache()
 
                         duration = (datetime.utcnow() - start_time).total_seconds()
-                        logger.info(f"Rollback completed in {duration:.2f}s (TTR requirement: ≤900s)")
+                        logger.info(
+                            f"Rollback completed in {duration:.2f}s (TTR requirement: ≤900s)"
+                        )
 
-                        return True, f"Successfully rolled back to version {target_version}"
+                        return (
+                            True,
+                            f"Successfully rolled back to version {target_version}",
+                        )
 
             except Exception as e:
                 logger.error(f"Rollback failed: {e}")
@@ -344,7 +374,7 @@ class TaxonomyDAGManager:
         node_name: str,
         parent_node_id: Optional[int] = None,
         description: str = "",
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Tuple[bool, int, str]:
         """Add new taxonomy node with validation"""
 
@@ -357,8 +387,8 @@ class TaxonomyDAGManager:
                     "node_name": node_name,
                     "parent_node_id": parent_node_id,
                     "description": description,
-                    "metadata": metadata or {}
-                }
+                    "metadata": metadata or {},
+                },
             )
 
             # Create new patch version
@@ -366,18 +396,17 @@ class TaxonomyDAGManager:
                 version_type=VersionType.PATCH,
                 changes=[operation],
                 description=f"Add node: {node_name}",
-                created_by="system"
+                created_by="system",
             )
 
             if success:
                 # Get the newly created node ID
                 async with async_session() as session:
                     result = await session.execute(
-                        select(TaxonomyNode.node_id)
-                        .where(
+                        select(TaxonomyNode.node_id).where(
                             and_(
                                 TaxonomyNode.version == new_version,
-                                TaxonomyNode.node_name == node_name
+                                TaxonomyNode.node_name == node_name,
                             )
                         )
                     )
@@ -392,10 +421,7 @@ class TaxonomyDAGManager:
             return False, -1, str(e)
 
     async def move_node(
-        self,
-        node_id: int,
-        new_parent_id: Optional[int],
-        reason: str = ""
+        self, node_id: int, new_parent_id: Optional[int], reason: str = ""
     ) -> Tuple[bool, str]:
         """Move node to new parent with cycle detection"""
 
@@ -408,10 +434,7 @@ class TaxonomyDAGManager:
             operation = MigrationOperation(
                 operation_type=MigrationType.MOVE_NODE,
                 target_nodes=[node_id],
-                parameters={
-                    "new_parent_id": new_parent_id,
-                    "reason": reason
-                }
+                parameters={"new_parent_id": new_parent_id, "reason": reason},
             )
 
             # Create new patch version
@@ -419,7 +442,7 @@ class TaxonomyDAGManager:
                 version_type=VersionType.PATCH,
                 changes=[operation],
                 description=f"Move node {node_id} to parent {new_parent_id}",
-                created_by="system"
+                created_by="system",
             )
 
             return success, message
@@ -434,24 +457,29 @@ class TaxonomyDAGManager:
         try:
             async with async_session() as session:
                 result = await session.execute(
-                    select(TaxonomyMigration)
-                    .order_by(TaxonomyMigration.applied_at.desc())
+                    select(TaxonomyMigration).order_by(
+                        TaxonomyMigration.applied_at.desc()
+                    )
                 )
                 migrations = result.scalars().all()
 
                 history = []
                 for migration in migrations:
-                    history.append({
-                        "migration_id": migration.migration_id,
-                        "from_version": migration.from_version,
-                        "to_version": migration.to_version,
-                        "migration_type": migration.migration_type,
-                        "description": migration.changes.get("description", ""),
-                        "applied_at": migration.applied_at.isoformat(),
-                        "applied_by": migration.applied_by,
-                        "operations_count": len(migration.changes.get("operations", [])),
-                        "rollback_available": "rollback_data" in migration.changes
-                    })
+                    history.append(
+                        {
+                            "migration_id": migration.migration_id,
+                            "from_version": migration.from_version,
+                            "to_version": migration.to_version,
+                            "migration_type": migration.migration_type,
+                            "description": migration.changes.get("description", ""),
+                            "applied_at": migration.applied_at.isoformat(),
+                            "applied_by": migration.applied_by,
+                            "operations_count": len(
+                                migration.changes.get("operations", [])
+                            ),
+                            "rollback_available": "rollback_data" in migration.changes,
+                        }
+                    )
 
                 return history
 
@@ -459,7 +487,9 @@ class TaxonomyDAGManager:
             logger.error(f"Failed to get version history: {e}")
             return []
 
-    async def get_node_ancestry(self, node_id: int, version: Optional[int] = None) -> List[Dict[str, Any]]:
+    async def get_node_ancestry(
+        self, node_id: int, version: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
         """Get complete ancestry path for a node"""
         version = version or self.current_version
 
@@ -481,22 +511,23 @@ class TaxonomyDAGManager:
                     ancestry = []
                     for node in path:
                         result = await session.execute(
-                            select(TaxonomyNode)
-                            .where(
+                            select(TaxonomyNode).where(
                                 and_(
                                     TaxonomyNode.node_id == node,
-                                    TaxonomyNode.version == version
+                                    TaxonomyNode.version == version,
                                 )
                             )
                         )
                         node_obj = result.scalar()
                         if node_obj:
-                            ancestry.append({
-                                "node_id": node_obj.node_id,
-                                "node_name": node_obj.node_name,
-                                "canonical_path": node_obj.canonical_path,
-                                "level": len(ancestry)
-                            })
+                            ancestry.append(
+                                {
+                                    "node_id": node_obj.node_id,
+                                    "node_name": node_obj.node_name,
+                                    "canonical_path": node_obj.canonical_path,
+                                    "level": len(ancestry),
+                                }
+                            )
 
                     return ancestry
 
@@ -521,9 +552,11 @@ class TaxonomyDAGManager:
             nodes = nodes_result.scalars().all()
 
             for node in nodes:
-                graph.add_node(node.node_id,
-                              name=node.node_name,
-                              canonical_path=node.canonical_path)
+                graph.add_node(
+                    node.node_id,
+                    name=node.node_name,
+                    canonical_path=node.canonical_path,
+                )
 
             # Add edges
             edges_result = await session.execute(
@@ -552,7 +585,9 @@ class TaxonomyDAGManager:
                     if node.canonical_path:
                         path_str = " -> ".join(node.canonical_path)
                         if node.node_name not in node.canonical_path:
-                            errors.append(f"Node {node.node_id} name mismatch in canonical path: {path_str}")
+                            errors.append(
+                                f"Node {node.node_id} name mismatch in canonical path: {path_str}"
+                            )
 
         except Exception as e:
             errors.append(f"Semantic validation error: {e}")
@@ -566,8 +601,9 @@ class TaxonomyDAGManager:
         try:
             async with async_session() as session:
                 result = await session.execute(
-                    select(TaxonomyNode.canonical_path)
-                    .where(TaxonomyNode.version == version)
+                    select(TaxonomyNode.canonical_path).where(
+                        TaxonomyNode.version == version
+                    )
                 )
                 paths = [row[0] for row in result.fetchall()]
 
@@ -594,58 +630,49 @@ class TaxonomyDAGManager:
         return self.current_version + 1
 
     async def _validate_migration_plan(
-        self,
-        from_version: int,
-        to_version: int,
-        operations: List[MigrationOperation]
+        self, from_version: int, to_version: int, operations: List[MigrationOperation]
     ) -> ValidationResult:
         """Validate migration plan before execution"""
 
         # For now, basic validation
         # In production, simulate migrations to detect issues
         return ValidationResult(
-            is_valid=True,
-            errors=[],
-            warnings=[],
-            cycles=[],
-            orphaned_nodes=[]
+            is_valid=True, errors=[], warnings=[], cycles=[], orphaned_nodes=[]
         )
 
     async def _create_rollback_data(
-        self,
-        session: AsyncSession,
-        version: int,
-        operations: List[MigrationOperation]
+        self, session: AsyncSession, version: int, operations: List[MigrationOperation]
     ) -> Dict[str, Any]:
         """Create rollback data for migration"""
 
         rollback_data = {
             "snapshot_timestamp": datetime.utcnow().isoformat(),
             "affected_nodes": [],
-            "affected_edges": []
+            "affected_edges": [],
         }
 
         # Store current state of affected entities
         for operation in operations:
             for node_id in operation.target_nodes:
                 result = await session.execute(
-                    select(TaxonomyNode)
-                    .where(
+                    select(TaxonomyNode).where(
                         and_(
                             TaxonomyNode.node_id == node_id,
-                            TaxonomyNode.version == version
+                            TaxonomyNode.version == version,
                         )
                     )
                 )
                 node = result.scalar()
                 if node:
-                    rollback_data["affected_nodes"].append({
-                        "node_id": node.node_id,
-                        "node_name": node.node_name,
-                        "canonical_path": node.canonical_path,
-                        "description": node.description,
-                        "metadata": node.metadata
-                    })
+                    rollback_data["affected_nodes"].append(
+                        {
+                            "node_id": node.node_id,
+                            "node_name": node.node_name,
+                            "canonical_path": node.canonical_path,
+                            "description": node.description,
+                            "metadata": node.metadata,
+                        }
+                    )
 
         return rollback_data
 
@@ -654,7 +681,7 @@ class TaxonomyDAGManager:
         session: AsyncSession,
         from_version: int,
         to_version: int,
-        operations: List[MigrationOperation]
+        operations: List[MigrationOperation],
     ) -> Tuple[bool, str]:
         """Apply migration operations atomically"""
 
@@ -672,10 +699,7 @@ class TaxonomyDAGManager:
             return False, str(e)
 
     async def _apply_single_operation(
-        self,
-        session: AsyncSession,
-        version: int,
-        operation: MigrationOperation
+        self, session: AsyncSession, version: int, operation: MigrationOperation
     ) -> Tuple[bool, str]:
         """Apply single migration operation"""
 
@@ -692,10 +716,7 @@ class TaxonomyDAGManager:
             return False, str(e)
 
     async def _create_node_operation(
-        self,
-        session: AsyncSession,
-        version: int,
-        operation: MigrationOperation
+        self, session: AsyncSession, version: int, operation: MigrationOperation
     ) -> Tuple[bool, str]:
         """Create new node operation"""
 
@@ -708,11 +729,10 @@ class TaxonomyDAGManager:
         canonical_path = [params["node_name"]]
         if params.get("parent_node_id"):
             parent_result = await session.execute(
-                select(TaxonomyNode.canonical_path)
-                .where(
+                select(TaxonomyNode.canonical_path).where(
                     and_(
                         TaxonomyNode.node_id == params["parent_node_id"],
-                        TaxonomyNode.version == version
+                        TaxonomyNode.version == version,
                     )
                 )
             )
@@ -728,7 +748,7 @@ class TaxonomyDAGManager:
             node_name=params["node_name"],
             description=params.get("description", ""),
             metadata=params.get("metadata", {}),
-            is_active=True
+            is_active=True,
         )
         session.add(new_node)
 
@@ -737,17 +757,14 @@ class TaxonomyDAGManager:
             new_edge = TaxonomyEdge(
                 version=version,
                 parent_node_id=params["parent_node_id"],
-                child_node_id=new_node_id
+                child_node_id=new_node_id,
             )
             session.add(new_edge)
 
         return True, "Node created successfully"
 
     async def _move_node_operation(
-        self,
-        session: AsyncSession,
-        version: int,
-        operation: MigrationOperation
+        self, session: AsyncSession, version: int, operation: MigrationOperation
     ) -> Tuple[bool, str]:
         """Move node operation"""
 
@@ -760,11 +777,10 @@ class TaxonomyDAGManager:
 
         if new_parent_id:
             parent_result = await session.execute(
-                select(TaxonomyNode.canonical_path, TaxonomyNode.node_name)
-                .where(
+                select(TaxonomyNode.canonical_path, TaxonomyNode.node_name).where(
                     and_(
                         TaxonomyNode.node_id == new_parent_id,
-                        TaxonomyNode.version == version
+                        TaxonomyNode.version == version,
                     )
                 )
             )
@@ -774,11 +790,10 @@ class TaxonomyDAGManager:
 
                 # Get current node name
                 node_result = await session.execute(
-                    select(TaxonomyNode.node_name)
-                    .where(
+                    select(TaxonomyNode.node_name).where(
                         and_(
                             TaxonomyNode.node_id == node_id,
-                            TaxonomyNode.version == version
+                            TaxonomyNode.version == version,
                         )
                     )
                 )
@@ -793,7 +808,7 @@ class TaxonomyDAGManager:
                         .where(
                             and_(
                                 TaxonomyNode.node_id == node_id,
-                                TaxonomyNode.version == version
+                                TaxonomyNode.version == version,
                             )
                         )
                         .values(canonical_path=new_canonical_path)
@@ -818,10 +833,7 @@ class TaxonomyDAGManager:
             return True  # Conservative: assume would create cycle on error
 
     async def _create_rollback_plan(
-        self,
-        session: AsyncSession,
-        from_version: int,
-        to_version: int
+        self, session: AsyncSession, from_version: int, to_version: int
     ) -> Dict[str, Any]:
         """Create comprehensive rollback plan"""
 
@@ -831,7 +843,7 @@ class TaxonomyDAGManager:
             .where(
                 and_(
                     TaxonomyMigration.to_version > to_version,
-                    TaxonomyMigration.to_version <= from_version
+                    TaxonomyMigration.to_version <= from_version,
                 )
             )
             .order_by(TaxonomyMigration.to_version.desc())
@@ -843,7 +855,7 @@ class TaxonomyDAGManager:
             "estimated_operations": sum(
                 len(m.changes.get("operations", [])) for m in migrations
             ),
-            "requires_full_rebuild": len(migrations) > 10
+            "requires_full_rebuild": len(migrations) > 10,
         }
 
         return rollback_plan
@@ -863,9 +875,7 @@ class TaxonomyDAGManager:
         return estimated
 
     async def _execute_rollback_plan(
-        self,
-        session: AsyncSession,
-        rollback_plan: Dict[str, Any]
+        self, session: AsyncSession, rollback_plan: Dict[str, Any]
     ) -> Tuple[bool, str]:
         """Execute rollback plan"""
 
@@ -878,8 +888,9 @@ class TaxonomyDAGManager:
             for migration_id in migration_ids:
                 # Get migration details
                 result = await session.execute(
-                    select(TaxonomyMigration)
-                    .where(TaxonomyMigration.migration_id == migration_id)
+                    select(TaxonomyMigration).where(
+                        TaxonomyMigration.migration_id == migration_id
+                    )
                 )
                 migration = result.scalar()
 
@@ -894,9 +905,7 @@ class TaxonomyDAGManager:
             return False, str(e)
 
     async def _restore_from_rollback_data(
-        self,
-        session: AsyncSession,
-        rollback_data: Dict[str, Any]
+        self, session: AsyncSession, rollback_data: Dict[str, Any]
     ):
         """Restore entities from rollback data"""
 
@@ -909,7 +918,7 @@ class TaxonomyDAGManager:
                     node_name=node_data["node_name"],
                     canonical_path=node_data["canonical_path"],
                     description=node_data["description"],
-                    metadata=node_data["metadata"]
+                    metadata=node_data["metadata"],
                 )
             )
 
@@ -923,18 +932,23 @@ class TaxonomyDAGManager:
         max_id = result.scalar()
         return (max_id or 0) + 1
 
-    def _build_tree_structure(self, nodes: List[TaxonomyNode], edges: List[TaxonomyEdge]) -> Dict[str, Any]:
+    def _build_tree_structure(
+        self, nodes: List[TaxonomyNode], edges: List[TaxonomyEdge]
+    ) -> Dict[str, Any]:
         """Build hierarchical tree structure from nodes and edges"""
 
         # Create node lookup
-        node_lookup = {node.node_id: {
-            "node_id": node.node_id,
-            "node_name": node.node_name,
-            "canonical_path": node.canonical_path,
-            "description": node.description,
-            "metadata": node.metadata,
-            "children": []
-        } for node in nodes}
+        node_lookup = {
+            node.node_id: {
+                "node_id": node.node_id,
+                "node_name": node.node_name,
+                "canonical_path": node.canonical_path,
+                "description": node.description,
+                "metadata": node.metadata,
+                "children": [],
+            }
+            for node in nodes
+        }
 
         # Build parent-child relationships
         for edge in edges:
@@ -945,13 +959,15 @@ class TaxonomyDAGManager:
 
         # Find root nodes
         child_ids = {edge.child_node_id for edge in edges}
-        root_nodes = [node for node_id, node in node_lookup.items() if node_id not in child_ids]
+        root_nodes = [
+            node for node_id, node in node_lookup.items() if node_id not in child_ids
+        ]
 
         return {
             "version": nodes[0].version if nodes else 1,
             "roots": root_nodes,
             "total_nodes": len(nodes),
-            "total_edges": len(edges)
+            "total_edges": len(edges),
         }
 
     def _serialize_operation(self, operation: MigrationOperation) -> Dict[str, Any]:
@@ -959,7 +975,7 @@ class TaxonomyDAGManager:
         return {
             "operation_type": operation.operation_type.value,
             "target_nodes": operation.target_nodes,
-            "parameters": operation.parameters
+            "parameters": operation.parameters,
         }
 
     async def _create_default_taxonomy(self, session: AsyncSession):
@@ -973,7 +989,7 @@ class TaxonomyDAGManager:
             node_name="Root",
             description="Root taxonomy node",
             metadata={"type": "root"},
-            is_active=True
+            is_active=True,
         )
         session.add(root_node)
 
@@ -985,16 +1001,12 @@ class TaxonomyDAGManager:
             node_name="AI",
             description="Artificial Intelligence",
             metadata={"type": "category"},
-            is_active=True
+            is_active=True,
         )
         session.add(ai_node)
 
         # Create edge
-        root_edge = TaxonomyEdge(
-            version=1,
-            parent_node_id=1,
-            child_node_id=2
-        )
+        root_edge = TaxonomyEdge(version=1, parent_node_id=1, child_node_id=2)
         session.add(root_edge)
 
     def _invalidate_cache(self):
@@ -1005,57 +1017,70 @@ class TaxonomyDAGManager:
 # Singleton instance
 taxonomy_dag_manager = TaxonomyDAGManager()
 
+
 # Convenience functions for external use
 async def initialize_taxonomy_system() -> bool:
     """Initialize the taxonomy DAG system"""
     return await taxonomy_dag_manager.initialize()
 
+
 async def validate_taxonomy_dag(version: Optional[int] = None) -> ValidationResult:
     """Validate taxonomy DAG structure"""
     return await taxonomy_dag_manager.validate_dag(version)
+
 
 async def create_taxonomy_version(
     version_type: VersionType,
     changes: List[MigrationOperation],
     description: str,
-    created_by: str
+    created_by: str,
 ) -> Tuple[bool, int, str]:
     """Create new taxonomy version"""
-    return await taxonomy_dag_manager.create_version(version_type, changes, description, created_by)
+    return await taxonomy_dag_manager.create_version(
+        version_type, changes, description, created_by
+    )
+
 
 async def rollback_taxonomy(
-    target_version: int,
-    reason: str,
-    performed_by: str
+    target_version: int, reason: str, performed_by: str
 ) -> Tuple[bool, str]:
     """Rollback taxonomy to specific version"""
-    return await taxonomy_dag_manager.rollback_to_version(target_version, reason, performed_by)
+    return await taxonomy_dag_manager.rollback_to_version(
+        target_version, reason, performed_by
+    )
+
 
 async def get_taxonomy_tree(version: Optional[int] = None) -> Dict[str, Any]:
     """Get taxonomy tree structure"""
     return await taxonomy_dag_manager.get_taxonomy_tree(version)
 
+
 async def add_taxonomy_node(
     node_name: str,
     parent_node_id: Optional[int] = None,
     description: str = "",
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Tuple[bool, int, str]:
     """Add new taxonomy node"""
-    return await taxonomy_dag_manager.add_node(node_name, parent_node_id, description, metadata)
+    return await taxonomy_dag_manager.add_node(
+        node_name, parent_node_id, description, metadata
+    )
+
 
 async def move_taxonomy_node(
-    node_id: int,
-    new_parent_id: Optional[int],
-    reason: str = ""
+    node_id: int, new_parent_id: Optional[int], reason: str = ""
 ) -> Tuple[bool, str]:
     """Move taxonomy node"""
     return await taxonomy_dag_manager.move_node(node_id, new_parent_id, reason)
+
 
 async def get_taxonomy_history() -> List[Dict[str, Any]]:
     """Get taxonomy version history"""
     return await taxonomy_dag_manager.get_version_history()
 
-async def get_node_ancestry(node_id: int, version: Optional[int] = None) -> List[Dict[str, Any]]:
+
+async def get_node_ancestry(
+    node_id: int, version: Optional[int] = None
+) -> List[Dict[str, Any]]:
     """Get node ancestry path"""
     return await taxonomy_dag_manager.get_node_ancestry(node_id, version)

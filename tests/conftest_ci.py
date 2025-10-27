@@ -20,6 +20,7 @@ from pathlib import Path
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("asyncio").setLevel(logging.WARNING)
 
+
 # CI Environment Detection
 def is_ci_environment() -> bool:
     """Detect if running in CI environment"""
@@ -30,9 +31,10 @@ def is_ci_environment() -> bool:
         "GITLAB_CI",
         "JENKINS_URL",
         "TRAVIS",
-        "CIRCLECI"
+        "CIRCLECI",
     ]
     return any(os.getenv(indicator) for indicator in ci_indicators)
+
 
 def has_service_available(service: str) -> bool:
     """Check if external service is available"""
@@ -40,11 +42,12 @@ def has_service_available(service: str) -> bool:
         "postgresql": lambda: os.getenv("DATABASE_URL") and not is_ci_environment(),
         "redis": lambda: os.getenv("REDIS_URL") and not is_ci_environment(),
         "openai": lambda: os.getenv("OPENAI_API_KEY") and os.getenv("TEST_WITH_OPENAI"),
-        "network": lambda: not is_ci_environment() or os.getenv("TEST_WITH_NETWORK")
+        "network": lambda: not is_ci_environment() or os.getenv("TEST_WITH_NETWORK"),
     }
 
     checker = service_checks.get(service.lower())
     return checker() if checker else False
+
 
 # pytest configuration for CI
 def pytest_configure(config):
@@ -65,6 +68,7 @@ def pytest_configure(config):
         if not os.getenv("TEST_WITH_REDIS"):
             os.environ["REDIS_ENABLED"] = "false"
 
+
 def pytest_collection_modifyitems(config, items):
     """Modify test collection based on environment"""
     if is_ci_environment():
@@ -74,20 +78,24 @@ def pytest_collection_modifyitems(config, items):
             "requires_redis": not has_service_available("redis"),
             "requires_openai": not has_service_available("openai"),
             "requires_network": not has_service_available("network"),
-            "local_only": True  # Always skip local_only tests in CI
+            "local_only": True,  # Always skip local_only tests in CI
         }
 
         for item in items:
             for marker, should_skip in skip_markers.items():
                 if should_skip and item.get_closest_marker(marker):
-                    item.add_marker(pytest.mark.skip(
-                        reason=f"{marker} not available in CI environment"
-                    ))
+                    item.add_marker(
+                        pytest.mark.skip(
+                            reason=f"{marker} not available in CI environment"
+                        )
+                    )
+
 
 @pytest.fixture(scope="session")
 def ci_environment() -> bool:
     """Fixture to indicate if running in CI"""
     return is_ci_environment()
+
 
 @pytest.fixture
 def ci_safe_database_url() -> str:
@@ -96,12 +104,14 @@ def ci_safe_database_url() -> str:
         return "sqlite+aiosqlite:///:memory:"
     return os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
 
+
 @pytest.fixture
 async def ci_safe_redis():
     """Provide CI-safe Redis mock"""
     if has_service_available("redis"):
         try:
             import redis.asyncio as redis
+
             client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/15"))
             await client.ping()
             yield client
@@ -121,12 +131,14 @@ async def ci_safe_redis():
     mock_redis.close = AsyncMock()
     yield mock_redis
 
+
 @pytest.fixture
 def ci_safe_openai_client():
     """Provide CI-safe OpenAI client mock"""
     if has_service_available("openai"):
         try:
             import openai
+
             client = openai.AsyncOpenAI()
             return client
         except Exception:
@@ -135,18 +147,21 @@ def ci_safe_openai_client():
     # Use mock OpenAI client for CI
     mock_client = AsyncMock()
     mock_embeddings = AsyncMock()
-    mock_embeddings.create = AsyncMock(return_value=MagicMock(
-        data=[MagicMock(embedding=[0.1] * 1536)]
-    ))
+    mock_embeddings.create = AsyncMock(
+        return_value=MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
+    )
     mock_client.embeddings = mock_embeddings
 
     mock_chat = AsyncMock()
-    mock_chat.completions.create = AsyncMock(return_value=MagicMock(
-        choices=[MagicMock(message=MagicMock(content="Mock response"))]
-    ))
+    mock_chat.completions.create = AsyncMock(
+        return_value=MagicMock(
+            choices=[MagicMock(message=MagicMock(content="Mock response"))]
+        )
+    )
     mock_client.chat = mock_chat
 
     return mock_client
+
 
 @pytest.fixture
 async def ci_safe_http_client():
@@ -154,6 +169,7 @@ async def ci_safe_http_client():
     if has_service_available("network"):
         try:
             from httpx import AsyncClient
+
             async with AsyncClient() as client:
                 yield client
             return
@@ -174,11 +190,13 @@ async def ci_safe_http_client():
 
     yield mock_client
 
+
 @pytest.fixture
 def ci_temp_directory() -> Generator[Path, None, None]:
     """Create temporary directory that's cleaned up properly"""
     with tempfile.TemporaryDirectory() as temp_dir:
         yield Path(temp_dir)
+
 
 @pytest.fixture
 def ci_environment_vars():
@@ -192,7 +210,7 @@ def ci_environment_vars():
         "DATABASE_URL": "sqlite+aiosqlite:///:memory:",
         "REDIS_ENABLED": "false",
         "OPENAI_API_KEY": "test-key-for-ci",
-        "SECRET_KEY": "test-secret-key-for-ci-only-do-not-use-in-production"
+        "SECRET_KEY": "test-secret-key-for-ci-only-do-not-use-in-production",
     }
 
     os.environ.update(test_env)
@@ -204,6 +222,7 @@ def ci_environment_vars():
         os.environ.clear()
         os.environ.update(original_env)
 
+
 # Graceful degradation helpers
 class GracefulDegradationHelper:
     """Helper class for graceful test degradation"""
@@ -211,26 +230,32 @@ class GracefulDegradationHelper:
     @staticmethod
     def skip_if_service_unavailable(service: str):
         """Decorator to skip tests if service is unavailable"""
+
         def decorator(func):
             if not has_service_available(service):
-                return pytest.mark.skip(
-                    reason=f"Service '{service}' not available"
-                )(func)
+                return pytest.mark.skip(reason=f"Service '{service}' not available")(
+                    func
+                )
             return func
+
         return decorator
 
     @staticmethod
     def mock_if_service_unavailable(service: str, mock_fixture: str):
         """Use mock fixture if service is unavailable"""
+
         def decorator(func):
             if not has_service_available(service):
                 # Add mock fixture dependency
                 func = pytest.mark.usefixtures(mock_fixture)(func)
             return func
+
         return decorator
+
 
 # Export helper for use in tests
 graceful_degradation = GracefulDegradationHelper()
+
 
 # Test data factories for CI
 class CITestDataFactory:
@@ -247,9 +272,9 @@ class CITestDataFactory:
                 "category": "Test",
                 "tags": ["test", "ci"],
                 "created_at": "2024-01-01T00:00:00Z",
-                "source": "ci_test"
+                "source": "ci_test",
             },
-            "embeddings": [0.1] * 384  # Mock embedding vector
+            "embeddings": [0.1] * 384,  # Mock embedding vector
         }
 
     @staticmethod
@@ -259,7 +284,7 @@ class CITestDataFactory:
             "query": query,
             "filters": {"category": "Test"},
             "limit": 10,
-            "include_metadata": True
+            "include_metadata": True,
         }
 
     @staticmethod
@@ -268,25 +293,28 @@ class CITestDataFactory:
         return {
             "text": text,
             "context": {"type": "test"},
-            "options": {"threshold": 0.5}
+            "options": {"threshold": 0.5},
         }
+
 
 # Export factory for use in tests
 ci_test_data = CITestDataFactory()
 
+
 # Custom assertions for CI
 def assert_ci_safe_response(response, expected_status_codes=[200]):
     """Assert that response is valid in CI environment"""
-    if hasattr(response, 'status_code'):
+    if hasattr(response, "status_code"):
         assert response.status_code in expected_status_codes
 
-    if hasattr(response, 'json'):
+    if hasattr(response, "json"):
         try:
             data = response.json()
             assert isinstance(data, (dict, list))
         except Exception:
             # JSON parsing might fail, that's okay in some cases
             pass
+
 
 def assert_graceful_degradation(result, fallback_value=None):
     """Assert that graceful degradation occurred"""

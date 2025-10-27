@@ -9,7 +9,7 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, Optional
 
-from .metrics import MetricsCollector, get_metrics_collector
+from .metrics import get_metrics_collector
 
 logger = logging.getLogger(__name__)
 

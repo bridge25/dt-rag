@@ -131,6 +131,7 @@ class TestDebateFallback:
 
                 def slow_llm(*args, **kwargs):
                     import time
+
                     time.sleep(2)
                     mock_response = MagicMock()
                     mock_response.text = "Too late"

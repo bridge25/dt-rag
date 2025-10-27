@@ -24,22 +24,30 @@ class TestCaseBank(TestBase):
     quality_score: Mapped[float | None] = mapped_column(Float)
     usage_count: Mapped[int | None] = mapped_column(Integer, default=0)
     success_rate: Mapped[float | None] = mapped_column(Float, default=100.0)
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
-    last_used_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
 
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    status: Mapped[str] = mapped_column(String(50), default='active', nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False
+        nullable=False,
     )
 
 
-test_engine = create_async_engine("sqlite+aiosqlite:///test_consolidation.db", echo=False)
-test_async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+test_engine = create_async_engine(
+    "sqlite+aiosqlite:///test_consolidation.db", echo=False
+)
+test_async_session = async_sessionmaker(
+    test_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -61,6 +69,7 @@ async def cleanup_cases():
     yield
     async with test_async_session() as session:
         from sqlalchemy import delete
+
         stmt = delete(TestCaseBank)
         await session.execute(stmt)
         await session.commit()
@@ -80,7 +89,7 @@ async def test_remove_low_performance_cases():
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=25.0,
-                usage_count=20
+                usage_count=20,
             )
             for i in range(3)
         ]
@@ -109,7 +118,7 @@ async def test_remove_low_performance_skip_high_usage():
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
-            usage_count=600
+            usage_count=600,
         )
         session.add(high_usage_case)
         await session.commit()
@@ -137,7 +146,7 @@ async def test_merge_duplicate_cases():
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=50,
-                success_rate=80.0
+                success_rate=80.0,
             ),
             TestCaseBank(
                 case_id="dup-case-2",
@@ -146,8 +155,8 @@ async def test_merge_duplicate_cases():
                 category_path='["AI", "Test"]',
                 query_vector=similar_vec,
                 usage_count=30,
-                success_rate=75.0
-            )
+                success_rate=75.0,
+            ),
         ]
         for case in cases:
             session.add(case)
@@ -157,7 +166,9 @@ async def test_merge_duplicate_cases():
         merged_pairs = await policy.merge_duplicate_cases(similarity_threshold=0.95)
 
         assert len(merged_pairs) >= 1
-        assert any(pair["removed"] in ["dup-case-1", "dup-case-2"] for pair in merged_pairs)
+        assert any(
+            pair["removed"] in ["dup-case-1", "dup-case-2"] for pair in merged_pairs
+        )
 
 
 @pytest.mark.asyncio
@@ -176,7 +187,7 @@ async def test_merge_keep_higher_usage():
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=100,
-                success_rate=80.0
+                success_rate=80.0,
             ),
             TestCaseBank(
                 case_id="remove-this",
@@ -185,8 +196,8 @@ async def test_merge_keep_higher_usage():
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=10,
-                success_rate=80.0
-            )
+                success_rate=80.0,
+            ),
         ]
         for case in cases:
             session.add(case)
@@ -220,7 +231,7 @@ async def test_archive_inactive_cases():
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             usage_count=50,
-            last_used_at=old_date
+            last_used_at=old_date,
         )
         session.add(inactive_case)
         await session.commit()
@@ -247,7 +258,7 @@ async def test_archive_skip_high_usage():
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             usage_count=150,
-            last_used_at=old_date
+            last_used_at=old_date,
         )
         session.add(high_usage_inactive)
         await session.commit()
@@ -273,7 +284,7 @@ async def test_dry_run_mode():
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
             usage_count=50,
-            status="active"
+            status="active",
         )
         session.add(low_perf_case)
         await session.commit()
@@ -330,7 +341,7 @@ async def test_run_consolidation_batch():
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=15.0,
-                usage_count=20
+                usage_count=20,
             ),
             TestCaseBank(
                 case_id="full-inactive",
@@ -339,8 +350,8 @@ async def test_run_consolidation_batch():
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=50,
-                last_used_at=old_date
-            )
+                last_used_at=old_date,
+            ),
         ]
         for case in cases:
             session.add(case)
@@ -348,9 +359,7 @@ async def test_run_consolidation_batch():
 
         policy = ConsolidationPolicy(session, dry_run=False)
         results = await policy.run_consolidation(
-            low_perf_threshold=30.0,
-            similarity_threshold=0.95,
-            inactive_days=90
+            low_perf_threshold=30.0, similarity_threshold=0.95, inactive_days=90
         )
 
         assert results["removed_cases"] >= 1

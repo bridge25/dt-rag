@@ -18,7 +18,9 @@ from datetime import datetime
 # Test database and environment setup
 os.environ["TESTING"] = "true"
 # Use PostgreSQL with pgvector for vector similarity search
-os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/dt_rag_test"
+os.environ["DATABASE_URL"] = (
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/dt_rag_test"
+)
 
 
 @pytest.fixture(scope="session")
@@ -69,9 +71,9 @@ def sample_document_data() -> Dict[str, Any]:
         "metadata": {
             "source": "test",
             "created_at": "2024-01-01T00:00:00Z",
-            "tags": ["test", "document"]
+            "tags": ["test", "document"],
         },
-        "embeddings": [0.1, 0.2, 0.3, 0.4, 0.5]
+        "embeddings": [0.1, 0.2, 0.3, 0.4, 0.5],
     }
 
 
@@ -80,11 +82,9 @@ def sample_search_query() -> Dict[str, Any]:
     """Sample search query for testing."""
     return {
         "query": "test search query",
-        "filters": {
-            "source": "test"
-        },
+        "filters": {"source": "test"},
         "limit": 10,
-        "include_metadata": True
+        "include_metadata": True,
     }
 
 
@@ -94,7 +94,7 @@ def sample_api_key_data() -> Dict[str, str]:
     return {
         "name": "test-api-key",
         "description": "Test API key for unit testing",
-        "permissions": ["read", "write"]
+        "permissions": ["read", "write"],
     }
 
 
@@ -175,7 +175,9 @@ async def setup_taxonomy_nodes():
     from sqlalchemy import text
 
     async with async_session() as session:
-        await session.execute(text("DELETE FROM taxonomy_nodes WHERE version = '1.0.0'"))
+        await session.execute(
+            text("DELETE FROM taxonomy_nodes WHERE version = '1.0.0'")
+        )
         await session.commit()
 
     async with async_session() as session:
@@ -185,21 +187,21 @@ async def setup_taxonomy_nodes():
                 label="technology",
                 canonical_path=["technology"],
                 version="1.0.0",
-                confidence=1.0
+                confidence=1.0,
             ),
             TaxonomyNode(
                 node_id=uuid.uuid4(),
                 label="ai",
                 canonical_path=["technology", "ai"],
                 version="1.0.0",
-                confidence=1.0
+                confidence=1.0,
             ),
             TaxonomyNode(
                 node_id=uuid.uuid4(),
                 label="machine-learning",
                 canonical_path=["technology", "ai", "machine-learning"],
                 version="1.0.0",
-                confidence=1.0
+                confidence=1.0,
             ),
         ]
 
@@ -211,7 +213,9 @@ async def setup_taxonomy_nodes():
     yield
 
     async with async_session() as session:
-        await session.execute(text("DELETE FROM taxonomy_nodes WHERE version = '1.0.0'"))
+        await session.execute(
+            text("DELETE FROM taxonomy_nodes WHERE version = '1.0.0'")
+        )
         await session.commit()
 
 
@@ -241,18 +245,10 @@ async def cleanup_test_files():
 # Pytest configuration
 def pytest_configure(config):
     """Configure pytest with custom markers and settings."""
-    config.addinivalue_line(
-        "markers", "unit: marks tests as unit tests"
-    )
-    config.addinivalue_line(
-        "markers", "integration: marks tests as integration tests"
-    )
-    config.addinivalue_line(
-        "markers", "e2e: marks tests as end-to-end tests"
-    )
-    config.addinivalue_line(
-        "markers", "slow: marks tests as slow running"
-    )
+    config.addinivalue_line("markers", "unit: marks tests as unit tests")
+    config.addinivalue_line("markers", "integration: marks tests as integration tests")
+    config.addinivalue_line("markers", "e2e: marks tests as end-to-end tests")
+    config.addinivalue_line("markers", "slow: marks tests as slow running")
 
 
 # Custom assertions and utilities
@@ -260,6 +256,7 @@ def assert_valid_uuid(value: str) -> bool:
     """Assert that a string is a valid UUID."""
     try:
         import uuid
+
         uuid.UUID(value)
         return True
     except ValueError:
@@ -269,15 +266,11 @@ def assert_valid_uuid(value: str) -> bool:
 def assert_valid_timestamp(value: str) -> bool:
     """Assert that a string is a valid ISO timestamp."""
     try:
-        datetime.fromisoformat(value.replace('Z', '+00:00'))
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
         return True
     except ValueError:
         return False
 
 
 # Export utilities for use in tests
-__all__ = [
-    "assert_valid_uuid",
-    "assert_valid_timestamp",
-    "AsyncContextManager"
-]
+__all__ = ["assert_valid_uuid", "assert_valid_timestamp", "AsyncContextManager"]

@@ -32,7 +32,14 @@ logger = logging.getLogger(__name__)
 
 class MockSearchResult:
     """Mock search result for testing"""
-    def __init__(self, chunk_id: str, text: str, bm25_score: float = 0.0, vector_score: float = 0.0):
+
+    def __init__(
+        self,
+        chunk_id: str,
+        text: str,
+        bm25_score: float = 0.0,
+        vector_score: float = 0.0,
+    ):
         self.chunk_id = chunk_id
         self.text = text
         self.bm25_score = bm25_score
@@ -49,7 +56,11 @@ class MockSearchResult:
 async def mock_hybrid_search_engine():
     """Create mock hybrid search engine"""
     try:
-        from apps.search.hybrid_search_engine import HybridSearchEngine, SearchResult, SearchMetrics
+        from apps.search.hybrid_search_engine import (
+            HybridSearchEngine,
+            SearchResult,
+            SearchMetrics,
+        )
 
         # Create real engine for testing
         engine = HybridSearchEngine(
@@ -57,7 +68,7 @@ async def mock_hybrid_search_engine():
             vector_weight=0.4,
             enable_caching=True,
             enable_reranking=True,
-            normalization="min_max"
+            normalization="min_max",
         )
 
         return engine
@@ -79,25 +90,25 @@ def sample_search_data():
             "neural network architecture",
             "natural language processing",
             "deep learning models",
-            "artificial intelligence applications"
+            "artificial intelligence applications",
         ],
         "expected_results": [
             {
                 "chunk_id": "doc1_chunk1",
                 "text": "Machine learning algorithms are computational methods that enable automatic learning from data.",
-                "relevance_score": 0.95
+                "relevance_score": 0.95,
             },
             {
                 "chunk_id": "doc2_chunk1",
                 "text": "Neural networks are computational models inspired by biological neural networks.",
-                "relevance_score": 0.88
+                "relevance_score": 0.88,
             },
             {
                 "chunk_id": "doc3_chunk1",
                 "text": "Natural language processing involves computational analysis of human language.",
-                "relevance_score": 0.82
-            }
-        ]
+                "relevance_score": 0.82,
+            },
+        ],
     }
 
 
@@ -175,7 +186,9 @@ class TestHybridScoreFusion:
             assert len(hybrid_scores) == len(bm25_scores)
             assert all(isinstance(score, float) for score in hybrid_scores)
 
-            logger.info(f"Hybrid fusion - BM25: {bm25_scores}, Vector: {vector_scores}, Hybrid: {hybrid_scores}")
+            logger.info(
+                f"Hybrid fusion - BM25: {bm25_scores}, Vector: {vector_scores}, Hybrid: {hybrid_scores}"
+            )
 
         except ImportError:
             pytest.skip("HybridSearchEngine not available")
@@ -189,19 +202,23 @@ class TestHybridScoreFusion:
 
             # Test different query characteristics
             query_characteristics = {
-                'length': 2,  # Short query should favor BM25
-                'exact_terms': True,
-                'semantic_complexity': 0.3
+                "length": 2,  # Short query should favor BM25
+                "exact_terms": True,
+                "semantic_complexity": 0.3,
             }
 
             bm25_scores = [0.8, 0.6, 0.4]
             vector_scores = [0.3, 0.5, 0.7]
 
-            adaptive_scores = fusion.adaptive_fusion(bm25_scores, vector_scores, query_characteristics)
+            adaptive_scores = fusion.adaptive_fusion(
+                bm25_scores, vector_scores, query_characteristics
+            )
 
             assert len(adaptive_scores) == len(bm25_scores)
 
-            logger.info(f"Adaptive fusion with query characteristics: {query_characteristics}")
+            logger.info(
+                f"Adaptive fusion with query characteristics: {query_characteristics}"
+            )
             logger.info(f"Adaptive scores: {adaptive_scores}")
 
         except ImportError:
@@ -214,7 +231,10 @@ class TestCrossEncoderReranking:
     def test_basic_reranking(self):
         """Test basic cross-encoder reranking"""
         try:
-            from apps.search.hybrid_search_engine import CrossEncoderReranker, SearchResult
+            from apps.search.hybrid_search_engine import (
+                CrossEncoderReranker,
+                SearchResult,
+            )
 
             reranker = CrossEncoderReranker()
 
@@ -223,18 +243,18 @@ class TestCrossEncoderReranking:
                 SearchResult(
                     chunk_id="doc1_chunk1",
                     text="Machine learning is a subset of artificial intelligence",
-                    hybrid_score=0.8
+                    hybrid_score=0.8,
                 ),
                 SearchResult(
                     chunk_id="doc2_chunk1",
                     text="Deep learning uses neural networks with multiple layers",
-                    hybrid_score=0.6
+                    hybrid_score=0.6,
                 ),
                 SearchResult(
                     chunk_id="doc3_chunk1",
                     text="Natural language processing analyzes human language",
-                    hybrid_score=0.4
-                )
+                    hybrid_score=0.4,
+                ),
             ]
 
             query = "machine learning algorithms"
@@ -245,7 +265,9 @@ class TestCrossEncoderReranking:
             # Results should be ordered by rerank score
             assert reranked_results[0].rerank_score >= reranked_results[1].rerank_score
 
-            logger.info(f"Reranked top result: {reranked_results[0].text[:50]}... (score: {reranked_results[0].rerank_score:.3f})")
+            logger.info(
+                f"Reranked top result: {reranked_results[0].text[:50]}... (score: {reranked_results[0].rerank_score:.3f})"
+            )
 
         except ImportError:
             pytest.skip("HybridSearchEngine not available")
@@ -264,7 +286,7 @@ class TestResultCache:
             # Create test results
             results = [
                 SearchResult(chunk_id="test1", text="Test result 1"),
-                SearchResult(chunk_id="test2", text="Test result 2")
+                SearchResult(chunk_id="test2", text="Test result 2"),
             ]
 
             query = "test query"
@@ -281,7 +303,9 @@ class TestResultCache:
             assert len(cached_results) == len(results)
             assert cached_results[0].chunk_id == results[0].chunk_id
 
-            logger.info(f"Cache test successful - stored and retrieved {len(results)} results")
+            logger.info(
+                f"Cache test successful - stored and retrieved {len(results)} results"
+            )
 
         except ImportError:
             pytest.skip("HybridSearchEngine not available")
@@ -293,7 +317,9 @@ class TestResultCache:
 
             cache = ResultCache(max_size=2, ttl_seconds=300)  # Small cache
 
-            results = [SearchResult(chunk_id=f"test{i}", text=f"Test {i}") for i in range(3)]
+            results = [
+                SearchResult(chunk_id=f"test{i}", text=f"Test {i}") for i in range(3)
+            ]
 
             # Fill cache beyond capacity
             for i in range(3):
@@ -320,33 +346,55 @@ class TestHybridSearchEngine:
         """Test search engine initialization"""
         engine = mock_hybrid_search_engine
 
-        if hasattr(engine, 'get_config'):
+        if hasattr(engine, "get_config"):
             config = engine.get_config()
             assert "bm25_weight" in config
             assert "vector_weight" in config
 
             logger.info(f"Engine initialized with config: {config}")
 
-    @patch('apps.search.hybrid_search_engine.embedding_service')
-    @patch('apps.api.database.db_manager')
-    async def test_hybrid_search_execution(self, mock_db, mock_embedding, mock_hybrid_search_engine):
+    @patch("apps.search.hybrid_search_engine.embedding_service")
+    @patch("apps.api.database.db_manager")
+    async def test_hybrid_search_execution(
+        self, mock_db, mock_embedding, mock_hybrid_search_engine
+    ):
         """Test hybrid search execution with mocked dependencies"""
         try:
-            from apps.search.hybrid_search_engine import HybridSearchEngine, SearchResult, SearchMetrics
+            from apps.search.hybrid_search_engine import (
+                HybridSearchEngine,
+                SearchResult,
+                SearchMetrics,
+            )
 
             # Mock embedding service
             mock_embedding.generate_embedding = AsyncMock(return_value=[0.1] * 768)
 
             # Mock database session and results
             mock_session = AsyncMock()
-            mock_db.async_session.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_db.async_session.return_value.__aenter__ = AsyncMock(
+                return_value=mock_session
+            )
             mock_db.async_session.return_value.__aexit__ = AsyncMock(return_value=None)
 
             # Mock BM25 results
             mock_bm25_result = MagicMock()
             mock_bm25_result.fetchall.return_value = [
-                ("chunk1", "Machine learning algorithms", "ML Guide", "https://example.com", ["AI", "ML"], 0.8),
-                ("chunk2", "Neural network basics", "NN Tutorial", "https://example2.com", ["AI", "DL"], 0.6)
+                (
+                    "chunk1",
+                    "Machine learning algorithms",
+                    "ML Guide",
+                    "https://example.com",
+                    ["AI", "ML"],
+                    0.8,
+                ),
+                (
+                    "chunk2",
+                    "Neural network basics",
+                    "NN Tutorial",
+                    "https://example2.com",
+                    ["AI", "DL"],
+                    0.6,
+                ),
             ]
             mock_session.execute.return_value = mock_bm25_result
 
@@ -357,7 +405,9 @@ class TestHybridSearchEngine:
             assert isinstance(metrics, SearchMetrics)
             assert metrics.total_time > 0
 
-            logger.info(f"Search completed in {metrics.total_time:.3f}s with {len(results)} results")
+            logger.info(
+                f"Search completed in {metrics.total_time:.3f}s with {len(results)} results"
+            )
 
         except ImportError:
             # Test with mock engine if real one not available
@@ -379,7 +429,7 @@ class TestSearchPerformance:
         queries = sample_search_data["queries"]
 
         # Warm-up query to initialize engine (avoid first-run penalty)
-        if hasattr(engine, 'search'):
+        if hasattr(engine, "search"):
             try:
                 await engine.search("warmup", top_k=1)
             except Exception:
@@ -390,7 +440,7 @@ class TestSearchPerformance:
         for query in queries:
             start_time = time.time()
 
-            if hasattr(engine, 'search'):
+            if hasattr(engine, "search"):
                 try:
                     results, metrics = await engine.search(query, top_k=5)
                 except Exception:
@@ -431,7 +481,7 @@ class TestSearchPerformance:
         async def single_search(query):
             start_time = time.time()
 
-            if hasattr(engine, 'search'):
+            if hasattr(engine, "search"):
                 try:
                     results, metrics = await engine.search(query, top_k=3)
                     return time.time() - start_time, len(results), None
@@ -463,9 +513,13 @@ class TestSearchPerformance:
         logger.info(f"  - Errors: {len(errors)}")
 
         # Performance assertions (adjusted for Docker PostgreSQL environment)
-        assert avg_latency < 15.0, f"Concurrent average latency too high: {avg_latency:.3f}s"
+        assert (
+            avg_latency < 15.0
+        ), f"Concurrent average latency too high: {avg_latency:.3f}s"
         assert throughput > 0.5, f"Throughput too low: {throughput:.1f} queries/second"
-        assert len(errors) / len(queries) < 0.1, f"Error rate too high: {len(errors)}/{len(queries)}"
+        assert (
+            len(errors) / len(queries) < 0.1
+        ), f"Error rate too high: {len(errors)}/{len(queries)}"
 
 
 class TestSearchQuality:
@@ -486,7 +540,7 @@ class TestSearchQuality:
         test_cases = [
             ("machine learning algorithms", results[0]["text"]),
             ("neural network", results[1]["text"]),
-            ("natural language", results[2]["text"])
+            ("natural language", results[2]["text"]),
         ]
 
         relevance_scores = []
@@ -496,8 +550,12 @@ class TestSearchQuality:
             logger.info(f"Relevance score for query '{query}': {score:.3f}")
 
         # Ensure results have reasonable relevance scores
-        assert all(score > 0 for score in relevance_scores), "All results should have some relevance"
-        assert max(relevance_scores) > 0.5, "At least one result should be highly relevant"
+        assert all(
+            score > 0 for score in relevance_scores
+        ), "All results should have some relevance"
+        assert (
+            max(relevance_scores) > 0.5
+        ), "At least one result should be highly relevant"
 
     def test_search_diversity(self, sample_search_data):
         """Test search result diversity"""
@@ -505,7 +563,9 @@ class TestSearchQuality:
 
         # Check text diversity (no exact duplicates)
         texts = [result["text"] for result in results]
-        assert len(texts) == len(set(texts)), "Results should be diverse (no duplicates)"
+        assert len(texts) == len(
+            set(texts)
+        ), "Results should be diverse (no duplicates)"
 
         # Check content diversity (different key concepts)
         key_terms = []
@@ -519,9 +579,13 @@ class TestSearchQuality:
         total_terms = len(key_terms)
         diversity_ratio = unique_terms / total_terms if total_terms > 0 else 0
 
-        logger.info(f"Content diversity ratio: {diversity_ratio:.3f} ({unique_terms}/{total_terms})")
+        logger.info(
+            f"Content diversity ratio: {diversity_ratio:.3f} ({unique_terms}/{total_terms})"
+        )
 
-        assert diversity_ratio > 0.5, f"Content diversity too low: {diversity_ratio:.3f}"
+        assert (
+            diversity_ratio > 0.5
+        ), f"Content diversity too low: {diversity_ratio:.3f}"
 
 
 @pytest.mark.asyncio
@@ -533,7 +597,7 @@ class TestAPIIntegration:
         try:
             from apps.search.hybrid_search_engine import hybrid_search
 
-            with patch('apps.search.hybrid_search_engine.search_engine') as mock_engine:
+            with patch("apps.search.hybrid_search_engine.search_engine") as mock_engine:
                 # Mock search engine response
                 mock_search_results = [
                     MagicMock(
@@ -546,7 +610,7 @@ class TestAPIIntegration:
                         hybrid_score=0.7,
                         bm25_score=0.6,
                         vector_score=0.5,
-                        metadata={"source": "test"}
+                        metadata={"source": "test"},
                     )
                 ]
 
@@ -564,7 +628,10 @@ class TestAPIIntegration:
 
                 # Use AsyncMock for async method
                 from unittest.mock import AsyncMock
-                mock_engine.search = AsyncMock(return_value=(mock_search_results, mock_metrics))
+
+                mock_engine.search = AsyncMock(
+                    return_value=(mock_search_results, mock_metrics)
+                )
 
                 # Test API function
                 api_results, api_metrics = await hybrid_search("test query", top_k=5)
@@ -578,7 +645,9 @@ class TestAPIIntegration:
                 assert api_metrics["total_time"] == 0.1
                 assert "candidates_found" in api_metrics
 
-                logger.info(f"API integration test successful - {len(api_results)} results")
+                logger.info(
+                    f"API integration test successful - {len(api_results)} results"
+                )
 
         except ImportError:
             pytest.skip("HybridSearchEngine not available")
@@ -586,10 +655,6 @@ class TestAPIIntegration:
 
 if __name__ == "__main__":
     # Run tests with performance reporting
-    pytest.main([
-        __file__,
-        "-v",
-        "--tb=short",
-        "--durations=10",
-        "--log-cli-level=INFO"
-    ])
+    pytest.main(
+        [__file__, "-v", "--tb=short", "--durations=10", "--log-cli-level=INFO"]
+    )

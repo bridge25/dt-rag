@@ -28,6 +28,7 @@ try:
     # Check for optional cache components
     try:
         import redis.asyncio as redis
+
         REDIS_AVAILABLE = True
     except ImportError:
         REDIS_AVAILABLE = False
@@ -67,7 +68,7 @@ class TestCachingSystemIntegration:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
 
-        with patch('redis.asyncio.from_url', return_value=mock_redis_client):
+        with patch("redis.asyncio.from_url", return_value=mock_redis_client):
             manager = RedisManager()
             await manager.initialize()
             yield manager
@@ -79,7 +80,9 @@ class TestCachingSystemIntegration:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")
 
-        with patch('apps.api.cache.redis_manager.get_redis_manager', return_value=redis_manager):
+        with patch(
+            "apps.api.cache.redis_manager.get_redis_manager", return_value=redis_manager
+        ):
             cache = SearchCache()
             yield cache
 
@@ -88,12 +91,9 @@ class TestCachingSystemIntegration:
         """Sample search query for testing"""
         return {
             "query": "machine learning algorithms",
-            "filters": {
-                "category": "AI",
-                "tags": ["ML", "algorithms"]
-            },
+            "filters": {"category": "AI", "tags": ["ML", "algorithms"]},
             "limit": 10,
-            "include_metadata": True
+            "include_metadata": True,
         }
 
     @pytest.fixture
@@ -108,8 +108,8 @@ class TestCachingSystemIntegration:
                 "metadata": {
                     "category": "AI",
                     "tags": ["ML", "algorithms"],
-                    "created_at": "2024-01-01T00:00:00Z"
-                }
+                    "created_at": "2024-01-01T00:00:00Z",
+                },
             },
             {
                 "id": "doc_2",
@@ -119,9 +119,9 @@ class TestCachingSystemIntegration:
                 "metadata": {
                     "category": "AI",
                     "tags": ["ML", "deep learning"],
-                    "created_at": "2024-01-02T00:00:00Z"
-                }
-            }
+                    "created_at": "2024-01-02T00:00:00Z",
+                },
+            },
         ]
 
     async def test_redis_manager_initialization(self, mock_redis_client):
@@ -129,7 +129,7 @@ class TestCachingSystemIntegration:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis components not available")
 
-        with patch('redis.asyncio.from_url', return_value=mock_redis_client):
+        with patch("redis.asyncio.from_url", return_value=mock_redis_client):
             try:
                 manager = RedisManager()
                 await manager.initialize()
@@ -147,7 +147,7 @@ class TestCachingSystemIntegration:
         self,
         search_cache: SearchCache,
         sample_search_query: Dict[str, Any],
-        sample_search_results: List[Dict[str, Any]]
+        sample_search_results: List[Dict[str, Any]],
     ):
         """Test search result caching integration"""
         if not COMPONENTS_AVAILABLE:
@@ -156,16 +156,14 @@ class TestCachingSystemIntegration:
         try:
             # Test cache key generation
             cache_key = search_cache._generate_cache_key(
-                sample_search_query["query"],
-                sample_search_query["filters"]
+                sample_search_query["query"], sample_search_query["filters"]
             )
             assert isinstance(cache_key, str)
             assert len(cache_key) > 0
 
             # Test cache miss
             cached_results = await search_cache.get_cached_results(
-                sample_search_query["query"],
-                sample_search_query["filters"]
+                sample_search_query["query"], sample_search_query["filters"]
             )
             assert cached_results is None
 
@@ -174,7 +172,7 @@ class TestCachingSystemIntegration:
                 sample_search_query["query"],
                 sample_search_query["filters"],
                 sample_search_results,
-                ttl=300
+                ttl=300,
             )
 
             # In a real scenario, this would retrieve from cache
@@ -213,9 +211,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache key consistency test failed: {e}")
 
     async def test_cache_expiration_handling(
-        self,
-        redis_manager: RedisManager,
-        mock_redis_client
+        self, redis_manager: RedisManager, mock_redis_client
     ):
         """Test cache expiration and TTL handling"""
         if not COMPONENTS_AVAILABLE:
@@ -245,9 +241,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache expiration test failed: {e}")
 
     async def test_cache_invalidation_patterns(
-        self,
-        redis_manager: RedisManager,
-        mock_redis_client
+        self, redis_manager: RedisManager, mock_redis_client
     ):
         """Test cache invalidation strategies"""
         if not COMPONENTS_AVAILABLE:
@@ -259,7 +253,7 @@ class TestCachingSystemIntegration:
                 "search:cache:key1",
                 "search:cache:key2",
                 "user:cache:key1",
-                "search:metadata:key1"
+                "search:metadata:key1",
             ]
             mock_redis_client.keys = AsyncMock(return_value=test_keys)
 
@@ -268,7 +262,9 @@ class TestCachingSystemIntegration:
             keys_to_delete = await redis_manager.keys(pattern)
 
             # Should match search cache keys
-            expected_matches = [key for key in test_keys if key.startswith("search:cache:")]
+            expected_matches = [
+                key for key in test_keys if key.startswith("search:cache:")
+            ]
             assert len(keys_to_delete) == len(expected_matches)
 
             # Test bulk deletion
@@ -281,10 +277,7 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Cache invalidation test failed: {e}")
 
-    async def test_concurrent_cache_operations(
-        self,
-        redis_manager: RedisManager
-    ):
+    async def test_concurrent_cache_operations(self, redis_manager: RedisManager):
         """Test concurrent cache operations"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -326,12 +319,12 @@ class TestCachingSystemIntegration:
                 {"type": "list", "value": [1, 2, 3, "string", True]},
                 {"type": "string", "value": "simple string"},
                 {"type": "number", "value": 12345},
-                {"type": "boolean", "value": True}
+                {"type": "boolean", "value": True},
             ]
 
             for test_case in test_data:
                 test_key = f"serialization:test:{test_case['type']}"
-                test_value = test_case['value']
+                test_value = test_case["value"]
 
                 # Set the value
                 await redis_manager.set(test_key, test_value)
@@ -342,17 +335,21 @@ class TestCachingSystemIntegration:
                 # Values should be equal (considering JSON serialization)
                 if isinstance(test_value, (dict, list)):
                     # For complex types, they should be equal after JSON round-trip
-                    assert json.dumps(test_value, sort_keys=True) == json.dumps(retrieved_value, sort_keys=True)
+                    assert json.dumps(test_value, sort_keys=True) == json.dumps(
+                        retrieved_value, sort_keys=True
+                    )
                 else:
                     # For simple types, direct comparison
-                    assert test_value == retrieved_value or str(test_value) == str(retrieved_value)
+                    assert test_value == retrieved_value or str(test_value) == str(
+                        retrieved_value
+                    )
 
         except Exception as e:
             pytest.skip(f"Cache serialization test failed: {e}")
 
     @pytest.mark.skipif(
         not os.getenv("TEST_WITH_REDIS"),
-        reason="Real Redis tests only run when TEST_WITH_REDIS is set"
+        reason="Real Redis tests only run when TEST_WITH_REDIS is set",
     )
     async def test_real_redis_integration(self):
         """Test integration with real Redis instance (when available)"""
@@ -384,9 +381,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Real Redis integration test failed: {e}")
 
     async def test_cache_error_handling(
-        self,
-        redis_manager: RedisManager,
-        mock_redis_client
+        self, redis_manager: RedisManager, mock_redis_client
     ):
         """Test error handling in cache operations"""
         if not COMPONENTS_AVAILABLE:
@@ -394,14 +389,18 @@ class TestCachingSystemIntegration:
 
         try:
             # Mock Redis connection error
-            mock_redis_client.ping = AsyncMock(side_effect=Exception("Connection failed"))
+            mock_redis_client.ping = AsyncMock(
+                side_effect=Exception("Connection failed")
+            )
 
             # Test connection check with error
             is_connected = await redis_manager.is_connected()
             assert is_connected is False
 
             # Mock Redis operation error
-            mock_redis_client.get = AsyncMock(side_effect=Exception("Redis operation failed"))
+            mock_redis_client.get = AsyncMock(
+                side_effect=Exception("Redis operation failed")
+            )
 
             # Test get operation with error
             result = await redis_manager.get("test:key")
@@ -413,9 +412,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache error handling test failed: {e}")
 
     async def test_cache_performance_metrics(
-        self,
-        search_cache: SearchCache,
-        sample_search_query: Dict[str, Any]
+        self, search_cache: SearchCache, sample_search_query: Dict[str, Any]
     ):
         """Test cache performance tracking"""
         if not COMPONENTS_AVAILABLE:
@@ -428,8 +425,7 @@ class TestCachingSystemIntegration:
             start_time = time.time()
 
             await search_cache.get_cached_results(
-                sample_search_query["query"],
-                sample_search_query["filters"]
+                sample_search_query["query"], sample_search_query["filters"]
             )
 
             end_time = time.time()
@@ -443,7 +439,7 @@ class TestCachingSystemIntegration:
                 "cache_operation_time_ms": operation_time_ms,
                 "cache_hit": False,  # First access should be miss
                 "cache_key_size": len(str(sample_search_query)),
-                "operation_type": "get"
+                "operation_type": "get",
             }
 
             assert metrics["operation_type"] == "get"

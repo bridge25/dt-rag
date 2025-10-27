@@ -24,22 +24,30 @@ class TestCaseBank(TestBase):
     quality_score: Mapped[float | None] = mapped_column(Float)
     usage_count: Mapped[int | None] = mapped_column(Integer, default=0)
     success_rate: Mapped[float | None] = mapped_column(Float, default=100.0)
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
-    last_used_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
 
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    status: Mapped[str] = mapped_column(String(50), default='active', nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False
+        nullable=False,
     )
 
 
-test_engine = create_async_engine("sqlite+aiosqlite:///test_consolidation_integration.db", echo=False)
-test_async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+test_engine = create_async_engine(
+    "sqlite+aiosqlite:///test_consolidation_integration.db", echo=False
+)
+test_async_session = async_sessionmaker(
+    test_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -61,6 +69,7 @@ async def cleanup_cases():
     yield
     async with test_async_session() as session:
         from sqlalchemy import delete
+
         stmt = delete(TestCaseBank)
         await session.execute(stmt)
         await session.commit()
@@ -82,7 +91,7 @@ async def test_full_consolidation_workflow():
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=15.0,
-                usage_count=20
+                usage_count=20,
             ),
             TestCaseBank(
                 case_id="workflow-inactive-001",
@@ -91,7 +100,7 @@ async def test_full_consolidation_workflow():
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=50,
-                last_used_at=old_date
+                last_used_at=old_date,
             ),
             TestCaseBank(
                 case_id="workflow-active-001",
@@ -101,8 +110,8 @@ async def test_full_consolidation_workflow():
                 query_vector="[0.3, 0.4, 0.5]",
                 usage_count=200,
                 success_rate=90.0,
-                last_used_at=datetime.now(timezone.utc)
-            )
+                last_used_at=datetime.now(timezone.utc),
+            ),
         ]
         for case in cases:
             session.add(case)
@@ -110,9 +119,7 @@ async def test_full_consolidation_workflow():
 
         policy = ConsolidationPolicy(session, dry_run=False)
         results = await policy.run_consolidation(
-            low_perf_threshold=30.0,
-            similarity_threshold=0.95,
-            inactive_days=90
+            low_perf_threshold=30.0, similarity_threshold=0.95, inactive_days=90
         )
 
         assert results["removed_cases"] >= 1
@@ -148,7 +155,7 @@ async def test_dry_run_no_changes():
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=15.0,
-                usage_count=20
+                usage_count=20,
             ),
             TestCaseBank(
                 case_id="dryrun-inactive-001",
@@ -157,8 +164,8 @@ async def test_dry_run_no_changes():
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=50,
-                last_used_at=old_date
-            )
+                last_used_at=old_date,
+            ),
         ]
         for case in cases:
             session.add(case)
@@ -189,7 +196,7 @@ async def test_restore_archived_case():
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
-            usage_count=30
+            usage_count=30,
         )
         session.add(case)
         await session.commit()
@@ -232,7 +239,7 @@ async def test_consolidation_with_real_vectors():
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=100,
-                success_rate=80.0
+                success_rate=80.0,
             ),
             TestCaseBank(
                 case_id="real-vec-2",
@@ -241,7 +248,7 @@ async def test_consolidation_with_real_vectors():
                 category_path='["AI", "Test"]',
                 query_vector=similar_vec,
                 usage_count=50,
-                success_rate=80.0
+                success_rate=80.0,
             ),
             TestCaseBank(
                 case_id="real-vec-3",
@@ -250,8 +257,8 @@ async def test_consolidation_with_real_vectors():
                 category_path='["AI", "Test"]',
                 query_vector=different_vec,
                 usage_count=75,
-                success_rate=85.0
-            )
+                success_rate=85.0,
+            ),
         ]
         for case in cases:
             session.add(case)
@@ -285,7 +292,7 @@ async def test_safety_constraints():
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=10.0,
-                usage_count=600
+                usage_count=600,
             ),
             TestCaseBank(
                 case_id="safety-high-usage-inactive",
@@ -294,8 +301,8 @@ async def test_safety_constraints():
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=150,
-                last_used_at=old_date
-            )
+                last_used_at=old_date,
+            ),
         ]
         for case in safety_cases:
             session.add(case)
@@ -308,8 +315,12 @@ async def test_safety_constraints():
         result = await session.execute(stmt)
         all_cases = result.scalars().all()
 
-        high_usage_low_perf = next((c for c in all_cases if c.case_id == "safety-high-usage-low-perf"), None)
-        high_usage_inactive = next((c for c in all_cases if c.case_id == "safety-high-usage-inactive"), None)
+        high_usage_low_perf = next(
+            (c for c in all_cases if c.case_id == "safety-high-usage-low-perf"), None
+        )
+        high_usage_inactive = next(
+            (c for c in all_cases if c.case_id == "safety-high-usage-inactive"), None
+        )
 
         assert high_usage_low_perf is not None
         assert high_usage_low_perf.status == "active"

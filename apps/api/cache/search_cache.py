@@ -16,14 +16,17 @@ logger = logging.getLogger(__name__)
 # Redis 호환 인터페이스 (실제 Redis 또는 메모리 폴백)
 try:
     import redis.asyncio  # noqa: F401
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
     logger.warning("Redis not available, using memory cache only")
 
+
 @dataclass
 class CacheConfig:
     """캐시 설정"""
+
     # 메모리 캐시 설정
     max_memory_entries: int = 1000
     memory_ttl_seconds: int = 300  # 5분
@@ -42,6 +45,7 @@ class CacheConfig:
     # 압축 설정
     enable_compression: bool = True
     compression_threshold: int = 1024  # 1KB 이상일 때 압축
+
 
 class MemoryCache:
     """메모리 기반 LRU 캐시"""
@@ -63,7 +67,8 @@ class MemoryCache:
         """만료된 항목 제거"""
         current_time = time.time()
         expired_keys = [
-            key for key, creation_time in self.creation_times.items()
+            key
+            for key, creation_time in self.creation_times.items()
             if current_time - creation_time > self.ttl_seconds
         ]
         for key in expired_keys:
@@ -75,8 +80,9 @@ class MemoryCache:
         """LRU 기반 공간 확보"""
         while len(self.cache) >= self.max_size:
             # 가장 오래된 접근 시간을 가진 키 찾기
-            oldest_key = min(self.access_times.keys(),
-                           key=lambda k: self.access_times[k])
+            oldest_key = min(
+                self.access_times.keys(), key=lambda k: self.access_times[k]
+            )
             self.cache.pop(oldest_key, None)
             self.access_times.pop(oldest_key, None)
             self.creation_times.pop(oldest_key, None)
@@ -118,8 +124,9 @@ class MemoryCache:
             "entries": len(self.cache),
             "max_size": self.max_size,
             "hit_rate": 0.0,  # 추적하려면 별도 구현 필요
-            "memory_usage_mb": 0.0  # 대략적 계산
+            "memory_usage_mb": 0.0,  # 대략적 계산
         }
+
 
 class RedisCache:
     """Redis 기반 캐시 (최적화된 Redis 매니저 사용)"""
@@ -134,6 +141,7 @@ class RedisCache:
         if not self._initialized and REDIS_AVAILABLE:
             try:
                 from .redis_manager import get_redis_manager
+
                 self.redis_manager = await get_redis_manager()
                 self._initialized = True
                 logger.info("Redis cache initialized with Redis manager")
@@ -162,9 +170,9 @@ class RedisCache:
         try:
             # TTL 결정
             ttl = self.config.redis_ttl_seconds
-            if 'embedding' in key:
+            if "embedding" in key:
                 ttl = 86400 * 7  # 임베딩은 1주일
-            elif 'query_suggest' in key:
+            elif "query_suggest" in key:
                 ttl = 3600  # 쿼리 제안은 1시간
 
             await self.redis_manager.set(key, value, ttl=ttl)
@@ -209,11 +217,12 @@ class RedisCache:
                 "operations_total": manager_stats.get("operations_total", 0),
                 "success_rate_percent": manager_stats.get("success_rate_percent", 0),
                 "compression_ratio": manager_stats.get("compression_ratio", 0),
-                "compression_enabled": manager_stats.get("compression_enabled", False)
+                "compression_enabled": manager_stats.get("compression_enabled", False),
             }
         except Exception as e:
             logger.warning(f"Redis stats failed: {e}")
             return {}
+
 
 class HybridSearchCache:
     """하이브리드 검색 캐시 시스템"""
@@ -224,15 +233,18 @@ class HybridSearchCache:
         # 2-레벨 캐시: 메모리(L1) + Redis(L2)
         self.memory_cache = MemoryCache(
             max_size=self.config.max_memory_entries,
-            ttl_seconds=self.config.memory_ttl_seconds
+            ttl_seconds=self.config.memory_ttl_seconds,
         )
         self.redis_cache = RedisCache(self.config)
 
         # 캐시 통계
         self.stats = {
-            "l1_hits": 0, "l1_misses": 0,
-            "l2_hits": 0, "l2_misses": 0,
-            "sets": 0, "evictions": 0
+            "l1_hits": 0,
+            "l1_misses": 0,
+            "l2_hits": 0,
+            "l2_misses": 0,
+            "sets": 0,
+            "evictions": 0,
         }
 
     def _generate_cache_key(self, prefix: str, **kwargs) -> str:
@@ -243,17 +255,14 @@ class HybridSearchCache:
         return f"{prefix}{key_hash}"
 
     async def get_search_results(
-        self,
-        query: str,
-        filters: Dict = None,
-        search_params: Dict = None
+        self, query: str, filters: Dict = None, search_params: Dict = None
     ) -> Optional[List[Dict[str, Any]]]:
         """검색 결과 캐시 조회"""
         cache_key = self._generate_cache_key(
             self.config.search_prefix,
             query=query,
             filters=filters or {},
-            params=search_params or {}
+            params=search_params or {},
         )
 
         # L1 캐시 확인 (메모리)
@@ -280,29 +289,29 @@ class HybridSearchCache:
         query: str,
         results: List[Dict[str, Any]],
         filters: Dict = None,
-        search_params: Dict = None
+        search_params: Dict = None,
     ):
         """검색 결과 캐시 저장"""
         cache_key = self._generate_cache_key(
             self.config.search_prefix,
             query=query,
             filters=filters or {},
-            params=search_params or {}
+            params=search_params or {},
         )
 
         # 양쪽 캐시에 저장
         await asyncio.gather(
             self.memory_cache.set(cache_key, results),
-            self.redis_cache.set(cache_key, results)
+            self.redis_cache.set(cache_key, results),
         )
         self.stats["sets"] += 1
 
-    async def get_embedding(self, text: str, model: str = "openai") -> Optional[List[float]]:
+    async def get_embedding(
+        self, text: str, model: str = "openai"
+    ) -> Optional[List[float]]:
         """임베딩 캐시 조회"""
         cache_key = self._generate_cache_key(
-            self.config.embedding_prefix,
-            text=text,
-            model=model
+            self.config.embedding_prefix, text=text, model=model
         )
 
         # 임베딩은 L2(Redis)만 사용 (크기가 크고 재사용 빈도 높음)
@@ -314,12 +323,12 @@ class HybridSearchCache:
         self.stats["l2_misses"] += 1
         return None
 
-    async def set_embedding(self, text: str, embedding: List[float], model: str = "openai"):
+    async def set_embedding(
+        self, text: str, embedding: List[float], model: str = "openai"
+    ):
         """임베딩 캐시 저장"""
         cache_key = self._generate_cache_key(
-            self.config.embedding_prefix,
-            text=text,
-            model=model
+            self.config.embedding_prefix, text=text, model=model
         )
 
         await self.redis_cache.set(cache_key, embedding)
@@ -328,8 +337,7 @@ class HybridSearchCache:
     async def get_query_suggestions(self, partial_query: str) -> Optional[List[str]]:
         """쿼리 제안 캐시 조회"""
         cache_key = self._generate_cache_key(
-            self.config.query_suggestion_prefix,
-            partial=partial_query.lower().strip()
+            self.config.query_suggestion_prefix, partial=partial_query.lower().strip()
         )
 
         result = await self.memory_cache.get(cache_key)
@@ -343,20 +351,21 @@ class HybridSearchCache:
     async def set_query_suggestions(self, partial_query: str, suggestions: List[str]):
         """쿼리 제안 캐시 저장"""
         cache_key = self._generate_cache_key(
-            self.config.query_suggestion_prefix,
-            partial=partial_query.lower().strip()
+            self.config.query_suggestion_prefix, partial=partial_query.lower().strip()
         )
 
         await asyncio.gather(
             self.memory_cache.set(cache_key, suggestions),
-            self.redis_cache.set(cache_key, suggestions)
+            self.redis_cache.set(cache_key, suggestions),
         )
 
     async def invalidate_search_cache(self, pattern: str = None):
         """검색 캐시 무효화"""
         if pattern:
             # 특정 패턴 매칭으로 삭제
-            await self.redis_cache.clear_pattern(f"{self.config.search_prefix}*{pattern}*")
+            await self.redis_cache.clear_pattern(
+                f"{self.config.search_prefix}*{pattern}*"
+            )
         else:
             # 전체 검색 캐시 삭제
             await self.redis_cache.clear_pattern(f"{self.config.search_prefix}*")
@@ -371,15 +380,21 @@ class HybridSearchCache:
         memory_stats = self.memory_cache.stats()
         redis_stats = await self.redis_cache.stats()
 
-        total_operations = sum([
-            self.stats["l1_hits"], self.stats["l1_misses"],
-            self.stats["l2_hits"], self.stats["l2_misses"]
-        ])
+        total_operations = sum(
+            [
+                self.stats["l1_hits"],
+                self.stats["l1_misses"],
+                self.stats["l2_hits"],
+                self.stats["l2_misses"],
+            ]
+        )
 
         if total_operations > 0:
             l1_hit_rate = self.stats["l1_hits"] / total_operations
             l2_hit_rate = self.stats["l2_hits"] / total_operations
-            overall_hit_rate = (self.stats["l1_hits"] + self.stats["l2_hits"]) / total_operations
+            overall_hit_rate = (
+                self.stats["l1_hits"] + self.stats["l2_hits"]
+            ) / total_operations
         else:
             l1_hit_rate = l2_hit_rate = overall_hit_rate = 0.0
 
@@ -389,13 +404,15 @@ class HybridSearchCache:
             "hit_rates": {
                 "l1_hit_rate": round(l1_hit_rate, 3),
                 "l2_hit_rate": round(l2_hit_rate, 3),
-                "overall_hit_rate": round(overall_hit_rate, 3)
+                "overall_hit_rate": round(overall_hit_rate, 3),
             },
             "operations": self.stats.copy(),
             "cache_efficiency": {
                 "cache_utilization": round(overall_hit_rate, 3),
-                "memory_efficiency": round(l1_hit_rate / max(overall_hit_rate, 0.001), 3)
-            }
+                "memory_efficiency": round(
+                    l1_hit_rate / max(overall_hit_rate, 0.001), 3
+                ),
+            },
         }
 
     async def warm_up(self, common_queries: List[str]):
@@ -408,8 +425,10 @@ class HybridSearchCache:
 
         logger.info("Cache warm-up completed")
 
+
 # 전역 캐시 인스턴스 (싱글톤)
 _cache_instance = None
+
 
 async def get_search_cache() -> HybridSearchCache:
     """전역 검색 캐시 인스턴스 조회"""
@@ -418,14 +437,17 @@ async def get_search_cache() -> HybridSearchCache:
         _cache_instance = HybridSearchCache()
     return _cache_instance
 
+
 async def configure_search_cache(config: CacheConfig):
     """전역 검색 캐시 설정"""
     global _cache_instance
     _cache_instance = HybridSearchCache(config)
 
+
 # 캐시 데코레이터
 def cache_search_results(ttl_seconds: int = 300):
     """검색 결과 캐싱 데코레이터"""
+
     def decorator(func):
         async def wrapper(*args, **kwargs):
             cache = await get_search_cache()
@@ -434,17 +456,15 @@ def cache_search_results(ttl_seconds: int = 300):
             cache_key_data = {
                 "function": func.__name__,
                 "args": str(args),
-                "kwargs": kwargs
+                "kwargs": kwargs,
             }
 
-            query = kwargs.get('query', args[1] if len(args) > 1 else '')
-            filters = kwargs.get('filters', {})
+            query = kwargs.get("query", args[1] if len(args) > 1 else "")
+            filters = kwargs.get("filters", {})
 
             # 캐시에서 결과 조회
             cached_result = await cache.get_search_results(
-                query=query,
-                filters=filters,
-                search_params=cache_key_data
+                query=query, filters=filters, search_params=cache_key_data
             )
 
             if cached_result is not None:
@@ -458,16 +478,19 @@ def cache_search_results(ttl_seconds: int = 300):
                 query=query,
                 results=result,
                 filters=filters,
-                search_params=cache_key_data
+                search_params=cache_key_data,
             )
 
             return result
 
         return wrapper
+
     return decorator
+
 
 def cache_embeddings(ttl_seconds: int = 3600):
     """임베딩 캐싱 데코레이터"""
+
     def decorator(func):
         async def wrapper(text: str, model: str = "openai", *args, **kwargs):
             cache = await get_search_cache()
@@ -486,4 +509,5 @@ def cache_embeddings(ttl_seconds: int = 3600):
             return embedding
 
         return wrapper
+
     return decorator

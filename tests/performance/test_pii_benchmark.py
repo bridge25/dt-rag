@@ -21,7 +21,9 @@ class TestPIIDetectionBenchmark:
             text = f"주민번호: {sample}"
             matches = self.detector.detect_pii(text)
 
-            rrn_matches = [m for m in matches if m.pii_type == PIIType.RESIDENT_REGISTRATION_NUMBER]
+            rrn_matches = [
+                m for m in matches if m.pii_type == PIIType.RESIDENT_REGISTRATION_NUMBER
+            ]
 
             if len(rrn_matches) > 0:
                 tp += 1
@@ -53,7 +55,9 @@ class TestPIIDetectionBenchmark:
             text = f"번호: {sample}"
             matches = self.detector.detect_pii(text)
 
-            rrn_matches = [m for m in matches if m.pii_type == PIIType.RESIDENT_REGISTRATION_NUMBER]
+            rrn_matches = [
+                m for m in matches if m.pii_type == PIIType.RESIDENT_REGISTRATION_NUMBER
+            ]
 
             if len(rrn_matches) > 0:
                 fp += 1
@@ -200,33 +204,51 @@ class TestPIIDetectionBenchmark:
 
     def test_summary_table(self):
         test_cases = [
-            ("Resident Number (Valid)", [
-                "901231-1234567",
-                "850615-2876543",
-                "700101-1234567",
-                "951225-2345678",
-            ], PIIType.RESIDENT_REGISTRATION_NUMBER),
-            ("Phone Number", [
-                "010-1234-5678",
-                "010-9876-5432",
-                "031-456-7890",
-                "051-123-4567",
-            ], PIIType.PHONE_NUMBER),
-            ("Email", [
-                "test@example.com",
-                "user.name@domain.co.kr",
-                "admin@company.org",
-                "support@service.net",
-            ], PIIType.EMAIL),
-            ("Credit Card (Valid)", [
-                "4532015112830366",
-                "5425233430109903",
-                "374245455400126",
-            ], PIIType.CREDIT_CARD),
+            (
+                "Resident Number (Valid)",
+                [
+                    "901231-1234567",
+                    "850615-2876543",
+                    "700101-1234567",
+                    "951225-2345678",
+                ],
+                PIIType.RESIDENT_REGISTRATION_NUMBER,
+            ),
+            (
+                "Phone Number",
+                [
+                    "010-1234-5678",
+                    "010-9876-5432",
+                    "031-456-7890",
+                    "051-123-4567",
+                ],
+                PIIType.PHONE_NUMBER,
+            ),
+            (
+                "Email",
+                [
+                    "test@example.com",
+                    "user.name@domain.co.kr",
+                    "admin@company.org",
+                    "support@service.net",
+                ],
+                PIIType.EMAIL,
+            ),
+            (
+                "Credit Card (Valid)",
+                [
+                    "4532015112830366",
+                    "5425233430109903",
+                    "374245455400126",
+                ],
+                PIIType.CREDIT_CARD,
+            ),
         ]
 
         print("\n\n=== PII Detection Precision Summary ===")
-        print(f"{'PII Type':<25} | {'TP':<5} | {'FP':<5} | {'Precision':<12} | {'Target':<8} | {'Status':<8}")
+        print(
+            f"{'PII Type':<25} | {'TP':<5} | {'FP':<5} | {'Precision':<12} | {'Target':<8} | {'Status':<8}"
+        )
         print("-" * 85)
 
         for name, samples, pii_type in test_cases:
@@ -247,23 +269,35 @@ class TestPIIDetectionBenchmark:
             precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
             status = "PASS" if precision > 0.99 else "FAIL"
 
-            print(f"{name:<25} | {tp:<5} | {fp:<5} | {precision * 100:.2f}%{'':<6} | {'>99%':<8} | {status:<8}")
+            print(
+                f"{name:<25} | {tp:<5} | {fp:<5} | {precision * 100:.2f}%{'':<6} | {'>99%':<8} | {status:<8}"
+            )
 
         print("\n=== False Positive Prevention Tests ===")
-        print(f"{'Test Case':<30} | {'TN':<5} | {'FP':<5} | {'FP Rate':<10} | {'Status':<8}")
+        print(
+            f"{'Test Case':<30} | {'TN':<5} | {'FP':<5} | {'FP Rate':<10} | {'Status':<8}"
+        )
         print("-" * 75)
 
         fp_tests = [
-            ("RRN Invalid Dates", [
-                "991331-1234567",
-                "900001-1234567",
-                "901232-1234567",
-            ], PIIType.RESIDENT_REGISTRATION_NUMBER),
-            ("Card Invalid Luhn", [
-                "1234567812345670",
-                "1111222233334444",
-                "9999888877776666",
-            ], PIIType.CREDIT_CARD),
+            (
+                "RRN Invalid Dates",
+                [
+                    "991331-1234567",
+                    "900001-1234567",
+                    "901232-1234567",
+                ],
+                PIIType.RESIDENT_REGISTRATION_NUMBER,
+            ),
+            (
+                "Card Invalid Luhn",
+                [
+                    "1234567812345670",
+                    "1111222233334444",
+                    "9999888877776666",
+                ],
+                PIIType.CREDIT_CARD,
+            ),
         ]
 
         for name, samples, pii_type in fp_tests:
@@ -284,4 +318,6 @@ class TestPIIDetectionBenchmark:
             fp_rate = fp / (tn + fp) if (tn + fp) > 0 else 0.0
             status = "PASS" if fp_rate < 0.01 else "FAIL"
 
-            print(f"{name:<30} | {tn:<5} | {fp:<5} | {fp_rate * 100:.2f}%{'':<4} | {status:<8}")
+            print(
+                f"{name:<30} | {tn:<5} | {fp:<5} | {fp_rate * 100:.2f}%{'':<4} | {status:<8}"
+            )

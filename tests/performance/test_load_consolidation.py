@@ -12,6 +12,7 @@ Performance targets:
 - Error rate < 1% (50 users), < 5% (100 users)
 - No database deadlocks or transaction failures
 """
+
 import pytest
 import asyncio
 import time
@@ -22,6 +23,7 @@ from dataclasses import dataclass
 @dataclass
 class LoadTestResult:
     """Load test result metrics"""
+
     total_requests: int
     successful_requests: int
     failed_requests: int
@@ -72,12 +74,11 @@ async def run_concurrent_requests(
                     response = await async_client.post(
                         endpoint,
                         json=payload,
-                        headers={"X-API-Key": "test_api_key_for_testing"}
+                        headers={"X-API-Key": "test_api_key_for_testing"},
                     )
                 else:
                     response = await async_client.post(
-                        endpoint,
-                        headers={"X-API-Key": "test_api_key_for_testing"}
+                        endpoint, headers={"X-API-Key": "test_api_key_for_testing"}
                     )
                 req_end = time.perf_counter()
 
@@ -103,9 +104,18 @@ async def run_concurrent_requests(
 
     if timings:
         import statistics
+
         p50 = statistics.median(timings)
-        p95 = statistics.quantiles(timings, n=20)[18] if len(timings) >= 20 else max(timings)
-        p99 = statistics.quantiles(timings, n=100)[98] if len(timings) >= 100 else max(timings)
+        p95 = (
+            statistics.quantiles(timings, n=20)[18]
+            if len(timings) >= 20
+            else max(timings)
+        )
+        p99 = (
+            statistics.quantiles(timings, n=100)[98]
+            if len(timings) >= 100
+            else max(timings)
+        )
     else:
         p50 = p95 = p99 = 0
 
@@ -121,7 +131,7 @@ async def run_concurrent_requests(
         p95_latency_ms=p95,
         p99_latency_ms=p99,
         error_rate=error_rate,
-        requests_per_second=rps
+        requests_per_second=rps,
     )
 
 
@@ -141,22 +151,27 @@ class TestConsolidationLoad:
         - No database transaction conflicts
         """
         result = await run_concurrent_requests(
-            async_client,
-            "/consolidation/dry-run",
-            num_users=10,
-            duration_seconds=60
+            async_client, "/consolidation/dry-run", num_users=10, duration_seconds=60
         )
 
         print(f"\n[10 users /consolidation/dry-run]")
         print(f"  Total requests: {result.total_requests}")
-        print(f"  Success: {result.successful_requests}, Failed: {result.failed_requests}")
-        print(f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms")
+        print(
+            f"  Success: {result.successful_requests}, Failed: {result.failed_requests}"
+        )
+        print(
+            f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms"
+        )
         print(f"  Error rate: {result.error_rate:.2f}%")
         print(f"  RPS: {result.requests_per_second:.2f}")
 
         # Assertions: REQ-5
-        assert result.p95_latency_ms < 2000, f"P95 latency {result.p95_latency_ms:.2f}ms exceeds SLA"
-        assert result.error_rate < 0.1, f"Error rate {result.error_rate:.2f}% exceeds 0.1%"
+        assert (
+            result.p95_latency_ms < 2000
+        ), f"P95 latency {result.p95_latency_ms:.2f}ms exceeds SLA"
+        assert (
+            result.error_rate < 0.1
+        ), f"Error rate {result.error_rate:.2f}% exceeds 0.1%"
         assert result.successful_requests > 0, "No successful requests"
 
     # @TEST:TEST-003:LOAD-CONSOLIDATION-DRY-50USERS | SPEC: SPEC-TEST-003.md
@@ -172,28 +187,35 @@ class TestConsolidationLoad:
         - No database deadlocks
         """
         result = await run_concurrent_requests(
-            async_client,
-            "/consolidation/dry-run",
-            num_users=50,
-            duration_seconds=60
+            async_client, "/consolidation/dry-run", num_users=50, duration_seconds=60
         )
 
         print(f"\n[50 users /consolidation/dry-run]")
         print(f"  Total requests: {result.total_requests}")
-        print(f"  Success: {result.successful_requests}, Failed: {result.failed_requests}")
-        print(f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms")
+        print(
+            f"  Success: {result.successful_requests}, Failed: {result.failed_requests}"
+        )
+        print(
+            f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms"
+        )
         print(f"  Error rate: {result.error_rate:.2f}%")
         print(f"  RPS: {result.requests_per_second:.2f}")
 
         # Assertions: REQ-6
-        assert result.p95_latency_ms < 3000, f"P95 latency {result.p95_latency_ms:.2f}ms exceeds 50% increase target"
-        assert result.error_rate < 1.0, f"Error rate {result.error_rate:.2f}% exceeds 1%"
+        assert (
+            result.p95_latency_ms < 3000
+        ), f"P95 latency {result.p95_latency_ms:.2f}ms exceeds 50% increase target"
+        assert (
+            result.error_rate < 1.0
+        ), f"Error rate {result.error_rate:.2f}% exceeds 1%"
         assert result.successful_requests > 0, "No successful requests"
 
     # @TEST:TEST-003:LOAD-CONSOLIDATION-DRY-100USERS | SPEC: SPEC-TEST-003.md
     @pytest.mark.load
     @pytest.mark.asyncio
-    async def test_consolidation_dry_run_100_users(self, async_client, sample_case_bank):
+    async def test_consolidation_dry_run_100_users(
+        self, async_client, sample_case_bank
+    ):
         """
         Load test: 100 concurrent users on /consolidation/dry-run
 
@@ -203,22 +225,27 @@ class TestConsolidationLoad:
         - System gracefully degrades (no crash)
         """
         result = await run_concurrent_requests(
-            async_client,
-            "/consolidation/dry-run",
-            num_users=100,
-            duration_seconds=60
+            async_client, "/consolidation/dry-run", num_users=100, duration_seconds=60
         )
 
         print(f"\n[100 users /consolidation/dry-run]")
         print(f"  Total requests: {result.total_requests}")
-        print(f"  Success: {result.successful_requests}, Failed: {result.failed_requests}")
-        print(f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms")
+        print(
+            f"  Success: {result.successful_requests}, Failed: {result.failed_requests}"
+        )
+        print(
+            f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms"
+        )
         print(f"  Error rate: {result.error_rate:.2f}%")
         print(f"  RPS: {result.requests_per_second:.2f}")
 
         # Assertions: REQ-7
-        assert result.p95_latency_ms < 4000, f"P95 latency {result.p95_latency_ms:.2f}ms exceeds 100% increase target"
-        assert result.error_rate < 5.0, f"Error rate {result.error_rate:.2f}% exceeds 5%"
+        assert (
+            result.p95_latency_ms < 4000
+        ), f"P95 latency {result.p95_latency_ms:.2f}ms exceeds 100% increase target"
+        assert (
+            result.error_rate < 5.0
+        ), f"Error rate {result.error_rate:.2f}% exceeds 5%"
         assert result.successful_requests > 0, "System crashed - no successful requests"
 
     # @TEST:TEST-003:LOAD-CONSOLIDATION-RUN-10USERS | SPEC: SPEC-TEST-003.md
@@ -234,20 +261,25 @@ class TestConsolidationLoad:
         - Database transactions complete without blocking
         """
         result = await run_concurrent_requests(
-            async_client,
-            "/consolidation/run",
-            num_users=10,
-            duration_seconds=60
+            async_client, "/consolidation/run", num_users=10, duration_seconds=60
         )
 
         print(f"\n[10 users /consolidation/run]")
         print(f"  Total requests: {result.total_requests}")
-        print(f"  Success: {result.successful_requests}, Failed: {result.failed_requests}")
-        print(f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms")
+        print(
+            f"  Success: {result.successful_requests}, Failed: {result.failed_requests}"
+        )
+        print(
+            f"  P50: {result.p50_latency_ms:.2f}ms, P95: {result.p95_latency_ms:.2f}ms, P99: {result.p99_latency_ms:.2f}ms"
+        )
         print(f"  Error rate: {result.error_rate:.2f}%")
         print(f"  RPS: {result.requests_per_second:.2f}")
 
         # Assertions: REQ-5 + REQ-10
-        assert result.p95_latency_ms < 3000, f"P95 latency {result.p95_latency_ms:.2f}ms exceeds SLA"
-        assert result.error_rate < 0.1, f"Error rate {result.error_rate:.2f}% exceeds 0.1%"
+        assert (
+            result.p95_latency_ms < 3000
+        ), f"P95 latency {result.p95_latency_ms:.2f}ms exceeds SLA"
+        assert (
+            result.error_rate < 0.1
+        ), f"Error rate {result.error_rate:.2f}% exceeds 0.1%"
         assert result.successful_requests > 0, "No successful requests"

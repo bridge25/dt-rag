@@ -17,7 +17,7 @@ from apps.api.config import (
     RedisConfig,
     SecurityConfig,
     _generate_secure_secret,
-    _validate_secret_strength
+    _validate_secret_strength,
 )
 
 
@@ -45,7 +45,7 @@ class TestDatabaseConfig:
             max_overflow=100,
             pool_timeout=60,
             pool_recycle=1800,
-            echo=True
+            echo=True,
         )
 
         assert config.url == "postgresql://prod-server:5432/dt_rag_prod"
@@ -58,11 +58,7 @@ class TestDatabaseConfig:
     @pytest.mark.unit
     def test_database_config_serialization(self):
         """Test DatabaseConfig can be serialized to dictionary"""
-        config = DatabaseConfig(
-            url="sqlite:///test.db",
-            pool_size=5,
-            echo=True
-        )
+        config = DatabaseConfig(url="sqlite:///test.db", pool_size=5, echo=True)
 
         config_dict = asdict(config)
 
@@ -77,12 +73,12 @@ class TestDatabaseConfig:
         config = DatabaseConfig()
 
         # Test that we can access all expected attributes
-        assert hasattr(config, 'url')
-        assert hasattr(config, 'pool_size')
-        assert hasattr(config, 'max_overflow')
-        assert hasattr(config, 'pool_timeout')
-        assert hasattr(config, 'pool_recycle')
-        assert hasattr(config, 'echo')
+        assert hasattr(config, "url")
+        assert hasattr(config, "pool_size")
+        assert hasattr(config, "max_overflow")
+        assert hasattr(config, "pool_timeout")
+        assert hasattr(config, "pool_recycle")
+        assert hasattr(config, "echo")
 
 
 class TestRedisConfig:
@@ -107,7 +103,7 @@ class TestRedisConfig:
             max_connections=50,
             socket_timeout=10,
             socket_connect_timeout=15,
-            socket_keepalive=False
+            socket_keepalive=False,
         )
 
         assert config.url == "redis://prod-redis:6379/1"
@@ -127,10 +123,7 @@ class TestRedisConfig:
     @pytest.mark.unit
     def test_redis_config_serialization(self):
         """Test RedisConfig serialization"""
-        config = RedisConfig(
-            url="redis://localhost:6380/2",
-            max_connections=25
-        )
+        config = RedisConfig(url="redis://localhost:6380/2", max_connections=25)
 
         config_dict = asdict(config)
 
@@ -162,7 +155,7 @@ class TestSecurityConfig:
         """Test SecurityConfig with custom values"""
         oauth_providers = {
             "google": {"client_id": "google_client", "client_secret": "google_secret"},
-            "github": {"client_id": "github_client", "client_secret": "github_secret"}
+            "github": {"client_id": "github_client", "client_secret": "github_secret"},
         }
 
         config = SecurityConfig(
@@ -173,7 +166,7 @@ class TestSecurityConfig:
             password_min_length=12,
             password_require_special=False,
             api_key_header="Authorization",
-            oauth_providers=oauth_providers
+            oauth_providers=oauth_providers,
         )
 
         assert config.secret_key == "custom-secret-key-123"
@@ -192,7 +185,7 @@ class TestSecurityConfig:
             "google": {
                 "client_id": "test_client_id",
                 "client_secret": "test_client_secret",
-                "redirect_uri": "https://app.example.com/auth/callback"
+                "redirect_uri": "https://app.example.com/auth/callback",
             }
         }
 
@@ -201,15 +194,15 @@ class TestSecurityConfig:
         assert "google" in config.oauth_providers
         assert config.oauth_providers["google"]["client_id"] == "test_client_id"
         assert config.oauth_providers["google"]["client_secret"] == "test_client_secret"
-        assert config.oauth_providers["google"]["redirect_uri"] == "https://app.example.com/auth/callback"
+        assert (
+            config.oauth_providers["google"]["redirect_uri"]
+            == "https://app.example.com/auth/callback"
+        )
 
     @pytest.mark.unit
     def test_security_config_serialization(self):
         """Test SecurityConfig serialization (excluding sensitive data)"""
-        config = SecurityConfig(
-            secret_key="very-secret-key",
-            jwt_expiration_minutes=45
-        )
+        config = SecurityConfig(secret_key="very-secret-key", jwt_expiration_minutes=45)
 
         config_dict = asdict(config)
 
@@ -247,7 +240,8 @@ class TestSecureSecretGeneration:
 
         # URL-safe characters only: A-Z, a-z, 0-9, -, _
         import re
-        url_safe_pattern = re.compile(r'^[A-Za-z0-9_-]+$')
+
+        url_safe_pattern = re.compile(r"^[A-Za-z0-9_-]+$")
         assert url_safe_pattern.match(secret)
 
     @pytest.mark.unit
@@ -257,10 +251,10 @@ class TestSecureSecretGeneration:
 
         # Check character diversity
         char_types = {
-            'upper': any(c.isupper() for c in secret),
-            'lower': any(c.islower() for c in secret),
-            'digit': any(c.isdigit() for c in secret),
-            'special': any(c in '_-' for c in secret)
+            "upper": any(c.isupper() for c in secret),
+            "lower": any(c.islower() for c in secret),
+            "digit": any(c.isdigit() for c in secret),
+            "special": any(c in "_-" for c in secret),
         }
 
         # Should have at least 2 different character types
@@ -269,7 +263,7 @@ class TestSecureSecretGeneration:
     @pytest.mark.unit
     def test_generate_secure_secret_consistency(self):
         """Test that _generate_secure_secret uses cryptographic random"""
-        with patch('secrets.token_urlsafe') as mock_token:
+        with patch("secrets.token_urlsafe") as mock_token:
             mock_token.return_value = "mocked_secure_token"
 
             secret = _generate_secure_secret()
@@ -376,32 +370,32 @@ class TestConfigurationIntegration:
     def test_config_serialization_round_trip(self):
         """Test that configs can be serialized and maintain structure"""
         configs = {
-            'database': DatabaseConfig(url="test://db", pool_size=15),
-            'redis': RedisConfig(url="redis://test:6379", max_connections=20),
-            'security': SecurityConfig(jwt_expiration_minutes=120)
+            "database": DatabaseConfig(url="test://db", pool_size=15),
+            "redis": RedisConfig(url="redis://test:6379", max_connections=20),
+            "security": SecurityConfig(jwt_expiration_minutes=120),
         }
 
         serialized = {name: asdict(config) for name, config in configs.items()}
 
         # Verify structure is maintained
-        assert 'database' in serialized
-        assert 'redis' in serialized
-        assert 'security' in serialized
+        assert "database" in serialized
+        assert "redis" in serialized
+        assert "security" in serialized
 
-        assert serialized['database']['url'] == "test://db"
-        assert serialized['database']['pool_size'] == 15
-        assert serialized['redis']['max_connections'] == 20
-        assert serialized['security']['jwt_expiration_minutes'] == 120
+        assert serialized["database"]["url"] == "test://db"
+        assert serialized["database"]["pool_size"] == 15
+        assert serialized["redis"]["max_connections"] == 20
+        assert serialized["security"]["jwt_expiration_minutes"] == 120
 
     @pytest.mark.unit
     def test_environment_variable_integration(self):
         """Test configuration with environment variables"""
         test_secret = "test-secret-key-for-environment"
 
-        with patch.dict(os.environ, {'SECRET_KEY': test_secret}):
+        with patch.dict(os.environ, {"SECRET_KEY": test_secret}):
             # Test that configuration would use environment variable
             # (This tests the concept; actual integration would depend on config loading logic)
-            env_secret = os.environ.get('SECRET_KEY')
+            env_secret = os.environ.get("SECRET_KEY")
             assert env_secret == test_secret
 
     @pytest.mark.unit
@@ -410,7 +404,14 @@ class TestConfigurationIntegration:
         config = SecurityConfig()
 
         # JWT algorithm should be secure
-        assert config.jwt_algorithm in ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512']
+        assert config.jwt_algorithm in [
+            "HS256",
+            "HS384",
+            "HS512",
+            "RS256",
+            "RS384",
+            "RS512",
+        ]
 
         # Password requirements should be reasonable
         assert config.password_min_length >= 8
@@ -421,7 +422,7 @@ class TestConfigurationIntegration:
         assert config.jwt_refresh_expiration_days <= 30  # Max 30 days
 
         # API key header should be standard
-        assert config.api_key_header in ['X-API-Key', 'Authorization', 'X-Auth-Token']
+        assert config.api_key_header in ["X-API-Key", "Authorization", "X-Auth-Token"]
 
     @pytest.mark.unit
     def test_database_config_production_values(self):
@@ -432,7 +433,7 @@ class TestConfigurationIntegration:
             max_overflow=100,
             pool_timeout=60,
             pool_recycle=1800,
-            echo=False  # Should be False in production
+            echo=False,  # Should be False in production
         )
 
         assert "prod-server" in prod_config.url
@@ -447,11 +448,11 @@ class TestConfigurationIntegration:
             url="redis://prod-redis:6379/0",
             max_connections=100,
             socket_timeout=10,
-            socket_connect_timeout=10
+            socket_connect_timeout=10,
         )
 
         assert prod_config.max_connections >= 10  # Sufficient connections
-        assert prod_config.socket_timeout >= 5   # Reasonable timeout
+        assert prod_config.socket_timeout >= 5  # Reasonable timeout
         assert prod_config.socket_keepalive is True  # Maintain connections
 
 
@@ -466,7 +467,9 @@ class TestSecurityRequirements:
         security_config_doc = SecurityConfig.__doc__
 
         assert "SECURITY REQUIREMENTS" in security_config_doc
-        assert "secret_key MUST be loaded from environment variable" in security_config_doc
+        assert (
+            "secret_key MUST be loaded from environment variable" in security_config_doc
+        )
         assert "NEVER use hardcoded secrets" in security_config_doc
 
     @pytest.mark.unit
@@ -479,9 +482,9 @@ class TestSecurityRequirements:
         assert len(set(secret)) > 10  # Should have reasonable character diversity
 
         # Test that it's not a common pattern
-        assert not secret.startswith('password')
-        assert not secret.startswith('secret')
-        assert '12345' not in secret
+        assert not secret.startswith("password")
+        assert not secret.startswith("secret")
+        assert "12345" not in secret
 
     @pytest.mark.unit
     def test_jwt_security_defaults(self):
@@ -489,8 +492,8 @@ class TestSecurityRequirements:
         config = SecurityConfig()
 
         # Algorithm should be HMAC-based or RSA-based (not 'none')
-        assert config.jwt_algorithm != 'none'
-        assert config.jwt_algorithm.startswith(('HS', 'RS', 'ES'))
+        assert config.jwt_algorithm != "none"
+        assert config.jwt_algorithm.startswith(("HS", "RS", "ES"))
 
         # Expiration times should be reasonable (not too long)
         assert config.jwt_expiration_minutes <= 120  # Max 2 hours

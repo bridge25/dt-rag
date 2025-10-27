@@ -14,16 +14,20 @@ import psutil
 
 logger = logging.getLogger(__name__)
 
+
 class HealthStatus(Enum):
     """헬스 상태"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
     UNKNOWN = "unknown"
 
+
 @dataclass
 class ComponentHealth:
     """컴포넌트 헬스 상태"""
+
     name: str
     status: HealthStatus
     response_time_ms: Optional[float] = None
@@ -33,14 +37,16 @@ class ComponentHealth:
 
     def to_dict(self) -> Dict[str, Any]:
         result = asdict(self)
-        result['status'] = self.status.value
+        result["status"] = self.status.value
         if self.last_check:
-            result['last_check'] = self.last_check.isoformat()
+            result["last_check"] = self.last_check.isoformat()
         return result
+
 
 @dataclass
 class SystemHealth:
     """전체 시스템 헬스"""
+
     overall_status: HealthStatus
     components: List[ComponentHealth]
     timestamp: datetime
@@ -53,8 +59,9 @@ class SystemHealth:
             "components": [comp.to_dict() for comp in self.components],
             "timestamp": self.timestamp.isoformat(),
             "uptime_seconds": self.uptime_seconds,
-            "version": self.version
+            "version": self.version,
         }
+
 
 class HealthChecker:
     """헬스 체크 관리자"""
@@ -96,7 +103,7 @@ class HealthChecker:
             memory_percent = memory.percent
 
             # 디스크 사용률 체크
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             disk_percent = disk.percent
 
             response_time = (time.time() - start_time) * 1000
@@ -122,8 +129,12 @@ class HealthChecker:
                     "cpu_percent": cpu_percent,
                     "memory_percent": memory_percent,
                     "disk_percent": disk_percent,
-                    "load_average": psutil.getloadavg()[0] if hasattr(psutil, 'getloadavg') else None
-                }
+                    "load_average": (
+                        psutil.getloadavg()[0]
+                        if hasattr(psutil, "getloadavg")
+                        else None
+                    ),
+                },
             )
 
         except Exception as e:
@@ -132,7 +143,7 @@ class HealthChecker:
                 name="system",
                 status=HealthStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def _check_database_health(self) -> ComponentHealth:
@@ -144,6 +155,7 @@ class HealthChecker:
             try:
                 from apps.api.database import db_manager
                 from sqlalchemy import text
+
                 async with db_manager.async_session() as session:
                     # 간단한 쿼리 실행
                     result = await session.execute(text("SELECT 1"))
@@ -156,10 +168,7 @@ class HealthChecker:
                     status=HealthStatus.HEALTHY,
                     response_time_ms=response_time,
                     last_check=datetime.now(),
-                    metadata={
-                        "connection_test": "passed",
-                        "query_test": "passed"
-                    }
+                    metadata={"connection_test": "passed", "query_test": "passed"},
                 )
             except ImportError:
                 # 데이터베이스 매니저를 사용할 수 없는 경우
@@ -170,10 +179,7 @@ class HealthChecker:
                     response_time_ms=response_time,
                     last_check=datetime.now(),
                     error_message="Database manager not available",
-                    metadata={
-                        "connection_test": "skipped",
-                        "reason": "testing_mode"
-                    }
+                    metadata={"connection_test": "skipped", "reason": "testing_mode"},
                 )
 
         except Exception as e:
@@ -182,7 +188,7 @@ class HealthChecker:
                 name="database",
                 status=HealthStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def _check_cache_health(self) -> ComponentHealth:
@@ -192,6 +198,7 @@ class HealthChecker:
 
             # 캐시 연결 체크
             from apps.api.cache.search_cache import get_search_cache
+
             cache = await get_search_cache()
 
             # 캐시 통계 확인
@@ -200,7 +207,7 @@ class HealthChecker:
             response_time = (time.time() - start_time) * 1000
 
             # 캐시 히트율 기반 상태 판단
-            hit_rate = stats.get('hit_rates', {}).get('overall_hit_rate', 0)
+            hit_rate = stats.get("hit_rates", {}).get("overall_hit_rate", 0)
             if hit_rate >= 0.7:  # 70% 이상
                 status = HealthStatus.HEALTHY
             elif hit_rate >= 0.5:  # 50% 이상
@@ -213,10 +220,7 @@ class HealthChecker:
                 status=status,
                 response_time_ms=response_time,
                 last_check=datetime.now(),
-                metadata={
-                    "hit_rate": hit_rate,
-                    "cache_stats": stats
-                }
+                metadata={"hit_rate": hit_rate, "cache_stats": stats},
             )
 
         except Exception as e:
@@ -225,7 +229,7 @@ class HealthChecker:
                 name="cache",
                 status=HealthStatus.DEGRADED,  # 캐시는 필수가 아니므로 DEGRADED
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def _check_storage_health(self) -> ComponentHealth:
@@ -260,8 +264,8 @@ class HealthChecker:
                 metadata={
                     "write_test": "passed",
                     "read_test": "passed",
-                    "storage_path": str(storage_path.absolute())
-                }
+                    "storage_path": str(storage_path.absolute()),
+                },
             )
 
         except Exception as e:
@@ -270,15 +274,19 @@ class HealthChecker:
                 name="storage",
                 status=HealthStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
 
-    async def _check_external_service(self, name: str, url: str, timeout: int = 5) -> ComponentHealth:
+    async def _check_external_service(
+        self, name: str, url: str, timeout: int = 5
+    ) -> ComponentHealth:
         """외부 서비스 헬스 체크"""
         try:
             start_time = time.time()
 
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=timeout)
+            ) as session:
                 async with session.get(url) as response:
                     status_code = response.status
 
@@ -300,10 +308,7 @@ class HealthChecker:
                 response_time_ms=response_time,
                 last_check=datetime.now(),
                 error_message=error_msg,
-                metadata={
-                    "url": url,
-                    "status_code": status_code
-                }
+                metadata={"url": url, "status_code": status_code},
             )
 
         except asyncio.TimeoutError:
@@ -312,7 +317,7 @@ class HealthChecker:
                 name=name,
                 status=HealthStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message="Request timeout"
+                error_message="Request timeout",
             )
         except Exception as e:
             logger.error(f"External service {name} health check failed: {e}")
@@ -320,7 +325,7 @@ class HealthChecker:
                 name=name,
                 status=HealthStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
 
     async def check_single_component(self, name: str) -> ComponentHealth:
@@ -330,13 +335,12 @@ class HealthChecker:
                 name=name,
                 status=HealthStatus.UNKNOWN,
                 last_check=datetime.now(),
-                error_message="Unknown component"
+                error_message="Unknown component",
             )
 
         try:
             result = await asyncio.wait_for(
-                self.health_checks[name](),
-                timeout=self.timeout
+                self.health_checks[name](), timeout=self.timeout
             )
             self.last_results[name] = result
             return result
@@ -347,7 +351,7 @@ class HealthChecker:
                 name=name,
                 status=HealthStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message="Health check timeout"
+                error_message="Health check timeout",
             )
             self.last_results[name] = result
             return result
@@ -358,7 +362,7 @@ class HealthChecker:
                 name=name,
                 status=HealthStatus.UNHEALTHY,
                 last_check=datetime.now(),
-                error_message=str(e)
+                error_message=str(e),
             )
             self.last_results[name] = result
             return result
@@ -366,8 +370,7 @@ class HealthChecker:
     async def check_all_components(self) -> List[ComponentHealth]:
         """모든 컴포넌트 헬스 체크"""
         tasks = [
-            self.check_single_component(name)
-            for name in self.health_checks.keys()
+            self.check_single_component(name) for name in self.health_checks.keys()
         ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -376,18 +379,22 @@ class HealthChecker:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 name = list(self.health_checks.keys())[i]
-                component_results.append(ComponentHealth(
-                    name=name,
-                    status=HealthStatus.UNHEALTHY,
-                    last_check=datetime.now(),
-                    error_message=str(result)
-                ))
+                component_results.append(
+                    ComponentHealth(
+                        name=name,
+                        status=HealthStatus.UNHEALTHY,
+                        last_check=datetime.now(),
+                        error_message=str(result),
+                    )
+                )
             else:
                 component_results.append(result)
 
         return component_results
 
-    def _calculate_overall_status(self, components: List[ComponentHealth]) -> HealthStatus:
+    def _calculate_overall_status(
+        self, components: List[ComponentHealth]
+    ) -> HealthStatus:
         """전체 시스템 상태 계산"""
         if not components:
             return HealthStatus.UNKNOWN
@@ -397,15 +404,15 @@ class HealthChecker:
             HealthStatus.HEALTHY: 1.0,
             HealthStatus.DEGRADED: 0.5,
             HealthStatus.UNHEALTHY: 0.0,
-            HealthStatus.UNKNOWN: 0.0
+            HealthStatus.UNKNOWN: 0.0,
         }
 
         # 컴포넌트별 중요도 (필수 컴포넌트는 높은 가중치)
         component_importance = {
             "system": 1.0,
             "database": 1.0,  # 필수
-            "cache": 0.5,     # 선택적
-            "storage": 0.8    # 중요하지만 필수는 아님
+            "cache": 0.5,  # 선택적
+            "storage": 0.8,  # 중요하지만 필수는 아님
         }
 
         total_weight = 0
@@ -441,7 +448,7 @@ class HealthChecker:
             overall_status=overall_status,
             components=components,
             timestamp=datetime.now(),
-            uptime_seconds=uptime
+            uptime_seconds=uptime,
         )
 
     def get_cached_health(self) -> Dict[str, Any]:
@@ -451,7 +458,7 @@ class HealthChecker:
                 "overall_status": HealthStatus.UNKNOWN.value,
                 "components": [],
                 "last_check": None,
-                "message": "No health checks performed yet"
+                "message": "No health checks performed yet",
             }
 
         components = list(self.last_results.values())
@@ -460,8 +467,10 @@ class HealthChecker:
         return {
             "overall_status": overall_status.value,
             "components": [comp.to_dict() for comp in components],
-            "last_check": max(comp.last_check for comp in components if comp.last_check).isoformat(),
-            "uptime_seconds": (datetime.now() - self.start_time).total_seconds()
+            "last_check": max(
+                comp.last_check for comp in components if comp.last_check
+            ).isoformat(),
+            "uptime_seconds": (datetime.now() - self.start_time).total_seconds(),
         }
 
     async def start_background_monitoring(self):
@@ -476,8 +485,10 @@ class HealthChecker:
                 logger.error(f"Background health monitoring error: {e}")
                 await asyncio.sleep(self.check_interval)
 
+
 # 전역 헬스 체커 인스턴스
 _health_checker: Optional[HealthChecker] = None
+
 
 def get_health_checker() -> HealthChecker:
     """전역 헬스 체커 조회"""
@@ -485,6 +496,7 @@ def get_health_checker() -> HealthChecker:
     if _health_checker is None:
         _health_checker = HealthChecker()
     return _health_checker
+
 
 def initialize_health_checker() -> HealthChecker:
     """헬스 체커 초기화"""

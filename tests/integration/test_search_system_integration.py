@@ -31,12 +31,14 @@ try:
     # Check for search modules
     try:
         from apps.api.search.hybrid_search import HybridSearchEngine
+
         HYBRID_SEARCH_AVAILABLE = True
     except ImportError:
         HYBRID_SEARCH_AVAILABLE = False
 
     try:
         from apps.api.search.embedding_service import EmbeddingService
+
         EMBEDDING_SERVICE_AVAILABLE = True
     except ImportError:
         EMBEDDING_SERVICE_AVAILABLE = False
@@ -63,8 +65,8 @@ class TestSearchSystemIntegration:
                 "metadata": {
                     "category": "AI",
                     "tags": ["ML", "algorithms"],
-                    "created_at": "2024-01-01T00:00:00Z"
-                }
+                    "created_at": "2024-01-01T00:00:00Z",
+                },
             },
             {
                 "id": "doc_2",
@@ -73,8 +75,8 @@ class TestSearchSystemIntegration:
                 "metadata": {
                     "category": "AI",
                     "tags": ["deep learning", "neural networks"],
-                    "created_at": "2024-01-02T00:00:00Z"
-                }
+                    "created_at": "2024-01-02T00:00:00Z",
+                },
             },
             {
                 "id": "doc_3",
@@ -83,9 +85,9 @@ class TestSearchSystemIntegration:
                 "metadata": {
                     "category": "Data Science",
                     "tags": ["statistics", "analysis"],
-                    "created_at": "2024-01-03T00:00:00Z"
-                }
-            }
+                    "created_at": "2024-01-03T00:00:00Z",
+                },
+            },
         ]
 
     @pytest.fixture
@@ -95,7 +97,7 @@ class TestSearchSystemIntegration:
         return [
             np.random.rand(384).tolist(),  # doc_1 embedding
             np.random.rand(384).tolist(),  # doc_2 embedding
-            np.random.rand(384).tolist()   # doc_3 embedding
+            np.random.rand(384).tolist(),  # doc_3 embedding
         ]
 
     @pytest.fixture
@@ -115,7 +117,9 @@ class TestSearchSystemIntegration:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache components not available")
 
-        with patch('apps.api.cache.redis_manager.redis.Redis', return_value=mock_redis_cache):
+        with patch(
+            "apps.api.cache.redis_manager.redis.Redis", return_value=mock_redis_cache
+        ):
             cache = SearchCache()
             yield cache
 
@@ -125,10 +129,14 @@ class TestSearchSystemIntegration:
             pytest.skip("Embedding service not available")
 
         mock_response = MagicMock()
-        mock_response.data = [MagicMock(embedding=[0.1] * 1536) for _ in sample_documents]
+        mock_response.data = [
+            MagicMock(embedding=[0.1] * 1536) for _ in sample_documents
+        ]
 
-        with patch('openai.AsyncOpenAI') as mock_client:
-            mock_client.return_value.embeddings.create = AsyncMock(return_value=mock_response)
+        with patch("openai.AsyncOpenAI") as mock_client:
+            mock_client.return_value.embeddings.create = AsyncMock(
+                return_value=mock_response
+            )
 
             try:
                 embedding_service = EmbeddingService()
@@ -151,7 +159,9 @@ class TestSearchSystemIntegration:
 
         try:
             # Mock the search engine components
-            with patch('apps.api.search.hybrid_search.EmbeddingService') as mock_embedding:
+            with patch(
+                "apps.api.search.hybrid_search.EmbeddingService"
+            ) as mock_embedding:
                 mock_embedding_instance = AsyncMock()
                 mock_embedding_instance.get_embedding = AsyncMock(
                     return_value=mock_embeddings[0]
@@ -166,9 +176,7 @@ class TestSearchSystemIntegration:
                 # Test search query
                 query = "machine learning algorithms"
                 results = await search_engine.search(
-                    query=query,
-                    limit=3,
-                    filters={"category": "AI"}
+                    query=query, limit=3, filters={"category": "AI"}
                 )
 
                 assert isinstance(results, list)
@@ -195,7 +203,7 @@ class TestSearchSystemIntegration:
             # Mock search results
             mock_results = [
                 {"id": "doc_1", "score": 0.9, "title": "ML Fundamentals"},
-                {"id": "doc_2", "score": 0.8, "title": "Deep Learning"}
+                {"id": "doc_2", "score": 0.8, "title": "Deep Learning"},
             ]
 
             # Test cache miss -> cache set
@@ -226,7 +234,7 @@ class TestSearchSystemIntegration:
 
             # Test score fusion (this would be done in the hybrid search engine)
             alpha = 0.7  # BM25 weight
-            beta = 0.3   # Vector weight
+            beta = 0.3  # Vector weight
 
             fused_scores = []
             for bm25, vector in zip(bm25_scores, vector_scores):
@@ -247,9 +255,24 @@ class TestSearchSystemIntegration:
         """Test search result ranking and post-processing"""
         # Mock search results with different scores
         raw_results = [
-            {"id": "doc_1", "score": 0.85, "title": "ML Basics", "content": "Content 1"},
-            {"id": "doc_2", "score": 0.92, "title": "DL Advanced", "content": "Content 2"},
-            {"id": "doc_3", "score": 0.78, "title": "Statistics", "content": "Content 3"}
+            {
+                "id": "doc_1",
+                "score": 0.85,
+                "title": "ML Basics",
+                "content": "Content 1",
+            },
+            {
+                "id": "doc_2",
+                "score": 0.92,
+                "title": "DL Advanced",
+                "content": "Content 2",
+            },
+            {
+                "id": "doc_3",
+                "score": 0.78,
+                "title": "Statistics",
+                "content": "Content 3",
+            },
         ]
 
         # Test ranking by score (descending)
@@ -266,7 +289,7 @@ class TestSearchSystemIntegration:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_WITH_OPENAI"),
-        reason="OpenAI tests only run when TEST_WITH_OPENAI is set"
+        reason="OpenAI tests only run when TEST_WITH_OPENAI is set",
     )
     async def test_real_openai_integration(self):
         """Test integration with real OpenAI API (when available)"""
@@ -312,7 +335,7 @@ class TestSearchSystemIntegration:
             "response_time_ms": response_time_ms,
             "documents_searched": len(sample_documents),
             "results_returned": min(3, len(sample_documents)),
-            "cache_hit": False
+            "cache_hit": False,
         }
 
         assert metrics["documents_searched"] == 3
@@ -323,7 +346,7 @@ class TestSearchSystemIntegration:
 
         # Test embedding service error handling
         if EMBEDDING_SERVICE_AVAILABLE:
-            with patch('openai.AsyncOpenAI') as mock_client:
+            with patch("openai.AsyncOpenAI") as mock_client:
                 # Mock API failure
                 mock_client.return_value.embeddings.create = AsyncMock(
                     side_effect=Exception("API Error")
@@ -341,7 +364,7 @@ class TestSearchSystemIntegration:
         # Test cache error handling
         if COMPONENTS_AVAILABLE:
             try:
-                with patch('redis.Redis') as mock_redis:
+                with patch("redis.Redis") as mock_redis:
                     mock_redis.return_value.get = AsyncMock(
                         side_effect=Exception("Redis Error")
                     )

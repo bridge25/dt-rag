@@ -25,22 +25,28 @@ class TestCaseBank(TestBase):
     quality_score: Mapped[float | None] = mapped_column(Float)
     usage_count: Mapped[int | None] = mapped_column(Integer)
     success_rate: Mapped[float | None] = mapped_column(Float)
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.now()
+    )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    status: Mapped[str] = mapped_column(String(50), default='active', nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now(),
-        nullable=False
+        nullable=False,
     )
 
 
-test_engine = create_async_engine("sqlite+aiosqlite:///test_casebank_integration.db", echo=False)
-test_async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+test_engine = create_async_engine(
+    "sqlite+aiosqlite:///test_casebank_integration.db", echo=False
+)
+test_async_session = async_sessionmaker(
+    test_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -85,7 +91,7 @@ async def test_create_case_with_metadata():
             usage_count=10,
             success_rate=0.90,
             updated_by="integration_tester@example.com",
-            status="active"
+            status="active",
         )
         session.add(case)
         await session.commit()
@@ -108,7 +114,7 @@ async def test_update_case_increments_version():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()
@@ -135,7 +141,7 @@ async def test_case_status_lifecycle():
             response_text="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
-            status="active"
+            status="active",
         )
         session.add(case)
         await session.commit()
@@ -165,7 +171,7 @@ async def test_query_by_status():
                 response_text="test response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
-                status="active" if i % 2 == 0 else "archived"
+                status="active" if i % 2 == 0 else "archived",
             )
             for i in range(6)
         ]
@@ -191,7 +197,7 @@ async def test_updated_at_timestamp():
             query="test query",
             response_text="test response",
             category_path='["AI", "Test"]',
-            query_vector="[0.1, 0.2, 0.3]"
+            query_vector="[0.1, 0.2, 0.3]",
         )
         session.add(case)
         await session.commit()

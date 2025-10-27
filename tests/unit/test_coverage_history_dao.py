@@ -43,7 +43,7 @@ class TestCoverageHistoryDAO:
             overall_coverage=overall_coverage,
             total_documents=total_documents,
             total_chunks=total_chunks,
-            version=version
+            version=version,
         )
 
         assert history_id is not None, "insert_history should return history_id"
@@ -54,8 +54,12 @@ class TestCoverageHistoryDAO:
 
         added_instance = mock_session.add.call_args.args[0]
         assert added_instance.agent_id == agent_id, "agent_id should match"
-        assert added_instance.overall_coverage == overall_coverage, "overall_coverage should match"
-        assert added_instance.total_documents == total_documents, "total_documents should match"
+        assert (
+            added_instance.overall_coverage == overall_coverage
+        ), "overall_coverage should match"
+        assert (
+            added_instance.total_documents == total_documents
+        ), "total_documents should match"
         assert added_instance.total_chunks == total_chunks, "total_chunks should match"
         assert added_instance.version == version, "version should match"
 
@@ -83,7 +87,7 @@ class TestCoverageHistoryDAO:
             overall_coverage=80.0,
             total_documents=100,
             total_chunks=500,
-            version="1.0.0"
+            version="1.0.0",
         )
         mock_history_2 = CoverageHistory(
             history_id=uuid.uuid4(),
@@ -92,20 +96,25 @@ class TestCoverageHistoryDAO:
             overall_coverage=75.0,
             total_documents=90,
             total_chunks=450,
-            version="1.0.0"
+            version="1.0.0",
         )
 
         mock_result = MagicMock()
-        mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[mock_history_1, mock_history_2])))
+        mock_result.scalars = MagicMock(
+            return_value=MagicMock(
+                all=MagicMock(return_value=[mock_history_1, mock_history_2])
+            )
+        )
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         histories = await CoverageHistoryDAO.query_history(
-            session=mock_session,
-            agent_id=agent_id
+            session=mock_session, agent_id=agent_id
         )
 
         assert len(histories) == 2, "Should return 2 history records"
-        assert histories[0].overall_coverage == 80.0, "First record should be most recent"
+        assert (
+            histories[0].overall_coverage == 80.0
+        ), "First record should be most recent"
         assert histories[1].overall_coverage == 75.0, "Second record should be older"
 
         mock_session.execute.assert_called_once()
@@ -135,22 +144,26 @@ class TestCoverageHistoryDAO:
             overall_coverage=78.0,
             total_documents=95,
             total_chunks=475,
-            version="1.0.0"
+            version="1.0.0",
         )
 
         mock_result = MagicMock()
-        mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[mock_history])))
+        mock_result.scalars = MagicMock(
+            return_value=MagicMock(all=MagicMock(return_value=[mock_history]))
+        )
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         histories = await CoverageHistoryDAO.query_history(
             session=mock_session,
             agent_id=agent_id,
             from_date=from_date,
-            to_date=to_date
+            to_date=to_date,
         )
 
         assert len(histories) == 1, "Should return 1 filtered record"
-        assert from_date <= histories[0].timestamp <= to_date, "Record should be within date range"
+        assert (
+            from_date <= histories[0].timestamp <= to_date
+        ), "Record should be within date range"
 
         mock_session.execute.assert_called_once()
 
@@ -158,7 +171,9 @@ class TestCoverageHistoryDAO:
         query = call_args.args[0]
 
         query_str = str(query.compile(compile_kwargs={"literal_binds": True}))
-        assert "timestamp >=" in query_str or "timestamp <=" in query_str, "Query should include date filters"
+        assert (
+            "timestamp >=" in query_str or "timestamp <=" in query_str
+        ), "Query should include date filters"
 
     @pytest.mark.asyncio
     async def test_coverage_history_dao_query_history_sorted_by_timestamp_desc(self):
@@ -184,7 +199,7 @@ class TestCoverageHistoryDAO:
             overall_coverage=85.0,
             total_documents=110,
             total_chunks=550,
-            version="1.0.0"
+            version="1.0.0",
         )
         mock_history_2 = CoverageHistory(
             history_id=uuid.uuid4(),
@@ -193,7 +208,7 @@ class TestCoverageHistoryDAO:
             overall_coverage=82.0,
             total_documents=105,
             total_chunks=525,
-            version="1.0.0"
+            version="1.0.0",
         )
         mock_history_3 = CoverageHistory(
             history_id=uuid.uuid4(),
@@ -202,24 +217,35 @@ class TestCoverageHistoryDAO:
             overall_coverage=80.0,
             total_documents=100,
             total_chunks=500,
-            version="1.0.0"
+            version="1.0.0",
         )
 
         mock_result = MagicMock()
-        mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[mock_history_1, mock_history_2, mock_history_3])))
+        mock_result.scalars = MagicMock(
+            return_value=MagicMock(
+                all=MagicMock(
+                    return_value=[mock_history_1, mock_history_2, mock_history_3]
+                )
+            )
+        )
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         histories = await CoverageHistoryDAO.query_history(
-            session=mock_session,
-            agent_id=agent_id
+            session=mock_session, agent_id=agent_id
         )
 
         assert len(histories) == 3, "Should return 3 records"
-        assert histories[0].timestamp > histories[1].timestamp, "First should be newer than second"
-        assert histories[1].timestamp > histories[2].timestamp, "Second should be newer than third"
+        assert (
+            histories[0].timestamp > histories[1].timestamp
+        ), "First should be newer than second"
+        assert (
+            histories[1].timestamp > histories[2].timestamp
+        ), "Second should be newer than third"
 
         for i in range(len(histories) - 1):
-            assert histories[i].timestamp >= histories[i + 1].timestamp, f"Record {i} should be newer than {i+1}"
+            assert (
+                histories[i].timestamp >= histories[i + 1].timestamp
+            ), f"Record {i} should be newer than {i+1}"
 
     @pytest.mark.asyncio
     async def test_coverage_history_dao_query_history_with_limit(self):
@@ -246,18 +272,19 @@ class TestCoverageHistoryDAO:
                 overall_coverage=80.0 + i,
                 total_documents=100,
                 total_chunks=500,
-                version="1.0.0"
-            ) for i in range(5)
+                version="1.0.0",
+            )
+            for i in range(5)
         ]
 
         mock_result = MagicMock()
-        mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=mock_histories[:limit])))
+        mock_result.scalars = MagicMock(
+            return_value=MagicMock(all=MagicMock(return_value=mock_histories[:limit]))
+        )
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         histories = await CoverageHistoryDAO.query_history(
-            session=mock_session,
-            agent_id=agent_id,
-            limit=limit
+            session=mock_session, agent_id=agent_id, limit=limit
         )
 
         assert len(histories) == limit, f"Should return at most {limit} records"
@@ -268,7 +295,9 @@ class TestCoverageHistoryDAO:
         query = call_args.args[0]
 
         query_str = str(query.compile(compile_kwargs={"literal_binds": True}))
-        assert "LIMIT" in query_str or "limit" in query_str.lower(), "Query should include LIMIT clause"
+        assert (
+            "LIMIT" in query_str or "limit" in query_str.lower()
+        ), "Query should include LIMIT clause"
 
     @pytest.mark.asyncio
     async def test_coverage_history_dao_validates_coverage_range(self):
@@ -286,24 +315,28 @@ class TestCoverageHistoryDAO:
 
         agent_id = uuid.uuid4()
 
-        with pytest.raises(ValueError, match="overall_coverage must be between 0.0 and 100.0"):
+        with pytest.raises(
+            ValueError, match="overall_coverage must be between 0.0 and 100.0"
+        ):
             await CoverageHistoryDAO.insert_history(
                 session=mock_session,
                 agent_id=agent_id,
                 overall_coverage=-5.0,
                 total_documents=100,
                 total_chunks=500,
-                version="1.0.0"
+                version="1.0.0",
             )
 
-        with pytest.raises(ValueError, match="overall_coverage must be between 0.0 and 100.0"):
+        with pytest.raises(
+            ValueError, match="overall_coverage must be between 0.0 and 100.0"
+        ):
             await CoverageHistoryDAO.insert_history(
                 session=mock_session,
                 agent_id=agent_id,
                 overall_coverage=105.0,
                 total_documents=100,
                 total_chunks=500,
-                version="1.0.0"
+                version="1.0.0",
             )
 
         mock_session.add.assert_not_called()
@@ -324,12 +357,13 @@ class TestCoverageHistoryDAO:
         nonexistent_agent_id = uuid.uuid4()
 
         mock_result = MagicMock()
-        mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))
+        mock_result.scalars = MagicMock(
+            return_value=MagicMock(all=MagicMock(return_value=[]))
+        )
         mock_session.execute = AsyncMock(return_value=mock_result)
 
         histories = await CoverageHistoryDAO.query_history(
-            session=mock_session,
-            agent_id=nonexistent_agent_id
+            session=mock_session, agent_id=nonexistent_agent_id
         )
 
         assert histories == [], "Should return empty list for nonexistent agent"
@@ -362,12 +396,16 @@ class TestCoverageHistoryDAO:
             overall_coverage=80.0,
             total_documents=100,
             total_chunks=500,
-            version="1.0.0"
+            version="1.0.0",
         )
 
         after_insert = datetime.utcnow()
 
         added_instance = mock_session.add.call_args.args[0]
         assert added_instance.timestamp is not None, "timestamp should be set"
-        assert before_insert <= added_instance.timestamp <= after_insert, "timestamp should be within insert window"
-        assert added_instance.timestamp.tzinfo is None, "timestamp should be naive datetime (UTC)"
+        assert (
+            before_insert <= added_instance.timestamp <= after_insert
+        ), "timestamp should be within insert window"
+        assert (
+            added_instance.timestamp.tzinfo is None
+        ), "timestamp should be naive datetime (UTC)"

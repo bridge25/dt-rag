@@ -37,13 +37,10 @@ class TestToolExecutor:
             description="Add two numbers",
             input_schema=ToolSchema(
                 type="object",
-                properties={
-                    "a": {"type": "number"},
-                    "b": {"type": "number"}
-                },
-                required=["a", "b"]
+                properties={"a": {"type": "number"}, "b": {"type": "number"}},
+                required=["a", "b"],
             ),
-            execute=calculator_fn
+            execute=calculator_fn,
         )
 
         registry.register(tool)
@@ -68,7 +65,7 @@ class TestToolExecutor:
             name="slow_tool",
             description="Slow tool",
             input_schema=ToolSchema(type="object", properties={}, required=[]),
-            execute=slow_tool_fn
+            execute=slow_tool_fn,
         )
 
         registry.register(tool)
@@ -90,11 +87,9 @@ class TestToolExecutor:
             name="strict_tool",
             description="Requires 'a' field",
             input_schema=ToolSchema(
-                type="object",
-                properties={"a": {"type": "string"}},
-                required=["a"]
+                type="object", properties={"a": {"type": "string"}}, required=["a"]
             ),
-            execute=tool_fn
+            execute=tool_fn,
         )
 
         registry.register(tool)
@@ -124,7 +119,7 @@ class TestToolExecutor:
             name="error_tool",
             description="Raises error",
             input_schema=ToolSchema(type="object", properties={}, required=[]),
-            execute=error_tool_fn
+            execute=error_tool_fn,
         )
 
         registry.register(tool)
@@ -147,7 +142,7 @@ class TestToolExecutor:
             name="quick_tool",
             description="Quick tool",
             input_schema=ToolSchema(type="object", properties={}, required=[]),
-            execute=quick_tool_fn
+            execute=quick_tool_fn,
         )
 
         registry.register(tool)

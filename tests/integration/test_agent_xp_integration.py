@@ -54,14 +54,14 @@ async def _setup_taxonomy_and_docs():
             label="technology",
             canonical_path=["technology"],
             version=version,
-            confidence=1.0
+            confidence=1.0,
         )
         ai_node = TaxonomyNode(
             node_id=node_id_ai,
             label="ai",
             canonical_path=["technology", "ai"],
             version=version,
-            confidence=1.0
+            confidence=1.0,
         )
 
         session.add_all([tech_node, ai_node])
@@ -72,7 +72,7 @@ async def _setup_taxonomy_and_docs():
             doc_id=doc_id,
             title="AI Testing Document",
             source_url="https://example.com/ai-test",
-            content_type="article"
+            content_type="article",
         )
         session.add(doc)
         await session.commit()
@@ -84,7 +84,7 @@ async def _setup_taxonomy_and_docs():
             text="This is a test document about artificial intelligence and machine learning.",
             span="0,80",
             chunk_index=0,
-            token_count=15
+            token_count=15,
         )
         session.add(chunk)
         await session.commit()
@@ -94,7 +94,7 @@ async def _setup_taxonomy_and_docs():
             node_id=node_id_ai,
             version=version,
             path=["technology", "ai"],
-            confidence=0.95
+            confidence=0.95,
         )
         session.add(doc_tax)
         await session.commit()
@@ -102,10 +102,7 @@ async def _setup_taxonomy_and_docs():
         return {
             "version": version,
             "node_ids": [node_id_tech, node_id_ai],
-            "nodes": {
-                "tech": node_id_tech,
-                "ai": node_id_ai
-            }
+            "nodes": {"tech": node_id_tech, "ai": node_id_ai},
         }
 
 
@@ -121,7 +118,7 @@ async def test_query_triggers_xp_calculation(sample_taxonomy_with_docs):
             name="XP Test Agent",
             taxonomy_node_ids=node_ids,
             taxonomy_version=sample_taxonomy_with_docs["version"],
-            scope_description="Testing XP calculation"
+            scope_description="Testing XP calculation",
         )
 
         initial_xp = agent.current_xp
@@ -133,14 +130,16 @@ async def test_query_triggers_xp_calculation(sample_taxonomy_with_docs):
         async def mock_api_key():
             return "test-api-key"
 
-        request = QueryRequest(query="test artificial intelligence", top_k=5, include_metadata=False)
+        request = QueryRequest(
+            query="test artificial intelligence", top_k=5, include_metadata=False
+        )
 
         start_time = time.time()
         response = await query_agent(
             agent_id=agent.agent_id,
             request=request,
             session=session,
-            api_key=await mock_api_key()
+            api_key=await mock_api_key(),
         )
         query_time = time.time() - start_time
 
@@ -167,7 +166,7 @@ async def test_xp_calculation_does_not_block_query(sample_taxonomy_with_docs):
             session=session,
             name="Non-Blocking Test Agent",
             taxonomy_node_ids=node_ids,
-            taxonomy_version=sample_taxonomy_with_docs["version"]
+            taxonomy_version=sample_taxonomy_with_docs["version"],
         )
 
         from apps.api.routers.agent_router import query_agent
@@ -176,14 +175,16 @@ async def test_xp_calculation_does_not_block_query(sample_taxonomy_with_docs):
         async def mock_api_key():
             return "test-api-key"
 
-        request = QueryRequest(query="machine learning", top_k=5, include_metadata=False)
+        request = QueryRequest(
+            query="machine learning", top_k=5, include_metadata=False
+        )
 
         start = time.time()
         response = await query_agent(
             agent_id=agent.agent_id,
             request=request,
             session=session,
-            api_key=await mock_api_key()
+            api_key=await mock_api_key(),
         )
         query_latency = time.time() - start
 
@@ -202,13 +203,11 @@ async def test_query_10_times_accumulates_xp(sample_taxonomy_with_docs):
             session=session,
             name="XP Accumulation Agent",
             taxonomy_node_ids=node_ids,
-            taxonomy_version=sample_taxonomy_with_docs["version"]
+            taxonomy_version=sample_taxonomy_with_docs["version"],
         )
 
         await AgentDAO.update_agent(
-            session=session,
-            agent_id=agent.agent_id,
-            avg_faithfulness=0.85
+            session=session, agent_id=agent.agent_id, avg_faithfulness=0.85
         )
 
         from apps.api.routers.agent_router import query_agent
@@ -217,14 +216,16 @@ async def test_query_10_times_accumulates_xp(sample_taxonomy_with_docs):
         async def mock_api_key():
             return "test-api-key"
 
-        request = QueryRequest(query="artificial intelligence", top_k=5, include_metadata=False)
+        request = QueryRequest(
+            query="artificial intelligence", top_k=5, include_metadata=False
+        )
 
         for _ in range(10):
             await query_agent(
                 agent_id=agent.agent_id,
                 request=request,
                 session=session,
-                api_key=await mock_api_key()
+                api_key=await mock_api_key(),
             )
 
         await asyncio.sleep(5)
@@ -245,19 +246,15 @@ async def test_level_up_after_queries(sample_taxonomy_with_docs):
             session=session,
             name="Level Up Agent",
             taxonomy_node_ids=node_ids,
-            taxonomy_version=sample_taxonomy_with_docs["version"]
+            taxonomy_version=sample_taxonomy_with_docs["version"],
         )
 
         await AgentDAO.update_xp_and_level(
-            session=session,
-            agent_id=agent.agent_id,
-            xp_delta=90.0
+            session=session, agent_id=agent.agent_id, xp_delta=90.0
         )
 
         await AgentDAO.update_agent(
-            session=session,
-            agent_id=agent.agent_id,
-            avg_faithfulness=0.9
+            session=session, agent_id=agent.agent_id, avg_faithfulness=0.9
         )
 
         from apps.api.routers.agent_router import query_agent
@@ -266,14 +263,16 @@ async def test_level_up_after_queries(sample_taxonomy_with_docs):
         async def mock_api_key():
             return "test-api-key"
 
-        request = QueryRequest(query="machine learning test", top_k=5, include_metadata=False)
+        request = QueryRequest(
+            query="machine learning test", top_k=5, include_metadata=False
+        )
 
         for _ in range(3):
             await query_agent(
                 agent_id=agent.agent_id,
                 request=request,
                 session=session,
-                api_key=await mock_api_key()
+                api_key=await mock_api_key(),
             )
 
         await asyncio.sleep(5)
@@ -295,7 +294,7 @@ async def test_xp_calculation_error_does_not_fail_query(sample_taxonomy_with_doc
             session=session,
             name="Error Isolation Agent",
             taxonomy_node_ids=node_ids,
-            taxonomy_version=sample_taxonomy_with_docs["version"]
+            taxonomy_version=sample_taxonomy_with_docs["version"],
         )
 
         from apps.api.routers.agent_router import query_agent
@@ -310,7 +309,7 @@ async def test_xp_calculation_error_does_not_fail_query(sample_taxonomy_with_doc
             agent_id=agent.agent_id,
             request=request,
             session=session,
-            api_key=await mock_api_key()
+            api_key=await mock_api_key(),
         )
 
         assert response.agent_id == agent.agent_id

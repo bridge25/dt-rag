@@ -2,6 +2,7 @@
 Database Integration Tests
 Tests database connections and DAO operations
 """
+
 import pytest
 import asyncio
 
@@ -74,10 +75,7 @@ class TestSearchDAO:
         """Test hybrid search executes without errors"""
         from database import SearchDAO
 
-        results = await SearchDAO.hybrid_search(
-            query="machine learning",
-            topk=5
-        )
+        results = await SearchDAO.hybrid_search(query="machine learning", topk=5)
 
         assert isinstance(results, list)
 
@@ -85,10 +83,7 @@ class TestSearchDAO:
         """Test search returns hits with proper structure"""
         from database import SearchDAO
 
-        results = await SearchDAO.hybrid_search(
-            query="RAG system",
-            topk=3
-        )
+        results = await SearchDAO.hybrid_search(query="RAG system", topk=3)
 
         if len(results) > 0:
             hit = results[0]
@@ -101,9 +96,7 @@ class TestSearchDAO:
         from database import SearchDAO
 
         results = await SearchDAO.hybrid_search(
-            query="neural networks",
-            filters={"taxonomy_path": ["AI", "ML"]},
-            topk=5
+            query="neural networks", filters={"taxonomy_path": ["AI", "ML"]}, topk=5
         )
 
         assert isinstance(results, list)
@@ -113,10 +106,7 @@ class TestSearchDAO:
         from database import SearchDAO
 
         # Even with no results, should return fallback
-        results = await SearchDAO.hybrid_search(
-            query="nonexistent-query-12345",
-            topk=5
-        )
+        results = await SearchDAO.hybrid_search(query="nonexistent-query-12345", topk=5)
 
         assert isinstance(results, list)
         # Fallback should provide at least one result
@@ -153,9 +143,7 @@ class TestClassifyDAO:
         """Test classification returns canonical path as list"""
         from database import ClassifyDAO
 
-        result = await ClassifyDAO.classify_text(
-            "Machine learning models"
-        )
+        result = await ClassifyDAO.classify_text("Machine learning models")
 
         assert isinstance(result["canonical"], list)
         assert len(result["canonical"]) > 0
@@ -166,8 +154,7 @@ class TestClassifyDAO:
         from database import ClassifyDAO
 
         result = await ClassifyDAO.classify_text(
-            "Neural network training",
-            hint_paths=[["AI", "ML"]]
+            "Neural network training", hint_paths=[["AI", "ML"]]
         )
 
         assert "confidence" in result
@@ -185,7 +172,9 @@ class TestClassifyDAO:
         assert "canonical" in result
         assert "confidence" in result
         # Should fallback to General AI
-        assert result["canonical"] == ["AI", "General"] or isinstance(result["canonical"], list)
+        assert result["canonical"] == ["AI", "General"] or isinstance(
+            result["canonical"], list
+        )
 
 
 @pytest.mark.asyncio
@@ -213,7 +202,9 @@ class TestDatabasePerformance:
         result = await ClassifyDAO.classify_text(sample_text)
         duration = time.time() - start
 
-        assert duration < 10.0  # Should complete in under 10 seconds (includes model loading)
+        assert (
+            duration < 10.0
+        )  # Should complete in under 10 seconds (includes model loading)
         assert "confidence" in result
 
     async def test_search_performance(self):

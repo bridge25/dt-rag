@@ -9,10 +9,8 @@ import asyncio
 import gc
 import logging
 import os
-import time
-import tracemalloc
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Callable, Dict, Optional, TypeVar
 
 import psutil  # type: ignore[import-untyped]
@@ -48,7 +46,9 @@ class PipelineRetryHandler:
     def __init__(self, config: Optional[RetryConfig] = None) -> None:
         self.config = config or RetryConfig()
 
-    async def execute_with_retry(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
+    async def execute_with_retry(
+        self, func: Callable[..., T], *args: Any, **kwargs: Any
+    ) -> T:
         """재시도 로직으로 함수 실행"""
         last_exception = None
 
@@ -282,7 +282,9 @@ class PipelineResilienceManager:
             except asyncio.CancelledError:
                 pass
 
-    async def execute_with_resilience(self, func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
+    async def execute_with_resilience(
+        self, func: Callable[..., T], *args: Any, **kwargs: Any
+    ) -> T:
         """복원력 기능을 적용하여 함수 실행"""
 
         # 실행 전 메모리 상태 확인
@@ -302,7 +304,7 @@ class PipelineResilienceManager:
 
             return result
 
-        except Exception as e:
+        except Exception:
             # 실행 실패 후 메모리 정리
             await self.memory_monitor.cleanup_memory()
             raise
@@ -337,7 +339,9 @@ def get_resilience_manager() -> PipelineResilienceManager:
 
 
 # 데코레이터 함수들
-def with_retry(retry_config: Optional[RetryConfig] = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def with_retry(
+    retry_config: Optional[RetryConfig] = None,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """재시도 데코레이터"""
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -351,7 +355,9 @@ def with_retry(retry_config: Optional[RetryConfig] = None) -> Callable[[Callable
     return decorator
 
 
-def with_memory_monitoring(thresholds: Optional[MemoryThreshold] = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def with_memory_monitoring(
+    thresholds: Optional[MemoryThreshold] = None,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """메모리 모니터링 데코레이터"""
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:

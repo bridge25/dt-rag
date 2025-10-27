@@ -35,7 +35,9 @@ class ParserFactory:
         try:
             return parser_class()
         except Exception as e:
-            raise ParserError(f"Failed to initialize parser for {file_format}: {str(e)}")
+            raise ParserError(
+                f"Failed to initialize parser for {file_format}: {str(e)}"
+            )
 
     @classmethod
     def supports_format(cls, file_format: str) -> bool:

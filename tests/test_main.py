@@ -17,13 +17,27 @@ class TestStartupValidation:
     @pytest.mark.asyncio
     async def test_startup_production_missing_api_key(self):
         """Test that production startup FAILS when OpenAI API key is missing"""
-        with patch.dict(os.environ, {"ENVIRONMENT": "production", "OPENAI_API_KEY": ""}, clear=True):
-            with patch("apps.api.main.test_database_connection", new_callable=AsyncMock, return_value=True):
-                with patch("apps.api.main.init_database", new_callable=AsyncMock, return_value=True):
-                    with patch("apps.api.main.rate_limiter.initialize", new_callable=AsyncMock):
+        with patch.dict(
+            os.environ, {"ENVIRONMENT": "production", "OPENAI_API_KEY": ""}, clear=True
+        ):
+            with patch(
+                "apps.api.main.test_database_connection",
+                new_callable=AsyncMock,
+                return_value=True,
+            ):
+                with patch(
+                    "apps.api.main.init_database",
+                    new_callable=AsyncMock,
+                    return_value=True,
+                ):
+                    with patch(
+                        "apps.api.main.rate_limiter.initialize", new_callable=AsyncMock
+                    ):
                         from apps.api.main import lifespan, app
 
-                        with pytest.raises(ValueError, match="OPENAI_API_KEY.*REQUIRED.*production"):
+                        with pytest.raises(
+                            ValueError, match="OPENAI_API_KEY.*REQUIRED.*production"
+                        ):
                             async with lifespan(app):
                                 pass
 
@@ -32,10 +46,28 @@ class TestStartupValidation:
         """Test that production startup SUCCEEDS with valid OpenAI API key"""
         valid_key = "sk-" + "a" * 48
 
-        with patch.dict(os.environ, {"ENVIRONMENT": "production", "OPENAI_API_KEY": valid_key, "SECRET_KEY": "b" * 32}, clear=True):
-            with patch("apps.api.main.test_database_connection", new_callable=AsyncMock, return_value=True):
-                with patch("apps.api.main.init_database", new_callable=AsyncMock, return_value=True):
-                    with patch("apps.api.main.rate_limiter.initialize", new_callable=AsyncMock):
+        with patch.dict(
+            os.environ,
+            {
+                "ENVIRONMENT": "production",
+                "OPENAI_API_KEY": valid_key,
+                "SECRET_KEY": "b" * 32,
+            },
+            clear=True,
+        ):
+            with patch(
+                "apps.api.main.test_database_connection",
+                new_callable=AsyncMock,
+                return_value=True,
+            ):
+                with patch(
+                    "apps.api.main.init_database",
+                    new_callable=AsyncMock,
+                    return_value=True,
+                ):
+                    with patch(
+                        "apps.api.main.rate_limiter.initialize", new_callable=AsyncMock
+                    ):
                         from apps.api.main import lifespan, app
 
                         async with lifespan(app):
@@ -50,9 +82,20 @@ class TestStartupValidation:
 
         with patch.dict(os.environ, env_vars):
             with patch("apps.api.env_manager._env_manager", None):
-                with patch("apps.api.main.test_database_connection", new_callable=AsyncMock, return_value=True):
-                    with patch("apps.api.main.init_database", new_callable=AsyncMock, return_value=True):
-                        with patch("apps.api.main.rate_limiter.initialize", new_callable=AsyncMock):
+                with patch(
+                    "apps.api.main.test_database_connection",
+                    new_callable=AsyncMock,
+                    return_value=True,
+                ):
+                    with patch(
+                        "apps.api.main.init_database",
+                        new_callable=AsyncMock,
+                        return_value=True,
+                    ):
+                        with patch(
+                            "apps.api.main.rate_limiter.initialize",
+                            new_callable=AsyncMock,
+                        ):
                             with patch("apps.api.main.logger") as mock_logger:
                                 from apps.api.main import lifespan, app
 
@@ -66,10 +109,24 @@ class TestStartupValidation:
         """Test that development startup SUCCEEDS with valid OpenAI API key"""
         valid_key = "sk-" + "c" * 48
 
-        with patch.dict(os.environ, {"ENVIRONMENT": "development", "OPENAI_API_KEY": valid_key}, clear=True):
-            with patch("apps.api.main.test_database_connection", new_callable=AsyncMock, return_value=True):
-                with patch("apps.api.main.init_database", new_callable=AsyncMock, return_value=True):
-                    with patch("apps.api.main.rate_limiter.initialize", new_callable=AsyncMock):
+        with patch.dict(
+            os.environ,
+            {"ENVIRONMENT": "development", "OPENAI_API_KEY": valid_key},
+            clear=True,
+        ):
+            with patch(
+                "apps.api.main.test_database_connection",
+                new_callable=AsyncMock,
+                return_value=True,
+            ):
+                with patch(
+                    "apps.api.main.init_database",
+                    new_callable=AsyncMock,
+                    return_value=True,
+                ):
+                    with patch(
+                        "apps.api.main.rate_limiter.initialize", new_callable=AsyncMock
+                    ):
                         from apps.api.main import lifespan, app
 
                         async with lifespan(app):
@@ -80,10 +137,24 @@ class TestStartupValidation:
         """Test that startup detects and warns about invalid API key format"""
         invalid_key = "invalid-key-format"
 
-        with patch.dict(os.environ, {"ENVIRONMENT": "development", "OPENAI_API_KEY": invalid_key}, clear=True):
-            with patch("apps.api.main.test_database_connection", new_callable=AsyncMock, return_value=True):
-                with patch("apps.api.main.init_database", new_callable=AsyncMock, return_value=True):
-                    with patch("apps.api.main.rate_limiter.initialize", new_callable=AsyncMock):
+        with patch.dict(
+            os.environ,
+            {"ENVIRONMENT": "development", "OPENAI_API_KEY": invalid_key},
+            clear=True,
+        ):
+            with patch(
+                "apps.api.main.test_database_connection",
+                new_callable=AsyncMock,
+                return_value=True,
+            ):
+                with patch(
+                    "apps.api.main.init_database",
+                    new_callable=AsyncMock,
+                    return_value=True,
+                ):
+                    with patch(
+                        "apps.api.main.rate_limiter.initialize", new_callable=AsyncMock
+                    ):
                         with patch("apps.api.main.logger") as mock_logger:
                             from apps.api.main import lifespan, app
 

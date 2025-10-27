@@ -5,6 +5,7 @@ from .base import BaseParser, ParserError
 try:
     import pymupdf
     import pymupdf4llm
+
     PYMUPDF_AVAILABLE = True
 except ImportError:
     PYMUPDF_AVAILABLE = False

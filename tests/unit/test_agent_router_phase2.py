@@ -54,19 +54,26 @@ def mock_agent():
         features_config={},
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
-        last_query_at=None
+        last_query_at=None,
     )
 
 
 def test_update_agent_success(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        with patch("apps.api.routers.agent_router.AgentDAO.update_agent", new_callable=AsyncMock):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        with patch(
+            "apps.api.routers.agent_router.AgentDAO.update_agent",
+            new_callable=AsyncMock,
+        ):
             response = test_client.patch(
                 f"/api/v1/agents/{mock_agent.agent_id}",
                 json={
                     "name": "Updated Agent Name",
-                    "scope_description": "Updated description"
-                }
+                    "scope_description": "Updated description",
+                },
             )
 
             assert response.status_code == 200
@@ -75,42 +82,62 @@ def test_update_agent_success(test_client, mock_agent):
 
 
 def test_update_agent_not_found(test_client):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=None):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         response = test_client.patch(
-            f"/api/v1/agents/{uuid4()}",
-            json={"name": "Updated Name"}
+            f"/api/v1/agents/{uuid4()}", json={"name": "Updated Name"}
         )
 
         assert response.status_code == 404
 
 
 def test_update_agent_empty_update(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        response = test_client.patch(
-            f"/api/v1/agents/{mock_agent.agent_id}",
-            json={}
-        )
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        response = test_client.patch(f"/api/v1/agents/{mock_agent.agent_id}", json={})
 
         assert response.status_code == 200
 
 
 def test_delete_agent_success(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        with patch("apps.api.routers.agent_router.AgentDAO.delete_agent", new_callable=AsyncMock, return_value=True):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        with patch(
+            "apps.api.routers.agent_router.AgentDAO.delete_agent",
+            new_callable=AsyncMock,
+            return_value=True,
+        ):
             response = test_client.delete(f"/api/v1/agents/{mock_agent.agent_id}")
 
             assert response.status_code == 204
 
 
 def test_delete_agent_not_found(test_client):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=None):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
         response = test_client.delete(f"/api/v1/agents/{uuid4()}")
 
         assert response.status_code == 404
 
 
 def test_search_agents_with_query(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.search_agents", new_callable=AsyncMock, return_value=[mock_agent]):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.search_agents",
+        new_callable=AsyncMock,
+        return_value=[mock_agent],
+    ):
         response = test_client.get("/api/v1/agents/search?q=test")
 
         assert response.status_code == 200
@@ -120,7 +147,11 @@ def test_search_agents_with_query(test_client, mock_agent):
 
 
 def test_search_agents_no_query(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.search_agents", new_callable=AsyncMock, return_value=[mock_agent]):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.search_agents",
+        new_callable=AsyncMock,
+        return_value=[mock_agent],
+    ):
         response = test_client.get("/api/v1/agents/search")
 
         assert response.status_code == 200
@@ -135,7 +166,11 @@ def test_search_agents_exceeding_max_results(test_client):
 
 
 def test_refresh_coverage_background_true(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
         response = test_client.post(
             f"/api/v1/agents/{mock_agent.agent_id}/coverage/refresh?background=true"
         )
@@ -155,12 +190,28 @@ def test_refresh_coverage_background_false(test_client, mock_agent):
         total_documents=100,
         total_chunks=500,
         coverage_percent=85.5,
-        node_coverage={str(mock_agent.taxonomy_node_ids[0]): {"document_count": 50, "chunk_count": 250}}
+        node_coverage={
+            str(mock_agent.taxonomy_node_ids[0]): {
+                "document_count": 50,
+                "chunk_count": 250,
+            }
+        },
     )
 
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        with patch("apps.api.routers.agent_router.CoverageMeterService.calculate_coverage", new_callable=AsyncMock, return_value=coverage_metrics):
-            with patch("apps.api.routers.agent_router.AgentDAO.update_agent", new_callable=AsyncMock):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        with patch(
+            "apps.api.routers.agent_router.CoverageMeterService.calculate_coverage",
+            new_callable=AsyncMock,
+            return_value=coverage_metrics,
+        ):
+            with patch(
+                "apps.api.routers.agent_router.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ):
                 response = test_client.post(
                     f"/api/v1/agents/{mock_agent.agent_id}/coverage/refresh?background=false"
                 )
@@ -172,7 +223,11 @@ def test_refresh_coverage_background_false(test_client, mock_agent):
 
 
 def test_get_coverage_task_status(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
         response = test_client.get(
             f"/api/v1/agents/{mock_agent.agent_id}/coverage/status/task-123"
         )
@@ -184,7 +239,11 @@ def test_get_coverage_task_status(test_client, mock_agent):
 
 
 def test_get_coverage_history(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
         response = test_client.get(
             f"/api/v1/agents/{mock_agent.agent_id}/coverage/history"
         )
@@ -196,7 +255,11 @@ def test_get_coverage_history(test_client, mock_agent):
 
 
 def test_get_coverage_history_with_date_filters(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
         response = test_client.get(
             f"/api/v1/agents/{mock_agent.agent_id}/coverage/history"
             "?start_date=2025-10-01T00:00:00Z&end_date=2025-10-12T23:59:59Z"
@@ -209,16 +272,30 @@ def test_get_coverage_history_with_date_filters(test_client, mock_agent):
 
 
 def test_query_agent_stream_endpoint_exists(test_client, mock_agent):
-    with patch("apps.api.routers.agent_router.AgentDAO.get_agent", new_callable=AsyncMock, return_value=mock_agent):
-        with patch("apps.api.routers.agent_router.SearchDAO.hybrid_search", new_callable=AsyncMock, return_value=[]):
-            with patch("apps.api.routers.agent_router.AgentDAO.update_agent", new_callable=AsyncMock):
+    with patch(
+        "apps.api.routers.agent_router.AgentDAO.get_agent",
+        new_callable=AsyncMock,
+        return_value=mock_agent,
+    ):
+        with patch(
+            "apps.api.routers.agent_router.SearchDAO.hybrid_search",
+            new_callable=AsyncMock,
+            return_value=[],
+        ):
+            with patch(
+                "apps.api.routers.agent_router.AgentDAO.update_agent",
+                new_callable=AsyncMock,
+            ):
                 response = test_client.post(
                     f"/api/v1/agents/{mock_agent.agent_id}/query/stream",
-                    json={"query": "test streaming query"}
+                    json={"query": "test streaming query"},
                 )
 
                 assert response.status_code == 200
-                assert response.headers["content-type"] == "text/event-stream; charset=utf-8"
+                assert (
+                    response.headers["content-type"]
+                    == "text/event-stream; charset=utf-8"
+                )
 
 
 def test_phase2_endpoints_require_auth(test_client_no_auth):
@@ -244,4 +321,6 @@ def test_phase2_endpoints_require_auth(test_client_no_auth):
         else:
             response = test_client_no_auth.get(url)
 
-        assert response.status_code == 403, f"{method} {url} should require authentication"
+        assert (
+            response.status_code == 403
+        ), f"{method} {url} should require authentication"

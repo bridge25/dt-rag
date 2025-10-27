@@ -50,7 +50,7 @@ async def test_memento_full_lifecycle():
             usage_count=50,
             success_rate=None,  # Will be calculated by Reflection
             status="active",
-            version=1
+            version=1,
         )
 
         case_low = CaseBank(
@@ -62,7 +62,7 @@ async def test_memento_full_lifecycle():
             usage_count=20,
             success_rate=None,
             status="active",
-            version=1
+            version=1,
         )
 
         case_duplicate = CaseBank(
@@ -74,7 +74,7 @@ async def test_memento_full_lifecycle():
             usage_count=10,
             success_rate=None,
             status="active",
-            version=1
+            version=1,
         )
 
         session.add_all([case_high, case_low, case_duplicate])
@@ -88,7 +88,7 @@ async def test_memento_full_lifecycle():
                 success=(i < 9),
                 error_type=None if i < 9 else "TimeoutError",
                 error_message=None if i < 9 else "Timeout after 5s",
-                execution_time_ms=100 + i * 10
+                execution_time_ms=100 + i * 10,
             )
             session.add(log)
 
@@ -99,7 +99,7 @@ async def test_memento_full_lifecycle():
                 success=(i < 2),
                 error_type=None if i < 2 else "ToolNotFound",
                 error_message=None if i < 2 else "Tool XYZ not found",
-                execution_time_ms=150 + i * 10
+                execution_time_ms=150 + i * 10,
             )
             session.add(log)
 
@@ -109,7 +109,7 @@ async def test_memento_full_lifecycle():
                 case_id="memento-test-dup",
                 success=(i < 6),
                 error_type=None if i < 6 else "InvalidInput",
-                execution_time_ms=120 + i * 10
+                execution_time_ms=120 + i * 10,
             )
             session.add(log)
 
@@ -118,7 +118,9 @@ async def test_memento_full_lifecycle():
         # 3. ReflectionEngine으로 성능 분석
         reflection_engine = ReflectionEngine(session)
 
-        perf_high = await reflection_engine.analyze_case_performance("memento-test-high")
+        perf_high = await reflection_engine.analyze_case_performance(
+            "memento-test-high"
+        )
         assert perf_high["success_rate"] == 90.0
         assert perf_high["total_executions"] == 10
 
@@ -138,9 +140,15 @@ async def test_memento_full_lifecycle():
         consolidation_policy = ConsolidationPolicy(session, dry_run=False)
 
         # 저성능 케이스 제거 (threshold=30% 기본값)
-        removed_cases = await consolidation_policy.remove_low_performance_cases(threshold=30.0)
-        assert "memento-test-low" in removed_cases, "Low-performance case should be archived"
-        assert "memento-test-high" not in removed_cases, "High-performance case should be kept"
+        removed_cases = await consolidation_policy.remove_low_performance_cases(
+            threshold=30.0
+        )
+        assert (
+            "memento-test-low" in removed_cases
+        ), "Low-performance case should be archived"
+        assert (
+            "memento-test-high" not in removed_cases
+        ), "High-performance case should be kept"
 
         # 5. 결과 검증
         # case_low가 archived 상태로 변경되었는지 확인
@@ -148,14 +156,18 @@ async def test_memento_full_lifecycle():
             select(CaseBank).where(CaseBank.case_id == "memento-test-low")
         )
         case_low_updated = result.scalar_one()
-        assert case_low_updated.status == "archived", "Low-performance case should be archived"
+        assert (
+            case_low_updated.status == "archived"
+        ), "Low-performance case should be archived"
 
         # case_high는 active 상태 유지
         result = await session.execute(
             select(CaseBank).where(CaseBank.case_id == "memento-test-high")
         )
         case_high_updated = result.scalar_one()
-        assert case_high_updated.status == "active", "High-performance case should remain active"
+        assert (
+            case_high_updated.status == "active"
+        ), "High-performance case should remain active"
 
         # Clean up
         await session.execute(delete(ExecutionLog))
@@ -190,7 +202,7 @@ async def test_memento_metadata_tracking():
             query_vector=[0.5] * 1536,
             status="active",
             version=1,
-            updated_by="test_user"
+            updated_by="test_user",
         )
         session.add(case)
         await session.commit()

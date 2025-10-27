@@ -7,7 +7,7 @@ database configuration, security settings, and feature flags.
 
 import os
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List, TypedDict
 from enum import Enum
 from dataclasses import dataclass
 
@@ -15,8 +15,18 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 
+class ValidationResult(TypedDict):
+    """Type definition for validation results"""
+
+    is_valid: bool
+    warnings: List[str]
+    errors: List[str]
+    recommendations: List[str]
+
+
 class Environment(Enum):
     """Environment types"""
+
     DEVELOPMENT = "development"
     TESTING = "testing"
     STAGING = "staging"
@@ -26,6 +36,7 @@ class Environment(Enum):
 @dataclass
 class EnvironmentConfig:
     """Environment-specific configuration"""
+
     debug: bool = True
     testing: bool = False
     worker_processes: int = 1
@@ -36,7 +47,7 @@ class EnvironmentConfig:
 class EnvironmentManager:
     """Manages environment-specific configuration and validation"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.current_env = self._detect_environment()
         self.config = self._get_environment_config()
 
@@ -47,7 +58,9 @@ class EnvironmentManager:
         try:
             return Environment(env_name)
         except ValueError:
-            logger.warning(f"Unknown environment '{env_name}', defaulting to development")
+            logger.warning(
+                f"Unknown environment '{env_name}', defaulting to development"
+            )
             return Environment.DEVELOPMENT
 
     def _get_environment_config(self) -> EnvironmentConfig:
@@ -58,29 +71,29 @@ class EnvironmentManager:
                 testing=False,
                 worker_processes=1,
                 log_level="DEBUG",
-                enable_docs=True
+                enable_docs=True,
             ),
             Environment.TESTING: EnvironmentConfig(
                 debug=True,
                 testing=True,
                 worker_processes=1,
                 log_level="DEBUG",
-                enable_docs=True
+                enable_docs=True,
             ),
             Environment.STAGING: EnvironmentConfig(
                 debug=False,
                 testing=False,
                 worker_processes=4,
                 log_level="INFO",
-                enable_docs=True
+                enable_docs=True,
             ),
             Environment.PRODUCTION: EnvironmentConfig(
                 debug=False,
                 testing=False,
                 worker_processes=8,
                 log_level="WARNING",
-                enable_docs=False
-            )
+                enable_docs=False,
+            ),
         }
 
         return configs.get(self.current_env, configs[Environment.DEVELOPMENT])
@@ -93,7 +106,7 @@ class EnvironmentManager:
             "url": database_url,
             "pool_size": int(os.getenv("DB_POOL_SIZE", "20")),
             "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "30")),
-            "echo": self.current_env in [Environment.DEVELOPMENT, Environment.TESTING]
+            "echo": self.current_env in [Environment.DEVELOPMENT, Environment.TESTING],
         }
 
         # Environment-specific overrides
@@ -112,10 +125,12 @@ class EnvironmentManager:
         """Get security configuration for current environment"""
         return {
             "debug": self.config.debug,
-            "enable_docs": self.config.enable_docs and self.current_env != Environment.PRODUCTION,
+            "enable_docs": self.config.enable_docs
+            and self.current_env != Environment.PRODUCTION,
             "cors_strict": self.current_env == Environment.PRODUCTION,
             "rate_limiting_enabled": self.current_env != Environment.TESTING,
-            "ssl_required": self.current_env in [Environment.STAGING, Environment.PRODUCTION]
+            "ssl_required": self.current_env
+            in [Environment.STAGING, Environment.PRODUCTION],
         }
 
     def get_feature_flags(self) -> Dict[str, bool]:
@@ -130,18 +145,21 @@ class EnvironmentManager:
             "enable_request_logging": True,
             "enable_error_tracking": True,
             "enable_debug_toolbar": self.current_env == Environment.DEVELOPMENT,
-            "enable_profiling": self.current_env in [Environment.DEVELOPMENT, Environment.STAGING],
-
+            "enable_profiling": self.current_env
+            in [Environment.DEVELOPMENT, Environment.STAGING],
             # PRD 1.5P flags (4개)
-            "neural_case_selector": self._get_flag_override("FEATURE_NEURAL_CASE_SELECTOR", False),
+            "neural_case_selector": self._get_flag_override(
+                "FEATURE_NEURAL_CASE_SELECTOR", False
+            ),
             "soft_q_bandit": self._get_flag_override("FEATURE_SOFT_Q_BANDIT", False),
             "debate_mode": self._get_flag_override("FEATURE_DEBATE_MODE", False),
             "tools_policy": self._get_flag_override("FEATURE_TOOLS_POLICY", False),
-
             # Memento flags (3개)
             "meta_planner": self._get_flag_override("FEATURE_META_PLANNER", False),
             "mcp_tools": self._get_flag_override("FEATURE_MCP_TOOLS", False),
-            "experience_replay": self._get_flag_override("FEATURE_EXPERIENCE_REPLAY", False),
+            "experience_replay": self._get_flag_override(
+                "FEATURE_EXPERIENCE_REPLAY", False
+            ),
         }
         return base_flags
 
@@ -154,13 +172,13 @@ class EnvironmentManager:
             return False
         return default
 
-    def validate_environment(self) -> Dict[str, Any]:
+    def validate_environment(self) -> ValidationResult:
         """Validate current environment configuration"""
-        validation_result = {
+        validation_result: ValidationResult = {
             "is_valid": True,
             "warnings": [],
             "errors": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Check required environment variables
@@ -172,25 +190,35 @@ class EnvironmentManager:
 
         for var in required_vars:
             if not os.getenv(var):
-                validation_result["errors"].append(f"Required environment variable {var} is not set")
+                validation_result["errors"].append(
+                    f"Required environment variable {var} is not set"
+                )
                 validation_result["is_valid"] = False
 
         # Check database URL format
         db_url = os.getenv("DATABASE_URL", "")
-        if db_url and not any(db_url.startswith(prefix) for prefix in ["sqlite:", "postgresql:", "mysql:"]):
+        if db_url and not any(
+            db_url.startswith(prefix) for prefix in ["sqlite:", "postgresql:", "mysql:"]
+        ):
             validation_result["warnings"].append("DATABASE_URL format may be invalid")
 
         # Environment-specific recommendations
         if self.current_env == Environment.PRODUCTION:
             if os.getenv("DEBUG", "").lower() == "true":
-                validation_result["warnings"].append("Debug mode is enabled in production")
+                validation_result["warnings"].append(
+                    "Debug mode is enabled in production"
+                )
 
             if not os.getenv("REDIS_URL"):
-                validation_result["recommendations"].append("Consider setting REDIS_URL for production caching")
+                validation_result["recommendations"].append(
+                    "Consider setting REDIS_URL for production caching"
+                )
 
         if self.current_env == Environment.DEVELOPMENT:
             if not os.getenv("REDIS_URL"):
-                validation_result["recommendations"].append("Set REDIS_URL for better development experience")
+                validation_result["recommendations"].append(
+                    "Set REDIS_URL for better development experience"
+                )
 
         return validation_result
 
@@ -203,7 +231,7 @@ class EnvironmentManager:
             "worker_processes": self.config.worker_processes,
             "log_level": self.config.log_level,
             "docs_enabled": self.config.enable_docs,
-            "validation": self.validate_environment()
+            "validation": self.validate_environment(),
         }
 
 
@@ -220,9 +248,4 @@ def get_env_manager() -> EnvironmentManager:
 
 
 # Export main classes and functions
-__all__ = [
-    "Environment",
-    "EnvironmentConfig",
-    "EnvironmentManager",
-    "get_env_manager"
-]
+__all__ = ["Environment", "EnvironmentConfig", "EnvironmentManager", "get_env_manager"]

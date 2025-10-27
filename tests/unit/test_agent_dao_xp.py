@@ -38,7 +38,7 @@ def test_agent():
         features_config={},
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
-        last_query_at=None
+        last_query_at=None,
     )
 
 
@@ -64,14 +64,14 @@ async def test_update_xp_and_level_single_xp(mock_session, test_agent):
         features_config=test_agent.features_config,
         created_at=test_agent.created_at,
         updated_at=datetime.utcnow(),
-        last_query_at=test_agent.last_query_at
+        last_query_at=test_agent.last_query_at,
     )
 
-    with patch.object(AgentDAO, 'get_agent', new_callable=AsyncMock, return_value=updated_agent):
+    with patch.object(
+        AgentDAO, "get_agent", new_callable=AsyncMock, return_value=updated_agent
+    ):
         result = await AgentDAO.update_xp_and_level(
-            mock_session,
-            test_agent.agent_id,
-            xp_delta=5.0
+            mock_session, test_agent.agent_id, xp_delta=5.0
         )
 
         assert result.current_xp == 15.0
@@ -102,18 +102,17 @@ async def test_update_xp_and_level_with_level(mock_session, test_agent):
         features_config=test_agent.features_config,
         created_at=test_agent.created_at,
         updated_at=datetime.utcnow(),
-        last_query_at=test_agent.last_query_at
+        last_query_at=test_agent.last_query_at,
     )
 
     test_agent.current_xp = 95.0
     test_agent.level = 1
 
-    with patch.object(AgentDAO, 'get_agent', new_callable=AsyncMock, return_value=updated_agent):
+    with patch.object(
+        AgentDAO, "get_agent", new_callable=AsyncMock, return_value=updated_agent
+    ):
         result = await AgentDAO.update_xp_and_level(
-            mock_session,
-            test_agent.agent_id,
-            xp_delta=10.0,
-            level=2
+            mock_session, test_agent.agent_id, xp_delta=10.0, level=2
         )
 
         assert result.current_xp == 105.0
@@ -153,12 +152,14 @@ async def test_concurrent_xp_updates(mock_session, test_agent):
             features_config=test_agent.features_config,
             created_at=test_agent.created_at,
             updated_at=datetime.utcnow(),
-            last_query_at=test_agent.last_query_at
+            last_query_at=test_agent.last_query_at,
         )
 
-    with patch.object(AgentDAO, 'get_agent', side_effect=mock_get_agent_incremental):
+    with patch.object(AgentDAO, "get_agent", side_effect=mock_get_agent_incremental):
         tasks = [
-            AgentDAO.update_xp_and_level(mock_session, test_agent.agent_id, xp_delta=5.0)
+            AgentDAO.update_xp_and_level(
+                mock_session, test_agent.agent_id, xp_delta=5.0
+            )
             for _ in range(10)
         ]
         results = await asyncio.gather(*tasks)
@@ -195,14 +196,14 @@ async def test_updated_at_timestamp(mock_session, test_agent):
         features_config=test_agent.features_config,
         created_at=test_agent.created_at,
         updated_at=datetime.utcnow(),
-        last_query_at=test_agent.last_query_at
+        last_query_at=test_agent.last_query_at,
     )
 
-    with patch.object(AgentDAO, 'get_agent', new_callable=AsyncMock, return_value=updated_agent):
+    with patch.object(
+        AgentDAO, "get_agent", new_callable=AsyncMock, return_value=updated_agent
+    ):
         result = await AgentDAO.update_xp_and_level(
-            mock_session,
-            test_agent.agent_id,
-            xp_delta=1.0
+            mock_session, test_agent.agent_id, xp_delta=1.0
         )
 
         assert result.updated_at > old_updated_at
@@ -232,14 +233,14 @@ async def test_negative_xp_delta(mock_session, test_agent):
         features_config=test_agent.features_config,
         created_at=test_agent.created_at,
         updated_at=datetime.utcnow(),
-        last_query_at=test_agent.last_query_at
+        last_query_at=test_agent.last_query_at,
     )
 
-    with patch.object(AgentDAO, 'get_agent', new_callable=AsyncMock, return_value=updated_agent):
+    with patch.object(
+        AgentDAO, "get_agent", new_callable=AsyncMock, return_value=updated_agent
+    ):
         result = await AgentDAO.update_xp_and_level(
-            mock_session,
-            test_agent.agent_id,
-            xp_delta=-5.0
+            mock_session, test_agent.agent_id, xp_delta=-5.0
         )
 
         assert result.current_xp == 15.0
@@ -249,11 +250,9 @@ async def test_negative_xp_delta(mock_session, test_agent):
 
 @pytest.mark.asyncio
 async def test_agent_not_found(mock_session, test_agent):
-    with patch.object(AgentDAO, 'get_agent', new_callable=AsyncMock, return_value=None):
+    with patch.object(AgentDAO, "get_agent", new_callable=AsyncMock, return_value=None):
         result = await AgentDAO.update_xp_and_level(
-            mock_session,
-            test_agent.agent_id,
-            xp_delta=5.0
+            mock_session, test_agent.agent_id, xp_delta=5.0
         )
 
         assert result is None

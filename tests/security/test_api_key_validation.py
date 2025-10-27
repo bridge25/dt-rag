@@ -18,21 +18,30 @@ from fastapi import HTTPException, Request
 from fastapi.testclient import TestClient
 
 # Add project root to Python path if not already present
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 try:
     from apps.api.deps import (
-        APIKeyValidator, verify_api_key, _check_rate_limit,
-        _hash_api_key, _log_security_event
+        APIKeyValidator,
+        verify_api_key,
+        _check_rate_limit,
+        _hash_api_key,
+        _log_security_event,
     )
     from apps.api.security import (
-        SecureAPIKeyGenerator, APIKeyConfig, APIKeyManager,
-        APIKeyCreateRequest, generate_production_key
+        SecureAPIKeyGenerator,
+        APIKeyConfig,
+        APIKeyManager,
+        APIKeyCreateRequest,
+        generate_production_key,
     )
 except ImportError as e:
-    pytest.skip(f"Required modules not available for testing: {e}", allow_module_level=True)
+    pytest.skip(
+        f"Required modules not available for testing: {e}", allow_module_level=True
+    )
+
 
 class TestAPIKeyValidator:
     """Test the API key format validation logic"""
@@ -55,12 +64,20 @@ class TestAPIKeyValidator:
     def test_character_composition_validation(self):
         """Test character composition requirements"""
         # Valid keys with mixed character types
-        assert APIKeyValidator.validate_character_composition("Abc123!@#$%^&*()_+-=[]{}|;:,.<>?")
-        assert APIKeyValidator.validate_character_composition("MySecureKey2023WithSpecial!")
+        assert APIKeyValidator.validate_character_composition(
+            "Abc123!@#$%^&*()_+-=[]{}|;:,.<>?"
+        )
+        assert APIKeyValidator.validate_character_composition(
+            "MySecureKey2023WithSpecial!"
+        )
 
         # Invalid keys
-        assert not APIKeyValidator.validate_character_composition("onlylowercase")  # Too short + single type
-        assert not APIKeyValidator.validate_character_composition("12345")  # Too short + single type
+        assert not APIKeyValidator.validate_character_composition(
+            "onlylowercase"
+        )  # Too short + single type
+        assert not APIKeyValidator.validate_character_composition(
+            "12345"
+        )  # Too short + single type
         assert not APIKeyValidator.validate_character_composition("abc")  # Too short
 
     def test_weak_pattern_detection(self):
@@ -70,23 +87,45 @@ class TestAPIKeyValidator:
         assert APIKeyValidator.check_weak_patterns("SecureRandomKey2023WithoutPatterns")
 
         # Invalid keys with weak patterns
-        assert not APIKeyValidator.check_weak_patterns("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")  # Repeated chars
-        assert not APIKeyValidator.check_weak_patterns("1234567890123456789012345678901234")  # Sequential
-        assert not APIKeyValidator.check_weak_patterns("passwordsecretadmintestdemoexample")  # Common words
-        assert not APIKeyValidator.check_weak_patterns("qwertyuiopasdfghjklzxcvbnmqwertyu")  # Keyboard pattern
+        assert not APIKeyValidator.check_weak_patterns(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        )  # Repeated chars
+        assert not APIKeyValidator.check_weak_patterns(
+            "1234567890123456789012345678901234"
+        )  # Sequential
+        assert not APIKeyValidator.check_weak_patterns(
+            "passwordsecretadmintestdemoexample"
+        )  # Common words
+        assert not APIKeyValidator.check_weak_patterns(
+            "qwertyuiopasdfghjklzxcvbnmqwertyu"
+        )  # Keyboard pattern
 
     def test_format_validation(self):
         """Test API key format validation"""
         # Valid formats
-        assert APIKeyValidator.validate_format("YWJjZGVmZ2hpams123456789012345678") == "base64"
-        assert APIKeyValidator.validate_format("abcdef1234567890abcdef1234567890ab") == "hex"
-        assert APIKeyValidator.validate_format("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef12") == "alphanumeric"
-        assert APIKeyValidator.validate_format("SecureKey2023_with-dots.and_dash123") == "secure"
+        assert (
+            APIKeyValidator.validate_format("YWJjZGVmZ2hpams123456789012345678")
+            == "base64"
+        )
+        assert (
+            APIKeyValidator.validate_format("abcdef1234567890abcdef1234567890ab")
+            == "hex"
+        )
+        assert (
+            APIKeyValidator.validate_format("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef12")
+            == "alphanumeric"
+        )
+        assert (
+            APIKeyValidator.validate_format("SecureKey2023_with-dots.and_dash123")
+            == "secure"
+        )
 
         # Invalid formats
         assert APIKeyValidator.validate_format("") == "empty"
         assert APIKeyValidator.validate_format("abc") == "invalid"
-        assert APIKeyValidator.validate_format("invalid@#$%^&*()characters") == "invalid"
+        assert (
+            APIKeyValidator.validate_format("invalid@#$%^&*()characters") == "invalid"
+        )
 
     def test_comprehensive_validation(self):
         """Test the complete validation pipeline"""
@@ -100,9 +139,12 @@ class TestAPIKeyValidator:
         assert not is_valid
         assert any("32 characters" in error for error in errors)
 
-        is_valid, errors = APIKeyValidator.comprehensive_validate("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        is_valid, errors = APIKeyValidator.comprehensive_validate(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        )
         assert not is_valid
         assert any("entropy" in error.lower() for error in errors)
+
 
 class TestSecureAPIKeyGenerator:
     """Test the secure API key generation"""
@@ -131,7 +173,9 @@ class TestSecureAPIKeyGenerator:
         assert len(key) == 32
 
         # Test with special characters
-        key_with_special = SecureAPIKeyGenerator.generate_mixed_key(32, include_special=True)
+        key_with_special = SecureAPIKeyGenerator.generate_mixed_key(
+            32, include_special=True
+        )
         assert len(key_with_special) == 32
 
     def test_entropy_validation(self):
@@ -144,10 +188,7 @@ class TestSecureAPIKeyGenerator:
     def test_api_key_generation_with_config(self):
         """Test API key generation with different configurations"""
         config = APIKeyConfig(
-            length=40,
-            format_type="base64",
-            prefix="test",
-            checksum=True
+            length=40, format_type="base64", prefix="test", checksum=True
         )
 
         generated_key = SecureAPIKeyGenerator.generate_api_key(config)
@@ -158,7 +199,9 @@ class TestSecureAPIKeyGenerator:
     def test_key_strength_validation(self):
         """Test validation of generated key strength"""
         generated_key = generate_production_key()
-        is_strong, issues = SecureAPIKeyGenerator.validate_generated_key_strength(generated_key)
+        is_strong, issues = SecureAPIKeyGenerator.validate_generated_key_strength(
+            generated_key
+        )
         assert is_strong, f"Production key should be strong, issues: {issues}"
 
     def test_hash_verification(self):
@@ -172,6 +215,7 @@ class TestSecureAPIKeyGenerator:
         # Should not verify with wrong key
         assert not SecureAPIKeyGenerator.verify_key_hash("wrong-key", key_hash)
 
+
 class TestRateLimiting:
     """Test rate limiting functionality"""
 
@@ -179,6 +223,7 @@ class TestRateLimiting:
         """Clear rate limiting storage before each test"""
         try:
             from apps.api.deps import _api_key_attempts, _blocked_keys
+
             _api_key_attempts.clear()
             _blocked_keys.clear()
         except ImportError:
@@ -196,7 +241,9 @@ class TestRateLimiting:
             assert _check_rate_limit(client_ip, api_key), f"Attempt {i+1} should pass"
 
         # 6th attempt should fail
-        assert not _check_rate_limit(client_ip, api_key), "6th attempt should be rate limited"
+        assert not _check_rate_limit(
+            client_ip, api_key
+        ), "6th attempt should be rate limited"
 
     def test_rate_limiting_time_window(self):
         """Test rate limiting time window cleanup"""
@@ -211,6 +258,7 @@ class TestRateLimiting:
         except ImportError:
             pytest.skip("Rate limiting modules not available for testing")
         import time
+
         old_time = time.time() - 120  # 2 minutes ago
         _api_key_attempts[client_ip] = [old_time] * 10
 
@@ -233,10 +281,11 @@ class TestRateLimiting:
         assert not _check_rate_limit(ip1, api_key), "IP1 should be rate limited"
         assert _check_rate_limit(ip2, api_key), "IP2 should still work"
 
+
 class TestSecurityLogging:
     """Test security event logging"""
 
-    @patch('apps.api.deps.security_logger', autospec=True)
+    @patch("apps.api.deps.security_logger", autospec=True)
     def test_security_event_logging(self, mock_logger):
         """Test that security events are logged properly"""
         api_key = "test-api-key-for-logging"
@@ -269,6 +318,7 @@ class TestSecurityLogging:
         # Should be shortened (16 chars)
         assert len(hash1) == 16
 
+
 @pytest.mark.asyncio
 class TestAPIKeyValidationIntegration:
     """Integration tests for the complete API key validation flow"""
@@ -297,7 +347,7 @@ class TestAPIKeyValidationIntegration:
         assert exc_info.value.status_code == 403
         assert "Invalid API key format" in exc_info.value.detail["error"]
 
-    @patch('apps.api.deps.get_async_session', autospec=True)
+    @patch("apps.api.deps.get_async_session", autospec=True)
     async def test_valid_api_key_flow(self, mock_get_session):
         """Test complete validation flow with valid API key"""
         # Mock database session and manager
@@ -308,7 +358,7 @@ class TestAPIKeyValidationIntegration:
         generated_key = generate_production_key()
 
         # Mock successful database validation
-        with patch('apps.api.deps.APIKeyManager', autospec=True) as mock_manager_class:
+        with patch("apps.api.deps.APIKeyManager", autospec=True) as mock_manager_class:
             mock_manager = AsyncMock()
             mock_manager_class.return_value = mock_manager
 
@@ -351,6 +401,7 @@ class TestAPIKeyValidationIntegration:
 
         assert exc_info.value.status_code == 429
 
+
 class TestProductionReadiness:
     """Test production readiness and edge cases"""
 
@@ -372,7 +423,9 @@ class TestProductionReadiness:
         memory_increase = final_memory - initial_memory
 
         # Should not increase memory by more than 50MB
-        assert memory_increase < 50 * 1024 * 1024, f"Memory increase too high: {memory_increase / 1024 / 1024:.1f}MB"
+        assert (
+            memory_increase < 50 * 1024 * 1024
+        ), f"Memory increase too high: {memory_increase / 1024 / 1024:.1f}MB"
 
     def test_performance_benchmarks(self):
         """Test performance of key validation"""
@@ -404,7 +457,9 @@ class TestProductionReadiness:
 
         def validate_key():
             try:
-                is_valid, validation_errors = APIKeyValidator.comprehensive_validate(generated_key.key)
+                is_valid, validation_errors = APIKeyValidator.comprehensive_validate(
+                    generated_key.key
+                )
                 results.put(is_valid)
             except Exception as e:
                 errors.put(e)
@@ -427,6 +482,7 @@ class TestProductionReadiness:
         # All should be valid
         while not results.empty():
             assert results.get() == True
+
 
 if __name__ == "__main__":
     # Run tests manually for development

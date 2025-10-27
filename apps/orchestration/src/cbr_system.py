@@ -6,10 +6,9 @@ A팀 case_bank 테이블 연동 + 유사도 로그/성과 레이블 적재 (PRD 
 import json
 import logging
 import os
-import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import httpx
 import numpy as np
@@ -360,7 +359,6 @@ class CBRUsageLogger:
             logger.error(f"로그 쓰기 실패: {e}")
 
 
-import numpy as np
 
 # 실제 임베딩 모델 초기화
 from sentence_transformers import SentenceTransformer

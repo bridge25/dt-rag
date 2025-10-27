@@ -19,7 +19,7 @@ import asyncio
 from apps.orchestration.src.langgraph_pipeline import (
     get_pipeline,
     PipelineRequest,
-    PipelineResponse
+    PipelineResponse,
 )
 
 
@@ -29,8 +29,7 @@ async def test_pipeline_basic_execution():
     pipeline = get_pipeline()
 
     request = PipelineRequest(
-        query="머신러닝이란 무엇인가요?",
-        taxonomy_version="1.0.0"
+        query="머신러닝이란 무엇인가요?", taxonomy_version="1.0.0"
     )
 
     response = await pipeline.execute(request)
@@ -70,8 +69,8 @@ async def test_pipeline_with_canonical_filter():
         taxonomy_version="1.0.0",
         canonical_filter=[
             ["Technology", "AI", "Machine Learning"],
-            ["Technology", "Software"]
-        ]
+            ["Technology", "Software"],
+        ],
     )
 
     response = await pipeline.execute(request)
@@ -88,10 +87,7 @@ async def test_pipeline_step_timings():
     """Test individual step timings"""
     pipeline = get_pipeline()
 
-    request = PipelineRequest(
-        query="파이썬 프로그래밍",
-        taxonomy_version="1.0.0"
-    )
+    request = PipelineRequest(query="파이썬 프로그래밍", taxonomy_version="1.0.0")
 
     response = await pipeline.execute(request)
 
@@ -119,8 +115,7 @@ async def test_pipeline_empty_results():
 
     # Query that likely returns no results
     request = PipelineRequest(
-        query="xyzabc123nonexistentquery456",
-        taxonomy_version="1.0.0"
+        query="xyzabc123nonexistentquery456", taxonomy_version="1.0.0"
     )
 
     response = await pipeline.execute(request)
@@ -145,11 +140,11 @@ async def test_pipeline_timeout_enforcement():
     pipeline = get_pipeline()
 
     request = PipelineRequest(
-        query="복잡한 질문 with many results",
-        taxonomy_version="1.0.0"
+        query="복잡한 질문 with many results", taxonomy_version="1.0.0"
     )
 
     import time
+
     start = time.time()
     response = await pipeline.execute(request)
     elapsed = time.time() - start

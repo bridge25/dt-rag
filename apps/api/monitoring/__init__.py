@@ -10,6 +10,7 @@ from .dashboard import MonitoringDashboard
 # Sentry monitoring (optional)
 try:
     from . import sentry_reporter  # noqa: F401
+
     SENTRY_AVAILABLE = True
 except ImportError:
     SENTRY_AVAILABLE = False
@@ -19,5 +20,5 @@ __all__ = [
     "get_metrics_collector",
     "HealthChecker",
     "get_health_checker",
-    "MonitoringDashboard"
+    "MonitoringDashboard",
 ]

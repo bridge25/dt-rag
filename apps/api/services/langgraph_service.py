@@ -17,7 +17,7 @@ from apps.orchestration.src.langgraph_pipeline import (
     LangGraphPipeline,
     PipelineRequest as LangGraphRequest,
     PipelineResponse as LangGraphResponse,
-    get_pipeline
+    get_pipeline,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class LangGraphService:
         query: str,
         taxonomy_version: Optional[str] = None,
         canonical_filter: Optional[List[List[str]]] = None,
-        options: Optional[Dict[str, Any]] = None
+        options: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Execute the 7-step RAG pipeline
@@ -65,7 +65,7 @@ class LangGraphService:
                 query=query,
                 taxonomy_version=taxonomy_version or "1.0.0",
                 canonical_filter=canonical_filter,
-                options=options or {}
+                options=options or {},
             )
 
             # Execute pipeline
@@ -84,7 +84,7 @@ class LangGraphService:
                 "pipeline_metadata": {
                     "step_timings": result.step_timings,
                     "steps_executed": list(result.step_timings.keys()),
-                }
+                },
             }
 
             logger.info(

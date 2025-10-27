@@ -18,7 +18,7 @@ class E2EIntegrationTestSuite:
             "debate_mode": True,
             "adaptive_retrieval": True,
             "meta_planner": True,
-            "tools_enabled": True
+            "tools_enabled": True,
         }
 
     @pytest.mark.e2e
@@ -78,6 +78,7 @@ class E2EIntegrationTestSuite:
     def teardown_method(self, method):
         """Reset configurations after each test"""
         pass
+
 
 if __name__ == "__main__":
     pytest.main(["-v", "test_phase_integration_e2e.py"])

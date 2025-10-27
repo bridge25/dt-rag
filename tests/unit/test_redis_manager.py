@@ -15,10 +15,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 # Import the modules under test
-from apps.api.cache.redis_manager import (
-    RedisConfig,
-    RedisManager
-)
+from apps.api.cache.redis_manager import RedisConfig, RedisManager
 
 
 class TestRedisConfig:
@@ -66,7 +63,7 @@ class TestRedisConfig:
             max_connections=100,
             socket_timeout=10.0,
             enable_compression=False,
-            default_ttl=7200
+            default_ttl=7200,
         )
 
         assert config.host == "redis.example.com"
@@ -97,22 +94,22 @@ class TestRedisConfig:
 
         assert config.ttl_configs is not None
         assert isinstance(config.ttl_configs, dict)
-        assert 'search_results' in config.ttl_configs
-        assert 'embeddings' in config.ttl_configs
-        assert 'query_suggestions' in config.ttl_configs
-        assert 'user_preferences' in config.ttl_configs
-        assert 'health_check' in config.ttl_configs
-        assert 'metrics' in config.ttl_configs
+        assert "search_results" in config.ttl_configs
+        assert "embeddings" in config.ttl_configs
+        assert "query_suggestions" in config.ttl_configs
+        assert "user_preferences" in config.ttl_configs
+        assert "health_check" in config.ttl_configs
+        assert "metrics" in config.ttl_configs
 
         # Check specific TTL values
-        assert config.ttl_configs['search_results'] == 3600
-        assert config.ttl_configs['embeddings'] == 86400 * 7
-        assert config.ttl_configs['health_check'] == 300
+        assert config.ttl_configs["search_results"] == 3600
+        assert config.ttl_configs["embeddings"] == 86400 * 7
+        assert config.ttl_configs["health_check"] == 300
 
     @pytest.mark.unit
     def test_redis_config_custom_ttl_configs(self):
         """Test RedisConfig with custom TTL configurations"""
-        custom_ttl = {'custom_key': 1800}
+        custom_ttl = {"custom_key": 1800}
         config = RedisConfig(ttl_configs=custom_ttl)
 
         assert config.ttl_configs == custom_ttl
@@ -132,11 +129,7 @@ class TestRedisManager:
     @pytest.fixture
     def redis_config(self):
         """Create Redis configuration for testing"""
-        return RedisConfig(
-            host="test-redis",
-            port=6379,
-            default_ttl=1800
-        )
+        return RedisConfig(host="test-redis", port=6379, default_ttl=1800)
 
     @pytest.fixture
     def redis_manager(self, redis_config):
@@ -170,9 +163,9 @@ class TestRedisManager:
         assert manager.max_retry_attempts == 3
 
         # Check stats initialization
-        assert manager.stats['operations_total'] == 0
-        assert manager.stats['operations_success'] == 0
-        assert manager.stats['operations_failed'] == 0
+        assert manager.stats["operations_total"] == 0
+        assert manager.stats["operations_success"] == 0
+        assert manager.stats["operations_failed"] == 0
 
     @pytest.mark.unit
     def test_redis_manager_init_without_config(self):
@@ -185,17 +178,19 @@ class TestRedisManager:
     @pytest.mark.unit
     async def test_initialize_redis_not_available(self, redis_manager):
         """Test initialization when Redis is not available"""
-        with patch('apps.api.cache.redis_manager.REDIS_AVAILABLE', False):
+        with patch("apps.api.cache.redis_manager.REDIS_AVAILABLE", False):
             result = await redis_manager.initialize()
 
             assert result is False
             assert redis_manager.is_connected is False
 
     @pytest.mark.unit
-    async def test_initialize_redis_available_success(self, redis_manager, mock_redis_client):
+    async def test_initialize_redis_available_success(
+        self, redis_manager, mock_redis_client
+    ):
         """Test successful initialization when Redis is available"""
-        with patch('apps.api.cache.redis_manager.REDIS_AVAILABLE', True):
-            with patch('apps.api.cache.redis_manager.redis') as mock_redis:
+        with patch("apps.api.cache.redis_manager.REDIS_AVAILABLE", True):
+            with patch("apps.api.cache.redis_manager.redis") as mock_redis:
                 mock_pool = Mock()
                 mock_redis.ConnectionPool.return_value = mock_pool
                 mock_redis.Redis.return_value = mock_redis_client
@@ -209,13 +204,18 @@ class TestRedisManager:
                 mock_redis_client.ping.assert_called_once()
 
     @pytest.mark.unit
-    async def test_initialize_redis_connection_error(self, redis_manager, mock_redis_client):
+    async def test_initialize_redis_connection_error(
+        self, redis_manager, mock_redis_client
+    ):
         """Test initialization with Redis connection error"""
-        with patch('apps.api.cache.redis_manager.REDIS_AVAILABLE', True):
-            with patch('apps.api.cache.redis_manager.redis') as mock_redis:
+        with patch("apps.api.cache.redis_manager.REDIS_AVAILABLE", True):
+            with patch("apps.api.cache.redis_manager.redis") as mock_redis:
                 # Configure mock to raise ConnectionError
                 from redis.exceptions import ConnectionError
-                mock_redis_client.ping.side_effect = ConnectionError("Connection failed")
+
+                mock_redis_client.ping.side_effect = ConnectionError(
+                    "Connection failed"
+                )
                 mock_redis.Redis.return_value = mock_redis_client
 
                 result = await redis_manager.initialize()
@@ -231,7 +231,9 @@ class TestRedisManager:
         assert result is None
 
     @pytest.mark.unit
-    async def test_get_redis_connected_key_exists(self, redis_manager, mock_redis_client):
+    async def test_get_redis_connected_key_exists(
+        self, redis_manager, mock_redis_client
+    ):
         """Test get operation when key exists"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -246,10 +248,12 @@ class TestRedisManager:
         # Assert
         assert result == test_value
         mock_redis_client.get.assert_called_once_with("test_key")
-        assert redis_manager.stats['operations_success'] == 1
+        assert redis_manager.stats["operations_success"] == 1
 
     @pytest.mark.unit
-    async def test_get_redis_connected_key_not_exists(self, redis_manager, mock_redis_client):
+    async def test_get_redis_connected_key_not_exists(
+        self, redis_manager, mock_redis_client
+    ):
         """Test get operation when key does not exist"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -270,6 +274,7 @@ class TestRedisManager:
         redis_manager.client = mock_redis_client
         redis_manager.is_connected = True
         from redis.exceptions import RedisError
+
         mock_redis_client.get.side_effect = RedisError("Redis error")
 
         # Execute
@@ -277,7 +282,7 @@ class TestRedisManager:
 
         # Assert
         assert result is None
-        assert redis_manager.stats['operations_failed'] == 1
+        assert redis_manager.stats["operations_failed"] == 1
 
     @pytest.mark.unit
     async def test_set_redis_not_connected(self, redis_manager):
@@ -329,6 +334,7 @@ class TestRedisManager:
         redis_manager.client = mock_redis_client
         redis_manager.is_connected = True
         from redis.exceptions import RedisError
+
         mock_redis_client.set.side_effect = RedisError("Redis error")
 
         # Execute
@@ -336,7 +342,7 @@ class TestRedisManager:
 
         # Assert
         assert result is False
-        assert redis_manager.stats['operations_failed'] == 1
+        assert redis_manager.stats["operations_failed"] == 1
 
     @pytest.mark.unit
     async def test_delete_redis_not_connected(self, redis_manager):
@@ -346,7 +352,9 @@ class TestRedisManager:
         assert result is False
 
     @pytest.mark.unit
-    async def test_delete_redis_connected_success(self, redis_manager, mock_redis_client):
+    async def test_delete_redis_connected_success(
+        self, redis_manager, mock_redis_client
+    ):
         """Test successful delete operation"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -359,7 +367,7 @@ class TestRedisManager:
         # Assert
         assert result is True
         mock_redis_client.delete.assert_called_once_with("test_key")
-        assert redis_manager.stats['operations_success'] == 1
+        assert redis_manager.stats["operations_success"] == 1
 
     @pytest.mark.unit
     async def test_delete_key_not_exists(self, redis_manager, mock_redis_client):
@@ -383,7 +391,9 @@ class TestRedisManager:
         assert result is False
 
     @pytest.mark.unit
-    async def test_exists_redis_connected_key_exists(self, redis_manager, mock_redis_client):
+    async def test_exists_redis_connected_key_exists(
+        self, redis_manager, mock_redis_client
+    ):
         """Test exists operation when key exists"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -398,7 +408,9 @@ class TestRedisManager:
         mock_redis_client.exists.assert_called_once_with("test_key")
 
     @pytest.mark.unit
-    async def test_exists_redis_connected_key_not_exists(self, redis_manager, mock_redis_client):
+    async def test_exists_redis_connected_key_not_exists(
+        self, redis_manager, mock_redis_client
+    ):
         """Test exists operation when key does not exist"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -419,7 +431,9 @@ class TestRedisManager:
         assert result is False
 
     @pytest.mark.unit
-    async def test_expire_redis_connected_success(self, redis_manager, mock_redis_client):
+    async def test_expire_redis_connected_success(
+        self, redis_manager, mock_redis_client
+    ):
         """Test successful expire operation"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -463,7 +477,9 @@ class TestRedisManager:
         assert result == 0
 
     @pytest.mark.unit
-    async def test_clear_pattern_redis_connected_success(self, redis_manager, mock_redis_client):
+    async def test_clear_pattern_redis_connected_success(
+        self, redis_manager, mock_redis_client
+    ):
         """Test successful clear_pattern operation"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -483,38 +499,40 @@ class TestRedisManager:
     def test_get_stats(self, redis_manager):
         """Test getting Redis manager statistics"""
         # Setup some stats
-        redis_manager.stats['operations_total'] = 100
-        redis_manager.stats['operations_success'] = 95
-        redis_manager.stats['operations_failed'] = 5
+        redis_manager.stats["operations_total"] = 100
+        redis_manager.stats["operations_success"] = 95
+        redis_manager.stats["operations_failed"] = 5
 
         # Execute
         stats = redis_manager.get_stats()
 
         # Assert
-        assert stats['operations_total'] == 100
-        assert stats['operations_success'] == 95
-        assert stats['operations_failed'] == 5
-        assert 'success_rate' in stats
-        assert stats['success_rate'] == 0.95
+        assert stats["operations_total"] == 100
+        assert stats["operations_success"] == 95
+        assert stats["operations_failed"] == 5
+        assert "success_rate" in stats
+        assert stats["success_rate"] == 0.95
 
     @pytest.mark.unit
     def test_get_stats_no_operations(self, redis_manager):
         """Test getting stats when no operations performed"""
         stats = redis_manager.get_stats()
 
-        assert stats['success_rate'] == 0.0
+        assert stats["success_rate"] == 0.0
 
     @pytest.mark.unit
     async def test_health_check_redis_not_connected(self, redis_manager):
         """Test health check when Redis is not connected"""
         health = await redis_manager.health_check()
 
-        assert health['status'] == 'disconnected'
-        assert health['connected'] is False
-        assert 'error' in health
+        assert health["status"] == "disconnected"
+        assert health["connected"] is False
+        assert "error" in health
 
     @pytest.mark.unit
-    async def test_health_check_redis_connected_healthy(self, redis_manager, mock_redis_client):
+    async def test_health_check_redis_connected_healthy(
+        self, redis_manager, mock_redis_client
+    ):
         """Test health check when Redis is connected and healthy"""
         # Setup
         redis_manager.client = mock_redis_client
@@ -525,28 +543,31 @@ class TestRedisManager:
         health = await redis_manager.health_check()
 
         # Assert
-        assert health['status'] == 'healthy'
-        assert health['connected'] is True
-        assert health['ping_success'] is True
-        assert 'response_time_ms' in health
+        assert health["status"] == "healthy"
+        assert health["connected"] is True
+        assert health["ping_success"] is True
+        assert "response_time_ms" in health
         mock_redis_client.ping.assert_called_once()
 
     @pytest.mark.unit
-    async def test_health_check_redis_connected_unhealthy(self, redis_manager, mock_redis_client):
+    async def test_health_check_redis_connected_unhealthy(
+        self, redis_manager, mock_redis_client
+    ):
         """Test health check when Redis is connected but ping fails"""
         # Setup
         redis_manager.client = mock_redis_client
         redis_manager.is_connected = True
         from redis.exceptions import RedisError
+
         mock_redis_client.ping.side_effect = RedisError("Ping failed")
 
         # Execute
         health = await redis_manager.health_check()
 
         # Assert
-        assert health['status'] == 'unhealthy'
-        assert health['connected'] is True
-        assert health['ping_success'] is False
+        assert health["status"] == "unhealthy"
+        assert health["connected"] is True
+        assert health["ping_success"] is False
 
     @pytest.mark.unit
     async def test_close_redis_connected(self, redis_manager, mock_redis_client):
@@ -604,7 +625,7 @@ class TestRedisManagerSerialization:
         data = {
             "list": [1, 2, 3],
             "nested": {"inner": "value"},
-            "datetime": datetime.now().isoformat()
+            "datetime": datetime.now().isoformat(),
         }
 
         serialized = redis_manager_without_compression._serialize(data)
@@ -614,17 +635,21 @@ class TestRedisManagerSerialization:
         assert deserialized["nested"]["inner"] == "value"
 
     @pytest.mark.unit
-    def test_serialize_with_compression_small_data(self, redis_manager_with_compression):
+    def test_serialize_with_compression_small_data(
+        self, redis_manager_with_compression
+    ):
         """Test serialization with compression for small data (below threshold)"""
         data = {"small": "data"}
 
         serialized = redis_manager_with_compression._serialize(data)
 
         # Small data should not be compressed
-        assert not serialized.startswith(b'\x1f\x8b')  # gzip magic number
+        assert not serialized.startswith(b"\x1f\x8b")  # gzip magic number
 
     @pytest.mark.unit
-    def test_serialize_with_compression_large_data(self, redis_manager_with_compression):
+    def test_serialize_with_compression_large_data(
+        self, redis_manager_with_compression
+    ):
         """Test serialization with compression for large data"""
         # Create large data that exceeds compression threshold
         data = {"large_data": "x" * 1000}
@@ -632,7 +657,7 @@ class TestRedisManagerSerialization:
         serialized = redis_manager_with_compression._serialize(data)
 
         # Large data should be compressed (starts with gzip magic number)
-        assert serialized.startswith(b'\x1f\x8b')
+        assert serialized.startswith(b"\x1f\x8b")
 
     @pytest.mark.unit
     def test_deserialize_simple_data(self, redis_manager_without_compression):
@@ -682,18 +707,23 @@ class TestRedisManagerIntegration:
             host="localhost",
             port=6379,
             enable_compression=True,
-            compression_threshold=100
+            compression_threshold=100,
         )
         return RedisManager(config)
 
     @pytest.mark.unit
-    async def test_full_operation_cycle(self, redis_manager_integration, mock_redis_client):
+    async def test_full_operation_cycle(
+        self, redis_manager_integration, mock_redis_client
+    ):
         """Test complete cycle of set, get, exists, expire, delete operations"""
         # Setup
         redis_manager_integration.client = mock_redis_client
         redis_manager_integration.is_connected = True
 
-        test_data = {"test": "integration_data", "timestamp": datetime.now().isoformat()}
+        test_data = {
+            "test": "integration_data",
+            "timestamp": datetime.now().isoformat(),
+        }
         key = "integration_test_key"
 
         # Mock responses
@@ -767,4 +797,4 @@ class TestRedisManagerIntegration:
         assert set_result is False
 
         # Check error stats
-        assert redis_manager_integration.stats['operations_failed'] == 2
+        assert redis_manager_integration.stats["operations_failed"] == 2

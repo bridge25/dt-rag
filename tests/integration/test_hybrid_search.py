@@ -42,7 +42,7 @@ class TestHybridSearchE2E:
                     query_vector=[0.1 * i] * 1536,
                     quality_score=0.8,
                     usage_count=10,
-                    success_rate=0.9
+                    success_rate=0.9,
                 )
                 for i in range(1, 11)
             ]
@@ -63,8 +63,8 @@ class TestHybridSearchE2E:
             json={
                 "q": "test query neural search",
                 "max_results": 5,
-                "use_neural": True
-            }
+                "use_neural": True,
+            },
         )
 
         # Assertions
@@ -83,7 +83,9 @@ class TestHybridSearchE2E:
 
         # Cleanup
         async with async_session() as session:
-            await session.execute(text("DELETE FROM case_bank WHERE case_id LIKE 'test_case_%'"))
+            await session.execute(
+                text("DELETE FROM case_bank WHERE case_id LIKE 'test_case_%'")
+            )
             await session.commit()
 
     @pytest.mark.integration
@@ -111,14 +113,13 @@ class TestHybridSearchE2E:
             await asyncio.sleep(0.15)  # Exceeds 100ms
             raise asyncio.TimeoutError("Vector search timeout")
 
-        with patch("apps.api.neural_selector.vector_similarity_search", side_effect=timeout_vector_search):
+        with patch(
+            "apps.api.neural_selector.vector_similarity_search",
+            side_effect=timeout_vector_search,
+        ):
             response = client.post(
                 "/search",
-                json={
-                    "q": "test query",
-                    "max_results": 5,
-                    "use_neural": True
-                }
+                json={"q": "test query", "max_results": 5, "use_neural": True},
             )
 
             # Should fallback to BM25
@@ -148,14 +149,13 @@ class TestHybridSearchE2E:
         client = TestClient(app)
 
         # Mock embedding generation to fail
-        with patch("apps.api.database.EmbeddingService.generate_embedding", side_effect=Exception("API Error")):
+        with patch(
+            "apps.api.database.EmbeddingService.generate_embedding",
+            side_effect=Exception("API Error"),
+        ):
             response = client.post(
                 "/search",
-                json={
-                    "q": "test query",
-                    "max_results": 5,
-                    "use_neural": True
-                }
+                json={"q": "test query", "max_results": 5, "use_neural": True},
             )
 
             # Should fallback to BM25
@@ -192,8 +192,8 @@ class TestHybridSearchE2E:
             json={
                 "q": "test query",
                 "max_results": 5,
-                "use_neural": False  # Explicit BM25 request
-            }
+                "use_neural": False,  # Explicit BM25 request
+            },
         )
 
         assert response.status_code == 200
@@ -252,8 +252,8 @@ class TestHybridSearchE2E:
             json={
                 "q": "machine learning neural networks",
                 "max_results": 10,
-                "use_neural": True
-            }
+                "use_neural": True,
+            },
         )
 
         assert response.status_code == 200
@@ -279,11 +279,7 @@ class TestSearchRequestModel:
         """
         from packages.common_schemas.common_schemas.models import SearchRequest
 
-        request = SearchRequest(
-            q="test query",
-            max_results=10,
-            use_neural=True
-        )
+        request = SearchRequest(q="test query", max_results=10, use_neural=True)
 
         assert hasattr(request, "use_neural")
         assert request.use_neural == True
@@ -300,10 +296,7 @@ class TestSearchRequestModel:
         """
         from packages.common_schemas.common_schemas.models import SearchRequest
 
-        request = SearchRequest(
-            q="test query",
-            max_results=10
-        )
+        request = SearchRequest(q="test query", max_results=10)
 
         # Should default to False (BM25 only)
         assert request.use_neural == False
@@ -331,7 +324,7 @@ class TestSearchResponseModel:
             total_candidates=100,
             sources_count=10,
             taxonomy_version="1.8.1",
-            mode="hybrid"
+            mode="hybrid",
         )
 
         assert hasattr(response, "mode")

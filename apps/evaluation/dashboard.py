@@ -29,6 +29,7 @@ dashboard_router = APIRouter(prefix="/dashboard", tags=["Evaluation Dashboard"])
 quality_monitor = QualityMonitor()
 experiment_tracker = ExperimentTracker()
 
+
 # WebSocket connection manager
 class ConnectionManager:
     def __init__(self):
@@ -50,6 +51,7 @@ class ConnectionManager:
                 await connection.send_text(message)
             except Exception:
                 self.active_connections.remove(connection)
+
 
 manager = ConnectionManager()
 
@@ -394,10 +396,12 @@ DASHBOARD_HTML = """
 </html>
 """
 
+
 @dashboard_router.get("/", response_class=HTMLResponse)
 async def get_dashboard(request: Request):
     """Get the evaluation dashboard HTML page"""
     return HTMLResponse(content=DASHBOARD_HTML)
+
 
 @dashboard_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -415,7 +419,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
             try:
                 dashboard_data = await get_dashboard_data()
-                await manager.send_personal_message(json.dumps(dashboard_data), websocket)
+                await manager.send_personal_message(
+                    json.dumps(dashboard_data), websocket
+                )
             except Exception as e:
                 print(f"Error sending dashboard update: {e}")
                 break
@@ -425,6 +431,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"WebSocket error: {e}")
         manager.disconnect(websocket)
+
 
 async def get_dashboard_data() -> Dict[str, Any]:
     """Get comprehensive dashboard data"""
@@ -448,14 +455,12 @@ async def get_dashboard_data() -> Dict[str, Any]:
             "active_alerts": [alert.dict() for alert in active_alerts],
             "quality_gates": quality_status.get("quality_gates", {}),
             "recommendations": quality_status.get("recommendations", []),
-            "system_stats": system_stats
+            "system_stats": system_stats,
         }
 
     except Exception as e:
-        return {
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"error": str(e), "timestamp": datetime.utcnow().isoformat()}
+
 
 async def get_system_statistics() -> Dict[str, Any]:
     """Get system statistics for dashboard"""
@@ -464,7 +469,8 @@ async def get_system_statistics() -> Dict[str, Any]:
             from sqlalchemy import text
 
             # Get recent statistics
-            query = text("""
+            query = text(
+                """
                 SELECT
                     COUNT(*) as total_evaluations,
                     COUNT(CASE WHEN faithfulness >= 0.85 THEN 1 END) as high_quality_responses,
@@ -472,16 +478,19 @@ async def get_system_statistics() -> Dict[str, Any]:
                     COUNT(CASE WHEN is_valid_evaluation = false THEN 1 END) as failed_evaluations
                 FROM search_logs
                 WHERE created_at >= NOW() - INTERVAL '24 hours'
-            """)
+            """
+            )
 
             result = await session.execute(query)
             stats = result.fetchone()
 
             return {
                 "evaluations_24h": int(stats[0]) if stats[0] else 0,
-                "high_quality_rate": float(stats[1]) / max(1, stats[0]) if stats[0] else 0,
+                "high_quality_rate": (
+                    float(stats[1]) / max(1, stats[0]) if stats[0] else 0
+                ),
                 "avg_response_time": float(stats[2]) if stats[2] else 0,
-                "error_rate": float(stats[3]) / max(1, stats[0]) if stats[0] else 0
+                "error_rate": float(stats[3]) / max(1, stats[0]) if stats[0] else 0,
             }
 
     except Exception as e:
@@ -490,13 +499,15 @@ async def get_system_statistics() -> Dict[str, Any]:
             "high_quality_rate": 0,
             "avg_response_time": 0,
             "error_rate": 0,
-            "error": str(e)
+            "error": str(e),
         }
+
 
 @dashboard_router.get("/api/metrics")
 async def get_dashboard_metrics():
     """API endpoint to get current dashboard metrics"""
     return await get_dashboard_data()
+
 
 @dashboard_router.post("/api/simulate-evaluation")
 async def simulate_evaluation():
@@ -510,7 +521,7 @@ async def simulate_evaluation():
         context_precision=random.uniform(0.70, 0.90),
         context_recall=random.uniform(0.65, 0.85),
         answer_relevancy=random.uniform(0.80, 0.95),
-        response_time=random.uniform(0.5, 3.0)
+        response_time=random.uniform(0.5, 3.0),
     )
 
     simulated_result = EvaluationResult(
@@ -519,7 +530,7 @@ async def simulate_evaluation():
         metrics=simulated_metrics,
         quality_flags=[],
         recommendations=[],
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow(),
     )
 
     # Record in quality monitor
@@ -528,5 +539,5 @@ async def simulate_evaluation():
     return {
         "message": "Simulated evaluation recorded",
         "metrics": simulated_metrics.dict(),
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }

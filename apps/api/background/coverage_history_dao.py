@@ -25,7 +25,7 @@ class CoverageHistoryDAO:
         overall_coverage: float,
         total_documents: int,
         total_chunks: int,
-        version: str = "1.0.0"
+        version: str = "1.0.0",
     ) -> UUID:
         """
         Insert coverage history record
@@ -56,7 +56,7 @@ class CoverageHistoryDAO:
             overall_coverage=overall_coverage,
             total_documents=total_documents,
             total_chunks=total_chunks,
-            version=version
+            version=version,
         )
 
         session.add(history)
@@ -75,7 +75,7 @@ class CoverageHistoryDAO:
         agent_id: UUID,
         from_date: Optional[datetime] = None,
         to_date: Optional[datetime] = None,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
     ) -> List[CoverageHistory]:
         """
         Query coverage history for agent

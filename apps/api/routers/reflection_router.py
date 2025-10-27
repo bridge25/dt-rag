@@ -12,7 +12,7 @@ import os
 # Import ReflectionEngine
 import sys
 from datetime import datetime
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import Any, AsyncGenerator, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -120,11 +120,12 @@ async def analyze_case_performance(
         async with db_manager.async_session() as session:
             try:
                 from reflection_engine import ReflectionEngine as RE
+
                 engine = RE(db_session=session)
             except ImportError:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="ReflectionEngine module not available"
+                    detail="ReflectionEngine module not available",
                 )
 
             performance = await engine.analyze_case_performance(
@@ -142,7 +143,9 @@ async def analyze_case_performance(
 
 
 @router.post("/batch", response_model=ReflectionBatchResponse)
-async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) -> ReflectionBatchResponse:
+async def run_reflection_batch(
+    api_key: APIKeyInfo = Depends(verify_api_key),
+) -> ReflectionBatchResponse:
     """
     배치 Reflection 실행
 
@@ -155,11 +158,12 @@ async def run_reflection_batch(api_key: APIKeyInfo = Depends(verify_api_key)) ->
         async with db_manager.async_session() as session:
             try:
                 from reflection_engine import ReflectionEngine as RE
+
                 engine = RE(db_session=session)
             except ImportError:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="ReflectionEngine module not available"
+                    detail="ReflectionEngine module not available",
                 )
 
             results = await engine.run_reflection_batch()
@@ -188,11 +192,12 @@ async def generate_improvement_suggestions(
         async with db_manager.async_session() as session:
             try:
                 from reflection_engine import ReflectionEngine as RE
+
                 engine = RE(db_session=session)
             except ImportError:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="ReflectionEngine module not available"
+                    detail="ReflectionEngine module not available",
                 )
 
             suggestions = await engine.generate_improvement_suggestions(

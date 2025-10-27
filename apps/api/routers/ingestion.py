@@ -1,4 +1,13 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, status, Request
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    Form,
+    HTTPException,
+    Depends,
+    status,
+    Request,
+)
 from fastapi.responses import JSONResponse
 from typing import Optional
 import logging
@@ -42,11 +51,17 @@ async def upload_document(
     http_request: Request = None,
 ):
     try:
-        correlation_id = http_request.headers.get("X-Correlation-ID") if http_request else str(uuid.uuid4())
+        correlation_id = (
+            http_request.headers.get("X-Correlation-ID")
+            if http_request
+            else str(uuid.uuid4())
+        )
         if not correlation_id:
             correlation_id = str(uuid.uuid4())
 
-        idempotency_key = http_request.headers.get("X-Idempotency-Key") if http_request else None
+        idempotency_key = (
+            http_request.headers.get("X-Idempotency-Key") if http_request else None
+        )
 
         file_extension = file.filename.split(".")[-1].lower()
 
@@ -102,10 +117,7 @@ async def upload_document(
 
         estimated_completion_minutes = max(1, len(file_content) // (1024 * 1024))
 
-        response_headers = {
-            "X-Job-ID": job_id,
-            "X-Correlation-ID": correlation_id
-        }
+        response_headers = {"X-Job-ID": job_id, "X-Correlation-ID": correlation_id}
 
         if idempotency_key:
             response_headers["X-Idempotency-Key"] = idempotency_key

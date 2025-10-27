@@ -31,8 +31,7 @@ async def test_rate_limit_concept(async_client: AsyncClient):
     responses = []
     for i in range(5):
         response = await async_client.get(
-            "/health",
-            headers={"X-API-Key": valid_api_key}
+            "/health", headers={"X-API-Key": valid_api_key}
         )
         responses.append(response)
 
@@ -41,8 +40,9 @@ async def test_rate_limit_concept(async_client: AsyncClient):
     assert success_count > 0, "At least some requests should succeed"
 
     # No rate limiting on health endpoint (it doesn't require auth in our setup)
-    assert all(r.status_code in [200, 204] for r in responses), \
-        "Health endpoint should not be rate limited"
+    assert all(
+        r.status_code in [200, 204] for r in responses
+    ), "Health endpoint should not be rate limited"
 
 
 # @TEST:TEST-004-005:AUTH-REQUIRED
@@ -63,7 +63,7 @@ async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient):
         response = await async_client.post(
             "/reflection/analyze",
             json={"case_id": f"test-rate-{i}"},
-            headers={"X-API-Key": valid_api_key}
+            headers={"X-API-Key": valid_api_key},
         )
         responses.append(response)
         # Small delay to avoid overwhelming the API
@@ -71,8 +71,9 @@ async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient):
 
     # All requests should be authenticated (no 401/403)
     auth_failures = [r for r in responses if r.status_code in [401, 403]]
-    assert len(auth_failures) == 0, \
-        f"All requests with valid API key should pass auth, got {len(auth_failures)} auth failures"
+    assert (
+        len(auth_failures) == 0
+    ), f"All requests with valid API key should pass auth, got {len(auth_failures)} auth failures"
 
     # Check for 429 (rate limit exceeded) - may or may not occur depending on setup
     rate_limited = [r for r in responses if r.status_code == 429]
@@ -81,8 +82,9 @@ async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient):
         # If rate limiting occurred, verify it's properly formatted
         for response in rate_limited:
             # Should have Retry-After header
-            assert "retry-after" in response.headers or "Retry-After" in response.headers, \
-                "Rate limited response should include Retry-After header"
+            assert (
+                "retry-after" in response.headers or "Retry-After" in response.headers
+            ), "Rate limited response should include Retry-After header"
 
 
 # @TEST:TEST-004-005:DIFFERENT-KEYS
@@ -103,25 +105,25 @@ async def test_rate_limit_per_api_key(async_client: AsyncClient):
         response = await async_client.post(
             "/reflection/analyze",
             json={"case_id": f"test-key1-{i}"},
-            headers={"X-API-Key": valid_api_key}
+            headers={"X-API-Key": valid_api_key},
         )
         responses_key1.append(response)
 
     # All should be authenticated
-    assert all(r.status_code not in [401, 403] for r in responses_key1), \
-        "All requests with valid key should pass auth"
+    assert all(
+        r.status_code not in [401, 403] for r in responses_key1
+    ), "All requests with valid key should pass auth"
 
     # Test with a different (invalid) key to verify per-key isolation
     invalid_key = "different_invalid_key_12345"
     response_key2 = await async_client.post(
         "/reflection/analyze",
         json={"case_id": "test-key2"},
-        headers={"X-API-Key": invalid_key}
+        headers={"X-API-Key": invalid_key},
     )
 
     # Should fail authentication (not rate limit)
-    assert response_key2.status_code in [401, 403], \
-        "Invalid key should fail auth"
+    assert response_key2.status_code in [401, 403], "Invalid key should fail auth"
 
 
 # @TEST:TEST-004-005:HEADERS
@@ -139,7 +141,7 @@ async def test_rate_limit_headers(async_client: AsyncClient):
     response = await async_client.post(
         "/reflection/analyze",
         json={"case_id": "test-headers"},
-        headers={"X-API-Key": valid_api_key}
+        headers={"X-API-Key": valid_api_key},
     )
 
     # Check for common rate limit headers (optional)
@@ -147,8 +149,10 @@ async def test_rate_limit_headers(async_client: AsyncClient):
     # Note: Not all implementations include these
 
     # At minimum, authenticated requests should not return 401/403
-    assert response.status_code not in [401, 403], \
-        "Valid API key should pass authentication"
+    assert response.status_code not in [
+        401,
+        403,
+    ], "Valid API key should pass authentication"
 
 
 # @TEST:TEST-004-005:429-RESPONSE
@@ -187,10 +191,10 @@ async def test_health_endpoint_not_rate_limited(async_client: AsyncClient):
         responses.append(response)
 
     # All should succeed (no rate limiting)
-    assert all(r.status_code in [200, 204] for r in responses), \
-        "Health endpoint should not be rate limited"
+    assert all(
+        r.status_code in [200, 204] for r in responses
+    ), "Health endpoint should not be rate limited"
 
     # No 429 responses
     rate_limited = [r for r in responses if r.status_code == 429]
-    assert len(rate_limited) == 0, \
-        "Health endpoint should never return 429"
+    assert len(rate_limited) == 0, "Health endpoint should never return 429"

@@ -13,11 +13,16 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///test_execution_log.db"
 TestBase = declarative_base()
 
 import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 from apps.api.database import ExecutionLog, CaseBank
 
-test_engine = create_async_engine("sqlite+aiosqlite:///test_execution_log.db", echo=False)
-test_async_session = async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+test_engine = create_async_engine(
+    "sqlite+aiosqlite:///test_execution_log.db", echo=False
+)
+test_async_session = async_sessionmaker(
+    test_engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -40,7 +45,9 @@ async def setup_database():
 async def cleanup_table():
     yield
     async with test_async_session() as session:
-        await session.execute(select(ExecutionLog).where(ExecutionLog.case_id.like("test-%")))
+        await session.execute(
+            select(ExecutionLog).where(ExecutionLog.case_id.like("test-%"))
+        )
         await session.execute(select(CaseBank).where(CaseBank.case_id.like("test-%")))
         await session.commit()
 
@@ -56,16 +63,12 @@ async def test_execution_log_creation():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
 
-        log = ExecutionLog(
-            case_id="test-case-001",
-            success=True,
-            execution_time_ms=150
-        )
+        log = ExecutionLog(case_id="test-case-001", success=True, execution_time_ms=150)
         session.add(log)
         await session.commit()
         await session.refresh(log)
@@ -88,7 +91,7 @@ async def test_execution_log_failure():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
@@ -98,7 +101,7 @@ async def test_execution_log_failure():
             success=False,
             error_type="ValidationError",
             error_message="Invalid input parameters",
-            execution_time_ms=50
+            execution_time_ms=50,
         )
         session.add(log)
         await session.commit()
@@ -121,16 +124,12 @@ async def test_execution_log_foreign_key():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
 
-        log = ExecutionLog(
-            case_id="test-case-003",
-            success=True,
-            execution_time_ms=100
-        )
+        log = ExecutionLog(case_id="test-case-003", success=True, execution_time_ms=100)
         session.add(log)
         await session.commit()
 
@@ -154,15 +153,12 @@ async def test_execution_log_nullable_fields():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
 
-        log = ExecutionLog(
-            case_id="test-case-004",
-            success=True
-        )
+        log = ExecutionLog(case_id="test-case-004", success=True)
         session.add(log)
         await session.commit()
         await session.refresh(log)
@@ -183,15 +179,12 @@ async def test_execution_log_timestamp():
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
-            version=1
+            version=1,
         )
         session.add(case)
         await session.commit()
 
-        log = ExecutionLog(
-            case_id="test-case-005",
-            success=True
-        )
+        log = ExecutionLog(case_id="test-case-005", success=True)
         session.add(log)
         await session.commit()
         await session.refresh(log)

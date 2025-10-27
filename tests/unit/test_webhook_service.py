@@ -22,7 +22,9 @@ class TestWebhookService:
     @pytest.fixture
     def mock_httpx_client(self):
         """Mock httpx AsyncClient"""
-        with patch('apps.api.background.webhook_service.httpx.AsyncClient') as MockClient:
+        with patch(
+            "apps.api.background.webhook_service.httpx.AsyncClient"
+        ) as MockClient:
             mock_response = MagicMock()
             mock_response.status_code = 200
 
@@ -35,7 +37,9 @@ class TestWebhookService:
             yield mock_client
 
     @pytest.mark.asyncio
-    async def test_send_webhook_succeeds_on_first_attempt(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_succeeds_on_first_attempt(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify send_webhook() succeeds with 200 response
 
@@ -48,7 +52,7 @@ class TestWebhookService:
         payload = {
             "task_id": "test-123",
             "agent_id": "agent-456",
-            "status": "completed"
+            "status": "completed",
         }
 
         result = await webhook_service.send_webhook(url, payload)
@@ -59,10 +63,12 @@ class TestWebhookService:
         # Verify POST arguments
         call_args = mock_httpx_client.post.call_args
         assert call_args.args[0] == url, "Should POST to correct URL"
-        assert call_args.kwargs['json'] == payload, "Should send correct payload"
+        assert call_args.kwargs["json"] == payload, "Should send correct payload"
 
     @pytest.mark.asyncio
-    async def test_send_webhook_retries_on_5xx_error(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_retries_on_5xx_error(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify send_webhook() retries on 5xx server error
 
@@ -80,26 +86,36 @@ class TestWebhookService:
         payload = {"status": "completed"}
 
         # Patch asyncio.sleep to avoid actual delays
-        with patch('apps.api.background.webhook_service.asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+        with patch(
+            "apps.api.background.webhook_service.asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
             result = await webhook_service.send_webhook(url, payload)
 
             assert result is False, "send_webhook should return False after max retries"
 
             # Verify retried 3 times (total 3 attempts)
-            assert mock_httpx_client.post.call_count == 3, (
-                f"Should make 3 attempts, got {mock_httpx_client.post.call_count}"
-            )
+            assert (
+                mock_httpx_client.post.call_count == 3
+            ), f"Should make 3 attempts, got {mock_httpx_client.post.call_count}"
 
             # Verify exponential backoff delays
-            assert mock_sleep.call_count == 2, "Should sleep 2 times (before retry 2 and 3)"
+            assert (
+                mock_sleep.call_count == 2
+            ), "Should sleep 2 times (before retry 2 and 3)"
 
             # Check delay values: 2^0=1, 2^1=2 seconds
             sleep_calls = [call.args[0] for call in mock_sleep.call_args_list]
-            assert sleep_calls[0] == 1, f"First delay should be 1s, got {sleep_calls[0]}"
-            assert sleep_calls[1] == 2, f"Second delay should be 2s, got {sleep_calls[1]}"
+            assert (
+                sleep_calls[0] == 1
+            ), f"First delay should be 1s, got {sleep_calls[0]}"
+            assert (
+                sleep_calls[1] == 2
+            ), f"Second delay should be 2s, got {sleep_calls[1]}"
 
     @pytest.mark.asyncio
-    async def test_send_webhook_succeeds_on_third_retry(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_succeeds_on_third_retry(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify send_webhook() succeeds after retries
 
@@ -112,21 +128,25 @@ class TestWebhookService:
         responses = [
             MagicMock(status_code=500),
             MagicMock(status_code=500),
-            MagicMock(status_code=200)
+            MagicMock(status_code=200),
         ]
         mock_httpx_client.post = AsyncMock(side_effect=responses)
 
         url = "https://example.com/webhook"
         payload = {"status": "completed"}
 
-        with patch('apps.api.background.webhook_service.asyncio.sleep', new_callable=AsyncMock):
+        with patch(
+            "apps.api.background.webhook_service.asyncio.sleep", new_callable=AsyncMock
+        ):
             result = await webhook_service.send_webhook(url, payload)
 
             assert result is True, "send_webhook should return True when retry succeeds"
             assert mock_httpx_client.post.call_count == 3, "Should make 3 attempts"
 
     @pytest.mark.asyncio
-    async def test_send_webhook_handles_timeout_exception(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_handles_timeout_exception(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify send_webhook() retries on timeout
 
@@ -136,19 +156,28 @@ class TestWebhookService:
         - Returns False after max retries
         """
         import httpx
-        mock_httpx_client.post = AsyncMock(side_effect=httpx.TimeoutException("Request timeout"))
+
+        mock_httpx_client.post = AsyncMock(
+            side_effect=httpx.TimeoutException("Request timeout")
+        )
 
         url = "https://example.com/webhook"
         payload = {"status": "completed"}
 
-        with patch('apps.api.background.webhook_service.asyncio.sleep', new_callable=AsyncMock):
+        with patch(
+            "apps.api.background.webhook_service.asyncio.sleep", new_callable=AsyncMock
+        ):
             result = await webhook_service.send_webhook(url, payload)
 
-            assert result is False, "send_webhook should return False on repeated timeouts"
+            assert (
+                result is False
+            ), "send_webhook should return False on repeated timeouts"
             assert mock_httpx_client.post.call_count == 3, "Should retry 3 times"
 
     @pytest.mark.asyncio
-    async def test_send_webhook_includes_content_type_header(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_includes_content_type_header(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify webhook POST includes Content-Type: application/json header
 
@@ -161,13 +190,17 @@ class TestWebhookService:
         await webhook_service.send_webhook(url, payload)
 
         call_args = mock_httpx_client.post.call_args
-        headers = call_args.kwargs.get('headers', {})
+        headers = call_args.kwargs.get("headers", {})
 
-        assert 'Content-Type' in headers, "Should include Content-Type header"
-        assert headers['Content-Type'] == 'application/json', "Content-Type should be application/json"
+        assert "Content-Type" in headers, "Should include Content-Type header"
+        assert (
+            headers["Content-Type"] == "application/json"
+        ), "Content-Type should be application/json"
 
     @pytest.mark.asyncio
-    async def test_send_webhook_with_signature_adds_hmac_header(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_with_signature_adds_hmac_header(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify send_webhook() adds HMAC signature header when secret provided
 
@@ -182,16 +215,20 @@ class TestWebhookService:
         await webhook_service.send_webhook(url, payload, secret=secret)
 
         call_args = mock_httpx_client.post.call_args
-        headers = call_args.kwargs.get('headers', {})
+        headers = call_args.kwargs.get("headers", {})
 
-        assert 'X-Agent-Signature' in headers, "Should include X-Agent-Signature header when secret provided"
+        assert (
+            "X-Agent-Signature" in headers
+        ), "Should include X-Agent-Signature header when secret provided"
 
-        signature = headers['X-Agent-Signature']
-        assert signature.startswith('sha256='), "Signature should start with 'sha256='"
+        signature = headers["X-Agent-Signature"]
+        assert signature.startswith("sha256="), "Signature should start with 'sha256='"
         assert len(signature) > 10, "Signature should contain hash digest"
 
     @pytest.mark.asyncio
-    async def test_send_webhook_respects_timeout_setting(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_respects_timeout_setting(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify WebhookService respects timeout configuration
 
@@ -204,7 +241,9 @@ class TestWebhookService:
         url = "https://example.com/webhook"
         payload = {"status": "completed"}
 
-        with patch('apps.api.background.webhook_service.httpx.AsyncClient') as MockClient:
+        with patch(
+            "apps.api.background.webhook_service.httpx.AsyncClient"
+        ) as MockClient:
             mock_client = AsyncMock()
             mock_client.post = AsyncMock(return_value=MagicMock(status_code=200))
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -216,11 +255,15 @@ class TestWebhookService:
             # Verify AsyncClient was created with timeout
             MockClient.assert_called_once()
             call_kwargs = MockClient.call_args.kwargs
-            assert 'timeout' in call_kwargs, "Should pass timeout to AsyncClient"
-            assert call_kwargs['timeout'] == 5, f"Expected timeout=5, got {call_kwargs['timeout']}"
+            assert "timeout" in call_kwargs, "Should pass timeout to AsyncClient"
+            assert (
+                call_kwargs["timeout"] == 5
+            ), f"Expected timeout=5, got {call_kwargs['timeout']}"
 
     @pytest.mark.asyncio
-    async def test_send_webhook_exponential_backoff_formula(self, webhook_service, mock_httpx_client):
+    async def test_send_webhook_exponential_backoff_formula(
+        self, webhook_service, mock_httpx_client
+    ):
         """
         RED Test: Verify exponential backoff uses formula delay = 2^retry_count
 
@@ -237,13 +280,21 @@ class TestWebhookService:
         url = "https://example.com/webhook"
         payload = {"status": "completed"}
 
-        with patch('apps.api.background.webhook_service.asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+        with patch(
+            "apps.api.background.webhook_service.asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
             await webhook_service.send_webhook(url, payload)
 
             # Extract all sleep delays
             sleep_delays = [call.args[0] for call in mock_sleep.call_args_list]
 
             # Verify exponential backoff: 1s, 2s
-            assert len(sleep_delays) == 2, f"Should have 2 delays, got {len(sleep_delays)}"
-            assert sleep_delays[0] == 1, f"First delay should be 1s (2^0), got {sleep_delays[0]}"
-            assert sleep_delays[1] == 2, f"Second delay should be 2s (2^1), got {sleep_delays[1]}"
+            assert (
+                len(sleep_delays) == 2
+            ), f"Should have 2 delays, got {len(sleep_delays)}"
+            assert (
+                sleep_delays[0] == 1
+            ), f"First delay should be 1s (2^0), got {sleep_delays[0]}"
+            assert (
+                sleep_delays[1] == 2
+            ), f"Second delay should be 2s (2^1), got {sleep_delays[1]}"

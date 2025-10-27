@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from apps.api.security.api_key_generator import (
     APIKeyConfig,
     GeneratedAPIKey,
-    SecureAPIKeyGenerator
+    SecureAPIKeyGenerator,
 )
 
 
@@ -41,7 +41,7 @@ class TestAPIKeyConfig:
             format_type="hex",
             include_special_chars=True,
             prefix="dtrag",
-            checksum=False
+            checksum=False,
         )
 
         assert config.length == 64
@@ -66,7 +66,7 @@ class TestGeneratedAPIKey:
             format_type="alphanumeric",
             entropy_bits=128.5,
             prefix="test",
-            checksum="abcd"
+            checksum="abcd",
         )
 
         assert api_key.key == "test-api-key-123"
@@ -85,7 +85,7 @@ class TestGeneratedAPIKey:
             key_hash="hash456",
             created_at=datetime.now(timezone.utc),
             format_type="base64",
-            entropy_bits=64.0
+            entropy_bits=64.0,
         )
 
         assert api_key.prefix is None
@@ -102,8 +102,8 @@ class TestSecureAPIKeyGenerator:
 
         assert len(key) == 32
         # Should contain only base64 characters (without padding)
-        assert re.match(r'^[A-Za-z0-9+/_-]+$', key)
-        assert '=' not in key  # No padding
+        assert re.match(r"^[A-Za-z0-9+/_-]+$", key)
+        assert "=" not in key  # No padding
 
     @pytest.mark.unit
     def test_generate_base64_key_custom_length(self):
@@ -111,7 +111,7 @@ class TestSecureAPIKeyGenerator:
         key = SecureAPIKeyGenerator.generate_base64_key(64)
 
         assert len(key) == 64
-        assert re.match(r'^[A-Za-z0-9+/_-]+$', key)
+        assert re.match(r"^[A-Za-z0-9+/_-]+$", key)
 
     @pytest.mark.unit
     def test_generate_base64_key_uniqueness(self):
@@ -128,7 +128,7 @@ class TestSecureAPIKeyGenerator:
 
         assert len(key) == 32
         # Should contain only lowercase hex characters
-        assert re.match(r'^[0-9a-f]+$', key)
+        assert re.match(r"^[0-9a-f]+$", key)
 
     @pytest.mark.unit
     def test_generate_hex_key_custom_length(self):
@@ -136,7 +136,7 @@ class TestSecureAPIKeyGenerator:
         key = SecureAPIKeyGenerator.generate_hex_key(48)
 
         assert len(key) == 48
-        assert re.match(r'^[0-9a-f]+$', key)
+        assert re.match(r"^[0-9a-f]+$", key)
 
     @pytest.mark.unit
     def test_generate_hex_key_uniqueness(self):
@@ -153,7 +153,7 @@ class TestSecureAPIKeyGenerator:
 
         assert len(key) == 32
         # Should contain only alphanumeric characters
-        assert re.match(r'^[A-Za-z0-9]+$', key)
+        assert re.match(r"^[A-Za-z0-9]+$", key)
 
     @pytest.mark.unit
     def test_generate_alphanumeric_key_custom_length(self):
@@ -161,7 +161,7 @@ class TestSecureAPIKeyGenerator:
         key = SecureAPIKeyGenerator.generate_alphanumeric_key(16)
 
         assert len(key) == 16
-        assert re.match(r'^[A-Za-z0-9]+$', key)
+        assert re.match(r"^[A-Za-z0-9]+$", key)
 
     @pytest.mark.unit
     def test_generate_alphanumeric_key_uniqueness(self):
@@ -178,7 +178,7 @@ class TestSecureAPIKeyGenerator:
 
         assert len(key) == 32
         # Should contain alphanumeric plus _-.
-        assert re.match(r'^[A-Za-z0-9_.-]+$', key)
+        assert re.match(r"^[A-Za-z0-9_.-]+$", key)
 
     @pytest.mark.unit
     def test_generate_mixed_key_with_special(self):
@@ -187,7 +187,7 @@ class TestSecureAPIKeyGenerator:
 
         assert len(key) == 32
         # Should contain alphanumeric, _-., and limited special chars
-        assert re.match(r'^[A-Za-z0-9_.!@#$%^-]+$', key)
+        assert re.match(r"^[A-Za-z0-9_.!@#$%^-]+$", key)
 
     @pytest.mark.unit
     def test_generate_mixed_key_uniqueness(self):
@@ -216,7 +216,9 @@ class TestSecureAPIKeyGenerator:
     @pytest.mark.unit
     def test_calculate_entropy_mixed_characters(self):
         """Test entropy calculation for mixed characters"""
-        entropy = SecureAPIKeyGenerator.calculate_entropy("abcdefghijklmnopqrstuvwxyz123456")
+        entropy = SecureAPIKeyGenerator.calculate_entropy(
+            "abcdefghijklmnopqrstuvwxyz123456"
+        )
 
         # Should have higher entropy for diverse characters
         assert entropy > 50.0
@@ -241,7 +243,7 @@ class TestSecureAPIKeyGenerator:
         assert key_with_checksum.startswith(original_key + "-")
         checksum = key_with_checksum.split("-", 1)[1]
         assert len(checksum) == 4
-        assert re.match(r'^[0-9a-f]+$', checksum)
+        assert re.match(r"^[0-9a-f]+$", checksum)
 
     @pytest.mark.unit
     def test_add_checksum_consistency(self):
@@ -303,7 +305,9 @@ class TestSecureAPIKeyGenerator:
     def test_verify_key_hash_correct(self):
         """Test key hash verification with correct key"""
         original_key = "testkey123"
-        stored_hash = SecureAPIKeyGenerator.generate_secure_hash(original_key, "testsalt")
+        stored_hash = SecureAPIKeyGenerator.generate_secure_hash(
+            original_key, "testsalt"
+        )
 
         is_valid = SecureAPIKeyGenerator.verify_key_hash(original_key, stored_hash)
 
@@ -314,7 +318,9 @@ class TestSecureAPIKeyGenerator:
         """Test key hash verification with incorrect key"""
         original_key = "testkey123"
         wrong_key = "wrongkey456"
-        stored_hash = SecureAPIKeyGenerator.generate_secure_hash(original_key, "testsalt")
+        stored_hash = SecureAPIKeyGenerator.generate_secure_hash(
+            original_key, "testsalt"
+        )
 
         is_valid = SecureAPIKeyGenerator.verify_key_hash(wrong_key, stored_hash)
 
@@ -365,7 +371,7 @@ class TestSecureAPIKeyGenerator:
 
         assert generated.format_type == "hex"
         assert len(generated.key) == 32
-        assert re.match(r'^[0-9a-f]+$', generated.key)
+        assert re.match(r"^[0-9a-f]+$", generated.key)
         assert generated.checksum is None
 
     @pytest.mark.unit
@@ -379,8 +385,8 @@ class TestSecureAPIKeyGenerator:
         # Length includes checksum: 24 + 1 + 4 = 29
         assert len(generated.key) == 24 + 1 + 4
         # Base part should be alphanumeric (before checksum)
-        base_key = generated.key.split('-')[0]
-        assert re.match(r'^[A-Za-z0-9]+$', base_key)
+        base_key = generated.key.split("-")[0]
+        assert re.match(r"^[A-Za-z0-9]+$", base_key)
 
     @pytest.mark.unit
     def test_generate_api_key_mixed_format(self):
@@ -391,8 +397,8 @@ class TestSecureAPIKeyGenerator:
 
         assert generated.format_type == "mixed"
         # Check that key contains expected character types
-        base_key = generated.key.split('-')[0]  # Remove checksum
-        assert re.match(r'^[A-Za-z0-9_.!@#$%^-]+$', base_key)
+        base_key = generated.key.split("-")[0]  # Remove checksum
+        assert re.match(r"^[A-Za-z0-9_.!@#$%^-]+$", base_key)
 
     @pytest.mark.unit
     def test_generate_api_key_with_prefix(self):
@@ -432,7 +438,9 @@ class TestSecureAPIKeyGenerator:
         """Test API key generation with length below minimum"""
         config = APIKeyConfig(length=8)  # Below minimum of 16
 
-        with pytest.raises(ValueError, match="API key length must be at least 16 characters"):
+        with pytest.raises(
+            ValueError, match="API key length must be at least 16 characters"
+        ):
             SecureAPIKeyGenerator.generate_api_key(config)
 
     @pytest.mark.unit
@@ -455,7 +463,7 @@ class TestSecureAPIKeyGenerator:
         assert generated.entropy_bits <= 256.0  # Reasonable upper bound
 
     @pytest.mark.unit
-    @patch('apps.api.security.api_key_generator.logger')
+    @patch("apps.api.security.api_key_generator.logger")
     def test_generate_api_key_logging(self, mock_logger):
         """Test that API key generation logs appropriate information"""
         config = APIKeyConfig(format_type="hex", length=24)
@@ -492,7 +500,9 @@ class TestSecureAPIKeyGenerator:
         generated = SecureAPIKeyGenerator.generate_api_key(config)
 
         # Verify that the generated hash can be verified with the original key
-        is_valid = SecureAPIKeyGenerator.verify_key_hash(generated.key, generated.key_hash)
+        is_valid = SecureAPIKeyGenerator.verify_key_hash(
+            generated.key, generated.key_hash
+        )
         assert is_valid is True
 
         # Verify that wrong key fails verification
@@ -504,16 +514,17 @@ class TestSecureAPIKeyGenerator:
     def test_character_sets_defined(self):
         """Test that all character sets are properly defined"""
         assert len(SecureAPIKeyGenerator.CHARSET_BASE64) == 64  # A-Z, a-z, 0-9, +, /
-        assert len(SecureAPIKeyGenerator.CHARSET_HEX) == 16     # 0-9, a-f
+        assert len(SecureAPIKeyGenerator.CHARSET_HEX) == 16  # 0-9, a-f
         assert len(SecureAPIKeyGenerator.CHARSET_ALPHANUMERIC) == 62  # A-Z, a-z, 0-9
         assert len(SecureAPIKeyGenerator.CHARSET_SPECIAL) > 0
         assert len(SecureAPIKeyGenerator.CHARSET_MIXED) > 60
 
         # Verify no overlap issues
-        assert all(c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-                  for c in SecureAPIKeyGenerator.CHARSET_BASE64)
-        assert all(c in "0123456789abcdef"
-                  for c in SecureAPIKeyGenerator.CHARSET_HEX)
+        assert all(
+            c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+            for c in SecureAPIKeyGenerator.CHARSET_BASE64
+        )
+        assert all(c in "0123456789abcdef" for c in SecureAPIKeyGenerator.CHARSET_HEX)
 
     @pytest.mark.unit
     def test_comprehensive_api_key_formats(self):
@@ -530,9 +541,9 @@ class TestSecureAPIKeyGenerator:
 
             # Format-specific checks
             if format_type == "hex":
-                assert re.match(r'^[0-9a-f]+$', generated.key)
+                assert re.match(r"^[0-9a-f]+$", generated.key)
             elif format_type == "alphanumeric":
-                assert re.match(r'^[A-Za-z0-9]+$', generated.key)
+                assert re.match(r"^[A-Za-z0-9]+$", generated.key)
 
 
 class TestSecurityFeatures:
@@ -559,12 +570,14 @@ class TestSecurityFeatures:
         salt = "testsalt"
 
         # Test that it uses 100,000 iterations (secure parameter)
-        with patch('hashlib.pbkdf2_hmac') as mock_pbkdf2:
-            mock_pbkdf2.return_value = b'fake_hash'
+        with patch("hashlib.pbkdf2_hmac") as mock_pbkdf2:
+            mock_pbkdf2.return_value = b"fake_hash"
 
             SecureAPIKeyGenerator.generate_secure_hash(key, salt)
 
-            mock_pbkdf2.assert_called_once_with('sha256', key.encode(), salt.encode(), 100000)
+            mock_pbkdf2.assert_called_once_with(
+                "sha256", key.encode(), salt.encode(), 100000
+            )
 
     @pytest.mark.unit
     def test_timing_attack_resistance(self):
@@ -576,7 +589,9 @@ class TestSecurityFeatures:
         result1 = SecureAPIKeyGenerator.verify_key_hash(original_key, stored_hash)
 
         # Test with completely different key (should take similar time)
-        result2 = SecureAPIKeyGenerator.verify_key_hash("completelydifferentkey", stored_hash)
+        result2 = SecureAPIKeyGenerator.verify_key_hash(
+            "completelydifferentkey", stored_hash
+        )
 
         assert result1 is True
         assert result2 is False
@@ -591,7 +606,7 @@ class TestSecurityFeatures:
 
         for key in keys:
             key_with_checksum = SecureAPIKeyGenerator.add_checksum(key)
-            checksum = key_with_checksum.split('-')[1]
+            checksum = key_with_checksum.split("-")[1]
             checksums.append(checksum)
 
         # Should have very few collisions in MD5 checksums for different inputs

@@ -67,13 +67,11 @@ class TestLLMPlanner:
             mock_llm.return_value = {
                 "strategy": "simple",
                 "reasoning": "단순 검색 쿼리",
-                "tools": ["case_search"]
+                "tools": ["case_search"],
             }
 
             result = await generate_plan(
-                query="보일러 고장 사례",
-                complexity="simple",
-                timeout=10.0
+                query="보일러 고장 사례", complexity="simple", timeout=10.0
             )
 
             assert "tools" in result
@@ -86,6 +84,7 @@ class TestLLMPlanner:
         from apps.orchestration.src.meta_planner import generate_plan
 
         with patch("apps.orchestration.src.meta_planner.call_llm") as mock_llm:
+
             async def slow_llm(*args, **kwargs):
                 await asyncio.sleep(15)  # 타임아웃 초과
                 return {}
@@ -95,7 +94,7 @@ class TestLLMPlanner:
             result = await generate_plan(
                 query="test query",
                 complexity="simple",
-                timeout=1.0  # 짧은 타임아웃으로 테스트
+                timeout=1.0,  # 짧은 타임아웃으로 테스트
             )
 
             # Fallback 전략 확인
@@ -111,9 +110,7 @@ class TestLLMPlanner:
             mock_llm.side_effect = Exception("API Error")
 
             result = await generate_plan(
-                query="test query",
-                complexity="simple",
-                timeout=10.0
+                query="test query", complexity="simple", timeout=10.0
             )
 
             # Fallback 전략 확인
@@ -129,13 +126,13 @@ class TestLLMPlanner:
             mock_llm.return_value = {
                 "strategy": "complex",
                 "reasoning": "다단계 분석 필요",
-                "tools": ["case_search", "external_api", "analysis"]
+                "tools": ["case_search", "external_api", "analysis"],
             }
 
             result = await generate_plan(
                 query="A와 B를 비교 분석하고 예측해줘",
                 complexity="complex",
-                timeout=10.0
+                timeout=10.0,
             )
 
             assert len(result["tools"]) >= 2
@@ -150,13 +147,11 @@ class TestLLMPlanner:
             mock_llm.return_value = {
                 "strategy": "simple",
                 "reasoning": "test",
-                "tools": ["case_search"]
+                "tools": ["case_search"],
             }
 
             result = await generate_plan(
-                query="test",
-                complexity="simple",
-                timeout=10.0
+                query="test", complexity="simple", timeout=10.0
             )
 
             # 필수 필드 검증

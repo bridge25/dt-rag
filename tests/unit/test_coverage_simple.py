@@ -11,7 +11,7 @@ def test_coverage_metrics_creation():
         total_documents=5,
         total_chunks=50,
         coverage_percent=75.0,
-        node_coverage={"node1": 10}
+        node_coverage={"node1": 10},
     )
 
     assert metrics.total_nodes == 10
@@ -49,8 +49,7 @@ async def test_coverage_service_with_mock():
 
     service = CoverageMeterService(session_factory=fake_factory)
     metrics = await service.calculate_coverage(
-        taxonomy_version="1.0.0",
-        node_ids=["node1"]
+        taxonomy_version="1.0.0", node_ids=["node1"]
     )
 
     assert metrics.total_nodes == 5
@@ -85,7 +84,7 @@ async def test_detect_gaps_no_gaps():
         node_coverage={
             "node1": {"document_count": 15, "chunk_count": 50},
             "node2": {"document_count": 20, "chunk_count": 50},
-        }
+        },
     )
 
     gaps = await service.detect_gaps(metrics, threshold=0.5)
@@ -104,7 +103,7 @@ async def test_detect_gaps_with_gaps():
         node_coverage={
             "node1": {"document_count": 2, "chunk_count": 10},
             "node2": {"document_count": 3, "chunk_count": 10},
-        }
+        },
     )
 
     gaps = await service.detect_gaps(metrics, threshold=0.5)
@@ -124,7 +123,7 @@ async def test_detect_gaps_threshold_variation():
         coverage_percent=30.0,
         node_coverage={
             "node1": {"document_count": 3, "chunk_count": 15},
-        }
+        },
     )
 
     gaps_low = await service.detect_gaps(metrics, threshold=0.3)

@@ -18,13 +18,10 @@ CALCULATOR_TOOL = Tool(
     description="Add two numbers",
     input_schema=ToolSchema(
         type="object",
-        properties={
-            "a": {"type": "number"},
-            "b": {"type": "number"}
-        },
-        required=["a", "b"]
+        properties={"a": {"type": "number"}, "b": {"type": "number"}},
+        required=["a", "b"],
     ),
-    execute=calculator_execute
+    execute=calculator_execute,
 )
 
 # Auto-register tool

@@ -25,9 +25,11 @@ from dataclasses import dataclass, asdict
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class GoldenSample:
     """Single golden dataset sample"""
+
     question: str
     ground_truth_answer: str
     retrieved_contexts: List[str]
@@ -58,7 +60,7 @@ class GoldenDatasetGenerator:
         self,
         documents: List[Dict[str, Any]],
         testset_size: int = 100,
-        query_distribution: Optional[Dict[str, float]] = None
+        query_distribution: Optional[Dict[str, float]] = None,
     ) -> List[GoldenSample]:
         """
         Generate golden dataset from documents using RAGAS
@@ -78,10 +80,12 @@ class GoldenDatasetGenerator:
             query_distribution = {
                 "simple": 0.5,
                 "reasoning": 0.25,
-                "multi_context": 0.25
+                "multi_context": 0.25,
             }
 
-        logger.info(f"Generating {testset_size} golden samples from {len(documents)} documents")
+        logger.info(
+            f"Generating {testset_size} golden samples from {len(documents)} documents"
+        )
 
         # Use RAGAS if available
         try:
@@ -100,7 +104,7 @@ class GoldenDatasetGenerator:
         self,
         documents: List[Dict[str, Any]],
         testset_size: int,
-        query_distribution: Dict[str, float]
+        query_distribution: Dict[str, float],
     ) -> List[GoldenSample]:
         """Generate using RAGAS TestsetGenerator"""
         try:
@@ -128,16 +132,15 @@ class GoldenDatasetGenerator:
                         metadata={
                             "doc_id": doc.get("doc_id", ""),
                             "title": doc.get("title", ""),
-                            "taxonomy_path": doc.get("taxonomy_path", [])
-                        }
+                            "taxonomy_path": doc.get("taxonomy_path", []),
+                        },
                     )
                 )
 
             # Generate testset
             logger.info("Generating testset with RAGAS...")
             testset = generator.generate_with_langchain_docs(
-                langchain_docs,
-                testset_size=testset_size
+                langchain_docs, testset_size=testset_size
             )
 
             # Convert to GoldenSample format
@@ -145,14 +148,20 @@ class GoldenDatasetGenerator:
             eval_dataset = testset.to_evaluation_dataset()
 
             for item in eval_dataset:
-                samples.append(GoldenSample(
-                    question=item.user_input,
-                    ground_truth_answer=item.reference,
-                    retrieved_contexts=item.retrieved_contexts if hasattr(item, 'retrieved_contexts') else [],
-                    source_doc_ids=[],  # Extract from contexts if available
-                    query_type="simple",  # RAGAS doesn't expose this, infer later
-                    metadata={"generated_by": "ragas"}
-                ))
+                samples.append(
+                    GoldenSample(
+                        question=item.user_input,
+                        ground_truth_answer=item.reference,
+                        retrieved_contexts=(
+                            item.retrieved_contexts
+                            if hasattr(item, "retrieved_contexts")
+                            else []
+                        ),
+                        source_doc_ids=[],  # Extract from contexts if available
+                        query_type="simple",  # RAGAS doesn't expose this, infer later
+                        metadata={"generated_by": "ragas"},
+                    )
+                )
 
             logger.info(f"Generated {len(samples)} samples with RAGAS")
             return samples
@@ -165,7 +174,7 @@ class GoldenDatasetGenerator:
         self,
         documents: List[Dict[str, Any]],
         testset_size: int,
-        query_distribution: Dict[str, float]
+        query_distribution: Dict[str, float],
     ) -> List[GoldenSample]:
         """Fallback method using Gemini API directly"""
         import google.generativeai as genai
@@ -174,7 +183,7 @@ class GoldenDatasetGenerator:
             raise ValueError("No API key available for fallback generation")
 
         genai.configure(api_key=self.gemini_api_key)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel("gemini-pro")
 
         samples = []
 
@@ -184,9 +193,9 @@ class GoldenDatasetGenerator:
         multi_count = testset_size - simple_count - reasoning_count
 
         query_types = (
-            ["simple"] * simple_count +
-            ["reasoning"] * reasoning_count +
-            ["multi_context"] * multi_count
+            ["simple"] * simple_count
+            + ["reasoning"] * reasoning_count
+            + ["multi_context"] * multi_count
         )
 
         logger.info("Generating samples with Gemini fallback method...")
@@ -194,13 +203,16 @@ class GoldenDatasetGenerator:
         for idx, query_type in enumerate(query_types):
             # Select random document(s)
             import random
+
             if query_type == "multi_context":
                 selected_docs = random.sample(documents, min(3, len(documents)))
             else:
                 selected_docs = [random.choice(documents)]
 
             # Generate question and answer
-            context_text = "\n\n".join([doc.get("text", "")[:500] for doc in selected_docs])
+            context_text = "\n\n".join(
+                [doc.get("text", "")[:500] for doc in selected_docs]
+            )
 
             prompt = f"""Based on the following context, generate a {query_type} question and its answer.
 
@@ -217,17 +229,23 @@ Format as JSON:
 
             try:
                 response = model.generate_content(prompt)
-                result = json.loads(response.text.strip().replace("```json", "").replace("```", ""))
+                result = json.loads(
+                    response.text.strip().replace("```json", "").replace("```", "")
+                )
 
-                samples.append(GoldenSample(
-                    question=result["question"],
-                    ground_truth_answer=result["answer"],
-                    retrieved_contexts=[doc.get("text", "")[:500] for doc in selected_docs],
-                    source_doc_ids=[doc.get("doc_id", "") for doc in selected_docs],
-                    query_type=query_type,
-                    taxonomy_path=selected_docs[0].get("taxonomy_path"),
-                    metadata={"generated_by": "gemini_fallback"}
-                ))
+                samples.append(
+                    GoldenSample(
+                        question=result["question"],
+                        ground_truth_answer=result["answer"],
+                        retrieved_contexts=[
+                            doc.get("text", "")[:500] for doc in selected_docs
+                        ],
+                        source_doc_ids=[doc.get("doc_id", "") for doc in selected_docs],
+                        query_type=query_type,
+                        taxonomy_path=selected_docs[0].get("taxonomy_path"),
+                        metadata={"generated_by": "gemini_fallback"},
+                    )
+                )
 
                 if (idx + 1) % 10 == 0:
                     logger.info(f"Generated {idx + 1}/{testset_size} samples")
@@ -251,12 +269,12 @@ Format as JSON:
                 "name": name,
                 "created_at": datetime.now().isoformat(),
                 "total_samples": len(samples),
-                "query_types": self._count_query_types(samples)
+                "query_types": self._count_query_types(samples),
             },
-            "samples": [sample.to_dict() for sample in samples]
+            "samples": [sample.to_dict() for sample in samples],
         }
 
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(dataset, f, indent=2, ensure_ascii=False)
 
         logger.info(f"Saved {len(samples)} samples to {output_path}")
@@ -264,7 +282,7 @@ Format as JSON:
 
     def load_dataset(self, file_path: str) -> List[GoldenSample]:
         """Load golden dataset from JSON file"""
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         samples = []
@@ -310,12 +328,14 @@ async def create_golden_dataset_from_db(testset_size: int = 100) -> str:
 
             if chunks:
                 combined_text = "\n\n".join([chunk.text for chunk in chunks])
-                doc_data.append({
-                    "doc_id": doc.doc_id,
-                    "title": doc.title or "Untitled",
-                    "text": combined_text,
-                    "taxonomy_path": []
-                })
+                doc_data.append(
+                    {
+                        "doc_id": doc.doc_id,
+                        "title": doc.title or "Untitled",
+                        "text": combined_text,
+                        "taxonomy_path": [],
+                    }
+                )
 
     # Generate golden dataset
     generator = GoldenDatasetGenerator()

@@ -53,9 +53,7 @@ async def cleanup_table():
         await session.execute(
             select(ExecutionLog).where(ExecutionLog.case_id.like("test-%"))
         )
-        await session.execute(
-            select(CaseBank).where(CaseBank.case_id.like("test-%"))
-        )
+        await session.execute(select(CaseBank).where(CaseBank.case_id.like("test-%")))
         await session.commit()
 
 
@@ -99,9 +97,7 @@ async def test_full_reflection_workflow():
         assert performance["success_rate"] == 33.33
 
         # 5. Generate improvement suggestions
-        suggestions = await engine.generate_improvement_suggestions(
-            "test-workflow-001"
-        )
+        suggestions = await engine.generate_improvement_suggestions("test-workflow-001")
         assert len(suggestions) > 0
 
         # 6. Update case success rate
@@ -126,9 +122,7 @@ async def test_batch_reflection_with_multiple_cases():
         await session.execute(
             delete(ExecutionLog).where(ExecutionLog.case_id.like("test-%"))
         )
-        await session.execute(
-            delete(CaseBank).where(CaseBank.case_id.like("test-%"))
-        )
+        await session.execute(delete(CaseBank).where(CaseBank.case_id.like("test-%")))
         await session.commit()
 
         # Create 3 cases with different performance levels

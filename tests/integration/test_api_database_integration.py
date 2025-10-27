@@ -31,7 +31,7 @@ try:
         test_database_connection,
         Document,
         Category,
-        Base
+        Base,
     )
     from apps.api.config import get_config
 
@@ -71,9 +71,7 @@ class TestAPIDatabaseIntegration:
     async def test_session(self, test_database_engine):
         """Create test database session"""
         async_session = sessionmaker(
-            test_database_engine,
-            class_=AsyncSession,
-            expire_on_commit=False
+            test_database_engine, class_=AsyncSession, expire_on_commit=False
         )
 
         async with async_session() as session:
@@ -98,8 +96,8 @@ class TestAPIDatabaseIntegration:
             "metadata": {
                 "source": "integration_test",
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "tags": ["test", "integration"]
-            }
+                "tags": ["test", "integration"],
+            },
         }
 
     @pytest.fixture
@@ -110,9 +108,7 @@ class TestAPIDatabaseIntegration:
             "description": "Category for integration testing",
             "parent_id": None,
             "level": 0,
-            "metadata": {
-                "test_category": True
-            }
+            "metadata": {"test_category": True},
         }
 
     async def test_database_connection_via_api(self, client: AsyncClient):
@@ -129,14 +125,14 @@ class TestAPIDatabaseIntegration:
         self,
         client: AsyncClient,
         test_session: AsyncSession,
-        sample_document: Dict[str, Any]
+        sample_document: Dict[str, Any],
     ):
         """Test document CRUD operations through API with database persistence"""
         # Skip if ingestion router not available
         try:
-            response = await client.post("/ingestion/upload", json={
-                "documents": [sample_document]
-            })
+            response = await client.post(
+                "/ingestion/upload", json={"documents": [sample_document]}
+            )
 
             if response.status_code == 404:
                 pytest.skip("Document ingestion endpoint not available")
@@ -146,7 +142,7 @@ class TestAPIDatabaseIntegration:
             # Verify document was stored in database
             result = await test_session.execute(
                 text("SELECT COUNT(*) FROM documents WHERE title = :title"),
-                {"title": sample_document["title"]}
+                {"title": sample_document["title"]},
             )
             count = result.scalar()
             assert count > 0, "Document should be stored in database"
@@ -155,16 +151,14 @@ class TestAPIDatabaseIntegration:
             pytest.skip(f"Document CRUD test skipped: {e}")
 
     async def test_search_integration(
-        self,
-        client: AsyncClient,
-        test_session: AsyncSession
+        self, client: AsyncClient, test_session: AsyncSession
     ):
         """Test search functionality with database integration"""
         # First, add some test data
         test_query = {
             "query": "integration test",
             "filters": {"source": "test"},
-            "limit": 10
+            "limit": 10,
         }
 
         try:
@@ -185,12 +179,12 @@ class TestAPIDatabaseIntegration:
         self,
         client: AsyncClient,
         test_session: AsyncSession,
-        sample_document: Dict[str, Any]
+        sample_document: Dict[str, Any],
     ):
         """Test classification functionality with database integration"""
         classification_request = {
             "text": sample_document["content"],
-            "context": sample_document.get("metadata", {})
+            "context": sample_document.get("metadata", {}),
         }
 
         try:
@@ -201,15 +195,15 @@ class TestAPIDatabaseIntegration:
 
             assert response.status_code == 200
             data = response.json()
-            assert "predictions" in data or "category" in data or "classification" in data
+            assert (
+                "predictions" in data or "category" in data or "classification" in data
+            )
 
         except Exception as e:
             pytest.skip(f"Classification integration test skipped: {e}")
 
     async def test_taxonomy_database_integration(
-        self,
-        client: AsyncClient,
-        test_session: AsyncSession
+        self, client: AsyncClient, test_session: AsyncSession
     ):
         """Test taxonomy operations with database persistence"""
         try:
@@ -231,7 +225,7 @@ class TestAPIDatabaseIntegration:
 
     @pytest.mark.skipif(
         not os.getenv("TEST_WITH_REAL_DB"),
-        reason="Real database tests only run when TEST_WITH_REAL_DB is set"
+        reason="Real database tests only run when TEST_WITH_REAL_DB is set",
     )
     async def test_postgresql_integration(self):
         """Test integration with real PostgreSQL database"""
@@ -245,15 +239,10 @@ class TestAPIDatabaseIntegration:
         except Exception as e:
             pytest.skip(f"PostgreSQL integration test failed: {e}")
 
-    async def test_error_handling_integration(
-        self,
-        client: AsyncClient
-    ):
+    async def test_error_handling_integration(self, client: AsyncClient):
         """Test error handling across API and database layers"""
         # Test invalid request data
-        invalid_data = {
-            "invalid_field": "invalid_value"
-        }
+        invalid_data = {"invalid_field": "invalid_value"}
 
         try:
             response = await client.post("/classify", json=invalid_data)
@@ -266,10 +255,7 @@ class TestAPIDatabaseIntegration:
         except Exception as e:
             pytest.skip(f"Error handling test skipped: {e}")
 
-    async def test_transaction_rollback(
-        self,
-        test_session: AsyncSession
-    ):
+    async def test_transaction_rollback(self, test_session: AsyncSession):
         """Test database transaction rollback behavior"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Database components not available")
@@ -279,9 +265,7 @@ class TestAPIDatabaseIntegration:
             async with test_session.begin():
                 # Insert test data
                 test_doc = Document(
-                    title="Transaction Test",
-                    content="Test content",
-                    metadata={}
+                    title="Transaction Test", content="Test content", metadata={}
                 )
                 test_session.add(test_doc)
                 await test_session.flush()
@@ -322,7 +306,7 @@ class TestDatabaseConnectionManagement:
 
             # Cleanup
             for conn in connections:
-                if hasattr(conn, 'close'):
+                if hasattr(conn, "close"):
                     await conn.close()
 
         except Exception as e:

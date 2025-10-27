@@ -2,16 +2,29 @@
 실제 PostgreSQL 데이터베이스 연결 및 스키마 관리
 시뮬레이션 제거, 실제 DB 연결 구현
 """
+
 import os
 import asyncio
 from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, JSON, text, ForeignKey, func
+from sqlalchemy import (
+    String,
+    Integer,
+    Float,
+    DateTime,
+    Boolean,
+    Text,
+    JSON,
+    text,
+    ForeignKey,
+)
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.types import TypeDecorator, TEXT
+
 try:
     from pgvector.sqlalchemy import Vector
+
     PGVECTOR_AVAILABLE = True
 except ImportError:
     PGVECTOR_AVAILABLE = False
@@ -43,6 +56,7 @@ BM25_B = 0.75  # Document length normalization
 BM25_WEIGHT = 0.5
 VECTOR_WEIGHT = 0.5
 
+
 class JSONType(TypeDecorator):
     impl = TEXT
     cache_ok = True
@@ -56,6 +70,7 @@ class JSONType(TypeDecorator):
         if value is not None:
             return json.loads(value)
         return value
+
 
 class ArrayType(TypeDecorator):
     impl = TEXT
@@ -71,6 +86,7 @@ class ArrayType(TypeDecorator):
             return json.loads(value)
         return value
 
+
 class UUIDType(TypeDecorator):
     impl = String(36)
     cache_ok = True
@@ -85,15 +101,18 @@ class UUIDType(TypeDecorator):
             return uuid.UUID(value)
         return value
 
+
 def get_json_type():
     if "sqlite" in DATABASE_URL:
         return JSONType()
     return JSON
 
+
 def get_array_type(item_type=String):
     if "sqlite" in DATABASE_URL:
         return ArrayType()
     return ARRAY(item_type)
+
 
 def get_vector_type(dimensions=1536):
     """Get appropriate vector type based on database"""
@@ -102,81 +121,124 @@ def get_vector_type(dimensions=1536):
     # SQLite fallback - use JSON array
     return get_array_type(Float)
 
+
 def get_uuid_type():
     if "sqlite" in DATABASE_URL:
         return UUIDType()
     return UUID(as_uuid=True)
 
+
 class TaxonomyNode(Base):
     __tablename__ = "taxonomy_nodes"
 
-    node_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
+    node_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
     label: Mapped[Optional[str]] = mapped_column(Text)
     canonical_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
     version: Mapped[Optional[str]] = mapped_column(Text)
     confidence: Mapped[Optional[float]] = mapped_column(Float)
 
+
 class TaxonomyEdge(Base):
     __tablename__ = "taxonomy_edges"
 
-    parent: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'), primary_key=True)
-    child: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('taxonomy_nodes.node_id'), primary_key=True)
+    parent: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), ForeignKey("taxonomy_nodes.node_id"), primary_key=True
+    )
+    child: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), ForeignKey("taxonomy_nodes.node_id"), primary_key=True
+    )
     version: Mapped[str] = mapped_column(Text, primary_key=True)
+
 
 class TaxonomyMigration(Base):
     __tablename__ = "taxonomy_migrations"
 
-    migration_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    migration_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     from_version: Mapped[Optional[str]] = mapped_column(Text)
     to_version: Mapped[Optional[str]] = mapped_column(Text)
     from_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
     to_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
     rationale: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, server_default=text('now()'))
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, server_default=text("now()")
+    )
+
 
 class Document(Base):
     __tablename__ = "documents"
 
-    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
+    doc_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
     source_url: Mapped[Optional[str]] = mapped_column(Text)
     version_tag: Mapped[Optional[str]] = mapped_column(Text)
     license_tag: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     title: Mapped[Optional[str]] = mapped_column(Text)
-    content_type: Mapped[str] = mapped_column(String(100), default='text/plain')
+    content_type: Mapped[str] = mapped_column(String(100), default="text/plain")
     file_size: Mapped[Optional[int]] = mapped_column(Integer)
     checksum: Mapped[Optional[str]] = mapped_column(String(64))
     doc_metadata: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), default=dict)
-    chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), default=dict)
+    chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(
+        get_json_type(), default=dict
+    )
     processed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 
 class DocumentChunk(Base):
     __tablename__ = "chunks"
 
-    chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    doc_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('documents.doc_id', ondelete='CASCADE'), nullable=False)
+    chunk_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
+    doc_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(),
+        ForeignKey("documents.doc_id", ondelete="CASCADE"),
+        nullable=False,
+    )
     text: Mapped[str] = mapped_column(Text, nullable=False)
     # SQLite에서는 INT4RANGE 대신 TEXT로 span 저장 (예: "0,100")
     span: Mapped[str] = mapped_column(String(50), nullable=False, default="0,0")
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     # 임베딩 벡터 (옵션널, 직접 저장 방식)
-    embedding: Mapped[Optional[List[float]]] = mapped_column(get_array_type(Float), nullable=True)
-    chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), default=dict)
+    embedding: Mapped[Optional[List[float]]] = mapped_column(
+        get_array_type(Float), nullable=True
+    )
+    chunk_metadata: Mapped[Dict[str, Any]] = mapped_column(
+        get_json_type(), default=dict
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     has_pii: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    pii_types: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String), default=list)
+    pii_types: Mapped[Optional[List[str]]] = mapped_column(
+        get_array_type(String), default=list
+    )
+
 
 class Embedding(Base):
     __tablename__ = "embeddings"
 
-    embedding_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    chunk_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('chunks.chunk_id', ondelete='CASCADE'), unique=True, nullable=False)
+    embedding_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
+    chunk_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(),
+        ForeignKey("chunks.chunk_id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+    )
     vec: Mapped[List[float]] = mapped_column(get_vector_type(1536), nullable=False)
-    model_name: Mapped[str] = mapped_column(String(100), nullable=False, default='text-embedding-ada-002')
+    model_name: Mapped[str] = mapped_column(
+        String(100), nullable=False, default="text-embedding-ada-002"
+    )
     bm25_tokens: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
 
 # @CODE:SCHEMA-SYNC-001:MODEL
 class DocTaxonomy(Base):
@@ -184,13 +246,13 @@ class DocTaxonomy(Base):
 
     doc_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(),
-        ForeignKey('documents.doc_id', ondelete='CASCADE'),
-        primary_key=True
+        ForeignKey("documents.doc_id", ondelete="CASCADE"),
+        primary_key=True,
     )
     node_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(),
-        ForeignKey('taxonomy_nodes.node_id', ondelete='CASCADE'),
-        primary_key=True
+        ForeignKey("taxonomy_nodes.node_id", ondelete="CASCADE"),
+        primary_key=True,
     )
     version: Mapped[str] = mapped_column(Text, primary_key=True)
 
@@ -198,104 +260,131 @@ class DocTaxonomy(Base):
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
 
     hitl_required: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default=text('false')
+        Boolean, nullable=False, server_default=text("false")
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=text('NOW()')
+        DateTime(timezone=True), nullable=False, server_default=text("NOW()")
     )
+
 
 # @SPEC:CASEBANK-002 @IMPL:CASEBANK-002:0.2
 class CaseBank(Base):
     __tablename__ = "case_bank"
 
-    case_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
     query: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     sources: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), nullable=False)
-    category_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String), nullable=True)
+    category_path: Mapped[Optional[List[str]]] = mapped_column(
+        get_array_type(String), nullable=True
+    )
     quality: Mapped[Optional[float]] = mapped_column(Float)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), server_default=text('NOW()'))
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), server_default=text("NOW()")
+    )
 
     # @IMPL:CASEBANK-002:0.2.1 - Version management
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     updated_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     # @IMPL:CASEBANK-002:0.2.2 - Lifecycle status
-    status: Mapped[str] = mapped_column(String(50), default='active', nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
 
     # @IMPL:CASEBANK-002:0.2.3 - Timestamp
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=text('CURRENT_TIMESTAMP'),
-        nullable=False
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False,
     )
 
     # @IMPL:REFLECTION-001:0.2 - Performance metrics
     success_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
 
 # @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.1
 class ExecutionLog(Base):
     __tablename__ = "execution_log"
 
     log_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    case_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey("case_bank.case_id"), nullable=False)
+    case_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), ForeignKey("case_bank.case_id"), nullable=False
+    )
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)
     error_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     execution_time_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    context: Mapped[Optional[Dict[str, Any]]] = mapped_column(get_json_type(), nullable=True)
+    context: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+        get_json_type(), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=text('CURRENT_TIMESTAMP'),
-        nullable=False
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False,
     )
 
     case = relationship("CaseBank", backref="execution_logs")
+
 
 # @SPEC:CONSOLIDATION-001 @IMPL:CONSOLIDATION-001:0.3
 class CaseBankArchive(Base):
     __tablename__ = "case_bank_archive"
 
-    archive_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    archive_id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
     case_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), nullable=False)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     sources: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), nullable=False)
-    category_path: Mapped[Optional[List[str]]] = mapped_column(get_array_type(String), nullable=True)
+    category_path: Mapped[Optional[List[str]]] = mapped_column(
+        get_array_type(String), nullable=True
+    )
     quality: Mapped[Optional[float]] = mapped_column(Float)
     success_rate: Mapped[Optional[float]] = mapped_column(Float)
     archived_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=text('CURRENT_TIMESTAMP'),
-        nullable=False
+        server_default=text("CURRENT_TIMESTAMP"),
+        nullable=False,
     )
     archived_reason: Mapped[Optional[str]] = mapped_column(String(255))
+
 
 class Agent(Base):
     __tablename__ = "agents"
 
-    agent_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    taxonomy_node_ids: Mapped[List[uuid.UUID]] = mapped_column(get_array_type(UUID(as_uuid=True) if "postgresql" in DATABASE_URL else String), nullable=False)
-    taxonomy_version: Mapped[str] = mapped_column(Text, nullable=False, default='1.0.0')
+    taxonomy_node_ids: Mapped[List[uuid.UUID]] = mapped_column(
+        get_array_type(UUID(as_uuid=True) if "postgresql" in DATABASE_URL else String),
+        nullable=False,
+    )
+    taxonomy_version: Mapped[str] = mapped_column(Text, nullable=False, default="1.0.0")
     scope_description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     total_documents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total_chunks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     coverage_percent: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
-    last_coverage_update: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    last_coverage_update: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, nullable=True
+    )
     level: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     current_xp: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     total_queries: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     successful_queries: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     avg_faithfulness: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
-    avg_response_time_ms: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
-    retrieval_config: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), default=dict)
-    features_config: Mapped[Dict[str, Any]] = mapped_column(get_json_type(), default=dict)
+    avg_response_time_ms: Mapped[float] = mapped_column(
+        Float, default=0.0, nullable=False
+    )
+    retrieval_config: Mapped[Dict[str, Any]] = mapped_column(
+        get_json_type(), default=dict
+    )
+    features_config: Mapped[Dict[str, Any]] = mapped_column(
+        get_json_type(), default=dict
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_query_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
@@ -303,43 +392,70 @@ class Agent(Base):
     def __repr__(self):
         return f"<Agent(id={self.agent_id}, name='{self.name}', level={self.level}, coverage={self.coverage_percent:.2f}%)>"
 
+
 # @CODE:AGENT-GROWTH-004:MODEL - BackgroundTask for Phase 3 real background tasks
 class BackgroundTask(Base):
     __tablename__ = "background_tasks"
 
-    task_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    agent_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('agents.agent_id', ondelete='CASCADE'), nullable=False)
+    task_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
+    agent_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(),
+        ForeignKey("agents.agent_id", ondelete="CASCADE"),
+        nullable=False,
+    )
     task_type: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )
     started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    result: Mapped[Optional[Dict[str, Any]]] = mapped_column(get_json_type(), nullable=True)
+    result: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+        get_json_type(), nullable=True
+    )
     error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     webhook_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     webhook_retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    cancellation_requested: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    cancellation_requested: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
     queue_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    progress_percentage: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
-    estimated_completion_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    progress_percentage: Mapped[float] = mapped_column(
+        Float, default=0.0, nullable=False
+    )
+    estimated_completion_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, nullable=True
+    )
 
     def __repr__(self):
         return f"<BackgroundTask(id={self.task_id}, agent_id={self.agent_id}, type='{self.task_type}', status='{self.status}')>"
+
 
 # @CODE:AGENT-GROWTH-004:MODEL - CoverageHistory for time-series coverage tracking
 class CoverageHistory(Base):
     __tablename__ = "coverage_history"
 
-    history_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), primary_key=True, default=uuid.uuid4)
-    agent_id: Mapped[uuid.UUID] = mapped_column(get_uuid_type(), ForeignKey('agents.agent_id', ondelete='CASCADE'), nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    history_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(), primary_key=True, default=uuid.uuid4
+    )
+    agent_id: Mapped[uuid.UUID] = mapped_column(
+        get_uuid_type(),
+        ForeignKey("agents.agent_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
+    )
     overall_coverage: Mapped[float] = mapped_column(Float, nullable=False)
     total_documents: Mapped[int] = mapped_column(Integer, nullable=False)
     total_chunks: Mapped[int] = mapped_column(Integer, nullable=False)
-    version: Mapped[str] = mapped_column(String(20), nullable=False, default='1.0.0')
+    version: Mapped[str] = mapped_column(String(20), nullable=False, default="1.0.0")
 
     def __repr__(self):
         return f"<CoverageHistory(id={self.history_id}, agent_id={self.agent_id}, coverage={self.overall_coverage:.2f}%, timestamp={self.timestamp})>"
+
 
 # @IMPL:REFLECTION-001:0.3 - ExecutionLog indices optimization
 async def optimize_execution_log_indices(session: AsyncSession) -> Dict[str, Any]:
@@ -358,20 +474,24 @@ async def optimize_execution_log_indices(session: AsyncSession) -> Dict[str, Any
             optimization_queries = [
                 "CREATE INDEX IF NOT EXISTS idx_execution_log_case_id ON execution_log(case_id)",
                 "CREATE INDEX IF NOT EXISTS idx_execution_log_created_at ON execution_log(created_at DESC)",
-                "CREATE INDEX IF NOT EXISTS idx_execution_log_success ON execution_log(success)"
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_success ON execution_log(success)",
             ]
         elif "sqlite" in DATABASE_URL:
             optimization_queries = [
                 "CREATE INDEX IF NOT EXISTS idx_execution_log_case_id ON execution_log(case_id)",
                 "CREATE INDEX IF NOT EXISTS idx_execution_log_created_at ON execution_log(created_at DESC)",
-                "CREATE INDEX IF NOT EXISTS idx_execution_log_success ON execution_log(success)"
+                "CREATE INDEX IF NOT EXISTS idx_execution_log_success ON execution_log(success)",
             ]
 
         created_indices = []
         for query in optimization_queries:
             try:
                 await session.execute(text(query))
-                index_name = query.split("idx_")[1].split(" ")[0] if "idx_" in query else "unknown"
+                index_name = (
+                    query.split("idx_")[1].split(" ")[0]
+                    if "idx_" in query
+                    else "unknown"
+                )
                 created_indices.append(index_name)
             except Exception as e:
                 logger.warning(f"ExecutionLog 인덱스 생성 실패: {e}")
@@ -381,16 +501,13 @@ async def optimize_execution_log_indices(session: AsyncSession) -> Dict[str, Any
         return {
             "success": True,
             "indices_created": created_indices,
-            "message": f"ExecutionLog {len(created_indices)}개 인덱스 최적화 완료"
+            "message": f"ExecutionLog {len(created_indices)}개 인덱스 최적화 완료",
         }
 
     except Exception as e:
         logger.error(f"ExecutionLog 인덱스 최적화 실패: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "indices_created": []
-        }
+        return {"success": False, "error": str(e), "indices_created": []}
+
 
 # @IMPL:CASEBANK-002:0.3 - CaseBank indices optimization
 async def optimize_casebank_indices(session: AsyncSession) -> Dict[str, Any]:
@@ -409,20 +526,24 @@ async def optimize_casebank_indices(session: AsyncSession) -> Dict[str, Any]:
             optimization_queries = [
                 "CREATE INDEX IF NOT EXISTS idx_casebank_status ON case_bank(status)",
                 "CREATE INDEX IF NOT EXISTS idx_casebank_version ON case_bank(version DESC)",
-                "CREATE INDEX IF NOT EXISTS idx_casebank_updated_at ON case_bank(updated_at DESC)"
+                "CREATE INDEX IF NOT EXISTS idx_casebank_updated_at ON case_bank(updated_at DESC)",
             ]
         elif "sqlite" in DATABASE_URL:
             optimization_queries = [
                 "CREATE INDEX IF NOT EXISTS idx_casebank_status ON case_bank(status)",
                 "CREATE INDEX IF NOT EXISTS idx_casebank_version ON case_bank(version DESC)",
-                "CREATE INDEX IF NOT EXISTS idx_casebank_updated_at ON case_bank(updated_at DESC)"
+                "CREATE INDEX IF NOT EXISTS idx_casebank_updated_at ON case_bank(updated_at DESC)",
             ]
 
         created_indices = []
         for query in optimization_queries:
             try:
                 await session.execute(text(query))
-                index_name = query.split("idx_")[1].split(" ")[0] if "idx_" in query else "unknown"
+                index_name = (
+                    query.split("idx_")[1].split(" ")[0]
+                    if "idx_" in query
+                    else "unknown"
+                )
                 created_indices.append(index_name)
             except Exception as e:
                 logger.warning(f"CaseBank 인덱스 생성 실패: {e}")
@@ -432,26 +553,22 @@ async def optimize_casebank_indices(session: AsyncSession) -> Dict[str, Any]:
         return {
             "success": True,
             "indices_created": created_indices,
-            "message": f"CaseBank {len(created_indices)}개 인덱스 최적화 완료"
+            "message": f"CaseBank {len(created_indices)}개 인덱스 최적화 완료",
         }
 
     except Exception as e:
         logger.error(f"CaseBank 인덱스 최적화 실패: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "indices_created": []
-        }
+        return {"success": False, "error": str(e), "indices_created": []}
 
 
 # 데이터베이스 연결 클래스
 class DatabaseManager:
     """실제 PostgreSQL 데이터베이스 매니저"""
-    
+
     def __init__(self):
         self.engine = engine
         self.async_session = async_session
-        
+
     async def init_database(self):
         """데이터베이스 초기화 및 테이블 생성"""
         try:
@@ -459,7 +576,9 @@ class DatabaseManager:
                 # pgvector 확장 설치 (PostgreSQL에서만 실행)
                 if "postgresql" in DATABASE_URL:
                     try:
-                        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                        await conn.execute(
+                            text("CREATE EXTENSION IF NOT EXISTS vector")
+                        )
                         logger.info("pgvector 확장 설치 완료")
                     except Exception as e:
                         logger.warning(f"pgvector 확장 설치 실패: {e}")
@@ -473,11 +592,11 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"데이터베이스 초기화 실패: {e}")
             return False
-    
+
     async def get_session(self):
         """데이터베이스 세션 반환"""
         return self.async_session()
-    
+
     async def test_connection(self) -> bool:
         """데이터베이스 연결 테스트"""
         try:
@@ -488,34 +607,38 @@ class DatabaseManager:
             logger.error(f"데이터베이스 연결 실패: {e}")
             return False
 
+
 # 전역 데이터베이스 매니저
 db_manager = DatabaseManager()
+
 
 # 택소노미 데이터 액세스 오브젝트
 class TaxonomyDAO:
     """분류체계 데이터 액세스"""
-    
+
     @staticmethod
     async def get_tree(version: str) -> List[Dict[str, Any]]:
         """분류체계 트리 조회 - 실제 데이터베이스에서"""
         async with async_session() as session:
             try:
                 # 실제 쿼리로 교체 - SQLAlchemy 2.0 방식
-                query = text("""
+                query = text(
+                    """
                     SELECT node_id, label, canonical_path, version
                     FROM taxonomy_nodes
                     WHERE version = :version
                     ORDER BY canonical_path
-                """)
+                """
+                )
                 result = await session.execute(query, {"version": version})
                 rows = result.fetchall()
-                
+
                 if not rows:
                     # 기본 데이터 삽입
                     await TaxonomyDAO._insert_default_taxonomy(session, version)
                     result = await session.execute(query, {"version": version})
                     rows = result.fetchall()
-                
+
                 # 트리 구조로 변환
                 tree = []
                 for row in rows:
@@ -524,17 +647,17 @@ class TaxonomyDAO:
                         "version": row[3],
                         "node_id": str(row[0]),
                         "canonical_path": row[2],
-                        "children": []
+                        "children": [],
                     }
                     tree.append(node)
 
                 return tree
-                
+
             except Exception as e:
                 logger.error(f"분류체계 조회 실패: {e}")
                 # 폴백 데이터
                 return await TaxonomyDAO._get_fallback_tree(version)
-    
+
     @staticmethod
     async def _insert_default_taxonomy(session, version: str):
         """기본 분류체계 데이터 삽입"""
@@ -547,19 +670,19 @@ class TaxonomyDAO:
         ]
 
         for label, path, ver in default_nodes:
-            insert_query = text("""
+            insert_query = text(
+                """
                 INSERT INTO taxonomy_nodes (label, canonical_path, version)
                 VALUES (:label, :canonical_path, :version)
                 ON CONFLICT DO NOTHING
-            """)
-            await session.execute(insert_query, {
-                "label": label,
-                "canonical_path": path,
-                "version": ver
-            })
+            """
+            )
+            await session.execute(
+                insert_query, {"label": label, "canonical_path": path, "version": ver}
+            )
 
         await session.commit()
-    
+
     @staticmethod
     async def _get_fallback_tree(version: str) -> List[Dict[str, Any]]:
         """폴백 트리 (DB 연결 실패 시)"""
@@ -575,25 +698,28 @@ class TaxonomyDAO:
                         "version": version,
                         "node_id": "ai_rag_001",
                         "canonical_path": ["AI", "RAG"],
-                        "children": []
+                        "children": [],
                     },
                     {
                         "label": "ML",
                         "version": version,
                         "node_id": "ai_ml_001",
                         "canonical_path": ["AI", "ML"],
-                        "children": []
-                    }
-                ]
+                        "children": [],
+                    },
+                ],
             }
         ]
+
 
 # 임베딩 서비스 클래스 (최적화된 버전 사용)
 try:
     from ..search.vector_engine import EmbeddingService as OptimizedEmbeddingService
+
     OPTIMIZED_EMBEDDING_AVAILABLE = True
 except ImportError:
     OPTIMIZED_EMBEDDING_AVAILABLE = False
+
 
 class EmbeddingService:
     """임베딩 생성 서비스 (업그레이드된 버전)"""
@@ -604,7 +730,9 @@ class EmbeddingService:
         # 최적화된 버전 사용 (캐싱 지원)
         if OPTIMIZED_EMBEDDING_AVAILABLE:
             try:
-                embedding_array = await OptimizedEmbeddingService.generate_embedding(text, model)
+                embedding_array = await OptimizedEmbeddingService.generate_embedding(
+                    text, model
+                )
                 return embedding_array.tolist()
             except Exception as e:
                 logger.warning(f"Optimized embedding failed, using fallback: {e}")
@@ -620,13 +748,13 @@ class EmbeddingService:
                     "https://api.openai.com/v1/embeddings",
                     headers={
                         "Authorization": f"Bearer {OPENAI_API_KEY}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "input": text[:8000],  # 토큰 제한
-                        "model": OPENAI_EMBEDDING_MODEL
+                        "model": OPENAI_EMBEDDING_MODEL,
                     },
-                    timeout=30.0
+                    timeout=30.0,
                 )
 
                 if response.status_code != 200:
@@ -654,12 +782,14 @@ class EmbeddingService:
         return embedding.tolist()
 
     @staticmethod
-    async def generate_batch_embeddings(texts: List[str], batch_size: int = 100) -> List[List[float]]:
+    async def generate_batch_embeddings(
+        texts: List[str], batch_size: int = 100
+    ) -> List[List[float]]:
         """배치로 임베딩 생성"""
         embeddings = []
 
         for i in range(0, len(texts), batch_size):
-            batch_texts = texts[i:i + batch_size]
+            batch_texts = texts[i : i + batch_size]
             batch_embeddings = []
 
             for text_content in batch_texts:
@@ -674,6 +804,7 @@ class EmbeddingService:
 
         return embeddings
 
+
 # BM25 스코어링 클래스
 class BM25Scorer:
     """BM25 스코어링 구현"""
@@ -685,33 +816,58 @@ class BM25Scorer:
         text = text.lower()
 
         # 특수문자 제거 (한국어, 영어, 숫자만 유지)
-        text = re.sub(r'[^\w\s가-힣]', ' ', text)
+        text = re.sub(r"[^\w\s가-힣]", " ", text)
 
         # 연속 공백 제거
-        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r"\s+", " ", text)
 
         # 토큰화 (단어 단위)
         tokens = text.split()
 
         # 불용어 제거 (기본적인 것만)
-        stopwords = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', '은', '는', '이', '가', '을', '를', '에', '의', '와', '과'}
-        tokens = [token for token in tokens if token not in stopwords and len(token) > 1]
+        stopwords = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "은",
+            "는",
+            "이",
+            "가",
+            "을",
+            "를",
+            "에",
+            "의",
+            "와",
+            "과",
+        }
+        tokens = [
+            token for token in tokens if token not in stopwords and len(token) > 1
+        ]
 
         return tokens
 
     @staticmethod
     def calculate_bm25_score(
-        query_tokens: List[str],
-        doc_tokens: List[str],
-        corpus_stats: Dict[str, Any]
+        query_tokens: List[str], doc_tokens: List[str], corpus_stats: Dict[str, Any]
     ) -> float:
         """BM25 스코어 계산"""
         if not query_tokens or not doc_tokens:
             return 0.0
 
         doc_length = len(doc_tokens)
-        avg_doc_length = corpus_stats.get('avg_doc_length', doc_length)
-        total_docs = corpus_stats.get('total_docs', 1)
+        avg_doc_length = corpus_stats.get("avg_doc_length", doc_length)
+        total_docs = corpus_stats.get("total_docs", 1)
 
         score = 0.0
 
@@ -722,7 +878,7 @@ class BM25Scorer:
                 continue
 
             # 역문서 빈도 (간소화된 버전)
-            doc_freq = corpus_stats.get('term_doc_freq', {}).get(query_token, 1)
+            doc_freq = corpus_stats.get("term_doc_freq", {}).get(query_token, 1)
             idf = np.log((total_docs - doc_freq + 0.5) / (doc_freq + 0.5))
 
             # BM25 공식
@@ -734,15 +890,14 @@ class BM25Scorer:
 
         return max(0.0, score)
 
+
 # Cross-encoder 재랭킹 클래스
 class CrossEncoderReranker:
     """Cross-encoder 기반 재랭킹"""
 
     @staticmethod
     def rerank_results(
-        query: str,
-        search_results: List[Dict[str, Any]],
-        top_k: int = 5
+        query: str, search_results: List[Dict[str, Any]], top_k: int = 5
     ) -> List[Dict[str, Any]]:
         """검색 결과 재랭킹 (간소화된 버전)"""
         if not search_results:
@@ -752,14 +907,14 @@ class CrossEncoderReranker:
         # 여기서는 hybrid score 기반 재랭킹
 
         for result in search_results:
-            bm25_score = result.get('metadata', {}).get('bm25_score', 0.0)
-            vector_score = result.get('metadata', {}).get('vector_score', 0.0)
+            bm25_score = result.get("metadata", {}).get("bm25_score", 0.0)
+            vector_score = result.get("metadata", {}).get("vector_score", 0.0)
 
             # 하이브리드 스코어 계산
             hybrid_score = BM25_WEIGHT * bm25_score + VECTOR_WEIGHT * vector_score
 
             # 텍스트 길이 보정 (너무 짧거나 긴 텍스트 페널티)
-            text_length = len(result.get('text', ''))
+            text_length = len(result.get("text", ""))
             length_penalty = 1.0
             if text_length < 50:
                 length_penalty = 0.8
@@ -768,15 +923,15 @@ class CrossEncoderReranker:
 
             # 쿼리 중복 보너스
             query_overlap = CrossEncoderReranker._calculate_query_overlap(
-                query.lower(), result.get('text', '').lower()
+                query.lower(), result.get("text", "").lower()
             )
 
             # 최종 점수
             final_score = hybrid_score * length_penalty * (1 + 0.1 * query_overlap)
-            result['score'] = final_score
+            result["score"] = final_score
 
         # 점수순 정렬 및 상위 K개 반환
-        reranked = sorted(search_results, key=lambda x: x['score'], reverse=True)
+        reranked = sorted(search_results, key=lambda x: x["score"], reverse=True)
         return reranked[:top_k]
 
     @staticmethod
@@ -791,10 +946,11 @@ class CrossEncoderReranker:
         overlap = len(query_words.intersection(text_words))
         return overlap / len(query_words)
 
+
 # 문서 검색 데이터 액세스 오브젝트
 class SearchDAO:
     """문서 검색 데이터 액세스"""
-    
+
     @staticmethod
     async def hybrid_search(
         query: str,
@@ -802,7 +958,7 @@ class SearchDAO:
         topk: int = 5,
         bm25_topk: int = 12,
         vector_topk: int = 12,
-        rerank_candidates: int = 50
+        rerank_candidates: int = 50,
     ) -> List[Dict[str, Any]]:
         """최적화된 하이브리드 검색 (BM25 + Vector 병렬 처리)"""
         # 비동기 최적화 엔진 사용
@@ -818,7 +974,13 @@ class SearchDAO:
             async with concurrency_controller.controlled_execution("hybrid_search"):
                 async with gc_optimizer.optimized_gc_context():
                     return await SearchDAO._execute_optimized_hybrid_search(
-                        query, filters, topk, bm25_topk, vector_topk, rerank_candidates, optimizer
+                        query,
+                        filters,
+                        topk,
+                        bm25_topk,
+                        vector_topk,
+                        rerank_candidates,
+                        optimizer,
                     )
 
         except ImportError:
@@ -839,7 +1001,7 @@ class SearchDAO:
         bm25_topk: int,
         vector_topk: int,
         rerank_candidates: int,
-        optimizer
+        optimizer,
     ) -> List[Dict[str, Any]]:
         """최적화된 하이브리드 검색 실행"""
         async with db_manager.async_session() as session:
@@ -851,28 +1013,31 @@ class SearchDAO:
                 search_params = {
                     "bm25_topk": bm25_topk,
                     "vector_topk": vector_topk,
-                    "filters": filters
+                    "filters": filters,
                 }
 
-                bm25_results, vector_results, execution_metrics = await optimizer.execute_parallel_search(
-                    session, query, query_embedding, search_params
+                bm25_results, vector_results, execution_metrics = (
+                    await optimizer.execute_parallel_search(
+                        session, query, query_embedding, search_params
+                    )
                 )
 
                 # 3. 결과 융합 (CPU 집약적 작업을 ThreadPool에서)
                 fusion_params = {
                     "bm25_weight": BM25_WEIGHT,
                     "vector_weight": VECTOR_WEIGHT,
-                    "max_candidates": rerank_candidates
+                    "max_candidates": rerank_candidates,
                 }
 
-                combined_results = await optimizer.execute_fusion_with_concurrency_control(
-                    bm25_results, vector_results, fusion_params
+                combined_results = (
+                    await optimizer.execute_fusion_with_concurrency_control(
+                        bm25_results, vector_results, fusion_params
+                    )
                 )
 
                 # 4. Cross-encoder 재랭킹 (CPU 집약적)
                 final_results = await optimizer.execute_cpu_intensive_task(
-                    CrossEncoderReranker.rerank_results,
-                    query, combined_results, topk
+                    CrossEncoderReranker.rerank_results, query, combined_results, topk
                 )
 
                 # 5. 성능 메트릭 추가
@@ -883,7 +1048,7 @@ class SearchDAO:
                         "total_time": execution_metrics.total_time,
                         "parallel_time": execution_metrics.parallel_time,
                         "memory_usage": execution_metrics.memory_usage,
-                        "optimization_enabled": True
+                        "optimization_enabled": True,
                     }
 
                 return final_results
@@ -902,7 +1067,7 @@ class SearchDAO:
         topk: int,
         bm25_topk: int,
         vector_topk: int,
-        rerank_candidates: int
+        rerank_candidates: int,
     ) -> List[Dict[str, Any]]:
         """레거시 하이브리드 검색 (순차 실행)"""
         async with db_manager.async_session() as session:
@@ -944,10 +1109,7 @@ class SearchDAO:
 
     @staticmethod
     async def _perform_bm25_search(
-        session: AsyncSession,
-        query: str,
-        topk: int,
-        filters: Dict = None
+        session: AsyncSession, query: str, topk: int, filters: Dict = None
     ) -> List[Dict[str, Any]]:
         """BM25 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -955,7 +1117,8 @@ class SearchDAO:
 
             if "sqlite" in DATABASE_URL:
                 # SQLite용 간단한 텍스트 매칭
-                bm25_query = text(f"""
+                bm25_query = text(
+                    f"""
                     SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
                            CASE
                                WHEN c.text LIKE '%' || :query || '%' THEN 1.0
@@ -968,10 +1131,12 @@ class SearchDAO:
                     {filter_clause}
                     ORDER BY bm25_score DESC
                     LIMIT :topk
-                """)
+                """
+                )
             else:
                 # PostgreSQL full-text search (정규화 스키마: chunks.text 사용)
-                bm25_query = text(f"""
+                bm25_query = text(
+                    f"""
                     SELECT c.chunk_id, c.text, d.title, d.source_url,
                            dt.path,
                            ts_rank_cd(
@@ -986,28 +1151,26 @@ class SearchDAO:
                     {filter_clause}
                     ORDER BY bm25_score DESC
                     LIMIT :topk
-                """)
+                """
+                )
 
-            result = await session.execute(bm25_query, {
-                "query": query,
-                "topk": topk
-            })
+            result = await session.execute(bm25_query, {"query": query, "topk": topk})
             rows = result.fetchall()
 
             results = []
             for row in rows:
                 result_dict = {
                     "chunk_id": str(row[0]),  # document id
-                    "text": row[1],           # content
-                    "title": row[2],          # title
-                    "source_url": row[3],     # source_url (현재는 'db_document')
+                    "text": row[1],  # content
+                    "title": row[2],  # title
+                    "source_url": row[3],  # source_url (현재는 'db_document')
                     "taxonomy_path": row[4] if row[4] else [],  # path (현재는 빈 배열)
                     "score": float(row[5]) if row[5] else 0.0,
                     "metadata": {
                         "bm25_score": float(row[5]) if row[5] else 0.0,
                         "vector_score": 0.0,
-                        "source": "bm25"
-                    }
+                        "source": "bm25",
+                    },
                 }
                 results.append(result_dict)
 
@@ -1022,7 +1185,7 @@ class SearchDAO:
         session: AsyncSession,
         query_embedding: List[float],
         topk: int,
-        filters: Dict = None
+        filters: Dict = None,
     ) -> List[Dict[str, Any]]:
         """Vector 유사도 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -1032,7 +1195,8 @@ class SearchDAO:
                 # SQLite용 간단한 벡터 유사도 (실제 임베딩이 있는 경우만)
                 # 실제로는 Python에서 코사인 유사도 계산이 필요하지만,
                 # 여기서는 간단한 폴백으로 텍스트 기반 검색 사용
-                vector_query = text(f"""
+                vector_query = text(
+                    f"""
                     SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path,
                            0.8 as vector_score
                     FROM chunks c
@@ -1043,16 +1207,16 @@ class SearchDAO:
                     {filter_clause}
                     ORDER BY c.chunk_id
                     LIMIT :topk
-                """)
+                """
+                )
 
-                result = await session.execute(vector_query, {
-                    "topk": topk
-                })
+                result = await session.execute(vector_query, {"topk": topk})
             else:
                 # PostgreSQL pgvector 검색 (정규화 스키마: embeddings.vec 사용)
                 try:
                     # chunks + embeddings JOIN으로 벡터 검색
-                    vector_query = text(f"""
+                    vector_query = text(
+                        f"""
                         SELECT c.chunk_id, c.text, d.title, d.source_url,
                                dt.path,
                                1.0 - (e.vec <-> :query_vector::vector) as vector_score
@@ -1064,19 +1228,22 @@ class SearchDAO:
                         {filter_clause}
                         ORDER BY e.vec <-> :query_vector::vector
                         LIMIT :topk
-                    """)
+                    """
+                    )
 
                     # pgvector 벡터를 문자열로 변환
-                    vector_str = '[' + ','.join(map(str, query_embedding)) + ']'
+                    vector_str = "[" + ",".join(map(str, query_embedding)) + "]"
 
-                    result = await session.execute(vector_query, {
-                        "query_vector": vector_str,
-                        "topk": topk
-                    })
+                    result = await session.execute(
+                        vector_query, {"query_vector": vector_str, "topk": topk}
+                    )
                 except Exception as vector_error:
                     # Fallback to cosine similarity calculation in Python
-                    logger.warning(f"pgvector 연산 실패, Python 계산으로 폴백: {vector_error}")
-                    vector_query = text(f"""
+                    logger.warning(
+                        f"pgvector 연산 실패, Python 계산으로 폴백: {vector_error}"
+                    )
+                    vector_query = text(
+                        f"""
                         SELECT c.chunk_id, c.text, d.title, d.source_url, dt.path, e.vec,
                                0.8 as vector_score
                         FROM chunks c
@@ -1087,11 +1254,10 @@ class SearchDAO:
                         {filter_clause}
                         ORDER BY c.chunk_id
                         LIMIT :topk
-                    """)
+                    """
+                    )
 
-                    result = await session.execute(vector_query, {
-                        "topk": topk
-                    })
+                    result = await session.execute(vector_query, {"topk": topk})
 
             rows = result.fetchall()
 
@@ -1099,16 +1265,16 @@ class SearchDAO:
             for row in rows:
                 result_dict = {
                     "chunk_id": str(row[0]),  # document id
-                    "text": row[1],           # content
-                    "title": row[2],          # title
-                    "source_url": row[3],     # source_url (현재는 'db_document')
+                    "text": row[1],  # content
+                    "title": row[2],  # title
+                    "source_url": row[3],  # source_url (현재는 'db_document')
                     "taxonomy_path": row[4] if row[4] else [],  # path (현재는 빈 배열)
                     "score": float(row[5]) if row[5] else 0.0,
                     "metadata": {
                         "bm25_score": 0.0,
                         "vector_score": float(row[5]) if row[5] else 0.0,
-                        "source": "vector"
-                    }
+                        "source": "vector",
+                    },
                 }
                 results.append(result_dict)
 
@@ -1161,7 +1327,7 @@ class SearchDAO:
     def _combine_search_results(
         bm25_results: List[Dict[str, Any]],
         vector_results: List[Dict[str, Any]],
-        max_candidates: int
+        max_candidates: int,
     ) -> List[Dict[str, Any]]:
         """BM25와 Vector 검색 결과 합성"""
         # chunk_id를 키로 하는 결과 딕셔너리
@@ -1177,11 +1343,15 @@ class SearchDAO:
             chunk_id = result["chunk_id"]
             if chunk_id in combined:
                 # 기존 결과에 vector 정보 추가
-                combined[chunk_id]["metadata"]["vector_score"] = result["metadata"]["vector_score"]
+                combined[chunk_id]["metadata"]["vector_score"] = result["metadata"][
+                    "vector_score"
+                ]
                 # 하이브리드 스코어 계산
                 bm25_score = combined[chunk_id]["metadata"]["bm25_score"]
                 vector_score = result["metadata"]["vector_score"]
-                combined[chunk_id]["score"] = BM25_WEIGHT * bm25_score + VECTOR_WEIGHT * vector_score
+                combined[chunk_id]["score"] = (
+                    BM25_WEIGHT * bm25_score + VECTOR_WEIGHT * vector_score
+                )
                 combined[chunk_id]["metadata"]["source"] = "hybrid"
             else:
                 # 새로운 vector 전용 결과
@@ -1189,55 +1359,73 @@ class SearchDAO:
 
         # 점수순 정렬 및 상위 후보 선택
         sorted_results = sorted(
-            combined.values(),
-            key=lambda x: x["score"],
-            reverse=True
+            combined.values(), key=lambda x: x["score"], reverse=True
         )
 
         return sorted_results[:max_candidates]
-    
+
     @staticmethod
     async def _insert_sample_chunks(session):
         """샘플 청크 데이터 삽입"""
         # 문서 먼저 삽입
         sample_docs = [
             ("RAG 개념", "https://example.com/rag"),
-            ("ML 분류", "https://example.com/ml")
+            ("ML 분류", "https://example.com/ml"),
         ]
 
         doc_ids = []
         for title, url in sample_docs:
             from sqlalchemy import text as sql_text
-            doc_insert = sql_text("""
+
+            doc_insert = sql_text(
+                """
                 INSERT INTO documents (title, source_url, content_type)
                 VALUES (:title, :source_url, 'text/plain')
                 RETURNING doc_id
-            """)
-            result = await session.execute(doc_insert, {"title": title, "source_url": url})
+            """
+            )
+            result = await session.execute(
+                doc_insert, {"title": title, "source_url": url}
+            )
             doc_id = result.scalar()
             doc_ids.append(doc_id)
 
         # 청크 삽입
         sample_chunks = [
-            (doc_ids[0], "RAG 시스템은 Retrieval-Augmented Generation의 약자입니다.", "[1,100)", 0),
-            (doc_ids[1], "머신러닝 분류 알고리즘에는 SVM, Random Forest 등이 있습니다.", "[1,100)", 0)
+            (
+                doc_ids[0],
+                "RAG 시스템은 Retrieval-Augmented Generation의 약자입니다.",
+                "[1,100)",
+                0,
+            ),
+            (
+                doc_ids[1],
+                "머신러닝 분류 알고리즘에는 SVM, Random Forest 등이 있습니다.",
+                "[1,100)",
+                0,
+            ),
         ]
 
         for doc_id, text_content, span, chunk_index in sample_chunks:
-            chunk_insert = text("""
+            chunk_insert = text(
+                """
                 INSERT INTO chunks (doc_id, text, span, chunk_index)
                 VALUES (:doc_id, :text, :span, :chunk_index)
                 ON CONFLICT DO NOTHING
-            """)
-            await session.execute(chunk_insert, {
-                "doc_id": doc_id,
-                "text": text_content,
-                "span": span,
-                "chunk_index": chunk_index
-            })
-        
+            """
+            )
+            await session.execute(
+                chunk_insert,
+                {
+                    "doc_id": doc_id,
+                    "text": text_content,
+                    "span": span,
+                    "chunk_index": chunk_index,
+                },
+            )
+
         await session.commit()
-    
+
     @staticmethod
     async def optimize_search_indices(session) -> Dict[str, Any]:
         """검색 인덱스 최적화 (SQLite/PostgreSQL 호환)"""
@@ -1249,7 +1437,7 @@ class SearchDAO:
                     "CREATE INDEX IF NOT EXISTS idx_chunks_doc_id ON chunks (doc_id)",
                     "CREATE INDEX IF NOT EXISTS idx_embeddings_chunk_id ON embeddings (chunk_id)",
                     "CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_doc_id ON doc_taxonomy (doc_id)",
-                    "CREATE INDEX IF NOT EXISTS idx_documents_title ON documents (title)"
+                    "CREATE INDEX IF NOT EXISTS idx_documents_title ON documents (title)",
                 ]
             else:
                 # PostgreSQL 인덱스
@@ -1262,14 +1450,18 @@ class SearchDAO:
                     "CREATE INDEX IF NOT EXISTS idx_chunks_doc_id ON chunks (doc_id)",
                     "CREATE INDEX IF NOT EXISTS idx_embeddings_chunk_id ON embeddings (chunk_id)",
                     "CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_doc_id ON doc_taxonomy (doc_id)",
-                    "CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_path ON doc_taxonomy USING GIN (path)"
+                    "CREATE INDEX IF NOT EXISTS idx_doc_taxonomy_path ON doc_taxonomy USING GIN (path)",
                 ]
 
             created_indices = []
             for query in optimization_queries:
                 try:
                     await session.execute(text(query))
-                    index_name = query.split("idx_")[1].split(" ")[0] if "idx_" in query else "unknown"
+                    index_name = (
+                        query.split("idx_")[1].split(" ")[0]
+                        if "idx_" in query
+                        else "unknown"
+                    )
                     created_indices.append(index_name)
                 except Exception as e:
                     logger.warning(f"인덱스 생성 실패: {e}")
@@ -1286,16 +1478,12 @@ class SearchDAO:
             return {
                 "success": True,
                 "indices_created": created_indices,
-                "message": f"{len(created_indices)}개 인덱스 최적화 완료"
+                "message": f"{len(created_indices)}개 인덱스 최적화 완료",
             }
 
         except Exception as e:
             logger.error(f"인덱스 최적화 실패: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "indices_created": []
-            }
+            return {"success": False, "error": str(e), "indices_created": []}
 
     @staticmethod
     async def get_search_analytics(session) -> Dict[str, Any]:
@@ -1306,7 +1494,7 @@ class SearchDAO:
                 "total_docs": "SELECT COUNT(*) FROM documents",
                 "total_chunks": "SELECT COUNT(*) FROM chunks",
                 "embedded_chunks": "SELECT COUNT(*) FROM embeddings",
-                "taxonomy_mappings": "SELECT COUNT(*) FROM doc_taxonomy"
+                "taxonomy_mappings": "SELECT COUNT(*) FROM doc_taxonomy",
             }
 
             statistics = {}
@@ -1319,30 +1507,38 @@ class SearchDAO:
                     statistics[stat_name] = 0
 
             # 인덱스 상태 확인
-            index_query = text("""
+            index_query = text(
+                """
                 SELECT indexname, tablename
                 FROM pg_indexes
                 WHERE tablename IN ('chunks', 'embeddings', 'documents', 'doc_taxonomy')
                 AND schemaname = 'public'
-            """)
+            """
+            )
 
             index_result = await session.execute(index_query)
-            indices = [{"name": row[0], "table": row[1]} for row in index_result.fetchall()]
+            indices = [
+                {"name": row[0], "table": row[1]} for row in index_result.fetchall()
+            ]
 
             # 검색 준비 상태
             search_readiness = {
                 "bm25_ready": statistics["total_chunks"] > 0,
                 "vector_ready": statistics["embedded_chunks"] > 0,
-                "hybrid_ready": statistics["total_chunks"] > 0 and statistics["embedded_chunks"] > 0,
-                "taxonomy_ready": statistics["taxonomy_mappings"] > 0
+                "hybrid_ready": statistics["total_chunks"] > 0
+                and statistics["embedded_chunks"] > 0,
+                "taxonomy_ready": statistics["taxonomy_mappings"] > 0,
             }
 
             return {
                 "statistics": statistics,
                 "indices": indices,
                 "search_readiness": search_readiness,
-                "embedding_coverage": (statistics["embedded_chunks"] / max(1, statistics["total_chunks"])) * 100,
-                "last_updated": datetime.utcnow().isoformat()
+                "embedding_coverage": (
+                    statistics["embedded_chunks"] / max(1, statistics["total_chunks"])
+                )
+                * 100,
+                "last_updated": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -1351,7 +1547,7 @@ class SearchDAO:
                 "statistics": {},
                 "indices": [],
                 "search_readiness": {},
-                "error": str(e)
+                "error": str(e),
             }
 
     @staticmethod
@@ -1365,43 +1561,76 @@ class SearchDAO:
                 "source_url": "https://example.com",
                 "taxonomy_path": ["AI", "General"],
                 "score": 0.5,
-                "metadata": {"source": "fallback", "bm25_score": 0.5, "vector_score": 0.5}
+                "metadata": {
+                    "source": "fallback",
+                    "bm25_score": 0.5,
+                    "vector_score": 0.5,
+                },
             }
         ]
+
 
 # 분류 데이터 액세스 오브젝트
 class ClassifyDAO:
     """문서 분류 데이터 액세스"""
-    
+
     @staticmethod
-    async def classify_text(text: str, hint_paths: List[List[str]] = None) -> Dict[str, Any]:
+    async def classify_text(
+        text: str, hint_paths: List[List[str]] = None
+    ) -> Dict[str, Any]:
         """실제 분류 로직 - ML 모델 기반 (키워드 기반 제거)"""
         try:
             # 실제 ML 분류 모델 호출 (여기서는 간단한 로직으로 시뮬레이션)
             # TODO: 실제 BERT/RoBERTa 등 분류 모델로 교체
-            
+
             # 텍스트 전처리
             text_lower = text.lower()
-            
+
             # 가중치 기반 분류 (키워드가 아닌 semantic similarity 기반)
             scores = {}
-            
+
             # AI/RAG 도메인 점수
-            rag_terms = ["rag", "retrieval", "augmented", "generation", "vector", "embedding"]
-            scores["rag"] = sum(1 for term in rag_terms if term in text_lower) / len(rag_terms)
-            
-            # AI/ML 도메인 점수  
-            ml_terms = ["machine learning", "ml", "model", "training", "algorithm", "neural"]
-            scores["ml"] = sum(1 for term in ml_terms if term in text_lower) / len(ml_terms)
-            
+            rag_terms = [
+                "rag",
+                "retrieval",
+                "augmented",
+                "generation",
+                "vector",
+                "embedding",
+            ]
+            scores["rag"] = sum(1 for term in rag_terms if term in text_lower) / len(
+                rag_terms
+            )
+
+            # AI/ML 도메인 점수
+            ml_terms = [
+                "machine learning",
+                "ml",
+                "model",
+                "training",
+                "algorithm",
+                "neural",
+            ]
+            scores["ml"] = sum(1 for term in ml_terms if term in text_lower) / len(
+                ml_terms
+            )
+
             # Taxonomy 도메인 점수
-            tax_terms = ["taxonomy", "classification", "category", "hierarchy", "ontology"]
-            scores["taxonomy"] = sum(1 for term in tax_terms if term in text_lower) / len(tax_terms)
-            
+            tax_terms = [
+                "taxonomy",
+                "classification",
+                "category",
+                "hierarchy",
+                "ontology",
+            ]
+            scores["taxonomy"] = sum(
+                1 for term in tax_terms if term in text_lower
+            ) / len(tax_terms)
+
             # 최고 점수 도메인 선택
             best_domain = max(scores.keys(), key=lambda k: scores[k])
             best_score = scores[best_domain]
-            
+
             # 도메인별 분류 결과 생성
             if best_domain == "rag" and best_score > 0.1:
                 canonical = ["AI", "RAG"]
@@ -1409,7 +1638,7 @@ class ClassifyDAO:
                 confidence = min(0.9, 0.6 + best_score * 0.4)
                 reasoning = [
                     f"Semantic similarity score: {best_score:.2f}",
-                    "Document retrieval and generation patterns detected"
+                    "Document retrieval and generation patterns detected",
                 ]
             elif best_domain == "ml" and best_score > 0.1:
                 canonical = ["AI", "ML"]
@@ -1417,7 +1646,7 @@ class ClassifyDAO:
                 confidence = min(0.9, 0.6 + best_score * 0.3)
                 reasoning = [
                     f"ML pattern score: {best_score:.2f}",
-                    "Machine learning methodology detected"
+                    "Machine learning methodology detected",
                 ]
             elif best_domain == "taxonomy" and best_score > 0.1:
                 canonical = ["AI", "Taxonomy"]
@@ -1425,7 +1654,7 @@ class ClassifyDAO:
                 confidence = min(0.85, 0.55 + best_score * 0.3)
                 reasoning = [
                     f"Taxonomy pattern score: {best_score:.2f}",
-                    "Classification structure detected"
+                    "Classification structure detected",
                 ]
             else:
                 # 일반 AI 분류
@@ -1434,9 +1663,9 @@ class ClassifyDAO:
                 confidence = 0.6
                 reasoning = [
                     "No specific domain patterns detected",
-                    "Defaulting to general AI classification"
+                    "Defaulting to general AI classification",
                 ]
-            
+
             # hint_paths 고려하여 confidence 조정
             if hint_paths:
                 for hint_path in hint_paths:
@@ -1444,16 +1673,16 @@ class ClassifyDAO:
                         confidence = min(1.0, confidence + 0.1)
                         reasoning.append(f"Hint path match: {' -> '.join(hint_path)}")
                         break
-            
+
             return {
                 "canonical": canonical,
                 "label": label,
                 "confidence": confidence,
                 "reasoning": reasoning,
                 "node_id": hash(text) % 10000,  # 정수형 node_id
-                "version": 1  # 정수형 version
+                "version": 1,  # 정수형 version
             }
-            
+
         except Exception as e:
             logger.error(f"분류 실패: {e}")
             # 폴백 분류
@@ -1463,18 +1692,21 @@ class ClassifyDAO:
                 "confidence": 0.5,
                 "reasoning": [f"분류 오류로 인한 기본 분류: {str(e)}"],
                 "node_id": hash(text) % 10000,  # 정수형 node_id
-                "version": 1  # 정수형 version
+                "version": 1,  # 정수형 version
             }
+
 
 # 초기화 함수
 async def init_database():
     """데이터베이스 초기화"""
     return await db_manager.init_database()
 
+
 # 연결 테스트 함수
 async def test_database_connection():
     """데이터베이스 연결 테스트"""
     return await db_manager.test_connection()
+
 
 # 유틸리티 함수들
 async def setup_search_system():
@@ -1504,6 +1736,7 @@ async def setup_search_system():
         logger.error(f"검색 시스템 설정 실패: {e}")
         return False
 
+
 async def get_search_performance_metrics() -> Dict[str, Any]:
     """검색 성능 지표 조회"""
     try:
@@ -1516,29 +1749,37 @@ async def get_search_performance_metrics() -> Dict[str, Any]:
             embedded_chunks = stats.get("embedded_chunks", 0)
 
             performance = {
-                "embedding_coverage": (embedded_chunks / total_chunks * 100) if total_chunks > 0 else 0,
+                "embedding_coverage": (
+                    (embedded_chunks / total_chunks * 100) if total_chunks > 0 else 0
+                ),
                 "search_readiness": embedded_chunks > 0 and total_chunks > 0,
                 "bm25_ready": total_chunks > 0,
                 "vector_ready": embedded_chunks > 0,
                 "hybrid_ready": embedded_chunks > 0 and total_chunks > 0,
                 "index_status": "optimized" if total_chunks > 0 else "empty",
-                "api_status": "enabled" if OPENAI_API_KEY else "disabled"
+                "api_status": "enabled" if OPENAI_API_KEY else "disabled",
             }
 
             # 권장사항 생성
             recommendations = []
             if performance["embedding_coverage"] < 100:
-                recommendations.append("일부 청크의 임베딩이 누락되었습니다. 임베딩 생성을 실행하세요.")
+                recommendations.append(
+                    "일부 청크의 임베딩이 누락되었습니다. 임베딩 생성을 실행하세요."
+                )
             if not performance["api_status"] == "enabled":
-                recommendations.append("OpenAI API 키를 설정하여 고품질 임베딩을 사용하세요.")
+                recommendations.append(
+                    "OpenAI API 키를 설정하여 고품질 임베딩을 사용하세요."
+                )
             if total_chunks == 0:
-                recommendations.append("문서를 추가하여 검색 가능한 콘텐츠를 구축하세요.")
+                recommendations.append(
+                    "문서를 추가하여 검색 가능한 콘텐츠를 구축하세요."
+                )
 
             return {
                 "performance": performance,
                 "analytics": analytics,
                 "recommendations": recommendations,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
     except Exception as e:
@@ -1547,8 +1788,9 @@ async def get_search_performance_metrics() -> Dict[str, Any]:
             "error": str(e),
             "performance": {},
             "analytics": {},
-            "recommendations": []
+            "recommendations": [],
         }
+
 
 # 검색 성능 모니터링을 위한 메트릭 수집기
 class SearchMetrics:
@@ -1578,11 +1820,15 @@ class SearchMetrics:
 
         return {
             "avg_latency": sum(self.search_latencies) / len(self.search_latencies),
-            "p95_latency": sorted(self.search_latencies)[int(len(self.search_latencies) * 0.95)] if len(self.search_latencies) > 20 else max(self.search_latencies),
+            "p95_latency": (
+                sorted(self.search_latencies)[int(len(self.search_latencies) * 0.95)]
+                if len(self.search_latencies) > 20
+                else max(self.search_latencies)
+            ),
             "total_searches": sum(self.search_counts.values()),
             "search_counts": self.search_counts,
             "error_rate": self.error_counts / max(1, sum(self.search_counts.values())),
-            "period_start": self.last_reset.isoformat()
+            "period_start": self.last_reset.isoformat(),
         }
 
     def reset(self):
@@ -1591,6 +1837,7 @@ class SearchMetrics:
         self.search_counts = {"bm25": 0, "vector": 0, "hybrid": 0}
         self.error_counts = 0
         self.last_reset = datetime.utcnow()
+
 
 # 전역 메트릭 수집기
 search_metrics = SearchMetrics()

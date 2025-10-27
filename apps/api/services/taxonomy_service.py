@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 class TaxonomyService:
     """Real taxonomy service using database"""
 
-    async def list_versions(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    async def list_versions(
+        self, limit: int = 50, offset: int = 0
+    ) -> List[Dict[str, Any]]:
         """
         List available taxonomy versions from database
 
@@ -29,7 +31,8 @@ class TaxonomyService:
         """
         async with db_manager.async_session() as session:
             try:
-                query = text("""
+                query = text(
+                    """
                     SELECT DISTINCT version,
                            COUNT(*) as node_count,
                            MAX(created_at) as created_at
@@ -38,47 +41,56 @@ class TaxonomyService:
                     GROUP BY version
                     ORDER BY version DESC
                     LIMIT :limit OFFSET :offset
-                """)
+                """
+                )
 
-                result = await session.execute(query, {"limit": limit, "offset": offset})
+                result = await session.execute(
+                    query, {"limit": limit, "offset": offset}
+                )
                 rows = result.fetchall()
 
                 versions = []
                 for row in rows:
-                    versions.append({
-                        "version": row[0],
-                        "node_count": row[1],
-                        "created_at": row[2] if row[2] else datetime.utcnow(),
-                        "created_by": "system",
-                        "change_summary": f"Taxonomy version {row[0]}",
-                        "parent_version": None,
-                        "depth": 3
-                    })
+                    versions.append(
+                        {
+                            "version": row[0],
+                            "node_count": row[1],
+                            "created_at": row[2] if row[2] else datetime.utcnow(),
+                            "created_by": "system",
+                            "change_summary": f"Taxonomy version {row[0]}",
+                            "parent_version": None,
+                            "depth": 3,
+                        }
+                    )
 
                 if not versions:
-                    return [{
-                        "version": "1.0.0",
-                        "node_count": 0,
-                        "created_at": datetime.utcnow(),
-                        "created_by": "system",
-                        "change_summary": "Initial version",
-                        "parent_version": None,
-                        "depth": 0
-                    }]
+                    return [
+                        {
+                            "version": "1.0.0",
+                            "node_count": 0,
+                            "created_at": datetime.utcnow(),
+                            "created_by": "system",
+                            "change_summary": "Initial version",
+                            "parent_version": None,
+                            "depth": 0,
+                        }
+                    ]
 
                 return versions
 
             except Exception as e:
                 logger.error(f"Failed to list versions: {e}")
-                return [{
-                    "version": "1.0.0",
-                    "node_count": 0,
-                    "created_at": datetime.utcnow(),
-                    "created_by": "system",
-                    "change_summary": "Fallback version",
-                    "parent_version": None,
-                    "depth": 0
-                }]
+                return [
+                    {
+                        "version": "1.0.0",
+                        "node_count": 0,
+                        "created_at": datetime.utcnow(),
+                        "created_by": "system",
+                        "change_summary": "Fallback version",
+                        "parent_version": None,
+                        "depth": 0,
+                    }
+                ]
 
     async def get_tree(self, version: str) -> Dict[str, Any]:
         """
@@ -99,8 +111,8 @@ class TaxonomyService:
                 "version": version,
                 "metadata": {
                     "total_nodes": len(nodes),
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             }
 
         except Exception as e:
@@ -112,8 +124,8 @@ class TaxonomyService:
                 "metadata": {
                     "total_nodes": 0,
                     "timestamp": datetime.utcnow().isoformat(),
-                    "error": str(e)
-                }
+                    "error": str(e),
+                },
             }
 
     async def _build_edges(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -126,11 +138,13 @@ class TaxonomyService:
             if len(path) > 1:
                 parent_path = tuple(path[:-1])
                 if parent_path in node_map:
-                    edges.append({
-                        "parent": node_map[parent_path],
-                        "child": node["node_id"],
-                        "version": node["version"]
-                    })
+                    edges.append(
+                        {
+                            "parent": node_map[parent_path],
+                            "child": node["node_id"],
+                            "version": node["version"],
+                        }
+                    )
 
         return edges
 
@@ -146,13 +160,15 @@ class TaxonomyService:
         """
         async with db_manager.async_session() as session:
             try:
-                query = text("""
+                query = text(
+                    """
                     SELECT COUNT(*) as total_nodes,
                            COUNT(DISTINCT canonical_path) as unique_paths,
                            MAX(array_length(canonical_path, 1)) as max_depth
                     FROM taxonomy_nodes
                     WHERE version = :version
-                """)
+                """
+                )
 
                 result = await session.execute(query, {"version": version})
                 row = result.fetchone()
@@ -164,7 +180,7 @@ class TaxonomyService:
                         "internal_nodes": 0,
                         "max_depth": row[2] if row[2] else 0,
                         "avg_depth": float(row[2] if row[2] else 0),
-                        "categories_distribution": {}
+                        "categories_distribution": {},
                     }
 
                 return {
@@ -173,7 +189,7 @@ class TaxonomyService:
                     "internal_nodes": 0,
                     "max_depth": 0,
                     "avg_depth": 0.0,
-                    "categories_distribution": {}
+                    "categories_distribution": {},
                 }
 
             except Exception as e:
@@ -184,7 +200,7 @@ class TaxonomyService:
                     "internal_nodes": 0,
                     "max_depth": 0,
                     "avg_depth": 0.0,
-                    "categories_distribution": {}
+                    "categories_distribution": {},
                 }
 
     async def validate_taxonomy(self, version: str) -> Dict[str, Any]:
@@ -220,7 +236,7 @@ class TaxonomyService:
                 "is_valid": is_valid,
                 "errors": errors,
                 "warnings": warnings,
-                "suggestions": suggestions
+                "suggestions": suggestions,
             }
 
         except Exception as e:
@@ -229,10 +245,12 @@ class TaxonomyService:
                 "is_valid": False,
                 "errors": [str(e)],
                 "warnings": [],
-                "suggestions": []
+                "suggestions": [],
             }
 
-    async def compare_versions(self, base_version: str, target_version: str) -> Dict[str, Any]:
+    async def compare_versions(
+        self, base_version: str, target_version: str
+    ) -> Dict[str, Any]:
         """
         Compare two taxonomy versions and identify changes
 
@@ -247,8 +265,8 @@ class TaxonomyService:
             base_nodes = await TaxonomyDAO.get_tree(base_version)
             target_nodes = await TaxonomyDAO.get_tree(target_version)
 
-            base_map = {node['node_id']: node for node in base_nodes}
-            target_map = {node['node_id']: node for node in target_nodes}
+            base_map = {node["node_id"]: node for node in base_nodes}
+            target_map = {node["node_id"]: node for node in target_nodes}
 
             added_nodes = []
             removed_nodes = []
@@ -259,13 +277,13 @@ class TaxonomyService:
                     added_nodes.append(target_node)
                 else:
                     base_node = base_map[node_id]
-                    if (base_node['label'] != target_node['label'] or
-                        base_node['canonical_path'] != target_node['canonical_path']):
-                        modified_nodes.append({
-                            'node_id': node_id,
-                            'old': base_node,
-                            'new': target_node
-                        })
+                    if (
+                        base_node["label"] != target_node["label"]
+                        or base_node["canonical_path"] != target_node["canonical_path"]
+                    ):
+                        modified_nodes.append(
+                            {"node_id": node_id, "old": base_node, "new": target_node}
+                        )
 
             for node_id, base_node in base_map.items():
                 if node_id not in target_map:
@@ -277,16 +295,20 @@ class TaxonomyService:
                 "changes": {
                     "added": added_nodes,
                     "removed": removed_nodes,
-                    "modified": modified_nodes
+                    "modified": modified_nodes,
                 },
                 "summary": {
                     "added_count": len(added_nodes),
                     "removed_count": len(removed_nodes),
                     "modified_count": len(modified_nodes),
-                    "total_changes": len(added_nodes) + len(removed_nodes) + len(modified_nodes)
-                }
+                    "total_changes": len(added_nodes)
+                    + len(removed_nodes)
+                    + len(modified_nodes),
+                },
             }
 
         except Exception as e:
-            logger.error(f"Failed to compare versions {base_version} and {target_version}: {e}")
+            logger.error(
+                f"Failed to compare versions {base_version} and {target_version}: {e}"
+            )
             raise
