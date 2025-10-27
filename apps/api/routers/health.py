@@ -5,6 +5,8 @@ Health Check 엔드포인트
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 """
 
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends
 
 from ..deps import get_current_timestamp, get_taxonomy_version, verify_api_key
@@ -13,7 +15,7 @@ router = APIRouter()
 
 
 @router.get("/healthz")
-def health_check(api_key: str = Depends(verify_api_key)) -> None:
+def health_check(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Bridge Pack 스펙: GET /healthz
     Expected Response:

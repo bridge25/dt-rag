@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH6
 import re
 from dataclasses import dataclass
 from typing import List
@@ -29,7 +30,7 @@ class IntelligentChunker:
         chunk_size: int = 500,
         overlap_size: int = 128,
         encoding_name: str = "cl100k_base",
-    ):
+    ) -> None:
         if not TIKTOKEN_AVAILABLE:
             raise ChunkingError("tiktoken not installed")
 
@@ -58,7 +59,7 @@ class IntelligentChunker:
             raise ChunkingError("No sentences found in text")
 
         chunks = []
-        current_chunk_sentences = []
+        current_chunk_sentences: List[str] = []
         current_tokens = 0
         position = 0
 
@@ -81,7 +82,7 @@ class IntelligentChunker:
                     current_tokens = 0
 
                 words = sentence.split()
-                word_chunk = []
+                word_chunk: List[str] = []
                 word_tokens = 0
 
                 for word in words:
@@ -133,7 +134,7 @@ class IntelligentChunker:
                     )
                 )
 
-                overlap_sentences = []
+                overlap_sentences: List[str] = []
                 overlap_tokens = 0
                 for sent in reversed(current_chunk_sentences):
                     sent_tokens = self.count_tokens(sent)

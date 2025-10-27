@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class MLClassifier:
     """Sentence-BERT 기반 의미론적 분류기"""
 
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+    def __init__(self, model_name: str = "all-MiniLM-L6-v2") -> None:
         """
         Args:
             model_name: Hugging Face 모델 이름
@@ -81,6 +81,8 @@ class MLClassifier:
         if self.model is None:
             self.load_model()
 
+        assert self.model is not None, "Model should be loaded"
+
         try:
             text_embedding = self.model.encode(
                 text, convert_to_numpy=True, show_progress_bar=False
@@ -93,7 +95,7 @@ class MLClassifier:
                 )[0][0]
                 similarities[path] = float(similarity)
 
-            best_path = max(similarities, key=similarities.get)
+            best_path = max(similarities, key=similarities.get)  # type: ignore[arg-type]
             best_score = similarities[best_path]
 
             confidence = min(0.95, best_score)

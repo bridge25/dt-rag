@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2
 """
 RAGAS evaluation engine implementation
 
@@ -56,7 +57,13 @@ class RAGASEvaluator:
                 logger.warning(f"Failed to initialize Gemini model: {e}")
 
         # Quality thresholds
-        self.thresholds = QualityThresholds()
+        self.thresholds = QualityThresholds(
+            faithfulness_min=0.85,
+            context_precision_min=0.75,
+            context_recall_min=0.70,
+            answer_relevancy_min=0.80,
+            response_time_max=5.0,
+        )
 
     async def evaluate_rag_response(
         self,
@@ -93,17 +100,22 @@ class RAGASEvaluator:
                 return_exceptions=True,
             )
 
-            # Parse results
-            context_precision = (
-                results[0] if not isinstance(results[0], Exception) else 0.0
-            )
-            context_recall = (
-                results[1] if not isinstance(results[1], Exception) else 0.0
-            )
-            faithfulness = results[2] if not isinstance(results[2], Exception) else 0.0
-            answer_relevancy = (
-                results[3] if not isinstance(results[3], Exception) else 0.0
-            )
+            # Parse results - ensure all values are float, not Exception
+            context_precision: Optional[float] = None
+            if not isinstance(results[0], Exception) and isinstance(results[0], float):
+                context_precision = results[0]
+
+            context_recall: Optional[float] = None
+            if not isinstance(results[1], Exception) and isinstance(results[1], float):
+                context_recall = results[1]
+
+            faithfulness: Optional[float] = None
+            if not isinstance(results[2], Exception) and isinstance(results[2], float):
+                faithfulness = results[2]
+
+            answer_relevancy: Optional[float] = None
+            if not isinstance(results[3], Exception) and isinstance(results[3], float):
+                answer_relevancy = results[3]
 
             # Create metrics object
             metrics = EvaluationMetrics(
@@ -111,6 +123,8 @@ class RAGASEvaluator:
                 context_recall=context_recall,
                 faithfulness=faithfulness,
                 answer_relevancy=answer_relevancy,
+                response_time=0.0,  # Placeholder, should be measured separately
+                retrieval_score=0.0,  # Placeholder, should be provided by retrieval system
             )
 
             # Generate quality flags and recommendations
@@ -145,7 +159,14 @@ class RAGASEvaluator:
             return EvaluationResult(
                 evaluation_id=evaluation_id,
                 query=query,
-                metrics=EvaluationMetrics(),
+                metrics=EvaluationMetrics(
+                    context_precision=None,
+                    context_recall=None,
+                    faithfulness=None,
+                    answer_relevancy=None,
+                    response_time=0.0,
+                    retrieval_score=0.0,
+                ),
                 quality_flags=["evaluation_error"],
                 recommendations=["Manual review required due to evaluation error"],
                 timestamp=datetime.now(),
@@ -312,7 +333,8 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
+            score: float = parsed.get("coverage_score", 0.0)
+            return min(1.0, max(0.0, score))
         except:
             return 0.0
 
@@ -347,7 +369,8 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
+            score: float = parsed.get("coverage_score", 0.0)
+            return min(1.0, max(0.0, score))
         except:
             return 0.0
 
@@ -382,7 +405,8 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("faithfulness_score", 0.0)))
+            score: float = parsed.get("faithfulness_score", 0.0)
+            return min(1.0, max(0.0, score))
         except:
             return 0.0
 
@@ -413,7 +437,8 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("relevancy_score", 0.0)))
+            score: float = parsed.get("relevancy_score", 0.0)
+            return min(1.0, max(0.0, score))
         except:
             return 0.0
 
@@ -424,7 +449,7 @@ class RAGASEvaluator:
 
         try:
             response = self.model.generate_content(prompt)
-            return response.text
+            return str(response.text)  # Explicit cast to str
         except Exception as e:
             logger.error(f"Gemini generation failed: {e}")
             return ""

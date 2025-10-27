@@ -16,7 +16,7 @@ from apps.api.agent_dao import AgentDAO
 from apps.api.background.agent_task_queue import AgentTaskQueue
 from apps.api.background.coverage_history_dao import CoverageHistoryDAO
 from apps.api.background.webhook_service import WebhookService
-from apps.api.database import BackgroundTask
+from apps.api.database import BackgroundTask  # type: ignore[attr-defined]
 from apps.core.db_session import async_session
 from apps.knowledge_builder.coverage.meter import CoverageMeterService
 
@@ -37,7 +37,7 @@ class AgentTaskWorker:
     - Webhook: sends completion notification if webhook_url present
     """
 
-    def __init__(self, worker_id: int, timeout: int = 300):
+    def __init__(self, worker_id: int, timeout: int = 300) -> None:
         """
         Initialize AgentTaskWorker
 
@@ -49,7 +49,7 @@ class AgentTaskWorker:
         self.timeout = timeout
         self.running = False
         self.task_queue = AgentTaskQueue()
-        self.worker_task = None
+        self.worker_task: Optional[asyncio.Task[Any]] = None
         logger.info(
             f"AgentTaskWorker initialized: worker_id={worker_id}, timeout={timeout}s"
         )
@@ -208,8 +208,8 @@ class AgentTaskWorker:
                 )
 
     async def _calculate_coverage(
-        self, session, task: BackgroundTask, job_data: Dict[str, Any]
-    ):
+        self, session: Any, task: BackgroundTask, job_data: Dict[str, Any]
+    ) -> Any:
         """
         Calculate coverage with cancellation checks
 
@@ -236,10 +236,10 @@ class AgentTaskWorker:
         await session.commit()
 
         # Calculate coverage
-        result = await CoverageMeterService.calculate_coverage(
-            session=session,
-            taxonomy_node_ids=agent.taxonomy_node_ids,
-            taxonomy_version=agent.taxonomy_version,
+        coverage_service = CoverageMeterService()
+        result = await coverage_service.calculate_coverage(
+            taxonomy_version=str(agent.taxonomy_version),
+            node_ids=agent.taxonomy_node_ids if agent.taxonomy_node_ids else None,
         )
 
         # Update progress
@@ -250,7 +250,7 @@ class AgentTaskWorker:
 
     async def _send_webhook(
         self, task: BackgroundTask, job_data: Dict[str, Any], webhook_url: str
-    ):
+    ) -> None:
         """
         Send webhook notification
 

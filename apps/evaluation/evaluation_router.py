@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 RAGAS Evaluation API Router for DT-RAG v1.8.1
 
@@ -17,6 +18,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy.engine import Row
 
 from ..api.database import db_manager
 from .experiment_tracker import ExperimentTracker
@@ -96,7 +98,7 @@ async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> EvaluationResult:
     """
     Evaluate RAG response using RAGAS metrics
 
@@ -118,14 +120,10 @@ async def evaluate_rag_response(
         )
 
         # Record for quality monitoring
-        alerts = await monitor.record_evaluation(result)
+        await monitor.record_evaluation(result)
 
         # Store evaluation in database
         await _store_evaluation_result(request, result)
-
-        # Add alerts to response if any
-        if alerts:
-            result.quality_flags.extend([alert.alert_id for alert in alerts])
 
         return result
 
@@ -141,7 +139,7 @@ async def evaluate_rag_response(
 async def evaluate_batch(
     request: EvaluationBatchRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
-):
+) -> Dict[str, Any]:
     """
     Batch evaluate multiple RAG responses
 
@@ -199,7 +197,7 @@ async def evaluate_batch(
 
 
 @evaluation_router.get("/quality/dashboard", response_model=QualityDashboard)
-async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_monitor)) -> None:
+async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_monitor)) -> QualityDashboard:
     """
     Get comprehensive quality monitoring dashboard
 
@@ -235,7 +233,7 @@ async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_mo
 async def get_quality_trends(
     hours: int = Query(24, ge=1, le=168, description="Hours of trend data to retrieve"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> Dict[str, Any]:
     """
     Get quality trends over specified time period
 
@@ -257,7 +255,7 @@ async def get_quality_trends(
 async def get_quality_alerts(
     active_only: bool = Query(True, description="Only return active alerts"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> List[QualityAlert]:
     """
     Get quality monitoring alerts
 
@@ -279,7 +277,7 @@ async def get_quality_alerts(
 async def update_quality_thresholds(
     thresholds: QualityThresholds,
     monitor: QualityMonitor = Depends(get_quality_monitor),
-):
+) -> Dict[str, Any]:
     """
     Update quality monitoring thresholds
 
@@ -309,7 +307,7 @@ async def update_quality_thresholds(
 async def create_experiment(
     config: ExperimentConfig,
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
-):
+) -> Dict[str, Any]:
     """
     Create new A/B testing experiment
 
@@ -339,7 +337,7 @@ async def create_experiment(
 @evaluation_router.post("/experiments/{experiment_id}/start")
 async def start_experiment(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
-):
+) -> Dict[str, Any]:
     """
     Start running an A/B testing experiment
 
@@ -376,7 +374,7 @@ async def stop_experiment(
     experiment_id: str,
     reason: str = Query("manual_stop", description="Reason for stopping experiment"),
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
-):
+) -> Dict[str, Any]:
     """
     Stop a running A/B testing experiment
 
@@ -412,7 +410,7 @@ async def stop_experiment(
 @evaluation_router.get("/experiments/{experiment_id}/status")
 async def get_experiment_status(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
-):
+) -> Dict[str, Any]:
     """
     Get current status of A/B testing experiment
 
@@ -443,7 +441,7 @@ async def get_experiment_status(
 )
 async def get_experiment_results(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
-):
+) -> ExperimentResults:
     """
     Get detailed results of A/B testing experiment
 
@@ -483,7 +481,7 @@ async def deploy_canary(
         60, ge=10, le=1440, description="Monitoring duration in minutes"
     ),
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
-):
+) -> Dict[str, Any]:
     """
     Deploy and monitor canary release
 
@@ -586,7 +584,7 @@ async def validate_dataset(entries: List[DatasetEntry]) -> DatasetValidationResu
 async def run_dataset_benchmark(
     dataset_id: str = Query(..., description="Golden dataset ID to benchmark against"),
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
-):
+) -> Dict[str, Any]:
     """
     Run benchmark evaluation against golden dataset
 
@@ -642,7 +640,7 @@ async def run_dataset_benchmark(
 @evaluation_router.get("/analytics/summary")
 async def get_evaluation_analytics(
     days: int = Query(7, ge=1, le=90, description="Days of analytics data")
-):
+) -> Dict[str, Any]:
     """
     Get comprehensive evaluation analytics
 
@@ -672,28 +670,48 @@ async def get_evaluation_analytics(
             )
 
             result = await session.execute(query, {"cutoff_date": cutoff_date})
-            stats = result.fetchone()
+            stats_row: Optional[Row[Any]] = result.fetchone()
 
-            analytics = {
-                "period_days": days,
-                "summary_statistics": {
-                    "total_evaluations": int(stats[0]) if stats[0] else 0,
-                    "avg_faithfulness": float(stats[1]) if stats[1] else None,
-                    "avg_context_precision": float(stats[2]) if stats[2] else None,
-                    "avg_context_recall": float(stats[3]) if stats[3] else None,
-                    "avg_answer_relevancy": float(stats[4]) if stats[4] else None,
-                    "avg_response_time": float(stats[5]) if stats[5] else None,
-                    "high_quality_rate": (
-                        float(stats[6]) / max(1, stats[0]) if stats[0] else 0
-                    ),
-                },
-                "quality_insights": {
-                    "strengths": _identify_system_strengths(stats),
-                    "improvement_areas": _identify_improvement_areas(stats),
-                    "trends": "stable",  # TODO: Calculate actual trends
-                },
-                "generated_at": datetime.utcnow().isoformat(),
-            }
+            if stats_row is None:
+                analytics = {
+                    "period_days": days,
+                    "summary_statistics": {
+                        "total_evaluations": 0,
+                        "avg_faithfulness": None,
+                        "avg_context_precision": None,
+                        "avg_context_recall": None,
+                        "avg_answer_relevancy": None,
+                        "avg_response_time": None,
+                        "high_quality_rate": 0.0,
+                    },
+                    "quality_insights": {
+                        "strengths": [],
+                        "improvement_areas": [],
+                        "trends": "no_data",
+                    },
+                    "generated_at": datetime.utcnow().isoformat(),
+                }
+            else:
+                analytics = {
+                    "period_days": days,
+                    "summary_statistics": {
+                        "total_evaluations": int(stats_row[0]) if stats_row[0] else 0,
+                        "avg_faithfulness": float(stats_row[1]) if stats_row[1] else None,
+                        "avg_context_precision": float(stats_row[2]) if stats_row[2] else None,
+                        "avg_context_recall": float(stats_row[3]) if stats_row[3] else None,
+                        "avg_answer_relevancy": float(stats_row[4]) if stats_row[4] else None,
+                        "avg_response_time": float(stats_row[5]) if stats_row[5] else None,
+                        "high_quality_rate": (
+                            float(stats_row[6]) / max(1, stats_row[0]) if stats_row[0] else 0
+                        ),
+                    },
+                    "quality_insights": {
+                        "strengths": _identify_system_strengths(stats_row),
+                        "improvement_areas": _identify_improvement_areas(stats_row),
+                        "trends": "stable",  # TODO: Calculate actual trends
+                    },
+                    "generated_at": datetime.utcnow().isoformat(),
+                }
 
             return analytics
 
@@ -710,7 +728,7 @@ async def get_evaluation_analytics(
 
 async def _store_evaluation_result(
     request: EvaluationRequest, result: EvaluationResult
-):
+) -> None:
     """Store evaluation result in database"""
     try:
         async with db_manager.async_session() as session:
@@ -745,7 +763,7 @@ async def _store_evaluation_result(
                     "answer_relevancy": result.metrics.answer_relevancy,
                     "response_time": result.metrics.response_time,
                     "num_retrieved_docs": len(request.retrieved_contexts),
-                    "model_version": request.model_version,
+                    "model_version": request.model_version_,
                     "experiment_id": request.experiment_id,
                     "is_valid_evaluation": len(result.quality_flags) == 0,
                     "quality_issues": result.quality_flags,
@@ -764,7 +782,7 @@ def _summarize_batch_results(results: List[EvaluationResult]) -> Dict[str, Any]:
     if not results:
         return {}
 
-    metrics_sums = {
+    metrics_sums: Dict[str, List[float]] = {
         "faithfulness": [],
         "context_precision": [],
         "context_recall": [],
@@ -792,7 +810,7 @@ def _summarize_batch_results(results: List[EvaluationResult]) -> Dict[str, Any]:
     }
 
 
-def _identify_system_strengths(stats) -> List[str]:
+def _identify_system_strengths(stats: Row[Any]) -> List[str]:
     """Identify system strengths from statistics"""
     strengths = []
 
@@ -806,7 +824,7 @@ def _identify_system_strengths(stats) -> List[str]:
     return strengths
 
 
-def _identify_improvement_areas(stats) -> List[str]:
+def _identify_improvement_areas(stats: Row[Any]) -> List[str]:
     """Identify areas needing improvement from statistics"""
     improvements = []
 

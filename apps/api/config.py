@@ -20,8 +20,8 @@ try:
     from .llm_config import get_llm_config
 except ImportError:
     # Fallback for direct execution
-    from env_manager import Environment, get_env_manager
-    from llm_config import get_llm_config
+    from env_manager import Environment, get_env_manager  # type: ignore[no-redef]
+    from llm_config import get_llm_config  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 
@@ -647,7 +647,7 @@ def get_security_info() -> Dict[str, Any]:
             else False
         ),
         "security_recommendations": _get_security_recommendations(config),
-        "environment_validation": env_manager.validate_environment(),
+        "environment_validation": env_manager.validate_environment(),  # type: ignore[attr-defined]
     }
 
 
@@ -663,7 +663,7 @@ def get_system_status() -> Dict[str, Any]:
 
     return {
         "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
-        "environment": env_manager.get_environment_summary(),
+        "environment": env_manager.get_environment_summary(),  # type: ignore[attr-defined]
         "llm_services": llm_config_manager.get_service_status(),
         "configuration": {
             "database_type": (
@@ -680,7 +680,7 @@ def get_system_status() -> Dict[str, Any]:
             "azure_configured": bool(os.getenv("AZURE_OPENAI_API_KEY")),
         },
         "system_health": {
-            "configuration_valid": env_manager.validate_environment()["is_valid"],
+            "configuration_valid": env_manager.validate_environment()["is_valid"],  # type: ignore[attr-defined]
             "llm_service_available": llm_config_manager.get_service_status()[
                 "system_operational"
             ],
@@ -702,7 +702,7 @@ def get_configuration_recommendations() -> List[str]:
     recommendations = []
 
     # Environment validation recommendations
-    env_validation = env_manager.validate_environment()
+    env_validation = env_manager.validate_environment()  # type: ignore[attr-defined]
     recommendations.extend(env_validation.get("recommendations", []))
 
     # LLM service recommendations

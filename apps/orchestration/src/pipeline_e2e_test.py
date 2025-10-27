@@ -2,16 +2,17 @@
 B-O3: E2E 테스트 30건 실행 시스템
 파이프라인 품질 검증을 위한 종합 테스트
 """
+# @CODE:MYPY-001:PHASE2:BATCH5 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 
 import asyncio
 import logging
 import os
 import time
 import tracemalloc
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union, cast
 
-import psutil
-from langgraph_pipeline import LangGraphPipeline, PipelineRequest
+import psutil  # type: ignore[import-untyped]
+from langgraph_pipeline import LangGraphPipeline, PipelineRequest  # type: ignore[import-not-found]
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class PipelineE2ETest:
     def __init__(self) -> None:
         self.pipeline = LangGraphPipeline()
         self.test_cases = self._generate_test_cases()
-        self.results = []
+        self.results: List[Dict[str, Any]] = []
 
     def _generate_test_cases(self) -> List[Dict[str, Any]]:
         """30건 테스트 케이스 생성"""
@@ -244,7 +245,7 @@ class PipelineE2ETest:
         )
         return result
 
-    def _validate_response(self, response, expected: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_response(self, response: Any, expected: Dict[str, Any]) -> Dict[str, Any]:
         """응답 검증"""
         validation = {}
 
@@ -289,24 +290,33 @@ class PipelineE2ETest:
         # 병렬 실행 (최대 5개 동시)
         semaphore = asyncio.Semaphore(5)
 
-        async def run_with_semaphore(test_case) -> None:
+        async def run_with_semaphore(test_case: Any) -> Dict[str, Any]:
             async with semaphore:
                 return await self.run_single_test(test_case)
 
         # 모든 테스트 실행
         tasks = [run_with_semaphore(case) for case in self.test_cases]
-        self.results = await asyncio.gather(*tasks, return_exceptions=True)
+        raw_results: List[Union[Dict[str, Any], BaseException]] = list(
+            await asyncio.gather(*tasks, return_exceptions=True)
+        )
 
         # 예외 처리
-        for i, result in enumerate(self.results):
-            if isinstance(result, Exception):
-                self.results[i] = {
-                    "case_id": self.test_cases[i]["case_id"],
-                    "success": False,
-                    "error": str(result),
-                    "latency": 0.0,
-                    "validation_results": {"all_passed": False},
-                }
+        processed_results: List[Dict[str, Any]] = []
+        for i, result in enumerate(raw_results):
+            if isinstance(result, BaseException):
+                processed_results.append(
+                    {
+                        "case_id": self.test_cases[i]["case_id"],
+                        "success": False,
+                        "error": str(result),
+                        "latency": 0.0,
+                        "validation_results": {"all_passed": False},
+                    }
+                )
+            else:
+                processed_results.append(result)
+
+        self.results = processed_results
 
         # 결과 분석
         total_time = time.time() - start_time
@@ -335,7 +345,7 @@ class PipelineE2ETest:
         max_memory = max(memory_usages) if memory_usages else 0.0
 
         # 카테고리별 성공률
-        category_stats = {}
+        category_stats: Dict[str, Dict[str, Any]] = {}
         for result in self.results:
             category = result.get("category", "unknown")
             if category not in category_stats:

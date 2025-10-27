@@ -1,0 +1,210 @@
+# @CODE:MYPY-001:PHASE1-V2 - Improved mypy fixer
+============================================================
+Found 91 files with errors
+
+[1/91] Processing: apps/api/agent_dao.py
+  ⏭️  SKIPPED: Already typed
+[2/91] Processing: apps/api/background/agent_task_queue.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[3/91] Processing: apps/api/background/agent_task_worker.py
+  ✅ MODIFIED: 0 funcs, 1 params, 3 returns
+[4/91] Processing: apps/api/background/coverage_history_dao.py
+  ⏭️  SKIPPED: Already typed
+[5/91] Processing: apps/api/cache/redis_manager.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[6/91] Processing: apps/api/cache/search_cache.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[7/91] Processing: apps/api/config.py
+  ⏭️  SKIPPED: Already typed
+[8/91] Processing: apps/api/database.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[9/91] Processing: apps/api/deps.py
+  ⏭️  SKIPPED: Already typed
+[10/91] Processing: apps/api/embedding_service.py
+  ✅ MODIFIED: 0 funcs, 0 params, 2 returns
+[11/91] Processing: apps/api/env_manager.py
+  ⏭️  SKIPPED: Already typed
+[12/91] Processing: apps/api/llm_config.py
+  ⏭️  SKIPPED: Already typed
+[13/91] Processing: apps/api/main.py
+  ✅ MODIFIED: 0 funcs, 1 params, 0 returns
+[14/91] Processing: apps/api/middleware/rate_limiter.py
+  ⏭️  SKIPPED: Already typed
+[15/91] Processing: apps/api/migrations/add_api_key_tables.py
+  ⏭️  SKIPPED: Already typed
+[16/91] Processing: apps/api/models/common_models.py
+  ⏭️  SKIPPED: Already typed
+[17/91] Processing: apps/api/monitoring/dashboard.py
+  ✅ MODIFIED: 0 funcs, 1 params, 0 returns
+[18/91] Processing: apps/api/monitoring/health_check.py
+  ⏭️  SKIPPED: Already typed
+[19/91] Processing: apps/api/monitoring/langfuse_client.py
+  ✅ MODIFIED: 0 funcs, 1 params, 0 returns
+[20/91] Processing: apps/api/monitoring/metrics.py
+  ✅ MODIFIED: 0 funcs, 1 params, 5 returns
+[21/91] Processing: apps/api/monitoring/sentry_reporter.py
+  ⏭️  SKIPPED: Already typed
+[22/91] Processing: apps/api/openapi_spec.py
+  ✅ MODIFIED: 0 funcs, 1 params, 0 returns
+[23/91] Processing: apps/api/routers/admin/api_keys.py
+  ✅ MODIFIED: 0 funcs, 2 params, 8 returns
+[24/91] Processing: apps/api/routers/agent_factory_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 9 returns
+[25/91] Processing: apps/api/routers/agent_router.py
+  ✅ MODIFIED: 0 funcs, 14 params, 4 returns
+[26/91] Processing: apps/api/routers/batch_search.py
+  ✅ MODIFIED: 0 funcs, 0 params, 2 returns
+[27/91] Processing: apps/api/routers/classification_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 6 returns
+[28/91] Processing: apps/api/routers/classify.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[29/91] Processing: apps/api/routers/consolidation_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[30/91] Processing: apps/api/routers/embedding_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 4 returns
+[31/91] Processing: apps/api/routers/evaluation.py
+  ✅ MODIFIED: 0 funcs, 0 params, 3 returns
+[32/91] Processing: apps/api/routers/health.py
+  ⏭️  SKIPPED: Already typed
+[33/91] Processing: apps/api/routers/ingestion.py
+  ✅ MODIFIED: 0 funcs, 0 params, 2 returns
+[34/91] Processing: apps/api/routers/monitoring_router.py
+  ⏭️  SKIPPED: Already typed
+[35/91] Processing: apps/api/routers/orchestration_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 5 returns
+[36/91] Processing: apps/api/routers/reflection_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 2 returns
+[37/91] Processing: apps/api/routers/search.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[38/91] Processing: apps/api/routers/search_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 4 returns
+[39/91] Processing: apps/api/routers/taxonomy.py
+  ⏭️  SKIPPED: Already typed
+[40/91] Processing: apps/api/routers/taxonomy_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 6 returns
+[41/91] Processing: apps/api/schemas/agent_schemas.py
+  ⏭️  SKIPPED: Already typed
+[42/91] Processing: apps/api/security/api_key_generator.py
+  ⏭️  SKIPPED: Already typed
+[43/91] Processing: apps/api/services/langgraph_service.py
+  ⏭️  SKIPPED: Already typed
+[44/91] Processing: apps/api/services/ml_classifier.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[45/91] Processing: apps/api/services/taxonomy_service.py
+  ⏭️  SKIPPED: Already typed
+[46/91] Processing: apps/api/taxonomy_dag.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[47/91] Processing: apps/classification/hitl_queue.py
+  ⏭️  SKIPPED: Already typed
+[48/91] Processing: apps/classification/hybrid_classifier.py
+  ✅ MODIFIED: 0 funcs, 3 params, 1 returns
+[49/91] Processing: apps/classification/semantic_classifier.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[50/91] Processing: apps/evaluation/dashboard.py
+  ⏭️  SKIPPED: Already typed
+[51/91] Processing: apps/evaluation/evaluation_router.py
+  ✅ MODIFIED: 0 funcs, 2 params, 14 returns
+[52/91] Processing: apps/evaluation/experiment_tracker.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[53/91] Processing: apps/evaluation/golden_dataset_generator.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[54/91] Processing: apps/evaluation/integration.py
+  ✅ MODIFIED: 0 funcs, 2 params, 1 returns
+[55/91] Processing: apps/evaluation/models.py
+  ⏭️  SKIPPED: Already typed
+[56/91] Processing: apps/evaluation/quality_monitor.py
+  ⏭️  SKIPPED: Already typed
+[57/91] Processing: apps/evaluation/ragas_engine.py
+  ⏭️  SKIPPED: Already typed
+[58/91] Processing: apps/evaluation/sample_data.py
+  ⏭️  SKIPPED: Already typed
+[59/91] Processing: apps/evaluation/test_ragas_system.py
+  ⏭️  SKIPPED: Already typed
+[60/91] Processing: apps/ingestion/batch/job_orchestrator.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[61/91] Processing: apps/ingestion/batch/job_queue.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[62/91] Processing: apps/ingestion/chunking/intelligent_chunker.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[63/91] Processing: apps/ingestion/contracts/signals.py
+  ✅ MODIFIED: 0 funcs, 3 params, 0 returns
+[64/91] Processing: apps/ingestion/parsers/csv_parser.py
+  ⏭️  SKIPPED: Already typed
+[65/91] Processing: apps/ingestion/parsers/docx_parser.py
+  ⏭️  SKIPPED: Already typed
+[66/91] Processing: apps/ingestion/parsers/pdf_parser.py
+  ⏭️  SKIPPED: Already typed
+[67/91] Processing: apps/ingestion/pii/detector.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[68/91] Processing: apps/knowledge_builder/coverage/meter.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[69/91] Processing: apps/monitoring/core/ragas_metrics_extension.py
+  ✅ MODIFIED: 0 funcs, 2 params, 2 returns
+[70/91] Processing: apps/monitoring/performance_monitor.py
+  ✅ MODIFIED: 0 funcs, 2 params, 3 returns
+[71/91] Processing: apps/orchestration/src/bandit/policy.py
+  ⏭️  SKIPPED: Already typed
+[72/91] Processing: apps/orchestration/src/bandit/replay_buffer.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[73/91] Processing: apps/orchestration/src/cbr_system.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[74/91] Processing: apps/orchestration/src/consolidation_policy.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[75/91] Processing: apps/orchestration/src/debate/debate_engine.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[76/91] Processing: apps/orchestration/src/langgraph_pipeline.py
+  ✅ MODIFIED: 0 funcs, 1 params, 1 returns
+[77/91] Processing: apps/orchestration/src/main.py
+  ✅ MODIFIED: 0 funcs, 0 params, 1 returns
+[78/91] Processing: apps/orchestration/src/meta_planner.py
+  ⏭️  SKIPPED: Already typed
+[79/91] Processing: apps/orchestration/src/pipeline_e2e_test.py
+  ✅ MODIFIED: 0 funcs, 2 params, 0 returns
+[80/91] Processing: apps/orchestration/src/pipeline_resilience.py
+  ✅ MODIFIED: 0 funcs, 2 params, 3 returns
+[81/91] Processing: apps/orchestration/src/reflection_engine.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[82/91] Processing: apps/orchestration/src/retrieval_filter.py
+  ✅ MODIFIED: 0 funcs, 0 params, 2 returns
+[83/91] Processing: apps/orchestration/src/tool_executor.py
+  ⏭️  SKIPPED: Already typed
+[84/91] Processing: apps/orchestration/src/tool_registry.py
+  ⏭️  SKIPPED: Already typed
+[85/91] Processing: apps/orchestration/src/tools/calculator.py
+  ⏭️  SKIPPED: Already typed
+[86/91] Processing: apps/search/hybrid_search_engine.py
+  ❌ FAILED: Lambda params cannot have type annotations.
+[87/91] Processing: apps/search/search_benchmark.py
+  ⏭️  SKIPPED: Already typed
+[88/91] Processing: apps/security/auth/auth_service.py
+  ✅ MODIFIED: 0 funcs, 0 params, 2 returns
+[89/91] Processing: apps/security/core/security_manager.py
+  ✅ MODIFIED: 0 funcs, 0 params, 2 returns
+[90/91] Processing: apps/security/middleware/security_middleware.py
+  ✅ MODIFIED: 0 funcs, 4 params, 9 returns
+[91/91] Processing: apps/security/routers/security_router.py
+  ✅ MODIFIED: 0 funcs, 0 params, 18 returns
+
+============================================================
+Summary:
+  Total files processed: 91
+  Modified: 48
+  Failed: 9
+  Total annotations added:
+    - Functions: 0
+    - Parameters: 45
+    - Returns: 138
+
+Failed files:
+  - apps/api/cache/search_cache.py
+  - apps/api/database.py
+  - apps/api/routers/search.py
+  - apps/classification/semantic_classifier.py
+  - apps/ingestion/pii/detector.py
+  - apps/knowledge_builder/coverage/meter.py
+  - apps/orchestration/src/cbr_system.py
+  - apps/orchestration/src/reflection_engine.py
+  - apps/search/hybrid_search_engine.py
+
+✅ Phase 1 automation complete!
+Run mypy again to check remaining errors.

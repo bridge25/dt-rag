@@ -313,7 +313,7 @@ class CBRUsageLogger:
         picked_case_ids: List[str],
         similarity_scores: List[float],
         user_id: Optional[str] = None,
-    ):
+    ) -> None:
         """쿼리 로그 기록"""
         log_entry = {
             "request_id": request_id,
@@ -336,7 +336,7 @@ class CBRUsageLogger:
         success_flag: bool,
         feedback_text: Optional[str] = None,
         user_id: Optional[str] = None,
-    ):
+    ) -> None:
         """피드백 로그 기록"""
         log_entry = {
             "request_id": request_id,
@@ -369,7 +369,8 @@ from sentence_transformers import SentenceTransformer
 _embedding_model = None
 
 
-def get_embedding_model() -> None:
+# @CODE:MYPY-001:PHASE2:BATCH6
+def get_embedding_model() -> SentenceTransformer:
     """싱글톤 패턴으로 임베딩 모델 반환"""
     global _embedding_model
     if _embedding_model is None:
@@ -380,13 +381,14 @@ def get_embedding_model() -> None:
     return _embedding_model
 
 
-def create_query_vector_real(query: str) -> List[float]:
+def create_query_vector_real(query: str) -> list[float]:
     """실제 임베딩 모델 기반 쿼리 벡터 생성"""
     try:
         model = get_embedding_model()
         # 실제 임베딩 생성
-        embedding = model.encode(query, convert_to_numpy=True)
-        return embedding.tolist()
+        embedding_array = model.encode(query, convert_to_numpy=True)
+        embedding_list: list[float] = list(embedding_array.tolist())
+        return embedding_list
     except Exception as e:
         logger.error(f"임베딩 생성 실패: {e}")
         # 실패 시 에러 발생 (시뮬레이션으로 폴백하지 않음)

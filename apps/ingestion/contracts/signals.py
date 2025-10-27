@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH6
 import uuid
 from datetime import datetime
 from enum import Enum
@@ -32,7 +33,7 @@ class DocumentUploadCommandV1(BaseModel):
     file_name: str = Field(..., min_length=1, max_length=255)
     file_content: bytes = Field(...)
     file_format: DocumentFormatV1 = Field(...)
-    taxonomy_path: List[str] = Field(..., min_items=1, max_items=10)
+    taxonomy_path: List[str] = Field(..., min_length=1, max_length=10)
     source_url: Optional[str] = Field(None, max_length=2000)
     author: Optional[str] = Field(None, max_length=200)
     language: str = Field(default="ko", pattern="^[a-z]{2}$")
@@ -41,14 +42,14 @@ class DocumentUploadCommandV1(BaseModel):
     requested_at: datetime = Field(default_factory=datetime.utcnow)
 
     @validator("file_content")
-    def validate_file_size(cls, v) -> None:
+    def validate_file_size(cls, v: Any) -> Any:
         max_size = 50 * 1024 * 1024
         if len(v) > max_size:
             raise ValueError(f"File size exceeds {max_size} bytes")
         return v
 
     @validator("file_name")
-    def validate_file_extension(cls, v, values) -> None:
+    def validate_file_extension(cls, v: Any, values: Any) -> Any:
         if "file_format" in values:
             expected_ext = f".{values['file_format'].value}"
             if not v.lower().endswith(expected_ext):

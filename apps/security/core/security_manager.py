@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 Core Security Manager for DT-RAG v1.8.1
 Orchestrates all security components and provides unified security interface
@@ -5,17 +6,25 @@ Orchestrates all security components and provides unified security interface
 
 import logging
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from ..audit.audit_logger import AuditLogger, EventType, SecurityEvent, SeverityLevel
-from ..auth.auth_service import AuthService, RBACManager
-from ..compliance.compliance_manager import ComplianceManager
-from ..compliance.pii_detector import PIIDetector
-from ..monitoring.security_monitor import SecurityMonitor
-from ..scanning.vulnerability_scanner import VulnerabilityScanner
+if TYPE_CHECKING:
+    from ..audit.audit_logger import AuditLogger, EventType, SecurityEvent, SeverityLevel
+    from ..auth.auth_service import AuthService, RBACManager
+    from ..compliance.compliance_manager import ComplianceManager
+    from ..compliance.pii_detector import PIIDetector
+    from ..monitoring.security_monitor import SecurityMonitor
+    from ..scanning.vulnerability_scanner import VulnerabilityScanner
+else:
+    from ..audit.audit_logger import AuditLogger, EventType, SecurityEvent, SeverityLevel
+    from ..auth.auth_service import AuthService, RBACManager
+    from ..compliance.compliance_manager import ComplianceManager
+    from ..compliance.pii_detector import PIIDetector
+    from ..monitoring.security_monitor import SecurityMonitor
+    from ..scanning.vulnerability_scanner import VulnerabilityScanner
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +53,7 @@ class SecurityContext:
     timestamp: datetime
     is_authenticated: bool = False
     risk_score: float = 0.0
-    metadata: Dict[str, Any] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -60,7 +69,7 @@ class SecurityPolicy:
     session_timeout_minutes: int = 30
     require_encryption: bool = True
     allow_anonymous_read: bool = False
-    sensitive_operations: List[str] = None
+    sensitive_operations: List[str] = field(default_factory=list)
 
 
 class SecurityManager:
@@ -68,7 +77,7 @@ class SecurityManager:
     Central security manager that orchestrates all security components
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         self.config = config or {}
         self.policy = SecurityPolicy(**self.config.get("policy", {}))
 
@@ -91,7 +100,7 @@ class SecurityManager:
         logger.info("SecurityManager initialized with OWASP Top 10 compliance")
 
     async def authenticate_request(
-        self, token: str, ip_address: str, user_agent: str, operation: str = None
+        self, token: str, ip_address: str, user_agent: str, operation: Optional[str] = None
     ) -> SecurityContext:
         """
         Authenticate and authorize a request
@@ -146,20 +155,26 @@ class SecurityManager:
             )
 
             # 6. Get user permissions
-            permissions = await self.rbac_manager.get_user_permissions(
+            permissions_enum = await self.rbac_manager.get_user_permissions(
                 user_info["user_id"]
             )
-            clearance_level = await self.rbac_manager.get_user_clearance(
+            clearance_level_str = await self.rbac_manager.get_user_clearance(
                 user_info["user_id"]
             )
+
+            # Convert permissions enum to strings
+            permissions_str = {p.value if hasattr(p, 'value') else str(p) for p in permissions_enum}
+
+            # Convert clearance level string to SecurityLevel enum
+            clearance_level = SecurityLevel(clearance_level_str) if isinstance(clearance_level_str, str) else clearance_level_str
 
             # 7. Create security context
             context = SecurityContext(
                 user_id=user_info["user_id"],
-                session_id=session_id,
+                session_id=str(session_id) if session_id else "",
                 ip_address=ip_address,
                 user_agent=user_agent,
-                permissions=permissions,
+                permissions=permissions_str,
                 clearance_level=clearance_level,
                 request_id=request_id,
                 timestamp=datetime.utcnow(),
@@ -169,7 +184,8 @@ class SecurityManager:
             )
 
             # 8. Store active session
-            self._active_sessions[session_id] = context
+            if session_id:
+                self._active_sessions[str(session_id)] = context
 
             # 9. Log successful authentication
             await self._log_security_event(
@@ -201,8 +217,8 @@ class SecurityManager:
         self,
         context: SecurityContext,
         operation: str,
-        resource: str = None,
-        data: Dict[str, Any] = None,
+        resource: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Authorize an operation based on RBAC
@@ -221,7 +237,7 @@ class SecurityManager:
 
             # 2. Check operation permissions
             if not await self.rbac_manager.check_permission(
-                context.user_id, operation, resource, context
+                context.user_id, operation, resource or "", context
             ):
                 await self._log_security_event(
                     EventType.AUTHORIZATION_FAILED,
@@ -277,7 +293,7 @@ class SecurityManager:
                 pii_findings = await self.pii_detector.scan_data(data)
                 if pii_findings:
                     if not await self.rbac_manager.check_permission(
-                        context.user_id, "access_pii", resource, context
+                        context.user_id, "access_pii", resource or "", context
                     ):
                         await self._log_security_event(
                             EventType.PII_ACCESS_DENIED,
@@ -373,14 +389,15 @@ class SecurityManager:
             if pii_findings:
                 # 2. Check if user has permission to see PII
                 can_access_pii = await self.rbac_manager.check_permission(
-                    context.user_id, "view_pii", None, context
+                    context.user_id, "view_pii", "", context
                 )
 
                 if not can_access_pii:
                     # 3. Mask PII data
-                    masked_data = await self.pii_detector.mask_pii_data(
+                    masked_data_any = await self.pii_detector.mask_pii_data(
                         data, pii_findings
                     )
+                    masked_data: Dict[str, Any] = masked_data_any if isinstance(masked_data_any, dict) else {}
 
                     # 4. Log PII masking
                     await self._log_security_event(
@@ -420,7 +437,7 @@ class SecurityManager:
 
     async def get_security_metrics(self) -> Dict[str, Any]:
         """Get comprehensive security metrics"""
-        return {
+        metrics: Dict[str, Any] = {
             "authentication": await self.auth_service.get_metrics(),
             "authorization": await self.rbac_manager.get_metrics(),
             "audit": await self.audit_logger.get_metrics(),
@@ -431,6 +448,7 @@ class SecurityManager:
             "active_sessions": len(self._active_sessions),
             "security_incidents": len(self._security_incidents),
         }
+        return metrics
 
     async def _check_rate_limit(self, identifier: str) -> bool:
         """Check rate limiting"""
@@ -616,7 +634,7 @@ class SecurityManager:
         details: Dict[str, Any],
         severity: SeverityLevel,
         request_id: str,
-    ):
+    ) -> None:
         """Log security event"""
         event = SecurityEvent(
             event_type=event_type,

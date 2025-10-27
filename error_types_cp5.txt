@@ -1,0 +1,16 @@
+     28 import-not-found
+     11 attr-defined
+      8 no-any-return
+      6 call-arg
+      5 import-untyped
+      5 assignment
+      4 var-annotated
+      3 return-value
+      3 no-untyped-def
+      3 no-redef
+      3 arg-type
+      2 unreachable
+      1 valid-type
+      1 union-attr
+      1 misc
+      1 call-overload

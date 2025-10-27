@@ -68,6 +68,7 @@ logs/
 .coverage
 htmlcov/
 .pytest_cache/
+.mypy_cache/
 coverage/
 *.cover
 

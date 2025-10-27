@@ -11,13 +11,18 @@ Architecture:
 - Round 1: Parallel independent answer generation (2 LLM calls)
 - Round 2: Parallel critique and improvement (2 LLM calls)
 - Synthesis: Final answer integration (1 LLM call)
+
+@CODE:MYPY-001:PHASE2:BATCH4
 """
 
 import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from apps.api.llm_service import GeminiLLMService
 
 from apps.orchestration.src.debate.agent_prompts import (
     AFFIRMATIVE_PROMPT_R1,
@@ -29,7 +34,7 @@ from apps.orchestration.src.debate.agent_prompts import (
 logger = logging.getLogger(__name__)
 
 
-def get_llm_service_cached() -> None:
+def get_llm_service_cached() -> "GeminiLLMService":
     """Lazy load LLM service"""
     from apps.api.llm_service import get_llm_service
 
@@ -57,7 +62,7 @@ class DebateAgent:
         max_tokens: Maximum tokens for answer generation (default: 500)
     """
 
-    def __init__(self, role: str, max_tokens: int = 500):
+    def __init__(self, role: str, max_tokens: int = 500) -> None:
         self.role = role
         self.max_tokens = max_tokens
 
@@ -150,7 +155,7 @@ class DebateEngine:
 
     async def _run_round1(
         self, query: str, context: List[Dict[str, Any]]
-    ) -> tuple[str, str]:
+    ) -> "tuple[str, str]":
         """
         Round 1: Independent answer generation (parallel)
 
@@ -186,7 +191,7 @@ class DebateEngine:
         context: List[Dict[str, Any]],
         affirmative_r1: str,
         critical_r1: str,
-    ) -> tuple[str, str]:
+    ) -> "tuple[str, str]":
         """
         Round 2: Mutual critique and improvement (parallel)
 
@@ -244,7 +249,7 @@ class DebateEngine:
 
         try:
             response = llm_service.model.generate_content(prompt)
-            final_answer = response.text
+            final_answer: str = response.text
 
             words = final_answer.split()
             original_tokens = len(words)
@@ -292,7 +297,7 @@ class DebateEngine:
         """
         start_time = time.time()
 
-        async def _execute_debate() -> None:
+        async def _execute_debate() -> DebateResult:
             affirmative_r1, critical_r1 = await self._run_round1(query, context)
 
             affirmative_r2, critical_r2 = await self._run_round2(

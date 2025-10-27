@@ -8,7 +8,7 @@ import hashlib
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import numpy as np
 
@@ -46,12 +46,12 @@ class EmbeddingService:
 
     TARGET_DIMENSIONS = 768  # PostgreSQL 벡터 차원
 
-    def __init__(self, model_name: str = "all-mpnet-base-v2"):
+    def __init__(self, model_name: str = "all-mpnet-base-v2") -> None:
         self.model_name = model_name
-        self.model_config = self.SUPPORTED_MODELS.get(model_name)
-        self._model = None
+        self.model_config: Optional[Dict[str, Any]] = self.SUPPORTED_MODELS.get(model_name)
+        self._model: Optional[SentenceTransformer] = None
         self._model_loaded = False
-        self.embedding_cache = {}  # 메모리 캐시
+        self.embedding_cache: Dict[str, List[float]] = {}  # 메모리 캐시
 
         if not self.model_config:
             logger.warning(f"지원되지 않는 모델: {model_name}, 기본 모델로 변경")
@@ -71,9 +71,14 @@ class EmbeddingService:
             logger.error("sentence-transformers 패키지가 설치되지 않음")
             return None
 
+        if self.model_config is None:
+            logger.error("모델 설정이 없습니다")
+            return None
+
         try:
-            logger.info(f"모델 로딩 중: {self.model_config['name']}")
-            self._model = SentenceTransformer(self.model_config["name"])
+            model_name_str = str(self.model_config['name'])
+            logger.info(f"모델 로딩 중: {model_name_str}")
+            self._model = SentenceTransformer(model_name_str)
             self._model_loaded = True
             logger.info(f"모델 로딩 완료: {self.model_name}")
             return self._model
@@ -88,15 +93,15 @@ class EmbeddingService:
         current_dim = len(vector)
 
         if current_dim == self.TARGET_DIMENSIONS:
-            return vector.tolist()
+            return cast(List[float], vector.tolist())
         elif current_dim < self.TARGET_DIMENSIONS:
             # 패딩 (제로 패딩)
             padded = np.zeros(self.TARGET_DIMENSIONS)
             padded[:current_dim] = vector
-            return padded.tolist()
+            return cast(List[float], padded.tolist())
         else:
             # 트런케이트
-            return vector[: self.TARGET_DIMENSIONS].tolist()
+            return cast(List[float], vector[: self.TARGET_DIMENSIONS].tolist())
 
     async def generate_embedding(
         self, text: str, use_cache: bool = True
@@ -186,14 +191,14 @@ class EmbeddingService:
 
                 # 배치 임베딩 생성
                 loop = asyncio.get_event_loop()
-                batch_embeddings = await loop.run_in_executor(
+                batch_embeddings_raw: Any = await loop.run_in_executor(
                     None, lambda: model.encode(processed_texts, convert_to_numpy=True)
                 )
 
                 # 768차원으로 조정 및 정규화
                 processed_embeddings = []
-                for embedding in batch_embeddings:
-                    adjusted = self._pad_or_truncate_vector(embedding)
+                for embedding_array in batch_embeddings_raw:
+                    adjusted = self._pad_or_truncate_vector(cast(np.ndarray, embedding_array))
                     normalized = self._normalize_vector(adjusted)
                     processed_embeddings.append(normalized)
 
@@ -268,7 +273,7 @@ class EmbeddingService:
             return vector
 
         normalized = vec_array / norm
-        return normalized.tolist()
+        return cast(List[float], normalized.tolist())
 
     def _generate_zero_vector(self) -> List[float]:
         """제로 벡터 생성"""
@@ -290,7 +295,7 @@ class EmbeddingService:
         if norm > 0:
             vector = vector / norm
 
-        return vector.tolist()
+        return cast(List[float], vector.tolist())
 
     def get_model_info(self) -> Dict[str, Any]:
         """모델 정보 반환"""
@@ -351,7 +356,7 @@ class EmbeddingService:
 class DocumentEmbeddingService:
     """문서 임베딩 업데이트 및 관리 서비스"""
 
-    def __init__(self, embedding_service: EmbeddingService):
+    def __init__(self, embedding_service: EmbeddingService) -> None:
         self.embedding_service = embedding_service
 
     async def update_document_embeddings(

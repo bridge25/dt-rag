@@ -1,11 +1,15 @@
 # @CODE:AGENT-GROWTH-001:DOMAIN
-from typing import Any, Dict, List, Optional
+# @CODE:MYPY-001:PHASE2:BATCH4
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import CoverageMetrics, CoverageResult, Gap
 
 
 class CoverageMeterService:
-    def __init__(self, session_factory=None) -> None:
+    def __init__(self, session_factory: Optional[Any] = None) -> None:
         self._session_factory = session_factory
 
     # @IMPL:AGENT-GROWTH-001:0.2.1
@@ -42,14 +46,14 @@ class CoverageMeterService:
 
             doc_count_result = await session.execute(
                 select(func.count(DocTaxonomy.doc_id.distinct()))
-                .where(DocTaxonomy.version == taxonomy_version)
+                .where(DocTaxonomy.version == taxonomy_version)  # type: ignore[attr-defined]
             )
             total_documents = doc_count_result.scalar() or 0
 
             chunk_count_result = await session.execute(
                 select(func.count(DocumentChunk.chunk_id))
                 .join(DocTaxonomy, DocumentChunk.doc_id == DocTaxonomy.doc_id)
-                .where(DocTaxonomy.version == taxonomy_version)
+                .where(DocTaxonomy.version == taxonomy_version)  # type: ignore[attr-defined]
             )
             total_chunks = chunk_count_result.scalar() or 0
 
@@ -62,16 +66,16 @@ class CoverageMeterService:
 
                 node_doc_count_result = await session.execute(
                     select(func.count(DocTaxonomy.doc_id.distinct()))
-                    .where(DocTaxonomy.node_id == node_uuid)
-                    .where(DocTaxonomy.version == taxonomy_version)
+                    .where(DocTaxonomy.node_id == node_uuid)  # type: ignore[attr-defined]
+                    .where(DocTaxonomy.version == taxonomy_version)  # type: ignore[attr-defined]
                 )
                 node_doc_count = node_doc_count_result.scalar() or 0
 
                 node_chunk_count_result = await session.execute(
                     select(func.count(DocumentChunk.chunk_id))
                     .join(DocTaxonomy, DocumentChunk.doc_id == DocTaxonomy.doc_id)
-                    .where(DocTaxonomy.node_id == node_uuid)
-                    .where(DocTaxonomy.version == taxonomy_version)
+                    .where(DocTaxonomy.node_id == node_uuid)  # type: ignore[attr-defined]
+                    .where(DocTaxonomy.version == taxonomy_version)  # type: ignore[attr-defined]
                 )
                 node_chunk_count = node_chunk_count_result.scalar() or 0
 
@@ -95,15 +99,15 @@ class CoverageMeterService:
 
     async def _get_descendant_nodes(
         self,
-        session,
+        session: "AsyncSession",
         root_node_ids: List[str],
         version: str
     ) -> List[str]:
-        import networkx as nx
+        import networkx as nx  # type: ignore[import-untyped]
 
         from apps.api.taxonomy_dag import taxonomy_dag_manager
 
-        graph = await taxonomy_dag_manager._build_networkx_graph(version)
+        graph = await taxonomy_dag_manager._build_networkx_graph(int(version))
 
         descendants = set(root_node_ids)
         for root_id in root_node_ids:

@@ -14,12 +14,19 @@ from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field, validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...database import get_async_session
+from ...database import async_session
 from ...deps import verify_api_key
 from ...security.api_key_storage import APIKeyCreateRequest, APIKeyInfo, APIKeyManager
 
 router = APIRouter(prefix="/admin/api-keys", tags=["API Key Management"])
 security = HTTPBearer()
+
+
+# Database session dependency
+async def get_db() -> AsyncSession:  # type: ignore[misc]
+    """Get database session"""
+    async with async_session() as session:
+        yield session
 
 
 # Request/Response Models
@@ -49,13 +56,13 @@ class CreateAPIKeyRequest(BaseModel):
     owner_id: Optional[str] = Field(None, description="Owner user ID")
 
     @validator("scope")
-    def validate_scope(cls, v) -> None:
+    def validate_scope(cls, v: str) -> str:
         if v not in ["read", "write", "admin"]:
             raise ValueError("Scope must be read, write, or admin")
         return v
 
     @validator("allowed_ips")
-    def validate_ips(cls, v) -> None:
+    def validate_ips(cls, v: Optional[List[str]]) -> Optional[List[str]]:
         if v is None:
             return v
 
@@ -120,7 +127,7 @@ class APIKeyUsageStats(BaseModel):
 
 
 # Helper function to check admin permissions
-async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)) -> None:
+async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)) -> APIKeyInfo:
     """Dependency to ensure the API key has admin scope"""
     if current_key.scope != "admin":
         raise HTTPException(
@@ -134,9 +141,9 @@ async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)) -
 async def create_api_key(
     request: CreateAPIKeyRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> CreateAPIKeyResponse:
     """
     Create a new API key with comprehensive security validation
 
@@ -165,6 +172,11 @@ async def create_api_key(
         plaintext_key, key_info = await key_manager.create_api_key(
             request=create_request, created_by=current_key.key_id, client_ip=client_ip
         )
+
+        if not key_info:
+            raise HTTPException(
+                status_code=500, detail="Failed to create API key: key_info is None"
+            )
 
         # Convert to response model
         key_response = APIKeyResponse(
@@ -199,9 +211,9 @@ async def list_api_keys(
         100, ge=1, le=1000, description="Maximum number of keys to return"
     ),
     offset: int = Query(0, ge=0, description="Number of keys to skip"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> List[APIKeyResponse]:
     """
     List API keys with optional filtering
 
@@ -247,9 +259,9 @@ async def list_api_keys(
 @router.get("/{key_id}", response_model=APIKeyResponse)
 async def get_api_key(
     key_id: str,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> APIKeyResponse:
     """
     Get detailed information about a specific API key
 
@@ -289,9 +301,9 @@ async def update_api_key(
     key_id: str,
     request: UpdateAPIKeyRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> APIKeyResponse:
     """
     Update an existing API key
 
@@ -344,16 +356,18 @@ async def update_api_key(
 async def revoke_api_key(
     key_id: str,
     reason: str = Body(..., description="Reason for revocation"),
-    http_request: Request = None,
-    db: AsyncSession = Depends(get_async_session),
+    http_request: Optional[Request] = None,
+    db: AsyncSession = Depends(get_db),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> Dict[str, str]:
     """
     Revoke an API key (mark as inactive)
 
     Requires admin-level API key for access. Revoked keys cannot be reactivated.
     """
-    client_ip = http_request.client.host if http_request.client else "unknown"
+    client_ip = (
+        http_request.client.host if http_request and http_request.client else "unknown"
+    )
 
     try:
         key_manager = APIKeyManager(db)
@@ -382,9 +396,9 @@ async def revoke_api_key(
 async def get_api_key_usage(
     key_id: str,
     days: int = Query(7, ge=1, le=90, description="Number of days to analyze"),
-    db: AsyncSession = Depends(get_async_session),
+    db: AsyncSession = Depends(get_db),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> APIKeyUsageStats:
     """
     Get usage statistics for an API key
 
@@ -408,12 +422,12 @@ async def get_api_key_usage(
         )
 
 
-@router.post("/generate", response_model=Dict[str, str])
+@router.post("/generate", response_model=Dict[str, Any])
 async def generate_sample_keys(
     key_type: str = Query("production", description="Type of key to generate"),
     count: int = Query(1, ge=1, le=10, description="Number of keys to generate"),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> Dict[str, Any]:
     """
     Generate sample API keys for testing
 
@@ -464,14 +478,14 @@ async def generate_sample_keys(
 async def validate_api_key_format(
     api_key: str = Body(..., description="API key to validate"),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> Dict[str, Any]:
     """
     Validate the format and strength of an API key
 
     Requires admin-level API key for access. This only validates format, not database existence.
     """
     try:
-        from ...deps import APIKeyValidator
+        from apps.api.security.api_key_generator import APIKeyValidator  # type: ignore[attr-defined]
 
         is_valid, errors = APIKeyValidator.comprehensive_validate(api_key)
         entropy = APIKeyValidator.calculate_entropy(api_key)

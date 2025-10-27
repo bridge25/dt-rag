@@ -166,6 +166,7 @@ class SampleDataGenerator:
                 query=query,
                 response=response,
                 retrieved_contexts=contexts,
+                ground_truth=None,
                 session_id=f"session_{i // 5 + 1}",
                 model_version=random.choice(["v1.8.1", "v1.8.0", "v1.7.9"]),
             )

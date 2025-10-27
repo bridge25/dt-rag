@@ -78,41 +78,49 @@ class SearchService:
         # Mock implementation
         hits = [
             SearchHit(
-                chunk_id="doc123_chunk456",
+                id="doc123_chunk456",
                 score=0.89,
-                text="Machine learning algorithms are computational methods that...",
-                source=SourceMeta(
+                content="Machine learning algorithms are computational methods that...",
+                title="Machine Learning Guide",
+                metadata={"taxonomy_path": ["Technology", "AI", "Machine Learning"]},
+                source_meta=SourceMeta(
+                    source_type="web",
+                    source_id="ml-guide-2024",
                     url="https://example.com/ml-guide",
                     title="Machine Learning Guide",
-                    date="2024-01-15",
+                    created_at=datetime(2024, 1, 15),
                 ),
-                taxonomy_path=["Technology", "AI", "Machine Learning"],
             ),
             SearchHit(
-                chunk_id="doc789_chunk012",
+                id="doc789_chunk012",
                 score=0.75,
-                text="Support Vector Machines (SVMs) are powerful supervised learning...",
-                source=SourceMeta(
+                content="Support Vector Machines (SVMs) are powerful supervised learning...",
+                title="SVM Tutorial",
+                metadata={
+                    "taxonomy_path": [
+                        "Technology",
+                        "AI",
+                        "Machine Learning",
+                        "Supervised Learning",
+                    ]
+                },
+                source_meta=SourceMeta(
+                    source_type="web",
+                    source_id="svm-tutorial-2024",
                     url="https://example.com/svm-tutorial",
                     title="SVM Tutorial",
-                    date="2024-01-10",
+                    created_at=datetime(2024, 1, 10),
                 ),
-                taxonomy_path=[
-                    "Technology",
-                    "AI",
-                    "Machine Learning",
-                    "Supervised Learning",
-                ],
             ),
         ]
 
         return SearchResponse(
+            query=request.query,
             hits=hits,
-            latency=0.045,
-            request_id=str(uuid.uuid4()),
-            total_candidates=50,
-            sources_count=12,
-            taxonomy_version="1.8.1",
+            total_hits=len(hits),
+            search_time_ms=45.0,
+            filters_applied=request.filters,
+            metadata={"taxonomy_version": "1.8.1"},
         )
 
     async def get_analytics(self) -> SearchAnalytics:
@@ -131,7 +139,12 @@ class SearchService:
 
     async def get_config(self) -> SearchConfig:
         """Get current search configuration"""
-        return SearchConfig()
+        return SearchConfig(
+            bm25_weight=0.5,
+            vector_weight=0.5,
+            rerank_threshold=0.7,
+            max_candidates=100,
+        )
 
     async def update_config(self, config: SearchConfig) -> SearchConfig:
         """Update search configuration"""
@@ -159,7 +172,7 @@ async def get_search_service() -> SearchService:
 @search_router.post("/", response_model=SearchResponse)
 async def search_documents(
     request: SearchRequest, service: SearchService = Depends(get_search_service)
-):
+) -> SearchResponse:
     """
     Perform hybrid search using BM25 and vector search with reranking
 
@@ -171,13 +184,13 @@ async def search_documents(
     """
     try:
         # Validate search request
-        if not request.q.strip():
+        if not request.query.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Search query cannot be empty",
             )
 
-        if request.max_results > 100:
+        if request.limit > 100:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Maximum results limit is 100",
@@ -186,14 +199,7 @@ async def search_documents(
         # Perform search
         result = await service.search(request)
 
-        # Add response headers for monitoring
-        headers = {
-            "X-Search-Latency": str(result.latency),
-            "X-Request-ID": result.request_id,
-            "X-Total-Candidates": str(result.total_candidates or 0),
-        }
-
-        return JSONResponse(content=result.dict(), headers=headers)
+        return result
 
     except HTTPException:
         raise
@@ -206,7 +212,9 @@ async def search_documents(
 
 
 @search_router.get("/analytics", response_model=SearchAnalytics)
-async def get_search_analytics(service: SearchService = Depends(get_search_service)) -> None:
+async def get_search_analytics(
+    service: SearchService = Depends(get_search_service),
+) -> SearchAnalytics:
     """
     Get search analytics and performance metrics
 
@@ -229,7 +237,9 @@ async def get_search_analytics(service: SearchService = Depends(get_search_servi
 
 
 @search_router.get("/config", response_model=SearchConfig)
-async def get_search_config(service: SearchService = Depends(get_search_service)) -> None:
+async def get_search_config(
+    service: SearchService = Depends(get_search_service),
+) -> SearchConfig:
     """
     Get current search configuration
 
@@ -253,7 +263,7 @@ async def get_search_config(service: SearchService = Depends(get_search_service)
 @search_router.put("/config", response_model=SearchConfig)
 async def update_search_config(
     config: SearchConfig, service: SearchService = Depends(get_search_service)
-):
+) -> SearchConfig:
     """
     Update search configuration
 
@@ -286,7 +296,7 @@ async def update_search_config(
 @search_router.post("/reindex")
 async def reindex_search_corpus(
     request: ReindexRequest, service: SearchService = Depends(get_search_service)
-):
+) -> Dict[str, Any]:
     """
     Trigger search index rebuild
 
@@ -308,7 +318,7 @@ async def reindex_search_corpus(
 
 
 @search_router.get("/status")
-async def get_search_status() -> None:
+async def get_search_status() -> Dict[str, Any]:
     """
     Get search system status and health
 
@@ -356,7 +366,7 @@ async def search_suggestions(
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
     limit: int = Query(5, ge=1, le=20, description="Maximum suggestions"),
     service: SearchService = Depends(get_search_service),
-):
+) -> Dict[str, Any]:
     """
     Get search query suggestions and autocompletion
 

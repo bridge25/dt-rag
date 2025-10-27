@@ -6,6 +6,8 @@ Provides optimized batch search operations for processing multiple queries effic
 - Shared embedding computation
 - Result aggregation and deduplication
 - Performance analytics for batch operations
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import sys
@@ -22,7 +24,7 @@ import logging  # noqa: E402
 import time  # noqa: E402
 import uuid  # noqa: E402
 from datetime import datetime  # noqa: E402
-from typing import List  # noqa: E402
+from typing import Any, Dict, List  # noqa: E402
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
@@ -51,7 +53,7 @@ except ImportError as e:
 
 class BatchSearchRequest(BaseModel):
     queries: List[str] = Field(
-        ..., min_items=1, max_items=50, description="List of search queries"
+        ..., min_length=1, description="List of search queries"
     )
     max_results_per_query: int = Field(
         10, ge=1, le=100, description="Maximum results per query"
@@ -169,8 +171,13 @@ class BatchSearchService:
                         url=result["source_url"] or "",
                         title=result["title"] or "Untitled",
                         date=result.get("metadata", {}).get("date", ""),
+                        author=result.get("metadata", {}).get("author"),
+                        content_type=result.get("metadata", {}).get("content_type"),
+                        language=result.get("metadata", {}).get("language"),
                     ),
                     taxonomy_path=result["taxonomy_path"],
+                    highlights=None,
+                    metadata=result.get("metadata"),
                 )
                 hits.append(hit)
 
@@ -200,8 +207,13 @@ class BatchSearchService:
                     url=f"https://example.com/doc{i}",
                     title=f"Document {i+1}",
                     date="2024-01-15",
+                    author=None,
+                    content_type=None,
+                    language=None,
                 ),
                 taxonomy_path=["AI", "ML"],
+                highlights=None,
+                metadata=None,
             )
             for i in range(min(3, max_results))
         ]
@@ -253,7 +265,7 @@ async def batch_search(
     http_request: Request,
     service: BatchSearchService = Depends(get_batch_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> BatchSearchResponse:
     """
     Execute multiple search queries in parallel or sequential mode
 
@@ -295,7 +307,7 @@ async def batch_search(
 # @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware
 async def get_batch_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """
     Get batch search performance metrics and recommendations
 

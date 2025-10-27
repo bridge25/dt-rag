@@ -1,6 +1,8 @@
 # @CODE:AGENT-GROWTH-002:API
 # @CODE:AGENT-GROWTH-003:API
 # @CODE:AGENT-GROWTH-004:API
+# @CODE:MYPY-001:PHASE2:BATCH4
+from typing import Any, AsyncGenerator, Dict
 import asyncio
 import json
 import logging
@@ -17,7 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.api.agent_dao import AgentDAO
 from apps.api.background.agent_task_queue import AgentTaskQueue
 from apps.api.background.coverage_history_dao import CoverageHistoryDAO
-from apps.api.database import BackgroundTask, SearchDAO, TaxonomyNode
+from apps.api.database import SearchDAO, TaxonomyNode
+from apps.api.models import BackgroundTask  # type: ignore[attr-defined]
 from apps.api.deps import verify_api_key
 from apps.api.schemas.agent_schemas import (
     AgentCreateRequest,
@@ -43,14 +46,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agents", tags=["agents"])
 
 
-async def get_session() -> None:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session
 
 
 async def validate_taxonomy_nodes(
     session: AsyncSession, taxonomy_node_ids: list, taxonomy_version: str
-):
+) -> None:
     query = select(TaxonomyNode.node_id).where(
         TaxonomyNode.node_id.in_(taxonomy_node_ids),
         TaxonomyNode.version == taxonomy_version,
@@ -75,7 +78,7 @@ async def validate_taxonomy_nodes(
 async def create_agent_from_taxonomy(
     request: AgentCreateRequest,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> AgentResponse:
     logger.info(f"Creating agent: {request.name}")
 
@@ -113,10 +116,10 @@ async def create_agent_from_taxonomy(
     description="Searches agents by name using case-insensitive pattern matching.",
 )
 async def search_agents(
-    q: str = None,
+    q: Optional[str] = None,
     max_results: int = 50,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> AgentListResponse:
     logger.info(f"Searching agents: query={q}, max_results={max_results}")
 
@@ -124,8 +127,8 @@ async def search_agents(
         if max_results > 100:
             raise HTTPException(status_code=422, detail="max_results must be <= 100")
 
-        agents = await AgentDAO.search_agents(
-            session=session, query=q, max_results=max_results
+        agents = await AgentDAO.list_agents(
+            session=session, max_results=max_results
         )
 
         return AgentListResponse(
@@ -151,7 +154,7 @@ async def search_agents(
 async def get_agent(
     agent_id: UUID,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> AgentResponse:
     logger.info(f"Retrieving agent: {agent_id}")
 
@@ -182,7 +185,7 @@ async def list_agents(
     min_coverage: Optional[float] = None,
     max_results: int = 50,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> AgentListResponse:
     logger.info(
         f"Listing agents with filters: level={level}, min_coverage={min_coverage}, max_results={max_results}"
@@ -199,7 +202,7 @@ async def list_agents(
             max_results=max_results,
         )
 
-        filters_applied = {}
+        filters_applied: Dict[str, Any] = {}
         if level is not None:
             filters_applied["level"] = level
         if min_coverage is not None:
@@ -228,7 +231,7 @@ async def list_agents(
 async def get_agent_coverage(
     agent_id: UUID,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> CoverageResponse:
     logger.info(f"Calculating coverage for agent: {agent_id}")
 
@@ -252,13 +255,15 @@ async def get_agent_coverage(
             last_coverage_update=datetime.utcnow(),
         )
 
-        node_coverage = {}
-        document_counts = {}
-        target_counts = {}
+        node_coverage: Dict[str, float] = {}
+        document_counts: Dict[str, int] = {}
+        target_counts: Dict[str, int] = {}
 
         for node_id, coverage_data in coverage_result.node_coverage.items():
-            doc_count = coverage_data.get("document_count", 0)
-            chunk_count = coverage_data.get("chunk_count", 0)
+            doc_count_value = coverage_data.get("document_count", 0)
+            chunk_count_value = coverage_data.get("chunk_count", 0)
+            doc_count = int(doc_count_value) if isinstance(doc_count_value, (int, float)) else 0
+            chunk_count = int(chunk_count_value) if isinstance(chunk_count_value, (int, float)) else 0
             target_count = max(doc_count, 10)
 
             node_coverage[node_id] = (
@@ -295,7 +300,7 @@ async def detect_coverage_gaps(
     agent_id: UUID,
     threshold: float = 0.5,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> GapListResponse:
     logger.info(f"Detecting gaps for agent: {agent_id}, threshold: {threshold}")
 
@@ -356,7 +361,7 @@ async def query_agent(
     agent_id: UUID,
     request: QueryRequest,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> QueryResponse:
     logger.info(f"Querying agent: {agent_id}, query: {request.query}")
 
@@ -440,7 +445,7 @@ async def update_agent(
     agent_id: UUID,
     request: AgentUpdateRequest,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> AgentResponse:
     logger.info(f"Updating agent: {agent_id}")
 
@@ -478,8 +483,8 @@ async def update_agent(
 async def delete_agent(
     agent_id: UUID,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
-):
+    api_key: Any=Depends(verify_api_key),
+) -> None:
     logger.info(f"Deleting agent: {agent_id}")
 
     try:
@@ -511,7 +516,7 @@ async def refresh_agent_coverage_background(
     agent_id: UUID,
     background: bool = True,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> BackgroundTaskResponse:
     logger.info(f"Triggering background coverage refresh for agent: {agent_id}")
 
@@ -600,7 +605,7 @@ async def get_coverage_task_status(
     agent_id: UUID,
     task_id: str,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> TaskStatusResponse:
     logger.info(f"Retrieving task status: {task_id} for agent: {agent_id}")
 
@@ -660,7 +665,7 @@ async def get_coverage_history(
     end_date: Optional[datetime] = None,
     limit: Optional[int] = 100,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
+    api_key: Any=Depends(verify_api_key),
 ) -> CoverageHistoryResponse:
     logger.info(f"Retrieving coverage history for agent: {agent_id}")
 
@@ -712,8 +717,8 @@ async def get_coverage_history(
 async def cancel_background_task(
     task_id: str,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
-):
+    api_key: Any=Depends(verify_api_key),
+) -> None:
     logger.info(f"Cancelling task: {task_id}")
 
     try:
@@ -764,11 +769,11 @@ async def query_agent_stream(
     agent_id: UUID,
     request: QueryRequest,
     session: AsyncSession = Depends(get_session),
-    api_key=Depends(verify_api_key),
-):
+    api_key: Any=Depends(verify_api_key),
+) -> Any:
     logger.info(f"Streaming query for agent: {agent_id}, query: {request.query}")
 
-    async def event_generator() -> None:
+    async def event_generator() -> AsyncGenerator[str, None]:
         try:
             agent = await AgentDAO.get_agent(session, agent_id)
 

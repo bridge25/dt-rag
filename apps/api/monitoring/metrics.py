@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2
 """
 성능 메트릭 수집 및 Prometheus 익스포트 시스템
 """
@@ -10,9 +11,9 @@ from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, AsyncIterator, Callable, Coroutine, Dict, List, Optional
 
-import psutil
+import psutil  # type: ignore[import-untyped]  # psutil has no type stubs
 
 logger = logging.getLogger(__name__)
 
@@ -81,9 +82,9 @@ class PerformanceSnapshot:
 class LatencyTracker:
     """지연시간 추적기"""
 
-    def __init__(self, max_samples: int = 10000):
+    def __init__(self, max_samples: int = 10000) -> None:
         self.max_samples = max_samples
-        self.samples = deque(maxlen=max_samples)
+        self.samples: deque[float] = deque(maxlen=max_samples)
         self.lock = threading.Lock()
 
     def add_sample(self, latency_ms: float) -> None:
@@ -111,19 +112,19 @@ class LatencyTracker:
 class MetricsCollector:
     """종합 메트릭 수집기"""
 
-    def __init__(self, enable_prometheus: bool = True):
+    def __init__(self, enable_prometheus: bool = True) -> None:
         self.enable_prometheus = enable_prometheus and PROMETHEUS_AVAILABLE
 
         # 내장 메트릭 저장소
-        self.metrics = defaultdict(list)
-        self.counters = defaultdict(int)
-        self.gauges = defaultdict(float)
+        self.metrics: Dict[str, List[MetricValue]] = defaultdict(list)
+        self.counters: Dict[str, int] = defaultdict(int)
+        self.gauges: Dict[str, float] = defaultdict(float)
 
         # 지연시간 추적기
         self.latency_tracker = LatencyTracker()
 
         # 성능 스냅샷 히스토리
-        self.performance_history = deque(maxlen=1000)
+        self.performance_history: deque[PerformanceSnapshot] = deque(maxlen=1000)
 
         # Prometheus 메트릭 (사용 가능한 경우)
         if self.enable_prometheus:
@@ -186,7 +187,9 @@ class MetricsCollector:
         self.qps_gauge = Gauge("dt_rag_queries_per_second", "Queries per second")
 
     @asynccontextmanager
-    async def track_operation(self, operation_name: str, labels: Dict[str, str] = None) -> None:
+    async def track_operation(
+        self, operation_name: str, labels: Optional[Dict[str, str]] = None
+    ) -> AsyncIterator[None]:
         """작업 시간 추적 컨텍스트 매니저"""
         labels = labels or {}
         start_time = time.time()
@@ -206,8 +209,8 @@ class MetricsCollector:
             raise
 
     def record_latency(
-        self, operation: str, latency_ms: float, labels: Dict[str, str] = None
-    ):
+        self, operation: str, latency_ms: float, labels: Optional[Dict[str, str]] = None
+    ) -> None:
         """지연시간 기록"""
         self.latency_tracker.add_sample(latency_ms)
 
@@ -218,12 +221,12 @@ class MetricsCollector:
 
         # Prometheus 메트릭 업데이트
         if self.enable_prometheus and hasattr(self, "request_duration"):
-            labels_list = [labels.get("method", ""), labels.get("endpoint", "")]
+            labels_list = [labels.get("method", ""), labels.get("endpoint", "")] if labels else ["", ""]
             self.request_duration.labels(*labels_list).observe(latency_ms / 1000)
 
     def increment_counter(
-        self, counter_name: str, labels: Dict[str, str] = None, value: int = 1
-    ):
+        self, counter_name: str, labels: Optional[Dict[str, str]] = None, value: int = 1
+    ) -> None:
         """카운터 증가"""
         self.counters[counter_name] += value
 
@@ -244,7 +247,7 @@ class MetricsCollector:
                 status = labels.get("status", "") if labels else ""
                 self.search_requests.labels(search_type, status).inc(value)
 
-    def set_gauge(self, gauge_name: str, value: float, labels: Dict[str, str] = None) -> None:
+    def set_gauge(self, gauge_name: str, value: float, labels: Optional[Dict[str, str]] = None) -> None:
         """게이지 값 설정"""
         self.gauges[gauge_name] = value
 
@@ -265,8 +268,8 @@ class MetricsCollector:
                 self.qps_gauge.set(value)
 
     def record_cache_operation(
-        self, operation: str, result: str, labels: Dict[str, str] = None
-    ):
+        self, operation: str, result: str, labels: Optional[Dict[str, str]] = None
+    ) -> None:
         """캐시 작업 기록"""
         all_labels = {"operation": operation, "result": result}
         if labels:
@@ -385,7 +388,7 @@ class MetricsCollector:
         # 시스템 메트릭 업데이트
         self.update_system_metrics()
 
-        return generate_latest()
+        return str(generate_latest())
 
     def reset_metrics(self) -> None:
         """메트릭 초기화"""
@@ -420,16 +423,16 @@ def initialize_metrics_collector(enable_prometheus: bool = True) -> MetricsColle
 
 
 # 데코레이터
-def track_performance(operation_name: str) -> None:
+def track_performance(operation_name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """성능 추적 데코레이터"""
 
-    def decorator(func) -> None:
-        async def async_wrapper(*args, **kwargs) -> None:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             collector = get_metrics_collector()
             async with collector.track_operation(operation_name):
                 return await func(*args, **kwargs)
 
-        def sync_wrapper(*args, **kwargs) -> None:
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             collector = get_metrics_collector()
             start_time = time.time()
             try:

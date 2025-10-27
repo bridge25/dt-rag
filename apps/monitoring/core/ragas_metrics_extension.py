@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 RAGAS Metrics Extension for MetricsCollector
 
@@ -6,7 +7,10 @@ for comprehensive RAG system quality monitoring.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
+
+if TYPE_CHECKING:
+    from prometheus_client import Counter, Gauge, Histogram  # type: ignore[import-not-found]
 
 try:
     from prometheus_client import Counter, Gauge, Histogram
@@ -16,34 +20,34 @@ except ImportError:
     PROMETHEUS_AVAILABLE = False
 
     # Use same mock classes as in metrics_collector.py
-    class Counter:
-        def __init__(self, *args, **kwargs) -> None:
+    class Counter:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def inc(self, *args, **kwargs) -> None:
+        def inc(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def labels(self, *args, **kwargs) -> None:
+        def labels(self, *args: Any, **kwargs: Any) -> "Counter":
             return self
 
-    class Gauge:
-        def __init__(self, *args, **kwargs) -> None:
+    class Gauge:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def set(self, *args, **kwargs) -> None:
+        def set(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def labels(self, *args, **kwargs) -> None:
+        def labels(self, *args: Any, **kwargs: Any) -> "Gauge":
             return self
 
-    class Histogram:
-        def __init__(self, *args, **kwargs) -> None:
+    class Histogram:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def observe(self, *args, **kwargs) -> None:
+        def observe(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def labels(self, *args, **kwargs) -> None:
+        def labels(self, *args: Any, **kwargs: Any) -> "Histogram":
             return self
 
 
@@ -58,7 +62,7 @@ class RAGASMetricsExtension:
     including faithfulness, relevancy, precision, recall, and quality gates.
     """
 
-    def __init__(self, registry=None) -> None:
+    def __init__(self, registry: Optional[Any]=None) -> None:
         self.registry = registry
         self.enabled = PROMETHEUS_AVAILABLE and registry is not None
 
@@ -205,7 +209,7 @@ class RAGASMetricsExtension:
         evaluation_type: str = "single",
         duration_seconds: Optional[float] = None,
         quality_gates_passed: bool = False,
-    ):
+    ) -> None:
         """
         Record RAGAS evaluation metrics
 
@@ -296,7 +300,7 @@ class RAGASMetricsExtension:
         except Exception as e:
             logger.error(f"Failed to record RAGAS metrics: {e}")
 
-    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, float]]) -> None:
+    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, Any]]) -> None:
         """
         Update quality gates status metrics
 
@@ -309,7 +313,8 @@ class RAGASMetricsExtension:
         try:
             for metric_name, gate_data in quality_gates.items():
                 # Set status (1 for passing, 0 for failing)
-                status_value = 1.0 if gate_data.get("status") == "passing" else 0.0
+                status = gate_data.get("status")
+                status_value = 1.0 if status == "passing" else 0.0
                 self.quality_gate_status.labels(metric_name=metric_name).set(
                     status_value
                 )
@@ -335,7 +340,7 @@ class RAGASMetricsExtension:
 
     def record_batch_evaluation_progress(
         self, batch_id: str, total_queries: int, completed_queries: int, status: str
-    ):
+    ) -> None:
         """
         Record batch evaluation progress
 
@@ -455,7 +460,7 @@ class RAGASMetricsExtension:
             return {"error": f"Failed to get summary: {e}"}
 
 
-def extend_metrics_collector(metrics_collector) -> None:
+def extend_metrics_collector(metrics_collector: Any) -> RAGASMetricsExtension:
     """
     Extend an existing MetricsCollector with RAGAS metrics
 

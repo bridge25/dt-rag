@@ -11,6 +11,8 @@ Performance targets:
 - Recall@10 ≥ 0.85
 - Search latency p95 ≤ 1s
 - Cost ≤ ₩3/search
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import asyncio
@@ -21,7 +23,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 from sqlalchemy import func, text
@@ -99,7 +101,7 @@ class ScoreNormalizer:
         if std_score == 0:
             return [0.0] * len(scores)
 
-        return [(score - mean_score) / std_score for score in scores]
+        return [float((score - mean_score) / std_score) for score in scores]
 
     @staticmethod
     def reciprocal_rank_normalize(scores: List[float]) -> List[float]:
@@ -330,8 +332,8 @@ class ResultCache:
     """In-memory cache for search results"""
 
     def __init__(self, max_size: int = 1000, ttl_seconds: int = 3600):
-        self.cache = {}
-        self.access_times = {}
+        self.cache: Dict[str, List[SearchResult]] = {}
+        self.access_times: Dict[str, float] = {}
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
 
@@ -355,7 +357,8 @@ class ResultCache:
                 # Update access time
                 self.access_times[cache_key] = time.time()
                 logger.debug(f"Cache hit for query: {query[:50]}...")
-                return self.cache[cache_key]
+                cached_results: List[SearchResult] = self.cache[cache_key]
+                return cached_results
             else:
                 # Expired
                 del self.cache[cache_key]
@@ -369,7 +372,7 @@ class ResultCache:
         filters: Dict[str, Any],
         top_k: int,
         results: List[SearchResult],
-    ):
+    ) -> None:
         """Cache search results"""
         cache_key = self._generate_cache_key(query, filters, top_k)
 
@@ -395,7 +398,7 @@ class ResultCache:
         self.cache.clear()
         self.access_times.clear()
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> Dict[str, Union[int, float]]:
         """Get cache statistics"""
         return {
             "size": len(self.cache),
@@ -479,18 +482,24 @@ class HybridSearchEngine:
                 query_embedding, vector_candidates, filters
             )
 
-            bm25_results, vector_results = await asyncio.gather(
+            results_tuple = await asyncio.gather(
                 bm25_task, vector_task, return_exceptions=True
             )
+            bm25_results_raw, vector_results_raw = results_tuple
 
-            # Handle exceptions
-            if isinstance(bm25_results, Exception):
-                logger.error(f"BM25 search failed: {bm25_results}")
-                bm25_results = []
+            # Handle exceptions and ensure proper types
+            bm25_results: List[SearchResult] = []
+            vector_results: List[SearchResult] = []
 
-            if isinstance(vector_results, Exception):
-                logger.error(f"Vector search failed: {vector_results}")
-                vector_results = []
+            if isinstance(bm25_results_raw, Exception):
+                logger.error(f"BM25 search failed: {bm25_results_raw}")
+            else:
+                bm25_results = cast(List[SearchResult], bm25_results_raw)
+
+            if isinstance(vector_results_raw, Exception):
+                logger.error(f"Vector search failed: {vector_results_raw}")
+            else:
+                vector_results = cast(List[SearchResult], vector_results_raw)
 
             metrics.bm25_candidates = len(bm25_results)
             metrics.vector_candidates = len(vector_results)
@@ -758,8 +767,8 @@ class HybridSearchEngine:
                 path_conditions = []
                 for path in paths:
                     if isinstance(path, list):
-                        path_str = '{"{"}'.format('","'.join(path))
-                        path_conditions.append(f"dt.path = '{path_str}'::text[]")
+                        path_str = '","'.join(path)
+                        path_conditions.append(f"dt.path = '{{{path_str}}}'::text[]")
                 if path_conditions:
                     conditions.append(f"({' OR '.join(path_conditions)})")
 
@@ -853,7 +862,7 @@ class HybridSearchEngine:
             config["cache_stats"] = self.cache.get_stats()
         return config
 
-    def update_config(self, **kwargs) -> None:
+    def update_config(self, **kwargs: Any) -> None:
         """Update search engine configuration"""
         if "bm25_weight" in kwargs or "vector_weight" in kwargs:
             bm25_weight = kwargs.get("bm25_weight", self.config["bm25_weight"])
@@ -889,7 +898,7 @@ search_engine = HybridSearchEngine()
 
 # Convenience functions for API integration
 async def hybrid_search(
-    query: str, top_k: int = 5, filters: Optional[Dict[str, Any]] = None, **kwargs
+    query: str, top_k: int = 5, filters: Optional[Dict[str, Any]] = None, **kwargs: Any
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """Main hybrid search function for API integration"""
     results, metrics = await search_engine.search(query, top_k, filters, **kwargs)
@@ -991,7 +1000,7 @@ def get_search_engine_config() -> Dict[str, Any]:
     return search_engine.get_config()
 
 
-def update_search_engine_config(**kwargs) -> None:
+def update_search_engine_config(**kwargs: Any) -> None:
     """Update search engine configuration"""
     search_engine.update_config(**kwargs)
 

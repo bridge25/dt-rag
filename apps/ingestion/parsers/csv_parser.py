@@ -1,5 +1,5 @@
 import io
-from typing import Optional
+from typing import Optional, cast
 
 from .base import BaseParser, ParserError
 
@@ -26,7 +26,7 @@ class CSVParser(BaseParser):
 
             markdown_table = df.to_markdown(index=False)
 
-            return markdown_table
+            return cast(str, markdown_table)
         except Exception as e:
             raise ParserError(f"CSV parsing failed: {str(e)}")
 

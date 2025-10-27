@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 Orchestration API Router for DT-RAG v1.8.1
 
@@ -67,13 +68,13 @@ class PipelineResponse(BaseModel):
 class PipelineConfig(BaseModel):
     """Pipeline configuration"""
 
-    max_search_results: int = Field(10, ge=1, le=50)
-    search_type: str = Field("hybrid", pattern="^(bm25|vector|hybrid)$")
-    rerank_enabled: bool = Field(True)
-    generation_temperature: float = Field(0.7, ge=0.0, le=2.0)
-    generation_max_tokens: int = Field(1000, ge=100, le=4000)
-    cost_threshold_krw: float = Field(50.0, ge=0.0)
-    timeout_seconds: int = Field(30, ge=5, le=300)
+    max_search_results: int = Field(default=10, ge=1, le=50)
+    search_type: str = Field(default="hybrid", pattern="^(bm25|vector|hybrid)$")
+    rerank_enabled: bool = Field(default=True)
+    generation_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    generation_max_tokens: int = Field(default=1000, ge=100, le=4000)
+    cost_threshold_krw: float = Field(default=50.0, ge=0.0)
+    timeout_seconds: int = Field(default=30, ge=5, le=300)
 
 
 class PipelineJob(BaseModel):
@@ -110,15 +111,18 @@ class PipelineService:
         # Mock pipeline execution
         sources = [
             SearchHit(
-                chunk_id="doc123_chunk456",
+                id="doc123_chunk456",
                 score=0.89,
-                text="Machine learning algorithms enable computers to learn...",
-                source=SourceMeta(
+                content="Machine learning algorithms enable computers to learn...",
+                title="ML Fundamentals",
+                metadata={"taxonomy_path": ["Technology", "AI", "Machine Learning"]},
+                source_meta=SourceMeta(
+                    source_type="web",
+                    source_id="ml-guide",
                     url="https://example.com/ml-guide",
                     title="ML Fundamentals",
-                    date="2024-01-15",
+                    created_at=None,
                 ),
-                taxonomy_path=["Technology", "AI", "Machine Learning"],
             )
         ]
 
@@ -222,7 +226,7 @@ async def get_pipeline_service() -> PipelineService:
 @orchestration_router.post("/execute", response_model=PipelineResponse)
 async def execute_pipeline(
     request: PipelineRequest, service: PipelineService = Depends(get_pipeline_service)
-):
+) -> JSONResponse:
     """
     Execute the complete 7-step RAG pipeline
 
@@ -272,7 +276,7 @@ async def execute_pipeline_async(
     request: PipelineRequest,
     background_tasks: BackgroundTasks,
     service: PipelineService = Depends(get_pipeline_service),
-):
+) -> Dict[str, Any]:
     """
     Start asynchronous pipeline execution
 
@@ -303,7 +307,7 @@ async def execute_pipeline_async(
 @orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)
 async def get_pipeline_job(
     job_id: str, service: PipelineService = Depends(get_pipeline_service)
-):
+) -> PipelineJob:
     """
     Get pipeline job status and results
 
@@ -334,7 +338,7 @@ async def get_pipeline_job(
 
 
 @orchestration_router.get("/config", response_model=PipelineConfig)
-async def get_pipeline_config(service: PipelineService = Depends(get_pipeline_service)) -> None:
+async def get_pipeline_config(service: PipelineService = Depends(get_pipeline_service)) -> PipelineConfig:
     """
     Get current pipeline configuration
 
@@ -358,7 +362,7 @@ async def get_pipeline_config(service: PipelineService = Depends(get_pipeline_se
 @orchestration_router.put("/config", response_model=PipelineConfig)
 async def update_pipeline_config(
     config: PipelineConfig, service: PipelineService = Depends(get_pipeline_service)
-):
+) -> PipelineConfig:
     """
     Update pipeline configuration
 
@@ -391,7 +395,7 @@ async def update_pipeline_config(
 @orchestration_router.get("/analytics", response_model=PipelineAnalytics)
 async def get_pipeline_analytics(
     service: PipelineService = Depends(get_pipeline_service),
-):
+) -> PipelineAnalytics:
     """
     Get pipeline analytics and performance metrics
 
@@ -413,7 +417,7 @@ async def get_pipeline_analytics(
 
 
 @orchestration_router.get("/status")
-async def get_pipeline_status() -> None:
+async def get_pipeline_status() -> Dict[str, Any]:
     """
     Get pipeline system status and health
 

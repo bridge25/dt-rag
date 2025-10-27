@@ -3,6 +3,8 @@ B-O3: 7-Step LangGraph Pipeline Implementation
 intent → retrieve → plan → tools/debate → compose → cite → respond
 
 Week-1 목표: 완전한 7-Step 파이프라인 골격 + 메타데이터 수집
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 import asyncio
@@ -11,7 +13,7 @@ import time
 from datetime import datetime
 
 # LangGraph 대신 간단한 그래프 구현 사용
-from typing import Any, Callable, Dict, List, Optional, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypedDict
 
 import httpx
 from pydantic import BaseModel, Field
@@ -88,7 +90,7 @@ class PipelineResponse(BaseModel):
 
     # B-O3 필수 메타데이터
     sources: List[Dict[str, Any]] = Field(
-        ..., min_items=0, description="출처 목록 (≥2개 권장)"
+        default_factory=list, description="출처 목록 (≥2개 권장)"
     )
     taxonomy_version: str = Field(..., description="사용된 택소노미 버전")
     cost: float = Field(..., ge=0.0, description="토큰 사용량 기반 비용 (₩)")
@@ -110,7 +112,7 @@ class SimpleGraph:
     """간단한 순차 실행 그래프"""
 
     def __init__(self) -> None:
-        self.steps = []
+        self.steps: List[Tuple[str, Callable[[PipelineState], Any]]] = []
 
     def add_step(self, name: str, func: Callable) -> None:
         self.steps.append((name, func))
@@ -126,20 +128,20 @@ class SimpleGraph:
 class LangGraphPipeline:
     """B-O3 7-Step 파이프라인 (A팀 API 연동, PRD 준수)"""
 
-    def __init__(self, a_team_base_url: str = "http://localhost:8001"):
+    def __init__(self, a_team_base_url: str = "http://localhost:8001") -> None:
         self.a_team_base_url = a_team_base_url
         self.client = httpx.AsyncClient()
         self.graph = self._build_graph()
         # 복원력 시스템 통합
+        self.resilience_manager: Optional[Any] = None
         try:
-            from pipeline_resilience import get_resilience_manager
+            from pipeline_resilience import get_resilience_manager  # type: ignore[import-not-found]
 
             self.resilience_manager = get_resilience_manager()
         except ImportError:
             logger.warning(
                 "pipeline_resilience 모듈을 찾을 수 없습니다. 기본 실행 모드로 진행합니다."
             )
-            self.resilience_manager = None
 
     def _build_graph(self) -> SimpleGraph:
         """7-Step 파이프라인 그래프 구성"""
@@ -288,7 +290,7 @@ class LangGraphPipeline:
         docs_count = len(state["retrieved_docs"])
         intent = state["intent"]
 
-        async def determine_strategy() -> None:
+        async def determine_strategy() -> str:
             """답변 전략 결정"""
             if intent == "search" and docs_count > 0:
                 return "search_results_summary"
@@ -297,7 +299,7 @@ class LangGraphPipeline:
             else:
                 return "general_answer"
 
-        async def generate_reasoning(strategy_type) -> None:
+        async def generate_reasoning(strategy_type: str) -> List[str]:
             """전략별 추론 생성"""
             if strategy_type == "search_results_summary":
                 return [

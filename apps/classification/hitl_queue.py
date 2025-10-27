@@ -10,13 +10,14 @@ Features:
 """
 
 # @CODE:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md | TEST: tests/e2e/test_complete_workflow.py
+# @CODE:MYPY-001:PHASE2:BATCH5 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 
 import logging
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import text
+from sqlalchemy import text as sql_text
 
 from apps.api.database import db_manager
 
@@ -60,7 +61,7 @@ class HITLQueue:
         try:
             async with db_manager.async_session() as session:
                 # Insert into doc_taxonomy with hitl_required=true
-                query = text(
+                query = sql_text(
                     """
                     UPDATE doc_taxonomy
                     SET hitl_required = true,
@@ -77,7 +78,7 @@ class HITLQueue:
                     {
                         "chunk_id": chunk_id,
                         "confidence": confidence,
-                        "path": suggested_classification,
+                        "path": str(suggested_classification),
                     },
                 )
 
@@ -114,7 +115,7 @@ class HITLQueue:
         """
         try:
             async with db_manager.async_session() as session:
-                query = text(
+                query = sql_text(
                     """
                     SELECT
                         dt.doc_id,
@@ -187,7 +188,7 @@ class HITLQueue:
         try:
             async with db_manager.async_session() as session:
                 # Update doc_taxonomy with approved classification
-                query = text(
+                query = sql_text(
                     """
                     UPDATE doc_taxonomy
                     SET path = :approved_path,
@@ -230,7 +231,7 @@ class HITLQueue:
         """
         try:
             async with db_manager.async_session() as session:
-                query = text(
+                query = sql_text(
                     """
                     SELECT
                         COUNT(*) as total_pending,
@@ -244,6 +245,15 @@ class HITLQueue:
 
                 result = await session.execute(query)
                 row = result.fetchone()
+
+                if row is None:
+                    return {
+                        "total_pending": 0,
+                        "avg_confidence": 0.0,
+                        "min_confidence": 0.0,
+                        "max_confidence": 0.0,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
 
                 return {
                     "total_pending": int(row[0]) if row[0] else 0,
@@ -278,7 +288,7 @@ class HITLQueue:
         try:
             async with db_manager.async_session() as session:
                 # Simply remove HITL flag
-                query = text(
+                query = sql_text(
                     """
                     UPDATE doc_taxonomy
                     SET hitl_required = false

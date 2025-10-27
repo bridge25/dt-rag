@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH2 | SPEC: .moai/specs/SPEC-MYPY-001/spec.md
 """
 Integration utilities for RAGAS evaluation system
 
@@ -11,7 +12,7 @@ Provides integration hooks and middleware for automatic evaluation:
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -27,15 +28,15 @@ logger = logging.getLogger(__name__)
 class RAGEvaluationMiddleware(BaseHTTPMiddleware):
     """Middleware to automatically evaluate RAG responses"""
 
-    def __init__(self, app, enable_evaluation: bool = True) -> None:
+    def __init__(self, app: Any, enable_evaluation: bool = True) -> None:
         super().__init__(app)
         self.enable_evaluation = enable_evaluation
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
 
-    async def dispatch(self, request: Request, call_next) -> None:
-        response = await call_next(request)
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Any]) -> Response:
+        response: Response = await call_next(request)
 
         # Only evaluate search endpoints
         if (
@@ -94,8 +95,8 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
             # request body reading more carefully
             if hasattr(request, "_body"):
                 import json
-
-                return json.loads(request._body)
+                body_dict: Dict[str, Any] = json.loads(request._body)
+                return body_dict
         except Exception as e:
             logger.warning(f"Failed to extract request body: {e}")
         return None
@@ -141,6 +142,8 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
                 query=query,
                 response=response_text,
                 retrieved_contexts=contexts,
+                ground_truth=None,
+                model_version="default",
                 session_id=session_id,
                 experiment_id=experiment_id,
             )
@@ -167,7 +170,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
         """Extract user ID from request"""
         # Check headers, session, JWT token, etc.
         user_id = request.headers.get("X-User-ID")
-        if not user_id:
+        if not user_id and request.client:
             # Could extract from session or JWT
             user_id = f"anon_{hash(request.client.host) % 10000}"
 
@@ -213,27 +216,29 @@ class EvaluationIntegration:
             query=query,
             response=generated_response,
             retrieved_contexts=contexts,
+            ground_truth=None,
+            model_version="default",
             session_id=session_id,
             experiment_id=experiment_id,
         )
 
         # Perform evaluation
-        result = await self.evaluator.evaluate_rag_response(
+        eval_result: EvaluationResult = await self.evaluator.evaluate_rag_response(
             query=eval_request.query,
             response=eval_request.response,
             retrieved_contexts=eval_request.retrieved_contexts,
         )
 
         # Record for quality monitoring
-        await self.quality_monitor.record_evaluation(result)
+        await self.quality_monitor.record_evaluation(eval_result)
 
         # Record for experiments if applicable
         if experiment_id and user_id:
             await self.experiment_tracker.record_experiment_result(
-                experiment_id, user_id, result
+                experiment_id, user_id, eval_result
             )
 
-        return result
+        return eval_result
 
     def _generate_response_from_contexts(self, query: str, contexts: List[str]) -> str:
         """
@@ -268,7 +273,7 @@ class EvaluationIntegration:
         precision_threshold: float = 0.75,
         recall_threshold: float = 0.70,
         relevancy_threshold: float = 0.80,
-    ):
+    ) -> None:
         """Setup quality monitoring with custom thresholds"""
         from .models import QualityThresholds
 
@@ -277,6 +282,7 @@ class EvaluationIntegration:
             context_precision_min=precision_threshold,
             context_recall_min=recall_threshold,
             answer_relevancy_min=relevancy_threshold,
+            response_time_max=5.0,
         )
 
         await self.quality_monitor.update_thresholds(thresholds)
@@ -297,6 +303,8 @@ class EvaluationIntegration:
             control_config=control_config,
             treatment_config=treatment_config,
             minimum_sample_size=target_sample_size,
+            significance_threshold=0.05,
+            power_threshold=0.8,
         )
 
         experiment_id = await self.experiment_tracker.create_experiment(config)

@@ -44,7 +44,7 @@ class ClassifyResponse(BaseModel):
 @router.post("/classify", response_model=ClassifyResponse)
 async def classify_text(
     request: ClassifyRequest, api_key: str = Depends(verify_api_key)
-):
+) -> ClassifyResponse:
     """
     Bridge Pack 스펙: POST /classify
     실제 ML 모델 기반 분류 (키워드 방식 제거)

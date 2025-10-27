@@ -1,6 +1,8 @@
 """
 벡터 임베딩 서비스 API 라우터
 Sentence Transformers 기반 실제 벡터 생성 및 관리
+
+@CODE:MYPY-001:PHASE2:BATCH3
 """
 
 # @CODE:EMBED-001 | SPEC: .moai/specs/SPEC-EMBED-001/spec.md | TEST: tests/test_embedding_service.py
@@ -32,7 +34,7 @@ router = APIRouter(
 
 
 @router.get("/health", response_model=Dict[str, Any])
-async def get_embedding_health() -> None:
+async def get_embedding_health() -> Dict[str, Any]:
     """임베딩 서비스 헬스체크"""
     try:
         health_status = health_check()
@@ -47,7 +49,7 @@ async def get_embedding_health() -> None:
 
 
 @router.get("/info", response_model=Dict[str, Any])
-async def get_embedding_info() -> None:
+async def get_embedding_info() -> Dict[str, Any]:
     """임베딩 서비스 정보 조회"""
     try:
         service_info = get_service_info()
@@ -62,7 +64,7 @@ async def get_embedding_info() -> None:
 
 
 @router.get("/status", response_model=Dict[str, Any])
-async def get_embeddings_status() -> None:
+async def get_embeddings_status() -> Dict[str, Any]:
     """임베딩 데이터베이스 상태 조회"""
     try:
         status = await get_embedding_status()
@@ -80,7 +82,7 @@ async def get_embeddings_status() -> None:
 async def generate_text_embedding(
     text: str = Body(..., description="임베딩을 생성할 텍스트", embed=True),
     use_cache: bool = Body(True, description="캐시 사용 여부", embed=True),
-):
+) -> Dict[str, Any]:
     """단일 텍스트의 임베딩 생성"""
     try:
         if not text or not text.strip():
@@ -106,7 +108,7 @@ async def generate_text_embedding(
 async def generate_batch_embeddings(
     texts: List[str] = Body(..., description="임베딩을 생성할 텍스트 목록"),
     batch_size: int = Body(32, description="배치 크기", ge=1, le=100),
-):
+) -> Dict[str, Any]:
     """여러 텍스트의 배치 임베딩 생성"""
     try:
         if not texts:
@@ -143,7 +145,7 @@ async def generate_batch_embeddings(
 async def calculate_embedding_similarity(
     embedding1: List[float] = Body(..., description="첫 번째 임베딩 벡터"),
     embedding2: List[float] = Body(..., description="두 번째 임베딩 벡터"),
-):
+) -> Dict[str, Any]:
     """두 임베딩 간의 코사인 유사도 계산"""
     try:
         if not embedding1 or not embedding2:
@@ -177,7 +179,7 @@ async def update_documents_embeddings(
     ),
     batch_size: int = Body(10, description="배치 크기", ge=1, le=50),
     run_in_background: bool = Body(False, description="백그라운드에서 실행할지 여부"),
-):
+) -> Dict[str, Any]:
     """문서들의 임베딩 업데이트"""
     try:
         if run_in_background:
@@ -203,7 +205,7 @@ async def update_documents_embeddings(
 
 
 @router.post("/cache/clear", response_model=Dict[str, Any])
-async def clear_embedding_cache() -> None:
+async def clear_embedding_cache() -> Dict[str, Any]:
     """임베딩 캐시 클리어"""
     try:
         cleared_count = embedding_service.clear_cache()
@@ -220,7 +222,7 @@ async def clear_embedding_cache() -> None:
 
 
 @router.get("/models", response_model=Dict[str, Any])
-async def get_supported_models() -> None:
+async def get_supported_models() -> Dict[str, Any]:
     """지원하는 모델 목록 조회"""
     try:
         return {
@@ -236,7 +238,7 @@ async def get_supported_models() -> None:
 
 
 @router.get("/analytics", response_model=Dict[str, Any])
-async def get_embedding_analytics() -> None:
+async def get_embedding_analytics() -> Dict[str, Any]:
     """임베딩 시스템 분석 정보"""
     try:
         # 서비스 상태
@@ -244,31 +246,32 @@ async def get_embedding_analytics() -> None:
         service_info = get_service_info()
         db_status = await get_embedding_status()
 
-        # 종합 분석
-        analysis = {
-            "service_health": service_health,
-            "service_info": service_info,
-            "database_status": db_status,
-            "recommendations": [],
-        }
-
         # 권장사항 생성
+        recommendations: List[str] = []
         if service_health.get("status") != "healthy":
-            analysis["recommendations"].append("임베딩 서비스 상태를 확인하세요")
+            recommendations.append("임베딩 서비스 상태를 확인하세요")
 
         if not service_info.get("sentence_transformers_available"):
-            analysis["recommendations"].append(
+            recommendations.append(
                 "sentence-transformers 라이브러리를 설치하세요"
             )
 
         embedding_coverage = db_status.get("embedding_coverage_percent", 0)
         if embedding_coverage < 100:
-            analysis["recommendations"].append(
+            recommendations.append(
                 f"임베딩 커버리지가 {embedding_coverage:.1f}%입니다. 문서 임베딩 업데이트를 실행하세요"
             )
 
-        if not analysis["recommendations"]:
-            analysis["recommendations"].append("시스템이 정상 상태입니다")
+        if not recommendations:
+            recommendations.append("시스템이 정상 상태입니다")
+
+        # 종합 분석
+        analysis: Dict[str, Any] = {
+            "service_health": service_health,
+            "service_info": service_info,
+            "database_status": db_status,
+            "recommendations": recommendations,
+        }
 
         return {"timestamp": datetime.utcnow().isoformat(), **analysis}
 

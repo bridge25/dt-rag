@@ -1,3 +1,4 @@
+# @CODE:MYPY-001:PHASE2:BATCH6
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -7,7 +8,7 @@ from sqlalchemy import delete as sql_delete
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.api.database import Agent, TaxonomyNode
+from apps.api.database import Agent, TaxonomyNode  # type: ignore[attr-defined]
 from apps.knowledge_builder.coverage.meter import CoverageMeterService
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ class AgentDAO:
         )
 
         default_retrieval_config = {"top_k": 5, "strategy": "hybrid"}
-        default_features_config = {}
+        default_features_config: Dict[str, Any] = {}
 
         agent = Agent(
             name=name,
@@ -88,7 +89,7 @@ class AgentDAO:
 
     # @IMPL:AGENT-GROWTH-001:0.3.3
     @staticmethod
-    async def update_agent(session: AsyncSession, agent_id: UUID, **kwargs) -> Agent:
+    async def update_agent(session: AsyncSession, agent_id: UUID, **kwargs: Any) -> Agent:
         query = select(Agent).where(Agent.agent_id == agent_id)
         result = await session.execute(query)
         agent = result.scalar_one_or_none()
