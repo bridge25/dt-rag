@@ -7,7 +7,7 @@ import asyncio
 import hashlib
 import json
 import time
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from dataclasses import dataclass
 import logging
 
@@ -269,7 +269,7 @@ class HybridSearchCache:
         result = await self.memory_cache.get(cache_key)
         if result is not None:
             self.stats["l1_hits"] += 1
-            return result
+            return cast(Optional[List[Dict[str, Any]]], result)
 
         self.stats["l1_misses"] += 1
 
@@ -279,7 +279,7 @@ class HybridSearchCache:
             self.stats["l2_hits"] += 1
             # L1 캐시에도 저장 (캐시 승격)
             await self.memory_cache.set(cache_key, result)
-            return result
+            return cast(Optional[List[Dict[str, Any]]], result)
 
         self.stats["l2_misses"] += 1
         return None
@@ -318,7 +318,7 @@ class HybridSearchCache:
         result = await self.redis_cache.get(cache_key)
         if result is not None:
             self.stats["l2_hits"] += 1
-            return result
+            return cast(Optional[List[float]], result)
 
         self.stats["l2_misses"] += 1
         return None
