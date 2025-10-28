@@ -13,10 +13,12 @@ import os
 from fastapi import Header, HTTPException, Request, Depends
 from uuid import uuid4
 from datetime import datetime, timezone
-from typing import Optional, Dict, Set
+from typing import Any, Dict, Optional, Set
 from collections import defaultdict
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from .security.api_key_storage import APIKeyInfo
 
 # Configure security logging
 security_logger = logging.getLogger("security")

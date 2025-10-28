@@ -119,9 +119,9 @@ async def analyze_case_performance(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
+                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
 
-                engine = RE(db_session=session)
+                engine = ReflectionEngine(db_session=session)
             except ImportError:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -157,9 +157,9 @@ async def run_reflection_batch(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
+                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
 
-                engine = RE(db_session=session)
+                engine = ReflectionEngine(db_session=session)
             except ImportError:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -191,9 +191,9 @@ async def generate_improvement_suggestions(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
+                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
 
-                engine = RE(db_session=session)
+                engine = ReflectionEngine(db_session=session)
             except ImportError:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

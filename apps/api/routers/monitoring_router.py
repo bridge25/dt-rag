@@ -1,5 +1,6 @@
 """Monitoring router with Langfuse LLM cost tracking"""
 
+from typing import Any, Dict
 from fastapi import APIRouter
 import time
 import psutil
