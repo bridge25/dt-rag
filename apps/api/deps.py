@@ -66,7 +66,7 @@ class APIKeyValidator:
             return 0.0
 
         # Count character frequencies
-        frequencies = {}
+        frequencies: dict[str, int] = {}
         for char in key:
             frequencies[char] = frequencies.get(char, 0) + 1
 

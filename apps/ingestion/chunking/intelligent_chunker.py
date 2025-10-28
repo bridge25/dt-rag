@@ -58,7 +58,7 @@ class IntelligentChunker:
             raise ChunkingError("No sentences found in text")
 
         chunks = []
-        current_chunk_sentences = []
+        current_chunk_sentences: list[str] = []
         current_tokens = 0
         position = 0
 
@@ -81,7 +81,7 @@ class IntelligentChunker:
                     current_tokens = 0
 
                 words = sentence.split()
-                word_chunk = []
+                word_chunk: list[str] = []
                 word_tokens = 0
 
                 for word in words:
@@ -133,7 +133,7 @@ class IntelligentChunker:
                     )
                 )
 
-                overlap_sentences = []
+                overlap_sentences: list[str] = []
                 overlap_tokens = 0
                 for sent in reversed(current_chunk_sentences):
                     sent_tokens = self.count_tokens(sent)

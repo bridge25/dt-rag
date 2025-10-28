@@ -42,9 +42,9 @@ class ExperimentTracker:
     """A/B testing and canary deployment tracker"""
 
     def __init__(self) -> None:
-        self.active_experiments = {}  # experiment_id -> ExperimentConfig
-        self.user_assignments = {}  # user_id -> ExperimentAssignment
-        self.experiment_data = {}  # experiment_id -> {'control': [], 'treatment': []}
+        self.active_experiments: dict[str, Any] = {}  # experiment_id -> ExperimentConfig
+        self.user_assignments: dict[str, Any] = {}  # user_id -> ExperimentAssignment
+        self.experiment_data: dict[str, Any] = {}  # experiment_id -> {'control': [], 'treatment': []}
 
         # Statistical parameters
         self.min_sample_size = 50

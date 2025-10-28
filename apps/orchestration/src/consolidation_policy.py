@@ -32,9 +32,9 @@ class ConsolidationPolicy:
         """
         self.db = db_session
         self.dry_run = dry_run
-        self.removed_cases = []
-        self.merged_cases = []
-        self.archived_cases = []
+        self.removed_cases: list[str] = []
+        self.merged_cases: list[str] = []
+        self.archived_cases: list[str] = []
 
     async def run_consolidation(
         self,

@@ -86,7 +86,7 @@ class TaxonomyDAGManager:
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def __init__(self) -> None:
         self.current_version = 1
-        self._graph_cache = {}
+        self._graph_cache: dict[str, Any] = {}
         self._lock = asyncio.Lock()
 
     async def initialize(self) -> bool:
@@ -509,7 +509,7 @@ class TaxonomyDAGManager:
 
                 # Get node details for each node in path
                 async with async_session() as session:
-                    ancestry = []
+                    ancestry: list[Any] = []
                     for node in path:
                         result = await session.execute(
                             select(TaxonomyNode).where(
@@ -609,7 +609,7 @@ class TaxonomyDAGManager:
                 paths = [row[0] for row in result.fetchall()]
 
                 # Check for duplicates
-                path_count = defaultdict(int)
+                path_count: Any = defaultdict(int)
                 for path in paths:
                     if path:
                         path_str = " -> ".join(path)

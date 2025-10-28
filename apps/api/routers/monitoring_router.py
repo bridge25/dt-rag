@@ -127,7 +127,7 @@ async def get_llm_costs() -> Dict[str, Any]:
         # This is a placeholder for the structure
 
         # Simulated data structure (replace with actual client.get_traces())
-        traces = []  # client.get_traces(limit=1000)
+        traces: list[Any] = []  # client.get_traces(limit=1000)
 
         # Calculate costs by model
         gemini_cost_usd = 0.0

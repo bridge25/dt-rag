@@ -82,7 +82,7 @@ class LatencyTracker:
 
     def __init__(self, max_samples: int = 10000):
         self.max_samples = max_samples
-        self.samples = deque(maxlen=max_samples)
+        self.samples: Any = deque(maxlen=max_samples)
         self.lock = threading.Lock()
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
@@ -115,15 +115,15 @@ class MetricsCollector:
         self.enable_prometheus = enable_prometheus and PROMETHEUS_AVAILABLE
 
         # 내장 메트릭 저장소
-        self.metrics = defaultdict(list)
-        self.counters = defaultdict(int)
-        self.gauges = defaultdict(float)
+        self.metrics: Any = defaultdict(list)
+        self.counters: Any = defaultdict(int)
+        self.gauges: Any = defaultdict(float)
 
         # 지연시간 추적기
         self.latency_tracker = LatencyTracker()
 
         # 성능 스냅샷 히스토리
-        self.performance_history = deque(maxlen=1000)
+        self.performance_history: Any = deque(maxlen=1000)
 
         # Prometheus 메트릭 (사용 가능한 경우)
         if self.enable_prometheus:

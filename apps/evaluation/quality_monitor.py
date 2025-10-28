@@ -39,7 +39,7 @@ class QualityMonitor:
 
         # In-memory metric buffers for real-time monitoring
         self.metric_buffer_size = 100
-        self.metric_buffers = {
+        self.metric_buffers: Any = {
             "faithfulness": deque(maxlen=self.metric_buffer_size),
             "context_precision": deque(maxlen=self.metric_buffer_size),
             "context_recall": deque(maxlen=self.metric_buffer_size),
@@ -48,12 +48,12 @@ class QualityMonitor:
         }
 
         # Alert state tracking
-        self.active_alerts = {}
+        self.active_alerts: dict[str, Any] = {}
         self.alert_cooldown = timedelta(minutes=10)  # Prevent alert spam
 
         # Quality trend tracking
         self.trend_window_minutes = 60
-        self.quality_history = deque(maxlen=1440)  # 24 hours of minute-level data
+        self.quality_history: Any = deque(maxlen=1440)  # 24 hours of minute-level data
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def record_evaluation(self, evaluation: EvaluationResult) -> None:
@@ -256,7 +256,7 @@ class QualityMonitor:
         if not self.active_alerts:
             return {"total_alerts": 0, "severity_breakdown": {}}
 
-        severity_counts = defaultdict(int)
+        severity_counts: Any = defaultdict(int)
         for alert in self.active_alerts.values():
             severity_counts[alert.severity] += 1
 
