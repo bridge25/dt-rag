@@ -37,7 +37,7 @@ class RedisConfig:
     max_connections: int = 50
     retry_on_timeout: bool = True
     socket_keepalive: bool = True
-    socket_keepalive_options: Dict = None
+    socket_keepalive_options: Optional[Dict] = None
     health_check_interval: int = 30
 
     # 타임아웃 설정
@@ -51,7 +51,7 @@ class RedisConfig:
 
     # TTL 설정
     default_ttl: int = 3600  # 1시간
-    ttl_configs: Dict[str, int] = None
+    ttl_configs: Optional[Dict[str, int]] = None
 
     def __post_init__(self) -> None:
         if self.socket_keepalive_options is None:
@@ -73,7 +73,7 @@ class RedisConfig:
 class RedisManager:
     """Redis 연결 및 작업 관리자"""
 
-    def __init__(self, config: RedisConfig = None):
+    def __init__(self, config: Optional[RedisConfig] = None):
         self.config = config or RedisConfig()
         self.client: Optional[redis.Redis] = None
         self.connection_pool: Optional[redis.ConnectionPool] = None
@@ -563,7 +563,7 @@ async def get_redis_manager() -> RedisManager:
     return _redis_manager
 
 
-async def initialize_redis_manager(config: RedisConfig = None) -> RedisManager:
+async def initialize_redis_manager(config: Optional[RedisConfig] = None) -> RedisManager:
     """Redis 매니저 초기화"""
     global _redis_manager
     _redis_manager = RedisManager(config)
