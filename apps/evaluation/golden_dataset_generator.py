@@ -257,7 +257,8 @@ Format as JSON:
         logger.info(f"Generated {len(samples)} samples with fallback method")
         return samples
 
-    def save_dataset(self, samples: List[GoldenSample], name: str = None):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def save_dataset(self, samples: List[GoldenSample], name: str = None) -> Path:
         """Save golden dataset to JSON file"""
         if name is None:
             name = f"golden_dataset_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -349,7 +350,8 @@ async def create_golden_dataset_from_db(testset_size: int = 100) -> str:
 
 if __name__ == "__main__":
     # Example usage
-    async def main():
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def main() -> None:
         # Create golden dataset from database
         output_path = await create_golden_dataset_from_db(testset_size=10)
         print(f"Golden dataset created: {output_path}")

@@ -50,7 +50,8 @@ class PIIDetector:
         PIIType.BANK_ACCOUNT: "[계좌번호]",
     }
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         self.compiled_patterns: Dict[PIIType, List[re.Pattern]] = {}
         for pii_type, patterns in self.PATTERNS.items():
             self.compiled_patterns[pii_type] = [
@@ -103,8 +104,8 @@ class PIIDetector:
         return checksum % 10 == 0
 
     def detect_pii(self, text: str) -> List[PIIMatch]:
-        matches = []
-        matched_ranges = set()
+        matches: List[PIIMatch] = []
+        matched_ranges: set[Tuple[int, int]] = set()
 
         priority_order = [
             PIIType.RESIDENT_REGISTRATION_NUMBER,

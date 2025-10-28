@@ -33,13 +33,15 @@ from apps.api.database import init_database  # noqa: E402
 class RAGASSystemTester:
     """Comprehensive RAGAS system tester"""
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
         self.sample_generator = SampleDataGenerator()
 
-    async def test_basic_evaluation(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_basic_evaluation(self) -> Any:
         """Test basic RAGAS evaluation functionality"""
         print("\n=== Testing Basic RAGAS Evaluation ===")
 
@@ -72,7 +74,8 @@ class RAGASSystemTester:
 
         return result
 
-    async def test_quality_scenarios(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_quality_scenarios(self) -> None:
         """Test different quality scenarios"""
         print("\n=== Testing Quality Scenarios ===")
 
@@ -116,7 +119,8 @@ class RAGASSystemTester:
             ):
                 print("⚠️  Warning: Low precision not detected")
 
-    async def test_quality_monitoring(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_quality_monitoring(self) -> Any:
         """Test quality monitoring system"""
         print("\n=== Testing Quality Monitoring ===")
 
@@ -164,7 +168,8 @@ class RAGASSystemTester:
 
         return quality_status
 
-    async def test_ab_testing(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_ab_testing(self) -> Any:
         """Test A/B testing functionality"""
         print("\n=== Testing A/B Testing ===")
 
@@ -261,7 +266,8 @@ class RAGASSystemTester:
 
         return results
 
-    async def test_canary_deployment(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_canary_deployment(self) -> Dict[str, str]:
         """Test canary deployment monitoring"""
         print("\n=== Testing Canary Deployment ===")
 
@@ -281,7 +287,8 @@ class RAGASSystemTester:
 
         return monitoring_result
 
-    async def test_golden_dataset(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_golden_dataset(self) -> Any:
         """Test golden dataset functionality"""
         print("\n=== Testing Golden Dataset ===")
 
@@ -305,7 +312,8 @@ class RAGASSystemTester:
 
         return validation_result
 
-    async def run_integration_test(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def run_integration_test(self) -> bool:
         """Run integration test with database"""
         print("\n=== Running Integration Test ===")
 
@@ -357,7 +365,8 @@ class RAGASSystemTester:
             print(f"❌ Integration test failed: {e}")
             return False
 
-    async def run_performance_test(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def run_performance_test(self) -> float:
         """Run performance test"""
         print("\n=== Running Performance Test ===")
 
@@ -395,7 +404,8 @@ class RAGASSystemTester:
 
         return total_time / len(requests)
 
-    async def generate_dashboard_test_data(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def generate_dashboard_test_data(self) -> None:
         """Generate test data for dashboard"""
         print("\n=== Generating Dashboard Test Data ===")
 
@@ -431,7 +441,8 @@ class RAGASSystemTester:
 
         print("✅ Dashboard test data generated")
 
-    async def run_all_tests(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def run_all_tests(self) -> Dict[str, Any]:
         """Run all tests in sequence"""
         print("🚀 Starting RAGAS System Comprehensive Test")
         print("=" * 60)
@@ -484,7 +495,8 @@ class RAGASSystemTester:
             return {"error": str(e)}
 
 
-async def main():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+async def main() -> None:
     """Main test function"""
     # Check if Gemini API key is available
     gemini_key = os.getenv("GEMINI_API_KEY")

@@ -19,8 +19,8 @@ from pydantic import BaseModel, Field
 try:
     from ..deps import verify_api_key
 except ImportError:
-
-    def verify_api_key():
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def verify_api_key() -> None:
         return None
 
 
@@ -112,13 +112,14 @@ async def get_taxonomy_service() -> TaxonomyService:
 # API Endpoints
 
 
-@taxonomy_router.get("/versions", response_model=Dict[str, Any])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@taxonomy_router.get("/versions", response_model=Dict[str, Any])  # type: ignore[misc]
 async def list_taxonomy_versions(
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
     service: TaxonomyService = Depends(get_taxonomy_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     List all available taxonomy versions with pagination
 
@@ -161,7 +162,8 @@ async def list_taxonomy_versions(
         )
 
 
-@taxonomy_router.get("/{version}/tree", response_model=Dict[str, Any])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@taxonomy_router.get("/{version}/tree", response_model=Dict[str, Any])  # type: ignore[misc]
 async def get_taxonomy_tree(
     version: str = Path(..., description="Taxonomy version"),
     expand_level: int = Query(
@@ -170,7 +172,7 @@ async def get_taxonomy_tree(
     filter_path: Optional[str] = Query(None, description="Filter by path prefix"),
     service: TaxonomyService = Depends(get_taxonomy_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     Retrieve complete taxonomy tree for specified version
 
@@ -218,12 +220,13 @@ async def get_taxonomy_tree(
         )
 
 
-@taxonomy_router.get("/{version}/statistics", response_model=TaxonomyStatistics)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@taxonomy_router.get("/{version}/statistics", response_model=TaxonomyStatistics)  # type: ignore[misc]
 async def get_taxonomy_statistics(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> TaxonomyStatistics:
     """
     Get comprehensive statistics for taxonomy version
 
@@ -247,12 +250,13 @@ async def get_taxonomy_statistics(
         )
 
 
-@taxonomy_router.get("/{version}/validate", response_model=ValidationResult)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@taxonomy_router.get("/{version}/validate", response_model=ValidationResult)  # type: ignore[misc]
 async def validate_taxonomy(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> ValidationResult:
     """
     Validate taxonomy structure and consistency
 
@@ -276,15 +280,16 @@ async def validate_taxonomy(
         )
 
 
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 @taxonomy_router.get(
     "/{base_version}/compare/{target_version}", response_model=VersionComparison
-)
+)  # type: ignore[misc]
 async def compare_taxonomy_versions(
     base_version: str = Path(..., description="Base version for comparison"),
     target_version: str = Path(..., description="Target version for comparison"),
     service: TaxonomyService = Depends(get_taxonomy_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> VersionComparison:
     """
     Compare two taxonomy versions and show differences
 
@@ -323,14 +328,15 @@ async def compare_taxonomy_versions(
         )
 
 
-@taxonomy_router.get("/{version}/search", response_model=List[TaxonomyNode])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@taxonomy_router.get("/{version}/search", response_model=List[TaxonomyNode])  # type: ignore[misc]
 async def search_taxonomy_nodes(
     version: str = Path(..., description="Taxonomy version"),
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
     service: TaxonomyService = Depends(get_taxonomy_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> List[Dict[str, Any]]:
     """
     Search taxonomy nodes by name or metadata
 

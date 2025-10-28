@@ -1,3 +1,4 @@
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 """
 RAGAS Metrics Extension for MetricsCollector
 
@@ -71,7 +72,7 @@ class RAGASMetricsExtension:
         self._initialize_ragas_metrics()
         logger.info("RAGAS metrics extension initialized")
 
-    def _initialize_ragas_metrics(self):
+    def _initialize_ragas_metrics(self) -> None:
         """Initialize all RAGAS-specific Prometheus metrics"""
 
         # Core RAGAS Metrics
@@ -205,7 +206,7 @@ class RAGASMetricsExtension:
         evaluation_type: str = "single",
         duration_seconds: Optional[float] = None,
         quality_gates_passed: bool = False,
-    ):
+    ) -> None:
         """
         Record RAGAS evaluation metrics
 
@@ -296,7 +297,7 @@ class RAGASMetricsExtension:
         except Exception as e:
             logger.error(f"Failed to record RAGAS metrics: {e}")
 
-    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, float]]):
+    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, float]]) -> None:
         """
         Update quality gates status metrics
 
@@ -335,7 +336,7 @@ class RAGASMetricsExtension:
 
     def record_batch_evaluation_progress(
         self, batch_id: str, total_queries: int, completed_queries: int, status: str
-    ):
+    ) -> None:
         """
         Record batch evaluation progress
 
@@ -365,7 +366,7 @@ class RAGASMetricsExtension:
         except Exception as e:
             logger.error(f"Failed to record batch evaluation progress: {e}")
 
-    def update_evaluation_success_rate(self, success_rate: float):
+    def update_evaluation_success_rate(self, success_rate: float) -> None:
         """
         Update overall evaluation success rate
 

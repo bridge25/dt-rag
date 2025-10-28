@@ -33,19 +33,22 @@ from ..api.embedding_service import embedding_service
 
 
 # Lazy import to avoid circular dependency
-def _get_db_manager():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def _get_db_manager() -> Any:
     from ..api.database import db_manager
 
     return db_manager
 
 
-def _get_search_metrics():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def _get_search_metrics() -> Any:
     from ..api.database import search_metrics
 
     return search_metrics
 
 
-def _get_search_dao():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def _get_search_dao() -> Any:
     from ..api.database import SearchDAO
 
     return SearchDAO
@@ -264,12 +267,13 @@ class HybridScoreFusion:
 class CrossEncoderReranker:
     """Cross-encoder reranking for result quality improvement"""
 
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
+    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
         self.model_name = model_name
         self.model = None
         self._load_model()
 
-    def _load_model(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def _load_model(self) -> None:
         """Load cross-encoder model"""
         try:
             from sentence_transformers import CrossEncoder
@@ -413,9 +417,9 @@ class CrossEncoderReranker:
 class ResultCache:
     """In-memory cache for search results"""
 
-    def __init__(self, max_size: int = 1000, ttl_seconds: int = 3600):
-        self.cache = {}
-        self.access_times = {}
+    def __init__(self, max_size: int = 1000, ttl_seconds: int = 3600) -> None:
+        self.cache: Dict[str, List[SearchResult]] = {}
+        self.access_times: Dict[str, float] = {}
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
 
@@ -447,13 +451,14 @@ class ResultCache:
 
         return None
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def put(
         self,
         query: str,
         filters: Dict[str, Any],
         top_k: int,
         results: List[SearchResult],
-    ):
+    ) -> None:
         """Cache search results"""
         cache_key = self._generate_cache_key(query, filters, top_k)
 
@@ -465,7 +470,8 @@ class ResultCache:
         self.access_times[cache_key] = time.time()
         logger.debug(f"Cached results for query: {query[:50]}...")
 
-    def _evict_oldest(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def _evict_oldest(self) -> None:
         """Evict oldest cache entry"""
         if not self.access_times:
             return
@@ -474,7 +480,8 @@ class ResultCache:
         del self.cache[oldest_key]
         del self.access_times[oldest_key]
 
-    def clear(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def clear(self) -> None:
         """Clear all cache entries"""
         self.cache.clear()
         self.access_times.clear()
@@ -1112,7 +1119,8 @@ class HybridSearchEngine:
 
         logger.info(f"Search engine configuration updated: {kwargs}")
 
-    def clear_cache(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def clear_cache(self) -> None:
         """Clear search result cache"""
         if self.cache:
             self.cache.clear()
@@ -1232,7 +1240,8 @@ def update_search_engine_config(**kwargs: Any) -> None:
     search_engine.update_config(**kwargs)
 
 
-def clear_search_cache():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def clear_search_cache() -> None:
     """Clear search result cache"""
     search_engine.clear_cache()
 

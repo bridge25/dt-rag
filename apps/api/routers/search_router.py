@@ -490,13 +490,14 @@ async def get_search_service() -> SearchService:
 # API Endpoints
 
 
-@search_router.post("", response_model=SearchResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.post("", response_model=SearchResponse)  # type: ignore[misc]
 async def search_documents(
     request: Request,
     search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> JSONResponse:
     """
     Perform hybrid search using BM25 and vector search with reranking
 
@@ -569,12 +570,13 @@ async def search_documents(
         )
 
 
-@search_router.get("/analytics", response_model=SearchAnalytics)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.get("/analytics", response_model=SearchAnalytics)  # type: ignore[misc]
 async def get_search_analytics(
     request: Request,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> SearchAnalytics:
     """
     Get search analytics and performance metrics
 
@@ -596,12 +598,13 @@ async def get_search_analytics(
         )
 
 
-@search_router.get("/config", response_model=SearchConfig)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.get("/config", response_model=SearchConfig)  # type: ignore[misc]
 async def get_search_config(
     request: Request,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> SearchConfig:
     """
     Get current search configuration
 
@@ -622,13 +625,14 @@ async def get_search_config(
         )
 
 
-@search_router.put("/config", response_model=SearchConfig)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.put("/config", response_model=SearchConfig)  # type: ignore[misc]
 async def update_search_config(
     request: Request,
     config: SearchConfig,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> SearchConfig:
     """
     Update search configuration
 
@@ -658,13 +662,14 @@ async def update_search_config(
         )
 
 
-@search_router.post("/reindex")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.post("/reindex")  # type: ignore[misc]
 async def reindex_search_corpus(
     request: Request,
     reindex_request: ReindexRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     Trigger search index rebuild
 
@@ -685,10 +690,11 @@ async def reindex_search_corpus(
         )
 
 
-@search_router.get("/status")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.get("/status")  # type: ignore[misc]
 async def get_search_status(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """
     Get search system status and health
 
@@ -731,14 +737,15 @@ async def get_search_status(
         )
 
 
-@search_router.post("/suggest")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.post("/suggest")  # type: ignore[misc]
 async def search_suggestions(
     request: Request,
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
     limit: int = Query(5, ge=1, le=20, description="Maximum suggestions"),
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     Get search query suggestions and autocompletion
 
@@ -770,13 +777,14 @@ async def search_suggestions(
 # New specialized search endpoints
 
 
-@search_router.post("/keyword", response_model=SearchResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.post("/keyword", response_model=SearchResponse)  # type: ignore[misc]
 async def search_documents_keyword_only(
     request: Request,
     search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> SearchResponse:
     """
     Perform BM25 keyword search only (no vector similarity)
 
@@ -848,13 +856,14 @@ async def search_documents_keyword_only(
         )
 
 
-@search_router.post("/vector", response_model=SearchResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.post("/vector", response_model=SearchResponse)  # type: ignore[misc]
 async def search_documents_vector_only(
     request: Request,
     search_request: SearchRequest,
     service: SearchService = Depends(get_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> SearchResponse:
     """
     Perform vector similarity search only (no BM25 keyword matching)
 
@@ -926,10 +935,11 @@ async def search_documents_vector_only(
         )
 
 
-@search_router.post("/cache/clear")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.post("/cache/clear")  # type: ignore[misc]
 async def clear_search_cache(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> Dict[str, str]:
     """
     Clear search result cache
 
@@ -950,10 +960,11 @@ async def clear_search_cache(
         )
 
 
-@search_router.get("/performance")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@search_router.get("/performance")  # type: ignore[misc]
 async def get_search_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """
     Get detailed search performance metrics
 

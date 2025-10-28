@@ -19,8 +19,8 @@ from pydantic import BaseModel
 try:
     from ..deps import verify_api_key
 except ImportError:
-
-    def verify_api_key():
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def verify_api_key() -> None:
         return None
 
 
@@ -238,12 +238,13 @@ async def get_agent_factory_service() -> AgentFactoryService:
 # API Endpoints
 
 
-@agent_factory_router.post("/from-category", response_model=AgentCreateResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.post("/from-category", response_model=AgentCreateResponse)  # type: ignore[misc]
 async def create_agent_from_category(
     request: FromCategoryRequest,
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> AgentCreateResponse:
     """
     Create specialized agent from taxonomy categories
 
@@ -279,13 +280,14 @@ async def create_agent_from_category(
         )
 
 
-@agent_factory_router.get("/", response_model=AgentListResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.get("/", response_model=AgentListResponse)  # type: ignore[misc]
 async def list_agents(
     status: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum agents to return"),
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> AgentListResponse:
     """
     List all agents with optional filtering
 
@@ -311,12 +313,13 @@ async def list_agents(
         )
 
 
-@agent_factory_router.get("/{agent_id}", response_model=AgentStatus)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.get("/{agent_id}", response_model=AgentStatus)  # type: ignore[misc]
 async def get_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> AgentStatus:
     """
     Get detailed information about specific agent
 
@@ -346,13 +349,14 @@ async def get_agent(
         )
 
 
-@agent_factory_router.put("/{agent_id}", response_model=AgentStatus)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.put("/{agent_id}", response_model=AgentStatus)  # type: ignore[misc]
 async def update_agent(
     agent_id: str,
     update: AgentUpdateRequest,
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> AgentStatus:
     """
     Update agent configuration
 
@@ -383,12 +387,13 @@ async def update_agent(
         )
 
 
-@agent_factory_router.delete("/{agent_id}")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.delete("/{agent_id}")  # type: ignore[misc]
 async def delete_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, str]:
     """
     Delete agent
 
@@ -416,12 +421,13 @@ async def delete_agent(
         )
 
 
-@agent_factory_router.get("/{agent_id}/metrics", response_model=AgentMetrics)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.get("/{agent_id}/metrics", response_model=AgentMetrics)  # type: ignore[misc]
 async def get_agent_metrics(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> AgentMetrics:
     """
     Get detailed performance metrics for agent
 
@@ -452,12 +458,13 @@ async def get_agent_metrics(
         )
 
 
-@agent_factory_router.post("/{agent_id}/activate")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.post("/{agent_id}/activate")  # type: ignore[misc]
 async def activate_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, str]:
     """
     Activate agent for use
 
@@ -495,12 +502,13 @@ async def activate_agent(
         )
 
 
-@agent_factory_router.post("/{agent_id}/deactivate")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.post("/{agent_id}/deactivate")  # type: ignore[misc]
 async def deactivate_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, str]:
     """
     Deactivate agent
 
@@ -538,11 +546,12 @@ async def deactivate_agent(
         )
 
 
-@agent_factory_router.get("/factory/status")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@agent_factory_router.get("/factory/status")  # type: ignore[misc]
 async def get_factory_status(
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     Get agent factory system status
 

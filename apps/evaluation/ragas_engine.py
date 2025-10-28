@@ -1,4 +1,5 @@
 # @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 
 """
 RAGAS evaluation engine implementation
@@ -62,7 +63,7 @@ class ContextAnalysis:
 class RAGASEvaluator:
     """RAGAS evaluation engine with Gemini-powered assessments"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.model = None
         if GEMINI_API_KEY:
             try:

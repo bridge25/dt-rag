@@ -39,7 +39,8 @@ class ToolRegistry:
     _instance: Optional["ToolRegistry"] = None
     _tools: Dict[str, Tool] = {}
 
-    def __new__(cls):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __new__(cls) -> "ToolRegistry":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance

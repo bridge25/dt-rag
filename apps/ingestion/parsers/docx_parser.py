@@ -11,7 +11,8 @@ except ImportError:
 
 
 class DOCXParser(BaseParser):
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         if not DOCX_AVAILABLE:
             raise ParserError("python-docx not installed")
 

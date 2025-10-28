@@ -1,3 +1,4 @@
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 """
 Authentication and Authorization Service for DT-RAG v1.8.1
 Implements JWT-based authentication with RBAC
@@ -257,7 +258,7 @@ class AuthService:
             logger.error(f"Token validation error: {e}")
             return None
 
-    async def revoke_token(self, token: str):
+    async def revoke_token(self, token: str) -> None:
         """Revoke a JWT token"""
         try:
             payload = jwt.decode(
@@ -280,7 +281,7 @@ class AuthService:
         except jwt.InvalidTokenError:
             pass  # Token already invalid
 
-    async def logout_user(self, token: str):
+    async def logout_user(self, token: str) -> None:
         """Logout user by revoking token and session"""
         await self.revoke_token(token)
 
@@ -418,7 +419,7 @@ class AuthService:
 
         return permissions
 
-    async def _initialize_default_users(self):
+    async def _initialize_default_users(self) -> None:
         """Initialize default system users"""
         # Create admin user
         admin_user = User(

@@ -71,7 +71,8 @@ class BenchmarkSummary:
 class SearchBenchmark:
     """Search engine benchmark runner"""
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         self.results: List[BenchmarkResult] = []
         self.cost_per_embedding = 0.1  # ₩0.1 per embedding generation
         self.cost_per_db_query = 0.05  # ₩0.05 per database query
@@ -208,7 +209,8 @@ class SearchBenchmark:
         end_time = start_time + duration_seconds
         throughput_results = []
 
-        async def continuous_search():
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+        async def continuous_search() -> None:
             """Continuously run searches until time limit"""
             while time.time() < end_time:
                 result = await self.run_single_search(query, "hybrid")
@@ -440,7 +442,8 @@ class SearchBenchmark:
 
         return benchmark_results
 
-    def save_results(self, results: Dict[str, Any], filename: str = None):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def save_results(self, results: Dict[str, Any], filename: str = None) -> None:
         """Save benchmark results to file"""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -451,7 +454,8 @@ class SearchBenchmark:
 
         logger.info(f"Benchmark results saved to {filename}")
 
-    def print_summary(self, results: Dict[str, Any]):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def print_summary(self, results: Dict[str, Any]) -> None:
         """Print human-readable benchmark summary"""
         print("\n" + "=" * 60)
         print("SEARCH ENGINE BENCHMARK SUMMARY")
@@ -506,7 +510,8 @@ class SearchBenchmark:
         print("\n" + "=" * 60)
 
 
-async def main():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+async def main() -> int:
     """Main benchmark runner"""
     parser = argparse.ArgumentParser(description="Search Engine Benchmark")
     parser.add_argument(

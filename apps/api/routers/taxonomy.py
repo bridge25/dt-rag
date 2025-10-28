@@ -152,10 +152,11 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
     ]
 
 
-@router.get("/taxonomy/{version}/tree")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/taxonomy/{version}/tree")  # type: ignore[misc]
 async def get_taxonomy_tree_endpoint(
     version: str, api_key: str = Depends(verify_api_key)
-):
+) -> List[Dict[str, Any]]:
     """
     Bridge Pack 스펙: GET /taxonomy/{version}/tree
     실제 PostgreSQL 데이터베이스에서 분류체계 로드
@@ -185,8 +186,9 @@ async def get_taxonomy_tree_endpoint(
         raise HTTPException(status_code=500, detail=f"Taxonomy tree error: {str(e)}")
 
 
-@router.get("/taxonomy/versions")
-def get_taxonomy_versions(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/taxonomy/versions")  # type: ignore[misc]
+def get_taxonomy_versions(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     사용 가능한 taxonomy 버전 목록
     """
@@ -207,8 +209,9 @@ def get_taxonomy_versions(api_key: str = Depends(verify_api_key)):
 # Enhanced DAG Management Endpoints
 
 
-@router.post("/taxonomy/initialize")
-async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/taxonomy/initialize")  # type: ignore[misc]
+async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """Initialize the taxonomy DAG system"""
     try:
         success = await initialize_taxonomy_system()
@@ -229,13 +232,14 @@ async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/taxonomy/validate")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/taxonomy/validate")  # type: ignore[misc]
 async def validate_taxonomy_structure(
     version: Optional[int] = Query(
         None, description="Version to validate (default: current)"
     ),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """Validate taxonomy DAG structure for cycles and consistency"""
     try:
         validation_result = await validate_taxonomy_dag(version)
@@ -254,13 +258,14 @@ async def validate_taxonomy_structure(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/taxonomy/dag/tree")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/taxonomy/dag/tree")  # type: ignore[misc]
 async def get_taxonomy_dag_tree(
     version: Optional[int] = Query(
         None, description="Version to retrieve (default: current)"
     ),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """Get taxonomy tree from DAG system with enhanced metadata"""
     try:
         tree = await get_taxonomy_tree(version)
@@ -278,10 +283,11 @@ async def get_taxonomy_dag_tree(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/taxonomy/nodes")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/taxonomy/nodes")  # type: ignore[misc]
 async def create_taxonomy_node(
     node_data: TaxonomyNodeCreate, api_key: str = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """Create a new taxonomy node with DAG validation"""
     try:
         success, node_id, message = await add_taxonomy_node(
@@ -302,12 +308,13 @@ async def create_taxonomy_node(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.patch("/taxonomy/nodes/{node_id}/move")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.patch("/taxonomy/nodes/{node_id}/move")  # type: ignore[misc]
 async def move_taxonomy_node_endpoint(
     node_id: int = Path(..., description="Node ID to move"),
     move_data: TaxonomyNodeMove = Body(...),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """Move a taxonomy node to a new parent with cycle detection"""
     try:
         success, message = await move_taxonomy_node(
@@ -327,12 +334,13 @@ async def move_taxonomy_node_endpoint(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/taxonomy/nodes/{node_id}/ancestry")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/taxonomy/nodes/{node_id}/ancestry")  # type: ignore[misc]
 async def get_node_ancestry_endpoint(
     node_id: int = Path(..., description="Node ID"),
     version: Optional[int] = Query(None, description="Version (default: current)"),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """Get complete ancestry path for a taxonomy node"""
     try:
         ancestry = await get_node_ancestry(node_id, version)
@@ -349,10 +357,11 @@ async def get_node_ancestry_endpoint(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/taxonomy/rollback")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/taxonomy/rollback")  # type: ignore[misc]
 async def rollback_taxonomy_version(
     rollback_data: TaxonomyRollback, api_key: str = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """Rollback taxonomy to a specific version (TTR ≤ 15분)"""
     try:
         success, message = await rollback_taxonomy(
@@ -372,8 +381,9 @@ async def rollback_taxonomy_version(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/taxonomy/history")
-async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/taxonomy/history")  # type: ignore[misc]
+async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """Get complete taxonomy version history with migration details"""
     try:
         history = await get_taxonomy_history()
@@ -389,8 +399,9 @@ async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/taxonomy/status")
-async def get_taxonomy_system_status(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/taxonomy/status")  # type: ignore[misc]
+async def get_taxonomy_system_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """Get comprehensive taxonomy system status and health"""
     try:
         current_version = taxonomy_dag_manager.current_version

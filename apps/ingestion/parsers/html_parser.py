@@ -10,7 +10,8 @@ except ImportError:
 
 
 class HTMLParser(BaseParser):
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         if not BS4_AVAILABLE:
             raise ParserError("beautifulsoup4 not installed")
 

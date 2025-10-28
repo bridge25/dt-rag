@@ -1,4 +1,5 @@
 # @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 
 """
 Sample data generator for RAGAS evaluation system testing
@@ -20,7 +21,7 @@ from .models import DatasetEntry, ExperimentConfig, EvaluationRequest
 class SampleDataGenerator:
     """Generate realistic sample data for evaluation testing"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.sample_queries = [
             "What is Retrieval-Augmented Generation (RAG)?",
             "How does vector similarity search work?",

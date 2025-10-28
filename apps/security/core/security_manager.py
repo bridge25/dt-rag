@@ -1,3 +1,4 @@
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 """
 Core Security Manager for DT-RAG v1.8.1
 Orchestrates all security components and provides unified security interface
@@ -506,7 +507,7 @@ class SecurityManager:
         session_age = datetime.utcnow() - context.timestamp
         return session_age > timedelta(minutes=self.policy.session_timeout_minutes)
 
-    async def _invalidate_session(self, session_id: str):
+    async def _invalidate_session(self, session_id: str) -> None:
         """Invalidate a session"""
         if session_id in self._active_sessions:
             context = self._active_sessions[session_id]
@@ -617,7 +618,7 @@ class SecurityManager:
         details: Dict[str, Any],
         severity: SeverityLevel,
         request_id: str,
-    ):
+    ) -> None:
         """Log security event"""
         event = SecurityEvent(
             event_type=event_type,

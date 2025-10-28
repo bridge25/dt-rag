@@ -32,7 +32,8 @@ try:
     from ..deps import verify_api_key
 except ImportError:
 
-    def verify_api_key():
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def verify_api_key() -> None:
         return None
 
 
@@ -254,7 +255,8 @@ async def get_classification_service() -> ClassificationService:
     return ClassificationService()
 
 
-async def get_db_session():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+async def get_db_session() -> Any:
     """Get database session dependency"""
     async with db_manager.async_session() as session:
         yield session
@@ -375,13 +377,14 @@ async def classify_batch(
         )
 
 
-@classification_router.get("/hitl/tasks", response_model=List[HITLTask])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@classification_router.get("/hitl/tasks", response_model=List[HITLTask])  # type: ignore[misc]
 async def get_hitl_tasks(
     limit: int = Query(50, ge=1, le=100, description="Maximum tasks to return"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
     service: ClassificationService = Depends(get_classification_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> List[HITLTask]:
     """
     Get pending human-in-the-loop classification tasks
 
@@ -407,12 +410,13 @@ async def get_hitl_tasks(
         )
 
 
-@classification_router.post("/hitl/review")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@classification_router.post("/hitl/review")  # type: ignore[misc]
 async def submit_hitl_review(
     review: HITLReviewRequest,
     service: ClassificationService = Depends(get_classification_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     Submit human review for classification task
 
@@ -442,11 +446,12 @@ async def submit_hitl_review(
         )
 
 
-@classification_router.get("/analytics", response_model=ClassificationAnalytics)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@classification_router.get("/analytics", response_model=ClassificationAnalytics)  # type: ignore[misc]
 async def get_classification_analytics(
     service: ClassificationService = Depends(get_classification_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> ClassificationAnalytics:
     """
     Get classification analytics and performance metrics
 
@@ -468,12 +473,13 @@ async def get_classification_analytics(
         )
 
 
-@classification_router.get("/confidence/{chunk_id}")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@classification_router.get("/confidence/{chunk_id}")  # type: ignore[misc]
 async def get_classification_confidence(
     chunk_id: str,
     service: ClassificationService = Depends(get_classification_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     Get detailed confidence analysis for a classification
 
@@ -513,8 +519,9 @@ async def get_classification_confidence(
         )
 
 
-@classification_router.get("/status")
-async def get_classification_status(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@classification_router.get("/status")  # type: ignore[misc]
+async def get_classification_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get classification system status and health
 
