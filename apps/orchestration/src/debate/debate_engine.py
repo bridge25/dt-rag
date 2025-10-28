@@ -16,7 +16,7 @@ Architecture:
 import asyncio
 import logging
 import time
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from dataclasses import dataclass
 
 from apps.orchestration.src.debate.agent_prompts import (
@@ -246,7 +246,7 @@ class DebateEngine:
 
         try:
             response = llm_service.model.generate_content(prompt)
-            final_answer = response.text
+            final_answer = cast(str, response.text)
 
             words = final_answer.split()
             original_tokens = len(words)
