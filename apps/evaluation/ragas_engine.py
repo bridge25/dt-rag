@@ -84,7 +84,7 @@ class RAGASEvaluator:
             response_time_max=5.0,
         )
 
-    @observe(name="ragas_evaluation", as_type="generation")  # type: ignore[misc]  # type: ignore[misc]  # type: ignore[misc]
+    @observe(name="ragas_evaluation", as_type="generation")
     async def evaluate_rag_response(
         self,
         query: str,

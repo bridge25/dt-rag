@@ -134,7 +134,7 @@ class EmbeddingService:
         else:
             return cast(List[float], vector[: self.TARGET_DIMENSIONS].tolist())
 
-    @observe(name="generate_embedding", as_type="embedding")  # type: ignore[misc]  # type: ignore[misc]  # type: ignore[misc]
+    @observe(name="generate_embedding", as_type="embedding")
     async def generate_embedding(
         self, text: str, use_cache: bool = True
     ) -> List[float]:
@@ -215,8 +215,8 @@ class EmbeddingService:
 
         return self._pad_or_truncate_vector(embedding)
 
-    @observe(name="batch_generate_embeddings", as_type="embedding")  # type: ignore[misc]
-    async def batch_generate_embeddings(  # type: ignore[misc]  # type: ignore[misc]
+    @observe(name="batch_generate_embeddings", as_type="embedding")
+    async def batch_generate_embeddings(
         self, texts: List[str], batch_size: int = 100, show_progress: bool = True
     ) -> List[List[float]]:
         """배치로 임베딩 생성 (Langfuse cost tracking enabled)"""

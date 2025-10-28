@@ -172,11 +172,11 @@ class ClassificationService:
         # not direct 'hitl', 'confidence', 'canonical' attributes
         summary = {
             "total_items": len(request.items),
-            "hitl_required": sum(1 for r in results if r.hitl),  # type: ignore[attr-defined]
+            "hitl_required": sum(1 for r in results if r.hitl),
             "avg_confidence": (
-                sum(r.confidence for r in results) / len(results) if results else 0.0  # type: ignore[attr-defined]
+                sum(r.confidence for r in results) / len(results) if results else 0.0
             ),
-            "categories": list(set(tuple(r.canonical) for r in results)),  # type: ignore[attr-defined]
+            "categories": list(set(tuple(r.canonical) for r in results)),
         }
 
         processing_time = (time.time() - start_time) * 1000
@@ -271,7 +271,7 @@ async def get_db_session() -> Any:
 # API Endpoints
 
 
-@classification_router.post("/", response_model=ClassifyResponse)  # type: ignore[misc]
+@classification_router.post("/", response_model=ClassifyResponse)
 async def classify_document_chunk(
     request: ClassifyRequest,
     http_request: Request,
@@ -331,8 +331,8 @@ async def classify_document_chunk(
         )
 
 
-@classification_router.post("/batch", response_model=BatchClassifyResponse)  # type: ignore[misc]
-async def classify_batch(  # type: ignore[misc]
+@classification_router.post("/batch", response_model=BatchClassifyResponse)
+async def classify_batch(
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
     service: ClassificationService = Depends(get_classification_service),
@@ -384,7 +384,7 @@ async def classify_batch(  # type: ignore[misc]
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/hitl/tasks", response_model=List[HITLTask])  # type: ignore[misc]
+@classification_router.get("/hitl/tasks", response_model=List[HITLTask])
 async def get_hitl_tasks(
     limit: int = Query(50, ge=1, le=100, description="Maximum tasks to return"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
@@ -417,7 +417,7 @@ async def get_hitl_tasks(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.post("/hitl/review")  # type: ignore[misc]
+@classification_router.post("/hitl/review")
 async def submit_hitl_review(
     review: HITLReviewRequest,
     service: ClassificationService = Depends(get_classification_service),
@@ -453,7 +453,7 @@ async def submit_hitl_review(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/analytics", response_model=ClassificationAnalytics)  # type: ignore[misc]
+@classification_router.get("/analytics", response_model=ClassificationAnalytics)
 async def get_classification_analytics(
     service: ClassificationService = Depends(get_classification_service),
     api_key: str = Depends(verify_api_key),
@@ -480,7 +480,7 @@ async def get_classification_analytics(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/confidence/{chunk_id}")  # type: ignore[misc]
+@classification_router.get("/confidence/{chunk_id}")
 async def get_classification_confidence(
     chunk_id: str,
     service: ClassificationService = Depends(get_classification_service),
@@ -526,7 +526,7 @@ async def get_classification_confidence(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/status")  # type: ignore[misc]
+@classification_router.get("/status")
 async def get_classification_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get classification system status and health

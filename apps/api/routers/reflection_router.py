@@ -91,7 +91,7 @@ class ImprovementSuggestionsResponse(BaseModel):
 async def get_reflection_engine() -> AsyncGenerator[Any, None]:
     """ReflectionEngine 인스턴스 생성"""
     try:
-        from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
+        from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine as RE
     except ImportError:
         RE = None
 
@@ -104,7 +104,7 @@ async def get_reflection_engine() -> AsyncGenerator[Any, None]:
 
 
 # API Endpoints
-@router.post("/analyze", response_model=ReflectionAnalysisResponse)  # type: ignore[misc]
+@router.post("/analyze", response_model=ReflectionAnalysisResponse)
 async def analyze_case_performance(
     request: ReflectionAnalysisRequest, api_key: APIKeyInfo = Depends(verify_api_key)
 ) -> ReflectionAnalysisResponse:
@@ -119,7 +119,7 @@ async def analyze_case_performance(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
+                from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine
 
                 engine = ReflectionEngine(db_session=session)
             except ImportError:
@@ -142,7 +142,7 @@ async def analyze_case_performance(
         )
 
 
-@router.post("/batch", response_model=ReflectionBatchResponse)  # type: ignore[misc]
+@router.post("/batch", response_model=ReflectionBatchResponse)
 async def run_reflection_batch(
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> ReflectionBatchResponse:
@@ -157,7 +157,7 @@ async def run_reflection_batch(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
+                from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine
 
                 engine = ReflectionEngine(db_session=session)
             except ImportError:
@@ -178,7 +178,7 @@ async def run_reflection_batch(
         )
 
 
-@router.post("/suggestions", response_model=ImprovementSuggestionsResponse)  # type: ignore[misc]
+@router.post("/suggestions", response_model=ImprovementSuggestionsResponse)
 async def generate_improvement_suggestions(
     request: ImprovementSuggestionsRequest,
     api_key: APIKeyInfo = Depends(verify_api_key),
@@ -191,7 +191,7 @@ async def generate_improvement_suggestions(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
+                from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine
 
                 engine = ReflectionEngine(db_session=session)
             except ImportError:
@@ -219,7 +219,7 @@ async def generate_improvement_suggestions(
         )
 
 
-@router.get("/health")  # type: ignore[misc]
+@router.get("/health")
 async def health_check() -> Dict[str, str]:
     """Reflection 서비스 상태 확인"""
     return {

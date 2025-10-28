@@ -13,8 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Dict, Optional, TypeVar
 
-import psutil  # type: ignore[import-untyped]
-
+import psutil
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
@@ -350,8 +349,7 @@ def with_retry(
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             return await handler.execute_with_retry(func, *args, **kwargs)
 
-        return wrapper  # type: ignore[return-value]
-
+        return wrapper
     return decorator
 
 
@@ -381,8 +379,7 @@ def with_memory_monitoring(
                 if health_after["status"] == "warning":
                     await monitor.cleanup_memory()
 
-        return wrapper  # type: ignore[return-value]
-
+        return wrapper
     return decorator
 
 

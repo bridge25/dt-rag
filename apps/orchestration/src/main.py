@@ -149,7 +149,7 @@ def _import_pipeline() -> Any:
         pipeline_file = current_dir / "langgraph_pipeline.py"
         if pipeline_file.exists():
             print(f"[DEBUG] Found pipeline file: {pipeline_file}")
-            from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+            from langgraph_pipeline import get_pipeline  # TODO: Implement langgraph pipeline
 
             print("[DEBUG] Success: directory-based import")
             return get_pipeline
@@ -256,7 +256,7 @@ def _get_pipeline_request_class() -> Any:
 
     try:
         # 절대 import 시도
-        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import PipelineRequest  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import PipelineRequest")
         return PipelineRequest
@@ -271,7 +271,7 @@ def _get_pipeline_request_class() -> Any:
         current_dir = Path(__file__).parent
         if str(current_dir) not in sys.path:
             sys.path.insert(0, str(current_dir))
-        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import PipelineRequest  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: directory-based PipelineRequest import")
         return PipelineRequest
@@ -1202,7 +1202,7 @@ class CBRCaseResponse(BaseModel):
     updated_at: str
 
 
-@app.get("/health", tags=["health"])  # type: ignore[misc]
+@app.get("/health", tags=["health"])
 def health_check() -> Dict[str, Any]:
     """헬스체크 엔드포인트 - B-O2 필터링 시스템 상태 포함"""
     # 기본 필터 테스트
@@ -1236,7 +1236,7 @@ def health_check() -> Dict[str, Any]:
     }
 
 
-@app.get("/api/taxonomy/tree/{version}", tags=["taxonomy"])  # type: ignore[misc]
+@app.get("/api/taxonomy/tree/{version}", tags=["taxonomy"])
 async def get_taxonomy_tree(version: str) -> Dict[str, Any]:
     """Taxonomy API를 프록시하여 트리 데이터 반환"""
     try:
@@ -1469,7 +1469,7 @@ def _validate_manifest(manifest: AgentManifest) -> None:
         )
 
 
-@app.post("/agents/from-category", response_model=AgentManifest, tags=["agents"])  # type: ignore[misc]
+@app.post("/agents/from-category", response_model=AgentManifest, tags=["agents"])
 def create_agent_from_category(req: FromCategoryRequest) -> AgentManifest:
     """노드 경로에서 Agent Manifest 생성 (B-O1: 완료)"""
     # 입력 검증
@@ -1519,7 +1519,7 @@ def create_agent_from_category(req: FromCategoryRequest) -> AgentManifest:
     return manifest
 
 
-@app.post("/search", response_model=OrchestrationSearchResponse, tags=["search"])  # type: ignore[misc]
+@app.post("/search", response_model=OrchestrationSearchResponse, tags=["search"])
 def hybrid_search(req: OrchestrationSearchRequest) -> OrchestrationSearchResponse:
     """하이브리드 검색 (BM25 + Vector + Rerank) with B-O2 필터링"""
     logger.info(f"검색 요청: query='{req.query}', filters={req.filters}")
@@ -1606,7 +1606,7 @@ def hybrid_search(req: OrchestrationSearchRequest) -> OrchestrationSearchRespons
     )
 
 
-@app.post("/chat/run", response_model=ChatResponse, tags=["chat"])  # type: ignore[misc]
+@app.post("/chat/run", response_model=ChatResponse, tags=["chat"])
 async def chat_run(req: ChatRequest) -> ChatResponse:
     """LangGraph 7-Step 채팅 파이프라인 (B-O3 구현)"""
     logger.info(
@@ -1670,7 +1670,7 @@ async def chat_run(req: ChatRequest) -> ChatResponse:
         )
 
 
-@app.post("/cbr/suggest", response_model=CBRSuggestResponse, tags=["cbr"])  # type: ignore[misc]
+@app.post("/cbr/suggest", response_model=CBRSuggestResponse, tags=["cbr"])
 def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
     """B-O4: CBR k-NN 기반 케이스 추천"""
     _require_cbr()
@@ -1747,7 +1747,7 @@ def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
         raise HTTPException(status_code=500, detail=f"CBR suggestion failed: {str(e)}")
 
 
-@app.post("/cbr/feedback", tags=["cbr"])  # type: ignore[misc]
+@app.post("/cbr/feedback", tags=["cbr"])
 def submit_case_feedback(request: CBRFeedbackRequest) -> Dict[str, Any]:
     """CBR 케이스 피드백 수집 (Neural Selector 학습용)"""
     _require_cbr()
@@ -1785,7 +1785,7 @@ def submit_case_feedback(request: CBRFeedbackRequest) -> Dict[str, Any]:
         )
 
 
-@app.get("/cbr/stats", tags=["cbr"])  # type: ignore[misc]
+@app.get("/cbr/stats", tags=["cbr"])
 def get_cbr_statistics() -> Dict[str, Any]:
     """CBR 시스템 통계 조회"""
     _require_cbr()
@@ -1819,7 +1819,7 @@ def get_cbr_statistics() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Stats retrieval failed: {str(e)}")
 
 
-@app.post("/cbr/case", tags=["cbr"])  # type: ignore[misc]
+@app.post("/cbr/case", tags=["cbr"])
 def add_cbr_case(case_data: Dict[str, Any]) -> Dict[str, Any]:
     """CBR 케이스 추가 (관리용)"""
     _require_cbr()
@@ -1870,7 +1870,7 @@ def add_cbr_case(case_data: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Failed to add case: {str(e)}")
 
 
-@app.get("/cbr/logs", tags=["cbr"])  # type: ignore[misc]
+@app.get("/cbr/logs", tags=["cbr"])
 def get_cbr_logs(limit: int = 100, success_only: bool = False) -> Dict[str, Any]:
     """CBR 상호작용 로그 조회 (Neural Selector 학습데이터)"""
     _require_cbr()
@@ -1929,7 +1929,7 @@ def get_cbr_logs(limit: int = 100, success_only: bool = False) -> Dict[str, Any]
         )
 
 
-@app.get("/cbr/export", tags=["cbr"])  # type: ignore[misc]
+@app.get("/cbr/export", tags=["cbr"])
 def export_cbr_training_data() -> Dict[str, Any]:
     """Neural Selector 학습을 위한 CBR 데이터 내보내기"""
     _require_cbr()
@@ -2010,7 +2010,7 @@ def export_cbr_training_data() -> Dict[str, Any]:
 
 
 # B-O2 관리용 엔드포인트들
-@app.post("/filter/validate", tags=["filter"])  # type: ignore[misc]
+@app.post("/filter/validate", tags=["filter"])
 def validate_filter_paths(paths: List[List[str]]) -> Dict[str, Any]:
     """필터 경로 유효성 검증 엔드포인트"""
     try:
@@ -2039,7 +2039,7 @@ def validate_filter_paths(paths: List[List[str]]) -> Dict[str, Any]:
         }
 
 
-@app.post("/filter/test", tags=["filter"])  # type: ignore[misc]
+@app.post("/filter/test", tags=["filter"])
 def test_filter_performance(test_data: Dict[str, Any]) -> Dict[str, Any]:
     """필터 성능 테스트 엔드포인트"""
     allowed_paths = test_data.get("allowed_paths", [])
@@ -2090,7 +2090,7 @@ def test_filter_performance(test_data: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Filter test failed: {str(e)}")
 
 
-@app.get("/metrics/filter", tags=["filter"])  # type: ignore[misc]
+@app.get("/metrics/filter", tags=["filter"])
 def get_filter_metrics() -> Dict[str, Any]:
     """필터링 시스템 메트릭 조회"""
     # TODO: 실제 메트릭 수집 시스템과 연동
@@ -2121,7 +2121,7 @@ def get_filter_metrics() -> Dict[str, Any]:
 # 새로운 CBR CRUD API 엔드포인트들 추가
 
 
-@app.get("/cbr/cases/{case_id}", response_model=CBRCaseResponse, tags=["cbr-cases"])  # type: ignore[misc]
+@app.get("/cbr/cases/{case_id}", response_model=CBRCaseResponse, tags=["cbr-cases"])
 def get_cbr_case(case_id: str) -> CBRCaseResponse:
     """특정 CBR 케이스 조회"""
     _require_cbr()
@@ -2159,7 +2159,7 @@ def get_cbr_case(case_id: str) -> CBRCaseResponse:
         raise HTTPException(status_code=500, detail=f"케이스 조회 실패: {str(e)}")
 
 
-@app.put("/cbr/cases/{case_id}", tags=["cbr-cases"])  # type: ignore[misc]
+@app.put("/cbr/cases/{case_id}", tags=["cbr-cases"])
 def update_cbr_case(case_id: str, update_request: CBRUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 업데이트"""
     _require_cbr()
@@ -2227,7 +2227,7 @@ def update_cbr_case(case_id: str, update_request: CBRUpdateRequest) -> Dict[str,
         raise HTTPException(status_code=500, detail=f"케이스 업데이트 실패: {str(e)}")
 
 
-@app.delete("/cbr/cases/{case_id}", tags=["cbr-cases"])  # type: ignore[misc]
+@app.delete("/cbr/cases/{case_id}", tags=["cbr-cases"])
 def delete_cbr_case(case_id: str) -> Dict[str, Any]:
     """CBR 케이스 삭제"""
     _require_cbr()
@@ -2266,7 +2266,7 @@ def delete_cbr_case(case_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"케이스 삭제 실패: {str(e)}")
 
 
-@app.put("/cbr/cases/{case_id}/quality", tags=["cbr-cases"])  # type: ignore[misc]
+@app.put("/cbr/cases/{case_id}/quality", tags=["cbr-cases"])
 def update_cbr_case_quality(case_id: str, quality_request: CBRQualityUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 품질 점수 업데이트"""
     _require_cbr()

@@ -402,15 +402,15 @@ DASHBOARD_HTML = """
 """
 
 
-@dashboard_router.get("/", response_class=HTMLResponse)  # type: ignore[misc]  # type: ignore[misc]
+@dashboard_router.get("/", response_class=HTMLResponse)
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def get_dashboard(request: Request) -> HTMLResponse:
     """Get the evaluation dashboard HTML page"""
     return HTMLResponse(content=DASHBOARD_HTML)
 
 
-@dashboard_router.websocket("/ws")  # type: ignore[misc]
-# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution  # type: ignore[misc]
+@dashboard_router.websocket("/ws")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """WebSocket endpoint for real-time dashboard updates"""
     await manager.connect(websocket)
@@ -510,20 +510,19 @@ async def get_system_statistics() -> Dict[str, Any]:
         }
 
 
-@dashboard_router.get("/api/metrics")  # type: ignore[misc]
+@dashboard_router.get("/api/metrics")
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-async def get_dashboard_metrics() -> Dict[str, Any]:  # type: ignore[misc]
-    """API endpoint to get current dashboard metrics"""  # type: ignore[misc]
+async def get_dashboard_metrics() -> Dict[str, Any]:
+    """API endpoint to get current dashboard metrics"""
     return await get_dashboard_data()
 
 
-@dashboard_router.post("/api/simulate-evaluation")  # type: ignore[misc]
+@dashboard_router.post("/api/simulate-evaluation")
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def simulate_evaluation() -> Dict[str, Any]:
-    """Simulate an evaluation for dashboard testing"""  # type: ignore[misc]
+    """Simulate an evaluation for dashboard testing"""
     from .models import EvaluationResult, EvaluationMetrics
-    import random  # type: ignore[misc]
-
+    import random
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
     # Create simulated evaluation result
     simulated_metrics = EvaluationMetrics(

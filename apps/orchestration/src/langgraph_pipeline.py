@@ -347,10 +347,10 @@ async def step4_tools_debate(state: PipelineState) -> PipelineState:
             tool_results.append(
                 {
                     "tool": tool_name,
-                    "success": result.success,  # type: ignore[attr-defined]
-                    "result": result.result,  # type: ignore[attr-defined]
-                    "error": result.error,  # type: ignore[attr-defined]
-                    "elapsed": result.elapsed,  # type: ignore[attr-defined]
+                    "success": result.success,
+                    "result": result.result,
+                    "error": result.error,
+                    "elapsed": result.elapsed,
                 }
             )
 

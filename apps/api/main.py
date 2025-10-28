@@ -118,7 +118,7 @@ config = get_config()
 
 # Application lifespan context manager
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@asynccontextmanager  # type: ignore[misc]
+@asynccontextmanager
 async def lifespan(app: FastAPI) -> Any:
     """Application startup and shutdown lifecycle"""
     # Startup
@@ -308,7 +308,7 @@ app.add_middleware(RateLimitMiddleware)
 
 
 # Request logging and monitoring middleware
-@app.middleware("http")  # type: ignore[misc]
+@app.middleware("http")
 async def log_requests_and_track_metrics(request: Request, call_next: Any) -> Any:
     """Log all HTTP requests and track performance metrics"""
     start_time = time.time()
@@ -330,7 +330,7 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
         # Track metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics  # type: ignore[import-not-found]  # TODO: Fix routers import path
+                from routers.monitoring import track_request_metrics  # TODO: Fix routers import path
 
                 await track_request_metrics(request, response_time_ms, status_code)
             except Exception as e:
@@ -361,7 +361,7 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
 
 # Global exception handler
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.exception_handler(HTTPException)  # type: ignore[misc]
+@app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle HTTP exceptions with RFC 7807 Problem Details format"""
     return JSONResponse(
@@ -379,7 +379,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.exception_handler(Exception)  # type: ignore[misc]
+@app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions"""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
@@ -399,7 +399,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 # Health check endpoint
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/health", tags=["Health"])  # type: ignore[misc]
+@app.get("/health", tags=["Health"])
 async def health_check() -> Dict[str, Any]:
     """Basic health check endpoint with database and Redis status"""
     from apps.api.database import test_database_connection
@@ -472,7 +472,7 @@ app.openapi = custom_openapi
 
 # Custom documentation endpoints
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/docs", include_in_schema=False)  # type: ignore[misc]
+@app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html() -> Any:
     """Custom Swagger UI with enhanced styling"""
     return get_swagger_ui_html(
@@ -495,7 +495,7 @@ async def custom_swagger_ui_html() -> Any:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/redoc", include_in_schema=False)  # type: ignore[misc]
+@app.get("/redoc", include_in_schema=False)
 async def redoc_html() -> Any:
     """Custom ReDoc documentation"""
     return get_redoc_html(
@@ -557,7 +557,7 @@ app.include_router(
 
 # API versioning support
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/api/versions", tags=["Versioning"])  # type: ignore[misc]
+@app.get("/api/versions", tags=["Versioning"])
 async def list_api_versions() -> Dict[str, Any]:
     """List available API versions"""
     return {
@@ -585,7 +585,7 @@ async def list_api_versions() -> Dict[str, Any]:
 
 # Rate limiting info endpoint
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/api/v1/rate-limits", tags=["Rate Limiting"])  # type: ignore[misc]
+@app.get("/api/v1/rate-limits", tags=["Rate Limiting"])
 async def get_rate_limit_info() -> Dict[str, Any]:
     """Get rate limiting information for current user"""
     # TODO: Implement actual rate limit checking based on user/API key
@@ -612,7 +612,7 @@ async def get_rate_limit_info() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/", tags=["Root"])  # type: ignore[misc]
+@app.get("/", tags=["Root"])
 async def root() -> Dict[str, Any]:
     """API root endpoint with comprehensive system information"""
     # 데이터베이스 연결 상태 확인

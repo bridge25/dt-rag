@@ -35,7 +35,7 @@ async def get_job_orchestrator() -> JobOrchestrator:
     return _job_orchestrator
 
 
-@router.post(  # type: ignore[misc]
+@router.post(
     "/upload",
     status_code=status.HTTP_202_ACCEPTED,
     summary="Upload document for processing",
@@ -144,7 +144,7 @@ async def upload_document(
         )
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
     "/status/{job_id}",
     response_model=JobStatusResponseV1,
     summary="Get ingestion job status",
@@ -176,9 +176,9 @@ async def get_job_status(
         )
 
 
-@router.on_event("shutdown")  # type: ignore[misc]
+@router.on_event("shutdown")
 async def shutdown_event() -> None:
-    global _job_orchestrator  # type: ignore[misc]
+    global _job_orchestrator
     if _job_orchestrator is not None:
         await _job_orchestrator.stop()
         _job_orchestrator = None
