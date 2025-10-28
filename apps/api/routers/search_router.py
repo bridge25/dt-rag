@@ -181,6 +181,7 @@ class SearchService:
         # Convert to SearchHit objects
         hits = []
         for result in search_results:
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             hit = SearchHit(
                 chunk_id=result["chunk_id"],
                 score=result["score"],
@@ -189,14 +190,20 @@ class SearchService:
                     url=result["source_url"] or "",
                     title=result["title"] or "Untitled",
                     date=result.get("metadata", {}).get("date", ""),
+                    author=None,  # Explicit None for MyPy strict mode
+                    content_type=None,  # Explicit None for MyPy strict mode
+                    language=None,  # Explicit None for MyPy strict mode
                 ),
                 taxonomy_path=result["taxonomy_path"],
+                highlights=None,  # Explicit None for MyPy strict mode
+                metadata=None,  # Explicit None for MyPy strict mode
             )
             hits.append(hit)
 
         # Calculate response metrics
         total_latency = time.time() - start_time
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         return SearchResponse(
             hits=hits,
             latency=total_latency,
@@ -206,6 +213,7 @@ class SearchService:
             sources_count=len(set(hit.source.url for hit in hits if hit.source.url)),
             taxonomy_version="1.8.1",
             mode="bm25",  # Legacy mode
+            query_analysis=None,  # Explicit None for MyPy strict mode
         )
 
     async def _neural_search(
@@ -266,6 +274,7 @@ class SearchService:
             # Convert to SearchHit objects
             hits = []
             for result in combined_results[: request.max_results]:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
                 hit = SearchHit(
                     chunk_id=result.get("case_id", "unknown"),
                     score=result["score"],
@@ -274,13 +283,19 @@ class SearchService:
                         url="casebank://case",
                         title=result.get("query", "Case"),
                         date="",
+                        author=None,  # Explicit None for MyPy strict mode
+                        content_type=None,  # Explicit None for MyPy strict mode
+                        language=None,  # Explicit None for MyPy strict mode
                     ),
                     taxonomy_path=result.get("category_path", []),
+                    highlights=None,  # Explicit None for MyPy strict mode
+                    metadata=None,  # Explicit None for MyPy strict mode
                 )
                 hits.append(hit)
 
             total_latency = time.time() - start_time
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             return SearchResponse(
                 hits=hits,
                 latency=total_latency,
@@ -289,6 +304,7 @@ class SearchService:
                 sources_count=len(hits),
                 taxonomy_version="1.8.1",
                 mode=search_mode,
+                query_analysis=None,  # Explicit None for MyPy strict mode
             )
 
     async def _bm25_fallback_search(
@@ -308,19 +324,28 @@ class SearchService:
 
             hits = []
             for result in bm25_results:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
                 hit = SearchHit(
                     chunk_id=result.get("case_id", "unknown"),
                     score=result.get("score", 0.5),
                     text=result.get("text", ""),
                     source=SourceMeta(
-                        url="casebank://case", title="Fallback Result", date=""
+                        url="casebank://case",
+                        title="Fallback Result",
+                        date="",
+                        author=None,  # Explicit None for MyPy strict mode
+                        content_type=None,  # Explicit None for MyPy strict mode
+                        language=None,  # Explicit None for MyPy strict mode
                     ),
                     taxonomy_path=[],
+                    highlights=None,  # Explicit None for MyPy strict mode
+                    metadata=None,  # Explicit None for MyPy strict mode
                 )
                 hits.append(hit)
 
             total_latency = time.time() - start_time
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             return SearchResponse(
                 hits=hits,
                 latency=total_latency,
@@ -329,6 +354,7 @@ class SearchService:
                 sources_count=len(hits),
                 taxonomy_version="1.8.1",
                 mode="bm25_fallback",
+                query_analysis=None,  # Explicit None for MyPy strict mode
             )
 
     async def _simple_bm25_search(
@@ -437,6 +463,7 @@ class SearchService:
                 # Get real configuration from hybrid search engine
                 engine_config = get_search_engine_config()
 
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
                 return SearchConfig(
                     bm25_weight=engine_config.get("bm25_weight", 0.5),
                     vector_weight=engine_config.get("vector_weight", 0.5),
@@ -446,10 +473,24 @@ class SearchService:
                 )
             else:
                 # Return default configuration
-                return SearchConfig()
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+                return SearchConfig(
+                    bm25_weight=0.5,
+                    vector_weight=0.5,
+                    rerank_threshold=0.7,
+                    max_candidates=100,
+                    embedding_model="text-embedding-ada-002",
+                )
         except Exception as e:
             logger.error(f"Failed to get search config: {e}")
-            return SearchConfig()
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+            return SearchConfig(
+                bm25_weight=0.5,
+                vector_weight=0.5,
+                rerank_threshold=0.7,
+                max_candidates=100,
+                embedding_model="text-embedding-ada-002",
+            )
 
     async def update_config(self, config: SearchConfig) -> SearchConfig:
         """Update search configuration"""
@@ -815,6 +856,7 @@ async def search_documents_keyword_only(
             # Convert to SearchHit objects
             hits = []
             for result in search_results:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
                 hit = SearchHit(
                     chunk_id=result["chunk_id"],
                     score=result["score"],
@@ -823,13 +865,19 @@ async def search_documents_keyword_only(
                         url=result["source_url"] or "",
                         title=result["title"] or "Untitled",
                         date=result.get("metadata", {}).get("date", ""),
+                        author=None,  # Explicit None for MyPy strict mode
+                        content_type=None,  # Explicit None for MyPy strict mode
+                        language=None,  # Explicit None for MyPy strict mode
                     ),
                     taxonomy_path=result["taxonomy_path"],
+                    highlights=None,  # Explicit None for MyPy strict mode
+                    metadata=None,  # Explicit None for MyPy strict mode
                 )
                 hits.append(hit)
 
             total_latency = time.time() - start_time
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             return SearchResponse(
                 hits=hits,
                 latency=total_latency,
@@ -839,6 +887,8 @@ async def search_documents_keyword_only(
                     set(hit.source.url for hit in hits if hit.source.url)
                 ),
                 taxonomy_version="1.8.1",
+                query_analysis=None,  # Explicit None for MyPy strict mode
+                mode=None,  # Explicit None for MyPy strict mode
             )
         else:
             raise HTTPException(
@@ -894,6 +944,7 @@ async def search_documents_vector_only(
             # Convert to SearchHit objects
             hits = []
             for result in search_results:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
                 hit = SearchHit(
                     chunk_id=result["chunk_id"],
                     score=result["score"],
@@ -902,13 +953,19 @@ async def search_documents_vector_only(
                         url=result["source_url"] or "",
                         title=result["title"] or "Untitled",
                         date=result.get("metadata", {}).get("date", ""),
+                        author=None,  # Explicit None for MyPy strict mode
+                        content_type=None,  # Explicit None for MyPy strict mode
+                        language=None,  # Explicit None for MyPy strict mode
                     ),
                     taxonomy_path=result["taxonomy_path"],
+                    highlights=None,  # Explicit None for MyPy strict mode
+                    metadata=None,  # Explicit None for MyPy strict mode
                 )
                 hits.append(hit)
 
             total_latency = time.time() - start_time
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             return SearchResponse(
                 hits=hits,
                 latency=total_latency,
@@ -918,6 +975,8 @@ async def search_documents_vector_only(
                     set(hit.source.url for hit in hits if hit.source.url)
                 ),
                 taxonomy_version="1.8.1",
+                query_analysis=None,  # Explicit None for MyPy strict mode
+                mode=None,  # Explicit None for MyPy strict mode
             )
         else:
             raise HTTPException(
