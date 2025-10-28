@@ -6,7 +6,7 @@ Orchestrates all security components and provides unified security interface
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Set
+from typing import Dict, List, Any, Set, Optional
 from dataclasses import dataclass
 from enum import Enum
 import uuid
@@ -46,7 +46,7 @@ class SecurityContext:
     timestamp: datetime
     is_authenticated: bool = False
     risk_score: float = 0.0
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -62,7 +62,7 @@ class SecurityPolicy:
     session_timeout_minutes: int = 30
     require_encryption: bool = True
     allow_anonymous_read: bool = False
-    sensitive_operations: List[str] = None
+    sensitive_operations: Optional[List[str]] = None
 
 
 class SecurityManager:
@@ -70,7 +70,7 @@ class SecurityManager:
     Central security manager that orchestrates all security components
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.policy = SecurityPolicy(**self.config.get("policy", {}))
 
@@ -93,7 +93,7 @@ class SecurityManager:
         logger.info("SecurityManager initialized with OWASP Top 10 compliance")
 
     async def authenticate_request(
-        self, token: str, ip_address: str, user_agent: str, operation: str = None
+        self, token: str, ip_address: str, user_agent: str, operation: Optional[str] = None
     ) -> SecurityContext:
         """
         Authenticate and authorize a request
@@ -203,8 +203,8 @@ class SecurityManager:
         self,
         context: SecurityContext,
         operation: str,
-        resource: str = None,
-        data: Dict[str, Any] = None,
+        resource: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Authorize an operation based on RBAC
