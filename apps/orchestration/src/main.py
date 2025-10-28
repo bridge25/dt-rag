@@ -8,7 +8,7 @@ AI 모델 협업 및 CBR 시스템 통합 레이어
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional, cast
+from typing import List, Dict, Any, Optional, cast, TYPE_CHECKING
 import os
 import sqlite3
 import httpx
@@ -22,42 +22,42 @@ import sys
 from pathlib import Path
 
 # 견고한 경로 설정 - GitHub Actions 환경에서도 안정적으로 작동
-try:
-    # 현재 파일의 절대 경로 기준으로 프로젝트 루트 찾기
-    current_file = Path(__file__).resolve()
-    project_root = current_file.parent.parent.parent.parent
-    common_schemas_path = project_root / "packages" / "common-schemas"
+if TYPE_CHECKING:
+    from common_schemas.models import SearchRequest, SearchResponse, SearchHit
+else:
+    try:
+        # 현재 파일의 절대 경로 기준으로 프로젝트 루트 찾기
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent.parent.parent
+        common_schemas_path = project_root / "packages" / "common-schemas"
 
-    # 경로가 존재하는 경우에만 추가
-    if common_schemas_path.exists():
-        sys.path.insert(0, str(common_schemas_path))
-    else:
-        # GitHub Actions에서 다른 구조일 수 있으므로 대안 경로들 시도
-        alternative_paths = [
-            Path.cwd() / "packages" / "common-schemas",
-            project_root / "dt-rag" / "packages" / "common-schemas",
-            Path(
-                "/github/workspace/packages/common-schemas"
-            ),  # GitHub Actions 기본 경로
-        ]
+        # 경로가 존재하는 경우에만 추가
+        if common_schemas_path.exists():
+            sys.path.insert(0, str(common_schemas_path))
+        else:
+            # GitHub Actions에서 다른 구조일 수 있으므로 대안 경로들 시도
+            alternative_paths = [
+                Path.cwd() / "packages" / "common-schemas",
+                project_root / "dt-rag" / "packages" / "common-schemas",
+                Path(
+                    "/github/workspace/packages/common-schemas"
+                ),  # GitHub Actions 기본 경로
+            ]
 
-        for alt_path in alternative_paths:
-            if alt_path.exists():
-                sys.path.insert(0, str(alt_path))
-                break
+            for alt_path in alternative_paths:
+                if alt_path.exists():
+                    sys.path.insert(0, str(alt_path))
+                    break
 
-    from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]  # TODO: Implement common schemas
-except ImportError as e:
-    # Import 실패 시 graceful fallback - 로컬 모델 정의
-    print(f"Warning: Could not import common_schemas, using local definitions: {e}")
+        from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]  # TODO: Implement common schemas
+    except ImportError as e:
+        # Import 실패 시 graceful fallback - 로컬 모델 정의
+        print(f"Warning: Could not import common_schemas, using local definitions: {e}")
 
-    from pydantic import BaseModel
-    from typing import List, Dict, Any, Optional
-
-    class SearchHit(BaseModel):
-        chunk_id: str
-        score: float
-        source: Dict[str, Any]
+        class SearchHit(BaseModel):
+            chunk_id: str
+            score: float
+            source: Dict[str, Any]
 
     class OrchestrationSearchRequest(BaseModel):
         query: str
@@ -128,10 +128,10 @@ def _import_pipeline() -> Any:
 
     try:
         # Method 2: 절대 import 시도
-        from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import get_pipeline as _get_pipeline_absolute  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import from langgraph_pipeline")
-        return get_pipeline
+        return _get_pipeline_absolute
     except ImportError as e:
         print(f"[DEBUG] Absolute import failed: {e}")
 
@@ -149,10 +149,10 @@ def _import_pipeline() -> Any:
         pipeline_file = current_dir / "langgraph_pipeline.py"
         if pipeline_file.exists():
             print(f"[DEBUG] Found pipeline file: {pipeline_file}")
-            from langgraph_pipeline import get_pipeline  # TODO: Implement langgraph pipeline
+            from langgraph_pipeline import get_pipeline as _get_pipeline_directory  # TODO: Implement langgraph pipeline
 
             print("[DEBUG] Success: directory-based import")
-            return get_pipeline
+            return _get_pipeline_directory
         else:
             print(f"[DEBUG] Pipeline file not found: {pipeline_file}")
 
@@ -256,10 +256,10 @@ def _get_pipeline_request_class() -> Any:
 
     try:
         # 절대 import 시도
-        from langgraph_pipeline import PipelineRequest  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import PipelineRequest as _PipelineRequest_absolute  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import PipelineRequest")
-        return PipelineRequest
+        return _PipelineRequest_absolute
     except ImportError as e:
         print(f"[DEBUG] Absolute PipelineRequest import failed: {e}")
 
@@ -271,10 +271,10 @@ def _get_pipeline_request_class() -> Any:
         current_dir = Path(__file__).parent
         if str(current_dir) not in sys.path:
             sys.path.insert(0, str(current_dir))
-        from langgraph_pipeline import PipelineRequest  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import PipelineRequest as _PipelineRequest_directory  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: directory-based PipelineRequest import")
-        return PipelineRequest
+        return _PipelineRequest_directory
     except ImportError as e:
         print(f"[DEBUG] Directory-based PipelineRequest import failed: {e}")
 

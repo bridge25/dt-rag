@@ -7,45 +7,46 @@ for comprehensive RAG system quality monitoring.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, TYPE_CHECKING
 
-try:
+PROMETHEUS_AVAILABLE = False
+
+if TYPE_CHECKING:
     from prometheus_client import Counter, Gauge, Histogram
+else:
+    try:
+        from prometheus_client import Counter, Gauge, Histogram
+        PROMETHEUS_AVAILABLE = True
+    except ImportError:
+        class Counter:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    PROMETHEUS_AVAILABLE = True
-except ImportError:
-    PROMETHEUS_AVAILABLE = False
+            def inc(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    # Use same mock classes as in metrics_collector.py
-    class Counter:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
+            def labels(self, *args: Any, **kwargs: Any) -> "Counter":
+                return self
 
-        def inc(self, *args: Any, **kwargs: Any) -> None:
-            pass
+        class Gauge:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-        def labels(self, *args: Any, **kwargs: Any) -> "Counter":
-            return self
+            def set(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    class Gauge:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
+            def labels(self, *args: Any, **kwargs: Any) -> "Gauge":
+                return self
 
-        def set(self, *args: Any, **kwargs: Any) -> None:
-            pass
+        class Histogram:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-        def labels(self, *args: Any, **kwargs: Any) -> "Gauge":
-            return self
+            def observe(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    class Histogram:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
-
-        def observe(self, *args: Any, **kwargs: Any) -> None:
-            pass
-
-        def labels(self, *args: Any, **kwargs: Any) -> "Histogram":
-            return self
+            def labels(self, *args: Any, **kwargs: Any) -> "Histogram":
+                return self
 
 
 logger = logging.getLogger(__name__)

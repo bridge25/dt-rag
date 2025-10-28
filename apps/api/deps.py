@@ -310,12 +310,12 @@ async def verify_api_key(
         )
         from .security.api_key_storage import APIKeyInfo
 
-        key_info = ALLOWED_TEST_KEYS[x_api_key]
+        test_key_info = ALLOWED_TEST_KEYS[x_api_key]
         return APIKeyInfo(
-            key_id=key_info["key_id"],
-            name=key_info["name"],
+            key_id=test_key_info["key_id"],
+            name=test_key_info["name"],
             description=f"Development test key ({CURRENT_ENV})",
-            scope=key_info["scope"],
+            scope=test_key_info["scope"],
             permissions=["*"],
             allowed_ips=None,
             rate_limit=1000,
