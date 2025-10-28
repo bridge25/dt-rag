@@ -36,7 +36,7 @@ class GoldenSample:
     source_doc_ids: List[str]
     query_type: str  # simple, reasoning, multi_context
     taxonomy_path: Optional[List[str]] = None
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -258,7 +258,7 @@ Format as JSON:
         return samples
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def save_dataset(self, samples: List[GoldenSample], name: str = None) -> Path:
+    def save_dataset(self, samples: List[GoldenSample], name: Optional[str] = None) -> Path:
         """Save golden dataset to JSON file"""
         if name is None:
             name = f"golden_dataset_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -295,7 +295,7 @@ Format as JSON:
 
     def _count_query_types(self, samples: List[GoldenSample]) -> Dict[str, int]:
         """Count samples by query type"""
-        counts = {}
+        counts: Dict[str, int] = {}
         for sample in samples:
             query_type = sample.query_type
             counts[query_type] = counts.get(query_type, 0) + 1
