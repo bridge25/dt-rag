@@ -33,7 +33,7 @@ class ComponentHealth:
     response_time_ms: Optional[float] = None
     last_check: Optional[datetime] = None
     error_message: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         result = asdict(self)
@@ -415,8 +415,8 @@ class HealthChecker:
             "storage": 0.8,  # 중요하지만 필수는 아님
         }
 
-        total_weight = 0
-        weighted_score = 0
+        total_weight = 0.0
+        weighted_score = 0.0
 
         for component in components:
             importance = component_importance.get(component.name, 0.5)
