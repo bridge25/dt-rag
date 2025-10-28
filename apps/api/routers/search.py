@@ -343,7 +343,7 @@ def _convert_to_response(
     latency: float,
     query_id: str,
     search_type: str,
-    perf_info: Dict[str, Any] = None,
+    perf_info: Optional[Dict[str, Any]] = None,
 ) -> LegacySearchResponse:
     """검색 결과를 LegacySearchResponse로 변환"""
     # LegacySearchHit 객체로 변환
