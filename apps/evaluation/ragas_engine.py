@@ -17,7 +17,7 @@ import asyncio
 import logging
 import re
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from dataclasses import dataclass
 
 import google.generativeai as genai
@@ -354,7 +354,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("coverage_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -389,7 +389,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("coverage_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -424,7 +424,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("faithfulness_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("faithfulness_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -455,7 +455,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("relevancy_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("relevancy_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -466,7 +466,7 @@ class RAGASEvaluator:
 
         try:
             response = self.model.generate_content(prompt)
-            return response.text
+            return cast(str, response.text)
         except Exception as e:
             logger.error(f"Gemini generation failed: {e}")
             return ""
