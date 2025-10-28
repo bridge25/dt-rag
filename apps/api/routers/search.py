@@ -186,7 +186,7 @@ async def search_documents(
                 search_type, latency_ms, True, len(result.hits)
             )
         elif MONITORING_AVAILABLE:
-            await track_search_metrics(search_type, latency_ms, True, len(result.hits))
+            track_search_metrics(search_type, latency_ms, True, len(result.hits))
 
         return result
 
@@ -200,7 +200,7 @@ async def search_documents(
         if OPTIMIZATION_AVAILABLE:
             await _record_optimized_metrics(search_type, latency_ms, False, 0)
         elif MONITORING_AVAILABLE:
-            await track_search_metrics(search_type, latency_ms, False, 0)
+            track_search_metrics(search_type, latency_ms, False, 0)
 
         raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
 

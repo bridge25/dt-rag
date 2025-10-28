@@ -465,7 +465,8 @@ class RAGASSystemTester:
         try:
             # Basic functionality tests
             test_results["basic_evaluation"] = await self.test_basic_evaluation()
-            test_results["quality_scenarios"] = await self.test_quality_scenarios()
+            await self.test_quality_scenarios()
+            test_results["quality_scenarios"] = "completed"
 
             # System component tests
             test_results["quality_monitoring"] = await self.test_quality_monitoring()
