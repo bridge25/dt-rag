@@ -16,6 +16,7 @@ from apps.api.background.coverage_history_dao import CoverageHistoryDAO
 from apps.api.background.webhook_service import WebhookService
 from apps.api.agent_dao import AgentDAO
 from apps.knowledge_builder.coverage.meter import CoverageMeterService
+from apps.knowledge_builder.coverage.models import CoverageMetrics
 from apps.core.db_session import async_session
 from apps.api.database import BackgroundTask
 
@@ -210,9 +211,10 @@ class AgentTaskWorker:
                     f"Fatal error processing task {task_id}: {e}", exc_info=True
                 )
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (return type annotation)
     async def _calculate_coverage(
         self, session: Any, task: BackgroundTask, job_data: Dict[str, Any]
-    ) -> None:
+    ) -> CoverageMetrics:
         """
         Calculate coverage with cancellation checks
 
