@@ -67,7 +67,6 @@ except ImportError as e:
 # 모니터링 import
 try:
     from ..monitoring.metrics import get_metrics_collector
-    from ..routers import monitoring  # noqa: F401
 
     MONITORING_AVAILABLE = True
 
@@ -417,7 +416,7 @@ async def create_embeddings(
         from database import db_manager  # type: ignore[import-not-found]  # TODO: Fix database import path
 
         async with db_manager.async_session() as session:
-            result = await SearchDAO.create_embeddings_for_chunks(
+            result = await SearchDAO.create_embeddings_for_chunks(  # type: ignore[attr-defined]
                 session=session,
                 chunk_ids=request.chunk_ids,
                 batch_size=request.batch_size,
@@ -694,30 +693,23 @@ async def optimized_search(
         )
 
     try:
-        # 커스텀 검색 설정 생성
-        search_config = SearchConfig(
-            # BM25 설정
-            bm25_k1=request.bm25_k1,
-            bm25_b=request.bm25_b,
-            bm25_topk=request.bm25_topk,
-            # Vector 설정
-            vector_topk=request.vector_topk,
-            vector_similarity_threshold=request.vector_similarity_threshold,
-            embedding_model=request.embedding_model,
-            # Fusion 설정
-            bm25_weight=request.bm25_weight,
-            vector_weight=request.vector_weight,
-            # Reranking 설정
-            enable_reranking=request.enable_reranking,
-            rerank_candidates=request.rerank_candidates,
-            final_topk=request.final_topk,
-            # 성능 설정
-            use_optimized_engines=request.use_optimized_engines,
-            max_query_time=request.max_query_time,
-        )
+        # 검색 설정 딕셔너리
+        search_config = {
+            "bm25_weight": 0.5,
+            "vector_weight": 0.5,
+            "enable_caching": True,
+            "enable_reranking": True,
+            "normalization": "min_max",
+        }
 
         # 커스텀 검색 엔진 생성
-        search_engine = HybridSearchEngine(search_config)
+        search_engine = HybridSearchEngine(
+            bm25_weight=search_config["bm25_weight"],
+            vector_weight=search_config["vector_weight"],
+            enable_caching=search_config["enable_caching"],
+            enable_reranking=search_config["enable_reranking"],
+            normalization=search_config["normalization"],
+        )
 
         # 캐시 확인 (선택적)
         cache = None
@@ -727,7 +719,7 @@ async def optimized_search(
             cached_results = await cache.get_search_results(
                 query=request.q,
                 filters=request.filters,
-                search_params=search_config.__dict__,
+                search_params=search_config,
             )
 
         if cached_results:
@@ -738,56 +730,58 @@ async def optimized_search(
             )
 
         # 최적화된 검색 실행
-        async with db_manager.async_session() as session:
-            hybrid_response = await search_engine.search(
-                session=session,
+        results, metrics = await search_engine.search(
+            query=request.q,
+            top_k=request.final_topk,
+            filters=request.filters,
+            bm25_candidates=request.bm25_topk,
+            vector_candidates=request.vector_topk,
+            correlation_id=query_id,
+        )
+
+        # 결과 변환
+        search_results = []
+        for result in results:
+            result_dict = {
+                "chunk_id": result.chunk_id,
+                "text": result.text,
+                "score": result.hybrid_score,
+                "metadata": result.metadata,
+                "title": result.metadata.get("title"),
+                "source_url": result.metadata.get("source_url"),
+                "taxonomy_path": result.metadata.get("taxonomy_path", []),
+            }
+            search_results.append(result_dict)
+
+        # 캐싱 (선택적)
+        if cache:
+            await cache.set_search_results(
                 query=request.q,
+                results=search_results,
                 filters=request.filters,
-                query_id=query_id,
+                search_params=search_config,
             )
 
-            # 결과 변환
-            search_results = []
-            for result in hybrid_response.results:
-                result_dict = {
-                    "chunk_id": result.chunk_id,
-                    "text": result.text,
-                    "score": result.score,
-                    "metadata": result.metadata,
-                    "title": result.metadata.get("title"),
-                    "source_url": result.metadata.get("source_url"),
-                    "taxonomy_path": result.metadata.get("taxonomy_path", []),
-                }
-                search_results.append(result_dict)
+        # 성능 메트릭 기록
+        search_metrics.record_search(
+            "optimized_v2", metrics.total_time, False
+        )
 
-            # 캐싱 (선택적)
-            if cache:
-                await cache.set_search_results(
-                    query=request.q,
-                    results=search_results,
-                    filters=request.filters,
-                    search_params=search_config.__dict__,
-                )
-
-            # 성능 메트릭 기록
-            search_metrics.record_search(
-                "optimized_v2", hybrid_response.total_time, False
-            )
-
-            return _convert_to_response(
-                search_results,
-                hybrid_response.total_time,
-                query_id,
-                "optimized_v2",
-                {
-                    "bm25_time": hybrid_response.bm25_time,
-                    "vector_time": hybrid_response.vector_time,
-                    "fusion_time": hybrid_response.fusion_time,
-                    "rerank_time": hybrid_response.rerank_time,
-                    "total_candidates": hybrid_response.total_candidates,
-                    "config": search_config.__dict__,
-                },
-            )
+        return _convert_to_response(
+            search_results,
+            metrics.total_time,
+            query_id,
+            "optimized_v2",
+            {
+                "bm25_time": metrics.bm25_time,
+                "vector_time": metrics.vector_time,
+                "fusion_time": metrics.fusion_time,
+                "rerank_time": metrics.rerank_time,
+                "bm25_candidates": metrics.bm25_candidates,
+                "vector_candidates": metrics.vector_candidates,
+                "config": search_config,
+            },
+        )
 
     except Exception as e:
         latency = time.time() - start_time
