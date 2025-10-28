@@ -955,7 +955,7 @@ class SearchDAO:
     @staticmethod
     async def hybrid_search(
         query: str,
-        filters: Dict = None,
+        filters: Optional[Dict] = None,
         topk: int = 5,
         bm25_topk: int = 12,
         vector_topk: int = 12,
@@ -1111,7 +1111,7 @@ class SearchDAO:
 
     @staticmethod
     async def _perform_bm25_search(
-        session: AsyncSession, query: str, topk: int, filters: Dict = None
+        session: AsyncSession, query: str, topk: int, filters: Optional[Dict] = None
     ) -> List[Dict[str, Any]]:
         """BM25 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -1187,7 +1187,7 @@ class SearchDAO:
         session: AsyncSession,
         query_embedding: List[float],
         topk: int,
-        filters: Dict = None,
+        filters: Optional[Dict] = None,
     ) -> List[Dict[str, Any]]:
         """Vector 유사도 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -1287,7 +1287,7 @@ class SearchDAO:
             return []
 
     @staticmethod
-    def _build_filter_clause(filters: Dict = None) -> str:
+    def _build_filter_clause(filters: Optional[Dict] = None) -> str:
         """필터 조건 SQL 절 생성 (SQLite/PostgreSQL 호환)"""
         if not filters:
             return ""
@@ -1578,7 +1578,7 @@ class ClassifyDAO:
 
     @staticmethod
     async def classify_text(
-        text: str, hint_paths: List[List[str]] = None
+        text: str, hint_paths: Optional[List[List[str]]] = None
     ) -> Dict[str, Any]:
         """실제 분류 로직 - ML 모델 기반 (키워드 기반 제거)"""
         try:
