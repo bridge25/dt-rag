@@ -5,7 +5,7 @@
 
 import os
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import (
@@ -734,7 +734,7 @@ class EmbeddingService:
                 embedding_array = await OptimizedEmbeddingService.generate_embedding(
                     text, model
                 )
-                return embedding_array.tolist()
+                return cast(List[float], embedding_array.tolist())
             except Exception as e:
                 logger.warning(f"Optimized embedding failed, using fallback: {e}")
 
@@ -763,7 +763,7 @@ class EmbeddingService:
                     return EmbeddingService._get_dummy_embedding(text)
 
                 result = response.json()
-                return result["data"][0]["embedding"]
+                return cast(List[float], result["data"][0]["embedding"])
 
         except Exception as e:
             logger.error(f"임베딩 생성 실패: {e}")
@@ -780,7 +780,7 @@ class EmbeddingService:
         norm = np.linalg.norm(embedding)
         if norm > 0:
             embedding = embedding / norm
-        return embedding.tolist()
+        return cast(List[float], embedding.tolist())
 
     @staticmethod
     async def generate_batch_embeddings(
@@ -1053,7 +1053,7 @@ class SearchDAO:
                         "optimization_enabled": True,
                     }
 
-                return final_results
+                return cast(List[Dict[str, Any]], final_results)
 
             except Exception as e:
                 logger.error(f"최적화된 검색 실행 실패: {e}")
