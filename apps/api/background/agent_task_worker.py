@@ -7,7 +7,7 @@ Processes tasks from Redis queue with timeout, cancellation, and progress tracki
 
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from uuid import UUID
 from datetime import datetime
 
@@ -49,7 +49,7 @@ class AgentTaskWorker:
         self.timeout = timeout
         self.running = False
         self.task_queue = AgentTaskQueue()
-        self.worker_task = None
+        self.worker_task: Optional[Any] = None
         logger.info(
             f"AgentTaskWorker initialized: worker_id={worker_id}, timeout={timeout}s"
         )

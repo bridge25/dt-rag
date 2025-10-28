@@ -269,7 +269,7 @@ class CrossEncoderReranker:
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
         self.model_name = model_name
-        self.model = None
+        self.model: Optional[Any] = None
         self._load_model()
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution

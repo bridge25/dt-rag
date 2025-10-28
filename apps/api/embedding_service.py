@@ -79,8 +79,8 @@ class EmbeddingService:
     def __init__(self, model_name: str = "text-embedding-3-large"):
         self.model_name = model_name
         self.model_config = self.SUPPORTED_MODELS.get(model_name)
-        self._openai_client = None
-        self._sentence_transformer = None
+        self._openai_client: Optional[Any] = None
+        self._sentence_transformer: Optional[Any] = None
         self._model_loaded = False
         self.embedding_cache: Dict[str, List[float]] = {}
 

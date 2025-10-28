@@ -90,8 +90,10 @@ class ImprovementSuggestionsResponse(BaseModel):
 # Dependency: Get ReflectionEngine instance
 async def get_reflection_engine() -> AsyncGenerator[Any, None]:
     """ReflectionEngine 인스턴스 생성"""
+    RE: Any = None
     try:
         from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine as RE
+        RE = ReflectionEngine
     except ImportError:
         RE = None
 

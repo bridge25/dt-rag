@@ -20,7 +20,7 @@ from typing import Optional, Dict, Any
 logger = logging.getLogger(__name__)
 
 # Lazy import to avoid startup errors
-_langfuse_client = None
+_langfuse_client: Optional[Any] = None
 _langfuse_available = False
 
 try:

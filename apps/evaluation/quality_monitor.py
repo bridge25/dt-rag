@@ -56,7 +56,7 @@ class QualityMonitor:
         self.quality_history: Any = deque(maxlen=1440)  # 24 hours of minute-level data
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    async def record_evaluation(self, evaluation: EvaluationResult) -> None:
+    async def record_evaluation(self, evaluation: EvaluationResult) -> List[QualityAlert]:
         """Record new evaluation result and check for quality issues"""
         try:
             # Update metric buffers
