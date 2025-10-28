@@ -5,7 +5,7 @@
 import time
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List, AsyncIterator
+from typing import Dict, Any, Optional, List, AsyncIterator, cast
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
@@ -392,7 +392,7 @@ class MetricsCollector:
         # 시스템 메트릭 업데이트
         self.update_system_metrics()
 
-        return generate_latest()
+        return cast(str, generate_latest())
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def reset_metrics(self) -> None:

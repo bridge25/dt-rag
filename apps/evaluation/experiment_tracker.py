@@ -14,7 +14,7 @@ Provides:
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, cast
 from dataclasses import dataclass
 import statistics
 import json
@@ -171,7 +171,7 @@ class ExperimentTracker:
         if user_id in self.user_assignments:
             assignment = self.user_assignments[user_id]
             if assignment.experiment_id == experiment_id:
-                return assignment.group
+                return cast(str, assignment.group)
 
         # Deterministic assignment based on user_id hash
         user_hash = hash(f"{user_id}_{experiment_id}")

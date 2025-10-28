@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, cast
 from datetime import datetime, timedelta
 from apps.api.cache.redis_manager import RedisManager, get_redis_manager
 
@@ -133,7 +133,7 @@ class JobQueue:
                     logger.info(
                         f"Dequeued job {job_payload['job_id']} from {priority} priority"
                     )
-                    return job_payload
+                    return cast(Optional[Dict[str, Any]], job_payload)
 
             return None
 

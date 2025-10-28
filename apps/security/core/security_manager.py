@@ -6,7 +6,7 @@ Orchestrates all security components and provides unified security interface
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Set, Optional
+from typing import Dict, List, Any, Set, Optional, cast
 from dataclasses import dataclass
 from enum import Enum
 import uuid
@@ -396,7 +396,7 @@ class SecurityManager:
                         context.request_id,
                     )
 
-                    return masked_data
+                    return cast(Dict[str, Any], masked_data)
                 else:
                     # 5. Log PII access
                     await self._log_security_event(

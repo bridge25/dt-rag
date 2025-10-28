@@ -5,7 +5,7 @@
 import asyncio
 import logging
 import time
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
@@ -343,7 +343,7 @@ class HealthChecker:
                 self.health_checks[name](), timeout=self.timeout
             )
             self.last_results[name] = result
-            return result
+            return cast(ComponentHealth, result)
 
         except asyncio.TimeoutError:
             logger.warning(f"Health check for {name} timed out")

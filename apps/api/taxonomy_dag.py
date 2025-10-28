@@ -14,7 +14,7 @@ import asyncio
 import logging
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 from dataclasses import dataclass
 from enum import Enum
 
@@ -343,7 +343,7 @@ class TaxonomyDAGManager:
             # Check cache first
             cache_key = f"tree_{version}"
             if cache_key in self._graph_cache:
-                return self._graph_cache[cache_key]
+                return cast(Dict[str, Any], self._graph_cache[cache_key])
 
             async with async_session() as session:
                 # Get all nodes for version
@@ -877,7 +877,7 @@ class TaxonomyDAGManager:
         if rollback_plan.get("requires_full_rebuild"):
             estimated *= 2  # Double time for complex rollbacks
 
-        return estimated
+        return cast(float, estimated)
 
     async def _execute_rollback_plan(
         self, session: AsyncSession, rollback_plan: Dict[str, Any]

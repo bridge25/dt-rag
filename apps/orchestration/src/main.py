@@ -8,7 +8,7 @@ AI 모델 협업 및 CBR 시스템 통합 레이어
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 import os
 import sqlite3
 import httpx
@@ -1243,7 +1243,7 @@ async def get_taxonomy_tree(version: str) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{TAXONOMY_BASE}/taxonomy/{version}/tree")
             response.raise_for_status()
-            return response.json()
+            return cast(Dict[str, Any], response.json())
     except httpx.HTTPError as e:
         logger.error(f"Taxonomy API 호출 실패: {e}")
         raise HTTPException(status_code=502, detail=f"Taxonomy API 호출 실패: {str(e)}")

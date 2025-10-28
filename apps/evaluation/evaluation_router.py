@@ -14,7 +14,7 @@ Provides comprehensive REST endpoints for RAG evaluation:
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, cast
 
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from pydantic import BaseModel
@@ -127,7 +127,7 @@ async def evaluate_rag_response(
         if alerts:
             result.quality_flags.extend([alert.alert_id for alert in alerts])
 
-        return result
+        return cast(EvaluationResult, result)
 
     except Exception as e:
         logger.error(f"Evaluation failed: {e}")
