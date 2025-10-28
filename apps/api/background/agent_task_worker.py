@@ -207,8 +207,8 @@ class AgentTaskWorker:
                 )
 
     async def _calculate_coverage(
-        self, session, task: BackgroundTask, job_data: Dict[str, Any]
-    ):
+        self, session: Any, task: BackgroundTask, job_data: Dict[str, Any]
+    ) -> None:
         """
         Calculate coverage with cancellation checks
 
@@ -234,11 +234,11 @@ class AgentTaskWorker:
         task.progress_percentage = 25.0
         await session.commit()
 
-        # Calculate coverage
-        result = await CoverageMeterService.calculate_coverage(
-            session=session,
-            taxonomy_node_ids=agent.taxonomy_node_ids,
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix call-arg errors
+        # Calculate coverage - Fixed method signature
+        result = await CoverageMeterService().calculate_coverage(
             taxonomy_version=agent.taxonomy_version,
+            node_ids=agent.taxonomy_node_ids,
         )
 
         # Update progress

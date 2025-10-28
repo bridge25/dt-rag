@@ -4,13 +4,13 @@ Secure API Key Storage and Management
 This module provides database models and management functions for secure API key storage,
 including proper hashing, rate limiting, and audit logging.
 """
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 1: SQLAlchemy Column Type Casting
 
 import hashlib
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 from sqlalchemy import (
-    Column,
     Integer,
     String,
     DateTime,
@@ -24,7 +24,7 @@ from sqlalchemy import (
     desc,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from dataclasses import dataclass
 import json
 
@@ -52,51 +52,41 @@ class APIKey(Base):
 
     __tablename__ = "api_keys"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Key identification
-    key_id = Column(
-        String(32), unique=True, nullable=False, index=True
-    )  # Public identifier
-    key_hash = Column(
-        String(256), nullable=False, index=True
-    )  # Hashed key for verification
+    key_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    key_hash: Mapped[str] = mapped_column(String(256), index=True)
 
     # Metadata
-    name = Column(String(100), nullable=False)  # Human-readable name
-    description = Column(Text, nullable=True)
+    name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[Optional[str]] = mapped_column(Text)
 
     # Ownership and permissions
-    owner_id = Column(String(50), nullable=True, index=True)  # User/service owner
-    permissions = Column(
-        Text, nullable=False, default="[]"
-    )  # JSON array of permissions
-    scope = Column(String(50), nullable=False, default="read")  # read, write, admin
+    owner_id: Mapped[Optional[str]] = mapped_column(String(50), index=True)
+    permissions: Mapped[str] = mapped_column(Text, default="[]")
+    scope: Mapped[str] = mapped_column(String(50), default="read")
 
     # Security settings
-    allowed_ips = Column(
-        Text, nullable=True
-    )  # JSON array of allowed IP addresses/ranges
-    rate_limit = Column(Integer, nullable=False, default=100)  # Requests per hour
+    allowed_ips: Mapped[Optional[str]] = mapped_column(Text)
+    rate_limit: Mapped[int] = mapped_column(Integer, default=100)
 
     # Status and lifecycle
-    is_active = Column(Boolean, nullable=False, default=True)
-    expires_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
-    updated_at = Column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
-    last_used_at = Column(DateTime(timezone=True), nullable=True)
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     # Usage tracking
-    total_requests = Column(Integer, nullable=False, default=0)
-    failed_requests = Column(Integer, nullable=False, default=0)
+    total_requests: Mapped[int] = mapped_column(Integer, default=0)
+    failed_requests: Mapped[int] = mapped_column(Integer, default=0)
 
     # Indexes for performance
     __table_args__ = (
@@ -116,31 +106,30 @@ class APIKeyUsage(Base):
 
     __tablename__ = "api_key_usage"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Key reference
-    key_id = Column(String(32), nullable=False, index=True)
+    key_id: Mapped[str] = mapped_column(String(32), index=True)
 
     # Request details
-    endpoint = Column(String(200), nullable=False)
-    method = Column(String(10), nullable=False)
-    client_ip = Column(String(45), nullable=False, index=True)  # IPv6 compatible
-    user_agent = Column(String(500), nullable=True)
+    endpoint: Mapped[str] = mapped_column(String(200))
+    method: Mapped[str] = mapped_column(String(10))
+    client_ip: Mapped[str] = mapped_column(String(45), index=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500))
 
     # Response details
-    status_code = Column(Integer, nullable=False)
-    response_time_ms = Column(Integer, nullable=True)
+    status_code: Mapped[int] = mapped_column(Integer)
+    response_time_ms: Mapped[Optional[int]] = mapped_column(Integer)
 
     # Timestamp
-    timestamp = Column(
+    timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
     )
 
     # Additional metadata
-    request_metadata = Column(Text, nullable=True)  # JSON for additional data
+    request_metadata: Mapped[Optional[str]] = mapped_column(Text)
 
     # Indexes for performance
     __table_args__ = (
@@ -159,29 +148,26 @@ class APIKeyAuditLog(Base):
 
     __tablename__ = "api_key_audit_log"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Operation details
-    operation = Column(
-        String(50), nullable=False, index=True
-    )  # CREATE, UPDATE, DELETE, USE, BLOCK
-    key_id = Column(String(32), nullable=False, index=True)
+    operation: Mapped[str] = mapped_column(String(50), index=True)
+    key_id: Mapped[str] = mapped_column(String(32), index=True)
 
     # Who performed the operation
-    performed_by = Column(String(50), nullable=True)  # User ID or system
-    client_ip = Column(String(45), nullable=False)
+    performed_by: Mapped[Optional[str]] = mapped_column(String(50))
+    client_ip: Mapped[str] = mapped_column(String(45))
 
     # What changed
-    old_values = Column(Text, nullable=True)  # JSON of previous values
-    new_values = Column(Text, nullable=True)  # JSON of new values
+    old_values: Mapped[Optional[str]] = mapped_column(Text)
+    new_values: Mapped[Optional[str]] = mapped_column(Text)
 
     # Context
-    reason = Column(String(200), nullable=True)
+    reason: Mapped[Optional[str]] = mapped_column(String(200))
 
     # Timestamp
-    timestamp = Column(
+    timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
         default=lambda: datetime.now(timezone.utc),
         index=True,
     )
@@ -201,7 +187,7 @@ class APIKeyCreateRequest:
     name: str
     description: Optional[str] = None
     owner_id: Optional[str] = None
-    permissions: List[str] = None
+    permissions: Optional[List[str]] = None
     scope: str = "read"
     allowed_ips: Optional[List[str]] = None
     rate_limit: int = 100
@@ -310,6 +296,8 @@ class APIKeyManager:
 
         # Return plaintext key and info
         api_key_info = await self.get_api_key_info(key_id)
+        if api_key_info is None:
+            raise RuntimeError(f"Failed to retrieve created API key info: {key_id}")
         return generated_key.key, api_key_info
 
     async def verify_api_key(
@@ -400,10 +388,11 @@ class APIKeyManager:
         self, owner_id: Optional[str] = None, active_only: bool = True
     ) -> List[APIKeyInfo]:
         """List API keys with optional filtering"""
-        conditions = []
+        from sqlalchemy.sql.elements import ColumnElement
+        conditions: List[ColumnElement[bool]] = []
 
         if active_only:
-            conditions.append(APIKey.is_active)
+            conditions.append(APIKey.is_active == True)  # noqa: E712
 
         if owner_id:
             conditions.append(APIKey.owner_id == owner_id)
@@ -437,7 +426,7 @@ class APIKeyManager:
         ]
 
     async def revoke_api_key(
-        self, key_id: str, revoked_by: str, client_ip: str, reason: str = None
+        self, key_id: str, revoked_by: str, client_ip: str, reason: Optional[str] = None
     ) -> bool:
         """Revoke an API key"""
         stmt = select(APIKey).where(APIKey.key_id == key_id)
@@ -619,8 +608,8 @@ class APIKeyManager:
         client_ip: str,
         status_code: int,
         response_time_ms: Optional[int],
-        request_metadata: str = None,
-    ):
+        request_metadata: Optional[str] = None,
+    ) -> None:
         """Log API key usage"""
         usage = APIKeyUsage(
             key_id=key_id,
@@ -639,10 +628,10 @@ class APIKeyManager:
         key_id: str,
         performed_by: str,
         client_ip: str,
-        old_values: str = None,
-        new_values: str = None,
-        reason: str = None,
-    ):
+        old_values: Optional[str] = None,
+        new_values: Optional[str] = None,
+        reason: Optional[str] = None,
+    ) -> None:
         """Log administrative operations"""
         audit_log = APIKeyAuditLog(
             operation=operation,
@@ -758,7 +747,7 @@ class APIKeyManager:
             "last_used_at": last_used_at,
         }
 
-    async def cleanup_expired_usage_logs(self, days_to_keep: int = 30):
+    async def cleanup_expired_usage_logs(self, days_to_keep: int = 30) -> int:
         """Clean up old usage logs to prevent database bloat"""
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
 

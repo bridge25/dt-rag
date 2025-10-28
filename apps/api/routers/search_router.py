@@ -332,7 +332,7 @@ class SearchService:
             )
 
     async def _simple_bm25_search(
-        self, session, query: str, limit: int
+        self, session: Any, query: str, limit: int
     ) -> List[Dict[str, Any]]:
         """Simple BM25 search on CaseBank"""
         from sqlalchemy import text

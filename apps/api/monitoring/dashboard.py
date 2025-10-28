@@ -247,7 +247,7 @@ class MonitoringDashboard:
         # JSON 형식으로 익스포트
         dashboard_data = await self.get_dashboard_data()
 
-        def json_serializer(obj):
+        def json_serializer(obj: Any) -> Any:
             """JSON 직렬화를 위한 커스텀 직렬화 함수"""
             if hasattr(obj, "isoformat"):  # datetime 객체
                 return obj.isoformat()

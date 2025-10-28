@@ -72,7 +72,7 @@ try:
 
     def track_search_metrics(
         search_type: str, latency_ms: float, success: bool, result_count: int
-    ):
+    ) -> None:
         pass
 
 except ImportError as e:
@@ -81,14 +81,14 @@ except ImportError as e:
 
     def track_search_metrics(
         search_type: str, latency_ms: float, success: bool, result_count: int
-    ):
+    ) -> None:
         pass
 
 
 router = APIRouter()
 
 
-async def get_search_engine():
+async def get_search_engine() -> Any:
     if HYBRID_ENGINE_AVAILABLE:
         return HybridSearchEngine()
     raise NotImplementedError("Search engine not available")
@@ -96,19 +96,19 @@ async def get_search_engine():
 
 class SearchEngineFactory:
     @staticmethod
-    def create_fast_engine():
+    def create_fast_engine() -> Any:
         if HYBRID_ENGINE_AVAILABLE:
             return HybridSearchEngine()
         raise NotImplementedError("Fast engine not available")
 
     @staticmethod
-    def create_accurate_engine():
+    def create_accurate_engine() -> Any:
         if HYBRID_ENGINE_AVAILABLE:
             return HybridSearchEngine()
         raise NotImplementedError("Accurate engine not available")
 
     @staticmethod
-    def create_balanced_engine():
+    def create_balanced_engine() -> Any:
         if HYBRID_ENGINE_AVAILABLE:
             return HybridSearchEngine()
         raise NotImplementedError("Balanced engine not available")
@@ -148,7 +148,7 @@ async def search_documents(
     request: LegacySearchRequest,
     http_request: Request,
     api_key: str = Depends(verify_api_key),
-):
+) -> LegacySearchResponse:
     """
     Bridge Pack 스펙: POST /search
     최적화된 BM25 + Vector + Cross-encoder 하이브리드 검색
@@ -264,7 +264,7 @@ async def _execute_search(
 
 async def _record_optimized_metrics(
     search_type: str, latency_ms: float, success: bool, result_count: int
-):
+) -> None:
     """최적화된 메트릭 기록"""
     try:
         # 기존 메트릭 기록
@@ -408,7 +408,7 @@ class EmbeddingResponse(BaseModel):
 @router.post("/admin/create-embeddings", response_model=EmbeddingResponse)
 async def create_embeddings(
     request: EmbeddingRequest, api_key: str = Depends(verify_api_key)
-):
+) -> EmbeddingResponse:
     """
     청크들에 대한 임베딩 생성 (관리자용)
     """
@@ -429,7 +429,7 @@ async def create_embeddings(
 
 
 @router.get("/admin/search-analytics")
-async def get_search_analytics(api_key: str = Depends(verify_api_key)):
+async def get_search_analytics(api_key: str = Depends(verify_api_key)) -> Any:
     """
     검색 시스템 분석 정보 조회 (관리자용)
     """
@@ -460,7 +460,7 @@ class CacheWarmUpRequest(BaseModel):
 @router.post("/admin/cache/warm-up")
 async def warm_up_cache(
     request: CacheWarmUpRequest, api_key: str = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """
     검색 캐시 웜업 (관리자용)
     """
@@ -488,7 +488,7 @@ async def warm_up_cache(
 async def clear_search_cache(
     pattern: Optional[str] = Query(None, description="삭제할 패턴 (비어있으면 전체)"),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     검색 캐시 클리어 (관리자용)
     """
@@ -507,7 +507,7 @@ async def clear_search_cache(
 
 
 @router.post("/admin/optimize-indices")
-async def optimize_search_indices(api_key: str = Depends(verify_api_key)):
+async def optimize_search_indices(api_key: str = Depends(verify_api_key)) -> Any:
     """
     검색 인덱스 최적화 (관리자용)
     """
@@ -525,7 +525,7 @@ async def optimize_search_indices(api_key: str = Depends(verify_api_key)):
 
 
 @router.get("/admin/metrics")
-async def get_search_metrics(api_key: str = Depends(verify_api_key)):
+async def get_search_metrics(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     실시간 검색 성능 메트릭 조회
     """
@@ -538,7 +538,7 @@ async def get_search_metrics(api_key: str = Depends(verify_api_key)):
 
 
 @router.post("/admin/reset-metrics")
-async def reset_search_metrics(api_key: str = Depends(verify_api_key)):
+async def reset_search_metrics(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     검색 메트릭 초기화
     """
@@ -554,7 +554,7 @@ async def reset_search_metrics(api_key: str = Depends(verify_api_key)):
 @router.post("/dev/search-bm25")
 async def search_bm25_only(
     request: LegacySearchRequest, api_key: str = Depends(verify_api_key)
-):
+) -> LegacySearchResponse:
     """
     BM25 전용 검색 (개발/테스트용)
     """
@@ -597,7 +597,7 @@ async def search_bm25_only(
 @router.post("/dev/search-vector")
 async def search_vector_only(
     request: LegacySearchRequest, api_key: str = Depends(verify_api_key)
-):
+) -> LegacySearchResponse:
     """
     Vector 전용 검색 (개발/테스트용)
     """
@@ -679,7 +679,7 @@ class OptimizedSearchRequest(BaseModel):
 @router.post("/v2/search", response_model=LegacySearchResponse)
 async def optimized_search(
     request: OptimizedSearchRequest, api_key: str = Depends(verify_api_key)
-):
+) -> LegacySearchResponse:
     """
     HYBRID_SEARCH_OPTIMIZATION_GUIDE.md 기준 최적화된 검색
     Target: Recall@10 >= 0.85, p95 latency < 200ms
@@ -797,7 +797,7 @@ async def optimized_search(
 @router.post("/v2/search/benchmark")
 async def benchmark_search_engines(
     request: LegacySearchRequest, api_key: str = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """
     검색 엔진 비교 벤치마크
     """
@@ -952,7 +952,7 @@ class AnswerResponse(BaseModel):
 @router.post("/answer", response_model=AnswerResponse)
 async def generate_answer(
     request: AnswerRequest, api_key: str = Depends(verify_api_key)
-):
+) -> AnswerResponse:
     """
     Generate natural language answer from search results using Gemini LLM
 

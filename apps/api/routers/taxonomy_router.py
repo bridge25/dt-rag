@@ -340,21 +340,28 @@ async def search_taxonomy_nodes(
     - Context information
     """
     try:
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (type annotation)
         # Get full tree for searching
-        tree = await service.get_tree(version)
-        if tree is None:
+        tree_data = await service.get_tree(version)
+        if tree_data is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Taxonomy version '{version}' not found",
             )
 
+        # Extract nodes from tree structure
+        tree_nodes: List[Dict[str, Any]] = tree_data.get("nodes", [])
+
         # Simple search implementation (would be more sophisticated in practice)
         query_lower = q.lower()
-        matching_nodes = []
+        matching_nodes: List[Dict[str, Any]] = []
 
-        for node in tree:
-            if query_lower in node.label.lower() or any(
-                query_lower in path_part.lower() for path_part in node.canonical_path
+        for node in tree_nodes:
+            node_label: str = str(node.get("label", ""))
+            node_canonical_path: List[str] = node.get("canonical_path", [])
+
+            if query_lower in node_label.lower() or any(
+                query_lower in str(path_part).lower() for path_part in node_canonical_path
             ):
                 matching_nodes.append(node)
 

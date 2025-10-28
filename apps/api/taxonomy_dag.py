@@ -645,10 +645,14 @@ class TaxonomyDAGManager:
     ) -> Dict[str, Any]:
         """Create rollback data for migration"""
 
-        rollback_data = {
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (list type annotation)
+        affected_nodes: List[Dict[str, Any]] = []
+        affected_edges: List[Dict[str, Any]] = []
+
+        rollback_data: Dict[str, Any] = {
             "snapshot_timestamp": datetime.utcnow().isoformat(),
-            "affected_nodes": [],
-            "affected_edges": [],
+            "affected_nodes": affected_nodes,
+            "affected_edges": affected_edges,
         }
 
         # Store current state of affected entities

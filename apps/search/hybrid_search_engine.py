@@ -1089,7 +1089,7 @@ class HybridSearchEngine:
             config["cache_stats"] = self.cache.get_stats()
         return config
 
-    def update_config(self, **kwargs):
+    def update_config(self, **kwargs: Any) -> None:
         """Update search engine configuration"""
         if "bm25_weight" in kwargs or "vector_weight" in kwargs:
             bm25_weight = kwargs.get("bm25_weight", self.config["bm25_weight"])
@@ -1125,7 +1125,7 @@ search_engine = HybridSearchEngine()
 
 # Convenience functions for API integration
 async def hybrid_search(
-    query: str, top_k: int = 5, filters: Optional[Dict[str, Any]] = None, **kwargs
+    query: str, top_k: int = 5, filters: Optional[Dict[str, Any]] = None, **kwargs: Any
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """Main hybrid search function for API integration"""
     results, metrics = await search_engine.search(query, top_k, filters, **kwargs)
@@ -1227,7 +1227,7 @@ def get_search_engine_config() -> Dict[str, Any]:
     return search_engine.get_config()
 
 
-def update_search_engine_config(**kwargs):
+def update_search_engine_config(**kwargs: Any) -> None:
     """Update search engine configuration"""
     search_engine.update_config(**kwargs)
 

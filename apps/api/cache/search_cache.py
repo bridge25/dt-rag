@@ -50,12 +50,12 @@ class CacheConfig:
 class MemoryCache:
     """메모리 기반 LRU 캐시"""
 
-    def __init__(self, max_size: int = 1000, ttl_seconds: int = 300):
+    def __init__(self, max_size: int = 1000, ttl_seconds: int = 300) -> None:
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self.cache = {}
-        self.access_times = {}
-        self.creation_times = {}
+        self.cache: Dict[str, Any] = {}
+        self.access_times: Dict[str, float] = {}
+        self.creation_times: Dict[str, float] = {}
 
     def _is_expired(self, key: str) -> bool:
         """TTL 만료 확인"""
@@ -63,7 +63,7 @@ class MemoryCache:
             return True
         return time.time() - self.creation_times[key] > self.ttl_seconds
 
-    def _evict_expired(self):
+    def _evict_expired(self) -> None:
         """만료된 항목 제거"""
         current_time = time.time()
         expired_keys = [
@@ -76,7 +76,7 @@ class MemoryCache:
             self.access_times.pop(key, None)
             self.creation_times.pop(key, None)
 
-    def _evict_lru(self):
+    def _evict_lru(self) -> None:
         """LRU 기반 공간 확보"""
         while len(self.cache) >= self.max_size:
             # 가장 오래된 접근 시간을 가진 키 찾기
@@ -95,7 +95,7 @@ class MemoryCache:
         self.access_times[key] = time.time()
         return self.cache[key]
 
-    async def set(self, key: str, value: Any):
+    async def set(self, key: str, value: Any) -> None:
         """캐시에 값 저장"""
         self._evict_expired()
         self._evict_lru()
@@ -105,13 +105,13 @@ class MemoryCache:
         self.access_times[key] = current_time
         self.creation_times[key] = current_time
 
-    async def delete(self, key: str):
+    async def delete(self, key: str) -> None:
         """캐시에서 값 삭제"""
         self.cache.pop(key, None)
         self.access_times.pop(key, None)
         self.creation_times.pop(key, None)
 
-    async def clear(self):
+    async def clear(self) -> None:
         """전체 캐시 클리어"""
         self.cache.clear()
         self.access_times.clear()
@@ -131,12 +131,12 @@ class MemoryCache:
 class RedisCache:
     """Redis 기반 캐시 (최적화된 Redis 매니저 사용)"""
 
-    def __init__(self, config: CacheConfig):
+    def __init__(self, config: CacheConfig) -> None:
         self.config = config
-        self.redis_manager = None
+        self.redis_manager: Any = None
         self._initialized = False
 
-    async def _ensure_connection(self):
+    async def _ensure_connection(self) -> None:
         """Redis 연결 확인"""
         if not self._initialized and REDIS_AVAILABLE:
             try:
@@ -161,7 +161,7 @@ class RedisCache:
             logger.warning(f"Redis get failed for key {key}: {e}")
             return None
 
-    async def set(self, key: str, value: Any):
+    async def set(self, key: str, value: Any) -> None:
         """Redis에 값 저장"""
         await self._ensure_connection()
         if self.redis_manager is None:
@@ -179,7 +179,7 @@ class RedisCache:
         except Exception as e:
             logger.warning(f"Redis set failed for key {key}: {e}")
 
-    async def delete(self, key: str):
+    async def delete(self, key: str) -> None:
         """Redis에서 값 삭제"""
         await self._ensure_connection()
         if self.redis_manager is None:
@@ -190,7 +190,7 @@ class RedisCache:
         except Exception as e:
             logger.warning(f"Redis delete failed for key {key}: {e}")
 
-    async def clear_pattern(self, pattern: str):
+    async def clear_pattern(self, pattern: str) -> None:
         """패턴 매칭으로 키 삭제"""
         await self._ensure_connection()
         if self.redis_manager is None:
@@ -227,7 +227,7 @@ class RedisCache:
 class HybridSearchCache:
     """하이브리드 검색 캐시 시스템"""
 
-    def __init__(self, config: CacheConfig = None):
+    def __init__(self, config: Optional[CacheConfig] = None) -> None:
         self.config = config or CacheConfig()
 
         # 2-레벨 캐시: 메모리(L1) + Redis(L2)
@@ -247,7 +247,7 @@ class HybridSearchCache:
             "evictions": 0,
         }
 
-    def _generate_cache_key(self, prefix: str, **kwargs) -> str:
+    def _generate_cache_key(self, prefix: str, **kwargs: Any) -> str:
         """캐시 키 생성"""
         # 정렬된 파라미터로 일관된 키 생성
         key_data = json.dumps(kwargs, sort_keys=True, ensure_ascii=False)
@@ -255,7 +255,7 @@ class HybridSearchCache:
         return f"{prefix}{key_hash}"
 
     async def get_search_results(
-        self, query: str, filters: Dict = None, search_params: Dict = None
+        self, query: str, filters: Optional[Dict[str, Any]] = None, search_params: Optional[Dict[str, Any]] = None
     ) -> Optional[List[Dict[str, Any]]]:
         """검색 결과 캐시 조회"""
         cache_key = self._generate_cache_key(
@@ -288,9 +288,9 @@ class HybridSearchCache:
         self,
         query: str,
         results: List[Dict[str, Any]],
-        filters: Dict = None,
-        search_params: Dict = None,
-    ):
+        filters: Optional[Dict[str, Any]] = None,
+        search_params: Optional[Dict[str, Any]] = None,
+    ) -> None:
         """검색 결과 캐시 저장"""
         cache_key = self._generate_cache_key(
             self.config.search_prefix,
@@ -325,7 +325,7 @@ class HybridSearchCache:
 
     async def set_embedding(
         self, text: str, embedding: List[float], model: str = "openai"
-    ):
+    ) -> None:
         """임베딩 캐시 저장"""
         cache_key = self._generate_cache_key(
             self.config.embedding_prefix, text=text, model=model
@@ -348,7 +348,7 @@ class HybridSearchCache:
 
         return result
 
-    async def set_query_suggestions(self, partial_query: str, suggestions: List[str]):
+    async def set_query_suggestions(self, partial_query: str, suggestions: List[str]) -> None:
         """쿼리 제안 캐시 저장"""
         cache_key = self._generate_cache_key(
             self.config.query_suggestion_prefix, partial=partial_query.lower().strip()
@@ -359,7 +359,7 @@ class HybridSearchCache:
             self.redis_cache.set(cache_key, suggestions),
         )
 
-    async def invalidate_search_cache(self, pattern: str = None):
+    async def invalidate_search_cache(self, pattern: Optional[str] = None) -> None:
         """검색 캐시 무효화"""
         if pattern:
             # 특정 패턴 매칭으로 삭제
@@ -415,7 +415,7 @@ class HybridSearchCache:
             },
         }
 
-    async def warm_up(self, common_queries: List[str]):
+    async def warm_up(self, common_queries: List[str]) -> None:
         """캐시 웜업"""
         logger.info(f"Warming up cache with {len(common_queries)} queries")
 
@@ -438,18 +438,18 @@ async def get_search_cache() -> HybridSearchCache:
     return _cache_instance
 
 
-async def configure_search_cache(config: CacheConfig):
+async def configure_search_cache(config: CacheConfig) -> None:
     """전역 검색 캐시 설정"""
     global _cache_instance
     _cache_instance = HybridSearchCache(config)
 
 
 # 캐시 데코레이터
-def cache_search_results(ttl_seconds: int = 300):
+def cache_search_results(ttl_seconds: int = 300) -> Any:
     """검색 결과 캐싱 데코레이터"""
 
-    def decorator(func):
-        async def wrapper(*args, **kwargs):
+    def decorator(func: Any) -> Any:
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             cache = await get_search_cache()
 
             # 캐시 키 생성 (함수명 + 인자들)
@@ -488,11 +488,11 @@ def cache_search_results(ttl_seconds: int = 300):
     return decorator
 
 
-def cache_embeddings(ttl_seconds: int = 3600):
+def cache_embeddings(ttl_seconds: int = 3600) -> Any:
     """임베딩 캐싱 데코레이터"""
 
-    def decorator(func):
-        async def wrapper(text: str, model: str = "openai", *args, **kwargs):
+    def decorator(func: Any) -> Any:
+        async def wrapper(text: str, model: str = "openai", *args: Any, **kwargs: Any) -> Any:
             cache = await get_search_cache()
 
             # 캐시에서 임베딩 조회

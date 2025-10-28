@@ -69,8 +69,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-        self, app, security_manager: SecurityManager, config: Dict[str, Any] = None
-    ):
+        self, app: Any, security_manager: SecurityManager, config: Optional[Dict[str, Any]] = None
+    ) -> None:
         super().__init__(app)
         self.security_manager = security_manager
         self.config = config or {}
@@ -656,10 +656,10 @@ def create_security_dependency(security_manager: SecurityManager) -> SecurityDep
 class CSRFProtection:
     """CSRF protection middleware"""
 
-    def __init__(self, secret_key: str):
+    def __init__(self, secret_key: str) -> None:
         self.secret_key = secret_key
 
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, request: Request, call_next: Any) -> Response:
         """CSRF protection middleware"""
 
         # Skip CSRF for GET, HEAD, OPTIONS
@@ -693,11 +693,11 @@ class CSRFProtection:
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Request logging middleware for security monitoring"""
 
-    def __init__(self, app, security_manager: SecurityManager):
+    def __init__(self, app: Any, security_manager: SecurityManager) -> None:
         super().__init__(app)
         self.security_manager = security_manager
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Log all requests for security monitoring"""
 
         start_time = time.time()

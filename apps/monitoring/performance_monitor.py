@@ -81,7 +81,7 @@ class RAGPerformanceMonitor:
         self.running = False
         self._monitor_task = None
 
-    async def start_monitoring(self, session_factory):
+    async def start_monitoring(self, session_factory: Any) -> None:
         """Start continuous performance monitoring"""
         if self.running:
             return
@@ -101,7 +101,7 @@ class RAGPerformanceMonitor:
                 pass
         logger.info("Performance monitoring stopped")
 
-    async def _monitoring_loop(self, session_factory):
+    async def _monitoring_loop(self, session_factory: Any) -> None:
         """Main monitoring loop"""
         while self.running:
             try:

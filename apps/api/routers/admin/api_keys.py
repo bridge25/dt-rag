@@ -48,13 +48,13 @@ class CreateAPIKeyRequest(BaseModel):
     owner_id: Optional[str] = Field(None, description="Owner user ID")
 
     @validator("scope")
-    def validate_scope(cls, v):
+    def validate_scope(cls, v: str) -> str:
         if v not in ["read", "write", "admin"]:
             raise ValueError("Scope must be read, write, or admin")
         return v
 
     @validator("allowed_ips")
-    def validate_ips(cls, v):
+    def validate_ips(cls, v: Optional[List[str]]) -> Optional[List[str]]:
         if v is None:
             return v
 

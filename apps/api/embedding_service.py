@@ -19,8 +19,8 @@ try:
     LANGFUSE_AVAILABLE = True
 except ImportError:
     # Fallback: no-op decorator
-    def observe(name: str = "", as_type: str = "span", **kwargs):
-        def decorator(func):
+    def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Any:
+        def decorator(func: Any) -> Any:
             return func
 
         return decorator

@@ -115,7 +115,7 @@ STEP_TIMEOUTS = {
 }
 
 
-async def execute_with_timeout(step_func, state: PipelineState, step_name: str):
+async def execute_with_timeout(step_func: Any, state: PipelineState, step_name: str) -> Any:
     """Execute step with timeout enforcement"""
     timeout = STEP_TIMEOUTS.get(step_name, 1.0)
     step_start = time.time()

@@ -116,14 +116,14 @@ from apps.api.database import db_manager  # noqa: E402
 class ClassificationService:
     """Real semantic similarity-based classification service"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize classification service with real dependencies"""
         self.embedding_service = None
         self.taxonomy_dao = None
         self.semantic_classifier = None
         self.hitl_queue = HITLQueue()
 
-    async def initialize(self, db_session):
+    async def initialize(self, db_session: Any) -> None:
         """Initialize service with database session"""
         if self.semantic_classifier is None:
             self.embedding_service = EmbeddingService()
@@ -135,7 +135,7 @@ class ClassificationService:
             )
 
     async def classify_single(
-        self, request: ClassifyRequest, db_session, correlation_id: Optional[str] = None
+        self, request: ClassifyRequest, db_session: Any, correlation_id: Optional[str] = None
     ) -> ClassifyResponse:
         """Classify a single document chunk using semantic similarity"""
         await self.initialize(db_session)
@@ -150,7 +150,7 @@ class ClassificationService:
         return result
 
     async def classify_batch(
-        self, request: BatchClassifyRequest, db_session
+        self, request: BatchClassifyRequest, db_session: Any
     ) -> BatchClassifyResponse:
         """Classify multiple document chunks"""
         import time
@@ -268,9 +268,9 @@ async def classify_document_chunk(
     request: ClassifyRequest,
     http_request: Request,
     service: ClassificationService = Depends(get_classification_service),
-    db_session=Depends(get_db_session),
+    db_session: Any = Depends(get_db_session),
     api_key: str = Depends(verify_api_key),
-):
+) -> JSONResponse:
     """
     Classify a document chunk into taxonomy categories
 
@@ -328,9 +328,9 @@ async def classify_batch(
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
     service: ClassificationService = Depends(get_classification_service),
-    db_session=Depends(get_db_session),
+    db_session: Any = Depends(get_db_session),
     api_key: str = Depends(verify_api_key),
-):
+) -> JSONResponse | BatchClassifyResponse:
     """
     Classify multiple document chunks in batch
 

@@ -340,13 +340,14 @@ async def verify_api_key(
             db = session
 
     # Database validation
-    from .security.api_key_storage import APIKeyManager
+    from .security.api_key_storage import APIKeyManager, APIKeyInfo
 
     try:
         key_manager = APIKeyManager(db)
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (type annotation)
         # Verify API key against database
-        key_info = await key_manager.verify_api_key(
+        key_info: Optional[APIKeyInfo] = await key_manager.verify_api_key(
             plaintext_key=x_api_key,
             client_ip=client_ip,
             endpoint=request.url.path,
@@ -430,7 +431,7 @@ def _get_required_scope(endpoint: str, method: str) -> str:
     return scope_map.get((method, endpoint), method_defaults.get(method, "read"))
 
 
-def _check_permission(api_key_info, required_scope: str) -> bool:
+def _check_permission(api_key_info: Any, required_scope: str) -> bool:
     """Check if API key has required permissions"""
     # Define scope hierarchy: admin > write > read
     scope_hierarchy = {"read": 0, "write": 1, "admin": 2}

@@ -243,31 +243,34 @@ async def get_embedding_analytics():
         service_info = get_service_info()
         db_status = await get_embedding_status()
 
-        # 종합 분석
-        analysis = {
-            "service_health": service_health,
-            "service_info": service_info,
-            "database_status": db_status,
-            "recommendations": [],
-        }
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (list type annotation)
+        recommendations: List[str] = []
 
         # 권장사항 생성
         if service_health.get("status") != "healthy":
-            analysis["recommendations"].append("임베딩 서비스 상태를 확인하세요")
+            recommendations.append("임베딩 서비스 상태를 확인하세요")
 
         if not service_info.get("sentence_transformers_available"):
-            analysis["recommendations"].append(
+            recommendations.append(
                 "sentence-transformers 라이브러리를 설치하세요"
             )
 
         embedding_coverage = db_status.get("embedding_coverage_percent", 0)
         if embedding_coverage < 100:
-            analysis["recommendations"].append(
+            recommendations.append(
                 f"임베딩 커버리지가 {embedding_coverage:.1f}%입니다. 문서 임베딩 업데이트를 실행하세요"
             )
 
-        if not analysis["recommendations"]:
-            analysis["recommendations"].append("시스템이 정상 상태입니다")
+        if not recommendations:
+            recommendations.append("시스템이 정상 상태입니다")
+
+        # 종합 분석
+        analysis = {
+            "service_health": service_health,
+            "service_info": service_info,
+            "database_status": db_status,
+            "recommendations": recommendations,
+        }
 
         return {"timestamp": datetime.utcnow().isoformat(), **analysis}
 

@@ -17,33 +17,33 @@ except ImportError:
 
     # Use same mock classes as in metrics_collector.py
     class Counter:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def inc(self, *args, **kwargs):
+        def inc(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def labels(self, *args, **kwargs):
+        def labels(self, *args: Any, **kwargs: Any) -> "Counter":
             return self
 
     class Gauge:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def set(self, *args, **kwargs):
+        def set(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def labels(self, *args, **kwargs):
+        def labels(self, *args: Any, **kwargs: Any) -> "Gauge":
             return self
 
     class Histogram:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def observe(self, *args, **kwargs):
+        def observe(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def labels(self, *args, **kwargs):
+        def labels(self, *args: Any, **kwargs: Any) -> "Histogram":
             return self
 
 
@@ -58,7 +58,7 @@ class RAGASMetricsExtension:
     including faithfulness, relevancy, precision, recall, and quality gates.
     """
 
-    def __init__(self, registry=None):
+    def __init__(self, registry: Optional[Any] = None) -> None:
         self.registry = registry
         self.enabled = PROMETHEUS_AVAILABLE and registry is not None
 
@@ -455,7 +455,7 @@ class RAGASMetricsExtension:
             return {"error": f"Failed to get summary: {e}"}
 
 
-def extend_metrics_collector(metrics_collector):
+def extend_metrics_collector(metrics_collector: Any) -> RAGASMetricsExtension:
     """
     Extend an existing MetricsCollector with RAGAS metrics
 

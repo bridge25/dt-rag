@@ -419,16 +419,16 @@ def initialize_metrics_collector(enable_prometheus: bool = True) -> MetricsColle
 
 
 # 데코레이터
-def track_performance(operation_name: str):
+def track_performance(operation_name: str) -> Any:
     """성능 추적 데코레이터"""
 
-    def decorator(func):
-        async def async_wrapper(*args, **kwargs):
+    def decorator(func: Any) -> Any:
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             collector = get_metrics_collector()
             async with collector.track_operation(operation_name):
                 return await func(*args, **kwargs)
 
-        def sync_wrapper(*args, **kwargs):
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             collector = get_metrics_collector()
             start_time = time.time()
             try:
