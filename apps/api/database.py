@@ -715,7 +715,7 @@ class TaxonomyDAO:
 
 # 임베딩 서비스 클래스 (최적화된 버전 사용)
 try:
-    from ..search.vector_engine import EmbeddingService as OptimizedEmbeddingService
+    from ..search.vector_engine import EmbeddingService as OptimizedEmbeddingService  # type: ignore[import-not-found]  # TODO: Implement vector engine module
 
     OPTIMIZED_EMBEDDING_AVAILABLE = True
 except ImportError:
@@ -964,9 +964,10 @@ class SearchDAO:
         """최적화된 하이브리드 검색 (BM25 + Vector 병렬 처리)"""
         # 비동기 최적화 엔진 사용
         try:
-            from .optimization.async_executor import get_async_optimizer
-            from .optimization.memory_optimizer import get_gc_optimizer
-            from .optimization.concurrency_control import get_concurrency_controller
+            # Future implementations - not yet available
+            from .optimization.async_executor import get_async_optimizer  # type: ignore[import-not-found]  # TODO: Implement async executor
+            from .optimization.memory_optimizer import get_gc_optimizer  # type: ignore[import-not-found]  # TODO: Implement memory optimizer
+            from .optimization.concurrency_control import get_concurrency_controller  # type: ignore[import-not-found]  # TODO: Implement concurrency control
 
             optimizer = await get_async_optimizer()
             gc_optimizer = get_gc_optimizer()

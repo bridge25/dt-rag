@@ -114,7 +114,7 @@ def migrate_existing_api_keys():
 def validate_migration():
     """Validate that the migration was successful"""
     from sqlalchemy import create_engine, text
-    from ...config import get_api_config
+    from apps.api.config import get_api_config
 
     config = get_api_config()
     engine = create_engine(config.database.url)

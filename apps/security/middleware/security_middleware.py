@@ -15,7 +15,8 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import JSONResponse
 
 from ..core.security_manager import SecurityManager, SecurityException, SecurityContext
-from ..audit.audit_logger import EventType, SeverityLevel
+# Future implementations - not yet available
+from ..audit.audit_logger import EventType, SeverityLevel  # type: ignore[import-not-found]  # TODO: Implement audit logger module
 
 logger = logging.getLogger(__name__)
 

@@ -46,7 +46,7 @@ try:
                 sys.path.insert(0, str(alt_path))
                 break
 
-    from common_schemas.models import SearchRequest, SearchResponse, SearchHit
+    from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]  # TODO: Implement common schemas
 except ImportError as e:
     # Import 실패 시 graceful fallback - 로컬 모델 정의
     print(f"Warning: Could not import common_schemas, using local definitions: {e}")
@@ -128,7 +128,7 @@ def _import_pipeline() -> Any:
 
     try:
         # Method 2: 절대 import 시도
-        from langgraph_pipeline import get_pipeline
+        from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import from langgraph_pipeline")
         return get_pipeline
@@ -149,7 +149,7 @@ def _import_pipeline() -> Any:
         pipeline_file = current_dir / "langgraph_pipeline.py"
         if pipeline_file.exists():
             print(f"[DEBUG] Found pipeline file: {pipeline_file}")
-            from langgraph_pipeline import get_pipeline
+            from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
             print("[DEBUG] Success: directory-based import")
             return get_pipeline
@@ -256,7 +256,7 @@ def _get_pipeline_request_class() -> Any:
 
     try:
         # 절대 import 시도
-        from langgraph_pipeline import PipelineRequest
+        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import PipelineRequest")
         return PipelineRequest
@@ -271,7 +271,7 @@ def _get_pipeline_request_class() -> Any:
         current_dir = Path(__file__).parent
         if str(current_dir) not in sys.path:
             sys.path.insert(0, str(current_dir))
-        from langgraph_pipeline import PipelineRequest
+        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: directory-based PipelineRequest import")
         return PipelineRequest

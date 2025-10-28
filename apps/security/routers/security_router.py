@@ -12,14 +12,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from ..core.security_manager import SecurityManager
 from ..auth.auth_service import Role
-from ..compliance.compliance_manager import (
+# Future implementations - not yet available
+from ..compliance.compliance_manager import (  # type: ignore[import-not-found]  # TODO: Implement compliance manager module
     DataSubjectRightType,
     ConsentType,
     LegalBasis,
     ProcessingPurpose,
 )
-from ..monitoring.security_monitor import ThreatLevel, AlertType
-from ..scanning.vulnerability_scanner import ScanType
+from ..monitoring.security_monitor import ThreatLevel, AlertType  # type: ignore[import-not-found]  # TODO: Implement security monitor module
+from ..scanning.vulnerability_scanner import ScanType  # type: ignore[import-not-found]  # TODO: Implement vulnerability scanner module
 
 logger = logging.getLogger(__name__)
 

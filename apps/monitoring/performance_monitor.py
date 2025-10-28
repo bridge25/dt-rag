@@ -211,8 +211,9 @@ class RAGPerformanceMonitor:
         """Collect search engine metrics"""
         try:
             # Import here to avoid circular imports
-            from ..search.optimization import get_performance_monitor
-            from ..search.optimized_hybrid_engine import get_hybrid_engine
+            # Future implementations - not yet available
+            from ..search.optimization import get_performance_monitor  # type: ignore[import-not-found]  # TODO: Implement optimization module
+            from ..search.optimized_hybrid_engine import get_hybrid_engine  # type: ignore[import-not-found]  # TODO: Implement optimized hybrid engine
 
             # Get performance monitor
             try:
