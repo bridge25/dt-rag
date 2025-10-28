@@ -95,7 +95,7 @@ def get_langfuse_status() -> Dict[str, Any]:
     Returns:
         Status dictionary with availability, configuration, and health info
     """
-    status = {
+    status: Dict[str, Any] = {
         "available": _langfuse_available,
         "enabled": os.getenv("LANGFUSE_ENABLED", "false").lower() == "true",
         "configured": False,
