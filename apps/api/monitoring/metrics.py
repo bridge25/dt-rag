@@ -209,7 +209,7 @@ class MetricsCollector:
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def record_latency(
-        self, operation: str, latency_ms: float, labels: Dict[str, str] = None
+        self, operation: str, latency_ms: float, labels: Optional[Dict[str, str]] = None
     ) -> None:
         """지연시간 기록"""
         self.latency_tracker.add_sample(latency_ms)
@@ -226,7 +226,7 @@ class MetricsCollector:
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def increment_counter(
-        self, counter_name: str, labels: Dict[str, str] = None, value: int = 1
+        self, counter_name: str, labels: Optional[Dict[str, str]] = None, value: int = 1
     ) -> None:
         """카운터 증가"""
         self.counters[counter_name] += value
@@ -249,7 +249,7 @@ class MetricsCollector:
                 self.search_requests.labels(search_type, status).inc(value)
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def set_gauge(self, gauge_name: str, value: float, labels: Dict[str, str] = None) -> None:
+    def set_gauge(self, gauge_name: str, value: float, labels: Optional[Dict[str, str]] = None) -> None:
         """게이지 값 설정"""
         self.gauges[gauge_name] = value
 
@@ -271,7 +271,7 @@ class MetricsCollector:
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def record_cache_operation(
-        self, operation: str, result: str, labels: Dict[str, str] = None
+        self, operation: str, result: str, labels: Optional[Dict[str, str]] = None
     ) -> None:
         """캐시 작업 기록"""
         all_labels = {"operation": operation, "result": result}
