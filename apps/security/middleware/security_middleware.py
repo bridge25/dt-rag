@@ -626,7 +626,7 @@ class SecurityDependency:
         self.security_manager = security_manager
 
     async def __call__(
-        self, request: Request, required_permission: str = None, resource: str = None
+        self, request: Request, required_permission: Optional[str] = None, resource: Optional[str] = None
     ) -> SecurityContext:
         """Security dependency for endpoints"""
 
