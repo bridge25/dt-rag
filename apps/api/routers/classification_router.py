@@ -119,9 +119,10 @@ class ClassificationService:
 
     def __init__(self) -> None:
         """Initialize classification service with real dependencies"""
-        self.embedding_service = None
-        self.taxonomy_dao = None
-        self.semantic_classifier = None
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 4-3: assignment resolution (Optional types)
+        self.embedding_service: Optional[EmbeddingService] = None
+        self.taxonomy_dao: Optional[TaxonomyDAO] = None
+        self.semantic_classifier: Optional[SemanticClassifier] = None
         self.hitl_queue = HITLQueue()
 
     async def initialize(self, db_session: Any) -> None:

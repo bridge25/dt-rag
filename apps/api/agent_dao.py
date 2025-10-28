@@ -42,7 +42,7 @@ class AgentDAO:
         )
 
         default_retrieval_config = {"top_k": 5, "strategy": "hybrid"}
-        default_features_config = {}
+        default_features_config: Dict[str, Any] = {}
 
         agent = Agent(
             name=name,
@@ -79,7 +79,7 @@ class AgentDAO:
     async def get_agent(session: AsyncSession, agent_id: UUID) -> Optional[Agent]:
         query = select(Agent).where(Agent.agent_id == agent_id)
         result = await session.execute(query)
-        agent = result.scalar_one_or_none()
+        agent: Optional[Agent] = result.scalar_one_or_none()
 
         return agent
 
@@ -88,7 +88,7 @@ class AgentDAO:
     async def update_agent(session: AsyncSession, agent_id: UUID, **kwargs: Any) -> Agent:
         query = select(Agent).where(Agent.agent_id == agent_id)
         result = await session.execute(query)
-        agent = result.scalar_one_or_none()
+        agent: Optional[Agent] = result.scalar_one_or_none()
 
         if not agent:
             raise ValueError(f"Agent with ID {agent_id} not found")

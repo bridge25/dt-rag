@@ -6,7 +6,7 @@ import logging
 import time
 import json
 import asyncio
-from typing import Any, Optional
+from typing import Any, Optional, List, Dict, cast
 from uuid import UUID
 from datetime import datetime
 
@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.api.deps import verify_api_key
 from apps.core.db_session import async_session
 from apps.api.agent_dao import AgentDAO
-from apps.api.database import SearchDAO, TaxonomyNode, BackgroundTask
+from apps.api.database import SearchDAO, TaxonomyNode, BackgroundTask, Agent
 from apps.knowledge_builder.coverage.meter import CoverageMeterService
 from apps.api.background.agent_task_queue import AgentTaskQueue
 from apps.api.background.coverage_history_dao import CoverageHistoryDAO
@@ -196,14 +196,14 @@ async def list_agents(
         if max_results > 100:
             raise HTTPException(status_code=422, detail="max_results must be <= 100")
 
-        agents = await AgentDAO.list_agents(
+        agents: List[Agent] = await AgentDAO.list_agents(
             session=session,
             level=level,
             min_coverage=min_coverage,
             max_results=max_results,
         )
 
-        filters_applied = {}
+        filters_applied: Dict[str, Any] = {}
         if level is not None:
             filters_applied["level"] = level
         if min_coverage is not None:
