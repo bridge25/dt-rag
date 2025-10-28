@@ -146,6 +146,7 @@ class PipelineService:
             # Convert sources from dict to SearchHit objects
             sources = []
             for source_dict in result.get("sources", []):
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
                 sources.append(
                     SearchHit(
                         chunk_id=source_dict.get("chunk_id", "unknown"),
@@ -155,8 +156,13 @@ class PipelineService:
                             url=source_dict.get("url", ""),
                             title=source_dict.get("title", "Untitled"),
                             date=source_dict.get("date", ""),
+                            author=None,  # Explicit None for MyPy strict mode
+                            content_type=None,  # Explicit None for MyPy strict mode
+                            language=None,  # Explicit None for MyPy strict mode
                         ),
                         taxonomy_path=source_dict.get("taxonomy_path", []),
+                        highlights=None,  # Explicit None for MyPy strict mode
+                        metadata=None,  # Explicit None for MyPy strict mode
                     )
                 )
 
@@ -210,7 +216,16 @@ class PipelineService:
 
     async def get_config(self) -> PipelineConfig:
         """Get current pipeline configuration"""
-        return PipelineConfig()
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+        return PipelineConfig(
+            max_search_results=10,
+            search_type="hybrid",
+            rerank_enabled=True,
+            generation_temperature=0.7,
+            generation_max_tokens=1000,
+            cost_threshold_krw=50.0,
+            timeout_seconds=30,
+        )
 
     async def update_config(self, config: PipelineConfig) -> PipelineConfig:
         """Update pipeline configuration"""

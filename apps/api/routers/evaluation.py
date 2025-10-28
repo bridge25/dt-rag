@@ -225,7 +225,14 @@ async def get_quality_thresholds(api_key: str = Depends(verify_api_key)) -> Qual
     Thresholds are used to trigger quality alerts and recommendations.
     """
     try:
-        thresholds = QualityThresholds()
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+        thresholds = QualityThresholds(
+            faithfulness_min=0.85,
+            context_precision_min=0.75,
+            context_recall_min=0.70,
+            answer_relevancy_min=0.80,
+            response_time_max=5.0,
+        )
         return thresholds
 
     except Exception as e:
@@ -302,7 +309,14 @@ async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)) -
             },
             "configuration": {
                 "max_batch_size": 50,
-                "default_thresholds": QualityThresholds().dict(),
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+                "default_thresholds": QualityThresholds(
+                    faithfulness_min=0.85,
+                    context_precision_min=0.75,
+                    context_recall_min=0.70,
+                    answer_relevancy_min=0.80,
+                    response_time_max=5.0,
+                ).dict(),
             },
         }
 
