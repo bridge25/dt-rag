@@ -13,7 +13,7 @@ Provides integration hooks and middleware for automatic evaluation:
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, cast
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -96,7 +96,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
             if hasattr(request, "_body"):
                 import json
 
-                return json.loads(request._body)
+                return cast(Optional[Dict[str, Any]], json.loads(request._body))
         except Exception as e:
             logger.warning(f"Failed to extract request body: {e}")
         return None
@@ -175,7 +175,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
             # Could extract from session or JWT
             user_id = f"anon_{hash(request.client.host) % 10000}"
 
-        return user_id
+        return cast(Optional[str], user_id)
 
 
 class EvaluationIntegration:
@@ -240,7 +240,7 @@ class EvaluationIntegration:
                 experiment_id, user_id, result
             )
 
-        return result
+        return cast(EvaluationResult, result)
 
     def _generate_response_from_contexts(self, query: str, contexts: List[str]) -> str:
         """
@@ -353,9 +353,10 @@ async def evaluate_rag_response(
 
     This is a convenience function for one-off evaluations.
     """
-    return await evaluation_integration.evaluator.evaluate_rag_response(
+    result = await evaluation_integration.evaluator.evaluate_rag_response(
         query=query, response=response, retrieved_contexts=contexts
     )
+    return cast(EvaluationResult, result)
 
 
 async def check_quality_gates(
@@ -422,12 +423,13 @@ async def run_evaluation_batch(
 
     async def evaluate_one(request: EvaluationRequest) -> EvaluationResult:
         async with semaphore:
-            return await evaluation_integration.evaluator.evaluate_rag_response(
+            result = await evaluation_integration.evaluator.evaluate_rag_response(
                 query=request.query,
                 response=request.response,
                 retrieved_contexts=request.retrieved_contexts,
                 ground_truth=request.ground_truth,
             )
+            return cast(EvaluationResult, result)
 
     # Run evaluations concurrently
     tasks = [evaluate_one(req) for req in evaluation_requests]
