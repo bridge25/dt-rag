@@ -83,7 +83,8 @@ class MigrationPlan:
 class TaxonomyDAGManager:
     """Core DAG management with versioning and rollback capabilities"""
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         self.current_version = 1
         self._graph_cache = {}
         self._lock = asyncio.Lock()
@@ -645,10 +646,14 @@ class TaxonomyDAGManager:
     ) -> Dict[str, Any]:
         """Create rollback data for migration"""
 
-        rollback_data = {
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (list type annotation)
+        affected_nodes: List[Dict[str, Any]] = []
+        affected_edges: List[Dict[str, Any]] = []
+
+        rollback_data: Dict[str, Any] = {
             "snapshot_timestamp": datetime.utcnow().isoformat(),
-            "affected_nodes": [],
-            "affected_edges": [],
+            "affected_nodes": affected_nodes,
+            "affected_edges": affected_edges,
         }
 
         # Store current state of affected entities
@@ -904,9 +909,10 @@ class TaxonomyDAGManager:
         except Exception as e:
             return False, str(e)
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _restore_from_rollback_data(
         self, session: AsyncSession, rollback_data: Dict[str, Any]
-    ):
+    ) -> None:
         """Restore entities from rollback data"""
 
         # Restore nodes
@@ -978,7 +984,8 @@ class TaxonomyDAGManager:
             "parameters": operation.parameters,
         }
 
-    async def _create_default_taxonomy(self, session: AsyncSession):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def _create_default_taxonomy(self, session: AsyncSession) -> None:
         """Create default taxonomy structure"""
 
         # Create root node
@@ -1009,7 +1016,8 @@ class TaxonomyDAGManager:
         root_edge = TaxonomyEdge(version=1, parent_node_id=1, child_node_id=2)
         session.add(root_edge)
 
-    def _invalidate_cache(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def _invalidate_cache(self) -> None:
         """Invalidate graph cache"""
         self._graph_cache.clear()
 

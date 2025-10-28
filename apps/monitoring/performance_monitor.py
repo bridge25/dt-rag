@@ -81,7 +81,7 @@ class RAGPerformanceMonitor:
         self.running = False
         self._monitor_task = None
 
-    async def start_monitoring(self, session_factory):
+    async def start_monitoring(self, session_factory: Any) -> None:
         """Start continuous performance monitoring"""
         if self.running:
             return
@@ -90,7 +90,8 @@ class RAGPerformanceMonitor:
         self._monitor_task = asyncio.create_task(self._monitoring_loop(session_factory))
         logger.info("Performance monitoring started")
 
-    async def stop_monitoring(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def stop_monitoring(self) -> None:
         """Stop performance monitoring"""
         self.running = False
         if self._monitor_task:
@@ -101,7 +102,7 @@ class RAGPerformanceMonitor:
                 pass
         logger.info("Performance monitoring stopped")
 
-    async def _monitoring_loop(self, session_factory):
+    async def _monitoring_loop(self, session_factory: Any) -> None:
         """Main monitoring loop"""
         while self.running:
             try:
@@ -146,9 +147,10 @@ class RAGPerformanceMonitor:
 
         return metrics
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _collect_db_metrics(
         self, session: AsyncSession, metrics: PerformanceMetrics
-    ):
+    ) -> None:
         """Collect database performance metrics"""
         try:
             # Connection statistics
@@ -207,12 +209,14 @@ class RAGPerformanceMonitor:
         except Exception as e:
             logger.warning(f"Database metrics collection failed: {e}")
 
-    async def _collect_search_metrics(self, metrics: PerformanceMetrics):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def _collect_search_metrics(self, metrics: PerformanceMetrics) -> None:
         """Collect search engine metrics"""
         try:
             # Import here to avoid circular imports
-            from ..search.optimization import get_performance_monitor
-            from ..search.optimized_hybrid_engine import get_hybrid_engine
+            # Future implementations - not yet available
+            from ..search.optimization import get_performance_monitor  # type: ignore[import-not-found]  # TODO: Implement optimization module
+            from ..search.optimized_hybrid_engine import get_hybrid_engine  # type: ignore[import-not-found]  # TODO: Implement optimized hybrid engine
 
             # Get performance monitor
             try:
@@ -251,7 +255,8 @@ class RAGPerformanceMonitor:
         except Exception as e:
             logger.warning(f"Search metrics collection failed: {e}")
 
-    def _collect_system_metrics(self, metrics: PerformanceMetrics):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def _collect_system_metrics(self, metrics: PerformanceMetrics) -> None:
         """Collect system performance metrics"""
         try:
             # CPU usage
@@ -268,9 +273,10 @@ class RAGPerformanceMonitor:
         except Exception as e:
             logger.warning(f"System metrics collection failed: {e}")
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _collect_data_metrics(
         self, session: AsyncSession, metrics: PerformanceMetrics
-    ):
+    ) -> None:
         """Collect data volume and coverage metrics"""
         try:
             # Document and chunk counts
@@ -300,7 +306,8 @@ class RAGPerformanceMonitor:
         except Exception as e:
             logger.warning(f"Data metrics collection failed: {e}")
 
-    async def _check_alerts(self, metrics: PerformanceMetrics):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def _check_alerts(self, metrics: PerformanceMetrics) -> None:
         """Check for performance alerts"""
         alerts = []
 

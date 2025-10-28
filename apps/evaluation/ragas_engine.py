@@ -1,4 +1,5 @@
 # @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 
 """
 RAGAS evaluation engine implementation
@@ -31,8 +32,8 @@ try:
     LANGFUSE_AVAILABLE = True
 except ImportError:
     # Fallback: no-op decorator
-    def observe(name: str = "", as_type: str = "span", **kwargs):
-        def decorator(func):
+    def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Any:
+        def decorator(func: Any) -> Any:
             return func
 
         return decorator
@@ -62,7 +63,7 @@ class ContextAnalysis:
 class RAGASEvaluator:
     """RAGAS evaluation engine with Gemini-powered assessments"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.model = None
         if GEMINI_API_KEY:
             try:
@@ -74,7 +75,14 @@ class RAGASEvaluator:
                 logger.warning(f"Failed to initialize Gemini model: {e}")
 
         # Quality thresholds
-        self.thresholds = QualityThresholds()
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+        self.thresholds = QualityThresholds(
+            faithfulness_min=0.85,
+            context_precision_min=0.75,
+            context_recall_min=0.70,
+            answer_relevancy_min=0.80,
+            response_time_max=5.0,
+        )
 
     @observe(name="ragas_evaluation", as_type="generation")
     async def evaluate_rag_response(
@@ -125,11 +133,14 @@ class RAGASEvaluator:
             )
 
             # Create metrics object
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             metrics = EvaluationMetrics(
                 context_precision=context_precision,
                 context_recall=context_recall,
                 faithfulness=faithfulness,
                 answer_relevancy=answer_relevancy,
+                response_time=None,  # Explicit None for MyPy strict mode
+                retrieval_score=None,  # Explicit None for MyPy strict mode
             )
 
             # Calculate overall score
@@ -165,10 +176,18 @@ class RAGASEvaluator:
             logger.error(f"RAGAS evaluation failed for query '{query[:50]}...': {e}")
 
             # Return fallback evaluation
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             return EvaluationResult(
                 evaluation_id=evaluation_id,
                 query=query,
-                metrics=EvaluationMetrics(),
+                metrics=EvaluationMetrics(
+                    context_precision=None,
+                    context_recall=None,
+                    faithfulness=None,
+                    answer_relevancy=None,
+                    response_time=None,
+                    retrieval_score=None,
+                ),
                 overall_score=0.0,
                 quality_flags=["evaluation_error"],
                 recommendations=["Manual review required due to evaluation error"],

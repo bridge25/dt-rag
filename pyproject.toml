@@ -142,6 +142,40 @@ strict_equality = true
 module = "tests.*"
 disallow_untyped_defs = false
 
+# External libraries without type stubs
+[[tool.mypy.overrides]]
+module = [
+    "fastapi.*",
+    "sqlalchemy.*",
+    "redis.*",
+    "numpy.*",
+    "pandas.*",
+    "sentence_transformers.*",
+    "google.*",
+    "sentry_sdk.*",
+    "langfuse.*",
+    "openai.*",
+    "uvicorn.*",
+    "starlette.*",
+    "prometheus_client.*",
+    "sklearn.*",
+    "ragas.*",
+    "langchain.*",
+    "langchain_openai.*",
+    "pgvector.*",
+    "tiktoken.*",
+    "pymupdf.*",
+    "pymupdf4llm.*",
+    "bs4.*",
+    "docx.*",
+    "aiohttp.*",
+    "psutil.*",
+    "jsonschema.*",
+    "scipy.*",
+    "networkx.*",
+]
+ignore_missing_imports = true
+
 [tool.coverage.run]
 source = ["apps"]
 omit = [

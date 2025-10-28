@@ -48,13 +48,13 @@ class CreateAPIKeyRequest(BaseModel):
     owner_id: Optional[str] = Field(None, description="Owner user ID")
 
     @validator("scope")
-    def validate_scope(cls, v):
+    def validate_scope(cls, v: str) -> str:
         if v not in ["read", "write", "admin"]:
             raise ValueError("Scope must be read, write, or admin")
         return v
 
     @validator("allowed_ips")
-    def validate_ips(cls, v):
+    def validate_ips(cls, v: Optional[List[str]]) -> Optional[List[str]]:
         if v is None:
             return v
 
@@ -119,7 +119,8 @@ class APIKeyUsageStats(BaseModel):
 
 
 # Helper function to check admin permissions
-async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)) -> APIKeyInfo:
     """Dependency to ensure the API key has admin scope"""
     if current_key.scope != "admin":
         raise HTTPException(
@@ -129,13 +130,14 @@ async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)):
     return current_key
 
 
-@router.post("/", response_model=CreateAPIKeyResponse, status_code=201)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/", response_model=CreateAPIKeyResponse, status_code=201)  # type: ignore[misc]
 async def create_api_key(
     request: CreateAPIKeyRequest,
     http_request: Request,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> CreateAPIKeyResponse:
     """
     Create a new API key with comprehensive security validation
 
@@ -190,7 +192,8 @@ async def create_api_key(
         )
 
 
-@router.get("/", response_model=List[APIKeyResponse])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/", response_model=List[APIKeyResponse])  # type: ignore[misc]
 async def list_api_keys(
     owner_id: Optional[str] = Query(None, description="Filter by owner ID"),
     active_only: bool = Query(True, description="Show only active keys"),
@@ -200,7 +203,7 @@ async def list_api_keys(
     offset: int = Query(0, ge=0, description="Number of keys to skip"),
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> List[APIKeyResponse]:
     """
     List API keys with optional filtering
 
@@ -243,12 +246,13 @@ async def list_api_keys(
         )
 
 
-@router.get("/{key_id}", response_model=APIKeyResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/{key_id}", response_model=APIKeyResponse)  # type: ignore[misc]
 async def get_api_key(
     key_id: str,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> APIKeyResponse:
     """
     Get detailed information about a specific API key
 
@@ -283,14 +287,15 @@ async def get_api_key(
         raise HTTPException(status_code=500, detail=f"Failed to get API key: {str(e)}")
 
 
-@router.put("/{key_id}", response_model=APIKeyResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.put("/{key_id}", response_model=APIKeyResponse)  # type: ignore[misc]
 async def update_api_key(
     key_id: str,
     request: UpdateAPIKeyRequest,
     http_request: Request,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> APIKeyResponse:
     """
     Update an existing API key
 
@@ -339,14 +344,15 @@ async def update_api_key(
         )
 
 
-@router.delete("/{key_id}")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.delete("/{key_id}")  # type: ignore[misc]
 async def revoke_api_key(
     key_id: str,
     reason: str = Body(..., description="Reason for revocation"),
     http_request: Request = None,
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> Dict[str, str]:
     """
     Revoke an API key (mark as inactive)
 
@@ -377,13 +383,14 @@ async def revoke_api_key(
         )
 
 
-@router.get("/{key_id}/usage", response_model=APIKeyUsageStats)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/{key_id}/usage", response_model=APIKeyUsageStats)  # type: ignore[misc]
 async def get_api_key_usage(
     key_id: str,
     days: int = Query(7, ge=1, le=90, description="Number of days to analyze"),
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> APIKeyUsageStats:
     """
     Get usage statistics for an API key
 
@@ -407,12 +414,13 @@ async def get_api_key_usage(
         )
 
 
-@router.post("/generate", response_model=Dict[str, str])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/generate", response_model=Dict[str, str])  # type: ignore[misc]
 async def generate_sample_keys(
     key_type: str = Query("production", description="Type of key to generate"),
     count: int = Query(1, ge=1, le=10, description="Number of keys to generate"),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> Dict[str, Any]:
     """
     Generate sample API keys for testing
 
@@ -459,11 +467,12 @@ async def generate_sample_keys(
         )
 
 
-@router.post("/validate")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/validate")  # type: ignore[misc]
 async def validate_api_key_format(
     api_key: str = Body(..., description="API key to validate"),
     current_key: APIKeyInfo = Depends(require_admin_key),
-):
+) -> Dict[str, Any]:
     """
     Validate the format and strength of an API key
 

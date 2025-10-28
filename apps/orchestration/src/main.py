@@ -46,7 +46,7 @@ try:
                 sys.path.insert(0, str(alt_path))
                 break
 
-    from common_schemas.models import SearchRequest, SearchResponse, SearchHit
+    from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]  # TODO: Implement common schemas
 except ImportError as e:
     # Import 실패 시 graceful fallback - 로컬 모델 정의
     print(f"Warning: Could not import common_schemas, using local definitions: {e}")
@@ -93,7 +93,8 @@ class AgentManifest(BaseModel):
 
 
 # GitHub Actions 환경 친화적 import 처리
-def _import_pipeline():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: Type Annotations
+def _import_pipeline() -> Any:
     """Pipeline import with GitHub Actions compatibility"""
     import sys
     import os
@@ -127,7 +128,7 @@ def _import_pipeline():
 
     try:
         # Method 2: 절대 import 시도
-        from langgraph_pipeline import get_pipeline
+        from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import from langgraph_pipeline")
         return get_pipeline
@@ -148,7 +149,7 @@ def _import_pipeline():
         pipeline_file = current_dir / "langgraph_pipeline.py"
         if pipeline_file.exists():
             print(f"[DEBUG] Found pipeline file: {pipeline_file}")
-            from langgraph_pipeline import get_pipeline
+            from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
             print("[DEBUG] Success: directory-based import")
             return get_pipeline
@@ -165,14 +166,14 @@ def _import_pipeline():
     return _create_dummy_pipeline()
 
 
-def _create_dummy_pipeline():
+def _create_dummy_pipeline() -> Any:
     """Create a dummy pipeline for environments where real pipeline cannot be imported"""
 
     class DummyPipeline:
-        def __init__(self):
+        def __init__(self) -> None:
             self.name = "DummyPipeline"
 
-        async def execute(self, request):
+        async def execute(self, request: Any) -> Any:
             """Dummy pipeline execution that returns a safe response"""
             query = getattr(request, "query", "N/A")
 
@@ -210,7 +211,7 @@ def _create_dummy_pipeline():
                 },
             )()
 
-    def dummy_get_pipeline():
+    def dummy_get_pipeline() -> DummyPipeline:
         return DummyPipeline()
 
     print("[DEBUG] Dummy pipeline created successfully")
@@ -227,7 +228,7 @@ except Exception as e:
     get_pipeline = _create_dummy_pipeline()
 
 
-def _get_pipeline_request_class():
+def _get_pipeline_request_class() -> Any:
     """PipelineRequest class with GitHub Actions compatibility"""
     import os
 
@@ -255,7 +256,7 @@ def _get_pipeline_request_class():
 
     try:
         # 절대 import 시도
-        from langgraph_pipeline import PipelineRequest
+        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import PipelineRequest")
         return PipelineRequest
@@ -270,7 +271,7 @@ def _get_pipeline_request_class():
         current_dir = Path(__file__).parent
         if str(current_dir) not in sys.path:
             sys.path.insert(0, str(current_dir))
-        from langgraph_pipeline import PipelineRequest
+        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: directory-based PipelineRequest import")
         return PipelineRequest
@@ -282,25 +283,25 @@ def _get_pipeline_request_class():
     return _create_dummy_pipeline_request()
 
 
-def _create_dummy_pipeline_request():
+def _create_dummy_pipeline_request() -> Any:
     """Create dummy PipelineRequest class for CI environments"""
 
     class DummyPipelineRequest:
         def __init__(
             self,
-            query,
-            taxonomy_version="1.8.1",
-            chunk_id=None,
-            filters=None,
-            options=None,
-        ):
+            query: str,
+            taxonomy_version: str = "1.8.1",
+            chunk_id: Optional[str] = None,
+            filters: Optional[Dict[str, Any]] = None,
+            options: Optional[Dict[str, Any]] = None,
+        ) -> None:
             self.query = query
             self.taxonomy_version = taxonomy_version
             self.chunk_id = chunk_id
             self.filters = filters or {}
             self.options = options or {}
 
-        def __repr__(self):
+        def __repr__(self) -> str:
             return f"DummyPipelineRequest(query='{self.query}', taxonomy_version='{self.taxonomy_version}')"
 
     print("[DEBUG] Dummy PipelineRequest class created")
@@ -312,14 +313,14 @@ def _create_dummy_pipeline_request():
 
 
 # CBR 시스템 생성 함수 구현
-def create_cbr_system(path):
+def create_cbr_system(path: str) -> "CBRSystem":
     """CBR 시스템 인스턴스 생성"""
     return CBRSystem(path)
 
 
-def create_category_filter(paths):
+def create_category_filter(paths: List[List[str]]) -> Any:
     class DummyFilter:
-        def is_path_allowed(self, path):
+        def is_path_allowed(self, path: List[str]) -> bool:
             return True
 
     return DummyFilter()
@@ -398,7 +399,7 @@ class CBRLog(BaseModel):
 class CBRSystem:
     """완전한 CBR 시스템 구현 (SQLite 기반)"""
 
-    def __init__(self, data_dir: str = "data/cbr"):
+    def __init__(self, data_dir: str = "data/cbr") -> None:
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.db_path = str(self.data_dir / "cbr_system.db")
@@ -421,7 +422,7 @@ class CBRSystem:
             logger.warning(f"Embedding generation failed: {e}, using dummy vector")
             return [0.0] * 1536
 
-    def _ensure_database(self):
+    def _ensure_database(self) -> None:
         """데이터베이스 스키마 초기화"""
         with sqlite3.connect(self.db_path) as conn:
             # CBR 케이스 테이블
@@ -563,7 +564,7 @@ class CBRSystem:
                 else 0.0
             )
 
-    def log_cbr_interaction(self, log: CBRLog):
+    def log_cbr_interaction(self, log: CBRLog) -> None:
         """CBR 상호작용 로그 저장"""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
@@ -1052,7 +1053,7 @@ cbr_system = None  # 실제 초기화는 lifespan에서 환경변수에 따라 �
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> Any:
     # Startup
     global cbr_system
     enabled = os.getenv("CBR_ENABLED", "false").lower() in ("1", "true", "yes", "on")
@@ -1127,7 +1128,7 @@ app.add_middleware(
 TAXONOMY_BASE = "http://api:8000"
 
 
-def _require_cbr():
+def _require_cbr() -> None:
     if cbr_system is None:
         raise HTTPException(status_code=501, detail="CBR is disabled")
 
@@ -1202,7 +1203,7 @@ class CBRCaseResponse(BaseModel):
 
 
 @app.get("/health", tags=["health"])
-def health_check():
+def health_check() -> Dict[str, Any]:
     """헬스체크 엔드포인트 - B-O2 필터링 시스템 상태 포함"""
     # 기본 필터 테스트
     try:
@@ -1236,7 +1237,7 @@ def health_check():
 
 
 @app.get("/api/taxonomy/tree/{version}", tags=["taxonomy"])
-async def get_taxonomy_tree(version: str):
+async def get_taxonomy_tree(version: str) -> Dict[str, Any]:
     """Taxonomy API를 프록시하여 트리 데이터 반환"""
     try:
         async with httpx.AsyncClient() as client:
@@ -1364,7 +1365,7 @@ def _validate_mcp_tools(mcp_tools: List[str]) -> None:
         )
 
 
-def _validate_options(options: Optional[Dict]) -> None:
+def _validate_options(options: Optional[Dict[str, Any]]) -> None:
     """Validate request options"""
     if not options:
         return
@@ -1398,7 +1399,7 @@ def _normalize_paths(node_paths: List[List[str]]) -> List[List[str]]:
     return normalized_paths
 
 
-def _build_retrieval_config(overrides: Optional[Dict]) -> Dict:
+def _build_retrieval_config(overrides: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     """Build retrieval configuration with optional overrides"""
     config = {
         "bm25_topk": 12,
@@ -1422,7 +1423,7 @@ def _build_retrieval_config(overrides: Optional[Dict]) -> Dict:
     return config
 
 
-def _build_features_config(overrides: Optional[Dict]) -> Dict:
+def _build_features_config(overrides: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     """Build features configuration with optional overrides"""
     config = {
         "debate": False,
@@ -1469,7 +1470,7 @@ def _validate_manifest(manifest: AgentManifest) -> None:
 
 
 @app.post("/agents/from-category", response_model=AgentManifest, tags=["agents"])
-def create_agent_from_category(req: FromCategoryRequest):
+def create_agent_from_category(req: FromCategoryRequest) -> AgentManifest:
     """노드 경로에서 Agent Manifest 생성 (B-O1: 완료)"""
     # 입력 검증
     _validate_version(req.version)
@@ -1519,7 +1520,7 @@ def create_agent_from_category(req: FromCategoryRequest):
 
 
 @app.post("/search", response_model=OrchestrationSearchResponse, tags=["search"])
-def hybrid_search(req: OrchestrationSearchRequest):
+def hybrid_search(req: OrchestrationSearchRequest) -> OrchestrationSearchResponse:
     """하이브리드 검색 (BM25 + Vector + Rerank) with B-O2 필터링"""
     logger.info(f"검색 요청: query='{req.query}', filters={req.filters}")
 
@@ -1606,7 +1607,7 @@ def hybrid_search(req: OrchestrationSearchRequest):
 
 
 @app.post("/chat/run", response_model=ChatResponse, tags=["chat"])
-async def chat_run(req: ChatRequest):
+async def chat_run(req: ChatRequest) -> ChatResponse:
     """LangGraph 7-Step 채팅 파이프라인 (B-O3 구현)"""
     logger.info(
         f"B-O3 7-Step 파이프라인 실행: conversation_id={req.conversation_id}, message={req.message}"
@@ -1670,7 +1671,7 @@ async def chat_run(req: ChatRequest):
 
 
 @app.post("/cbr/suggest", response_model=CBRSuggestResponse, tags=["cbr"])
-def suggest_cases(request: CBRSuggestRequest):
+def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
     """B-O4: CBR k-NN 기반 케이스 추천"""
     _require_cbr()
     logger.info(
@@ -1709,6 +1710,7 @@ def suggest_cases(request: CBRSuggestRequest):
             for s in suggestions
         ]
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
         # 로그 기록
         log_id = str(uuid.uuid4())
         cbr_log = CBRLog(
@@ -1721,6 +1723,8 @@ def suggest_cases(request: CBRSuggestRequest):
             success_flag=True,
             execution_time_ms=exec_time,
             similarity_method=request.similarity_method,
+            feedback=None,  # Explicit None for MyPy strict mode
+            user_id=None,  # Explicit None for MyPy strict mode
         )
 
         cbr_system.log_cbr_interaction(cbr_log)
@@ -1744,7 +1748,7 @@ def suggest_cases(request: CBRSuggestRequest):
 
 
 @app.post("/cbr/feedback", tags=["cbr"])
-def submit_case_feedback(request: CBRFeedbackRequest):
+def submit_case_feedback(request: CBRFeedbackRequest) -> Dict[str, Any]:
     """CBR 케이스 피드백 수집 (Neural Selector 학습용)"""
     _require_cbr()
     logger.info(
@@ -1782,7 +1786,7 @@ def submit_case_feedback(request: CBRFeedbackRequest):
 
 
 @app.get("/cbr/stats", tags=["cbr"])
-def get_cbr_statistics():
+def get_cbr_statistics() -> Dict[str, Any]:
     """CBR 시스템 통계 조회"""
     _require_cbr()
     try:
@@ -1816,7 +1820,7 @@ def get_cbr_statistics():
 
 
 @app.post("/cbr/case", tags=["cbr"])
-def add_cbr_case(case_data: Dict[str, Any]):
+def add_cbr_case(case_data: Dict[str, Any]) -> Dict[str, Any]:
     """CBR 케이스 추가 (관리용)"""
     _require_cbr()
     try:
@@ -1867,7 +1871,7 @@ def add_cbr_case(case_data: Dict[str, Any]):
 
 
 @app.get("/cbr/logs", tags=["cbr"])
-def get_cbr_logs(limit: int = 100, success_only: bool = False):
+def get_cbr_logs(limit: int = 100, success_only: bool = False) -> Dict[str, Any]:
     """CBR 상호작용 로그 조회 (Neural Selector 학습데이터)"""
     _require_cbr()
     try:
@@ -1926,14 +1930,15 @@ def get_cbr_logs(limit: int = 100, success_only: bool = False):
 
 
 @app.get("/cbr/export", tags=["cbr"])
-def export_cbr_training_data():
+def export_cbr_training_data() -> Dict[str, Any]:
     """Neural Selector 학습을 위한 CBR 데이터 내보내기"""
     _require_cbr()
     try:
         import sqlite3
         import json
 
-        training_data = {
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (Collection.append)
+        training_data: Dict[str, Any] = {
             "cases": [],
             "interactions": [],
             "metadata": {
@@ -2006,7 +2011,7 @@ def export_cbr_training_data():
 
 # B-O2 관리용 엔드포인트들
 @app.post("/filter/validate", tags=["filter"])
-def validate_filter_paths(paths: List[List[str]]):
+def validate_filter_paths(paths: List[List[str]]) -> Dict[str, Any]:
     """필터 경로 유효성 검증 엔드포인트"""
     try:
         # 필터 생성을 통한 유효성 검증
@@ -2035,7 +2040,7 @@ def validate_filter_paths(paths: List[List[str]]):
 
 
 @app.post("/filter/test", tags=["filter"])
-def test_filter_performance(test_data: Dict[str, Any]):
+def test_filter_performance(test_data: Dict[str, Any]) -> Dict[str, Any]:
     """필터 성능 테스트 엔드포인트"""
     allowed_paths = test_data.get("allowed_paths", [])
     test_documents = test_data.get("test_documents", [])
@@ -2086,7 +2091,7 @@ def test_filter_performance(test_data: Dict[str, Any]):
 
 
 @app.get("/metrics/filter", tags=["filter"])
-def get_filter_metrics():
+def get_filter_metrics() -> Dict[str, Any]:
     """필터링 시스템 메트릭 조회"""
     # TODO: 실제 메트릭 수집 시스템과 연동
     return {
@@ -2117,7 +2122,7 @@ def get_filter_metrics():
 
 
 @app.get("/cbr/cases/{case_id}", response_model=CBRCaseResponse, tags=["cbr-cases"])
-def get_cbr_case(case_id: str):
+def get_cbr_case(case_id: str) -> CBRCaseResponse:
     """특정 CBR 케이스 조회"""
     _require_cbr()
 
@@ -2155,7 +2160,7 @@ def get_cbr_case(case_id: str):
 
 
 @app.put("/cbr/cases/{case_id}", tags=["cbr-cases"])
-def update_cbr_case(case_id: str, update_request: CBRUpdateRequest):
+def update_cbr_case(case_id: str, update_request: CBRUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 업데이트"""
     _require_cbr()
 
@@ -2223,7 +2228,7 @@ def update_cbr_case(case_id: str, update_request: CBRUpdateRequest):
 
 
 @app.delete("/cbr/cases/{case_id}", tags=["cbr-cases"])
-def delete_cbr_case(case_id: str):
+def delete_cbr_case(case_id: str) -> Dict[str, Any]:
     """CBR 케이스 삭제"""
     _require_cbr()
 
@@ -2262,7 +2267,7 @@ def delete_cbr_case(case_id: str):
 
 
 @app.put("/cbr/cases/{case_id}/quality", tags=["cbr-cases"])
-def update_cbr_case_quality(case_id: str, quality_request: CBRQualityUpdateRequest):
+def update_cbr_case_quality(case_id: str, quality_request: CBRQualityUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 품질 점수 업데이트"""
     _require_cbr()
 

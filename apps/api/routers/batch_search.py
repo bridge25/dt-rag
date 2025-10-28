@@ -20,7 +20,7 @@ sys.path.insert(0, str(project_root))
 import logging  # noqa: E402
 import time  # noqa: E402
 import asyncio  # noqa: E402
-from typing import List  # noqa: E402
+from typing import List, Dict, Any  # noqa: E402
 from datetime import datetime  # noqa: E402
 import uuid  # noqa: E402
 
@@ -160,6 +160,7 @@ class BatchSearchService:
 
             hits = []
             for result in search_results:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
                 hit = SearchHit(
                     chunk_id=result["chunk_id"],
                     score=result["score"],
@@ -168,8 +169,13 @@ class BatchSearchService:
                         url=result["source_url"] or "",
                         title=result["title"] or "Untitled",
                         date=result.get("metadata", {}).get("date", ""),
+                        author=None,  # Explicit None for MyPy strict mode
+                        content_type=None,  # Explicit None for MyPy strict mode
+                        language=None,  # Explicit None for MyPy strict mode
                     ),
                     taxonomy_path=result["taxonomy_path"],
+                    highlights=None,  # Explicit None for MyPy strict mode
+                    metadata=None,  # Explicit None for MyPy strict mode
                 )
                 hits.append(hit)
 
@@ -191,6 +197,7 @@ class BatchSearchService:
 
     def _mock_single_search(self, query: str, max_results: int) -> BatchSearchResult:
         mock_hits = [
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             SearchHit(
                 chunk_id=f"mock_{query[:10]}_{i}",
                 score=0.9 - (i * 0.1),
@@ -199,8 +206,13 @@ class BatchSearchService:
                     url=f"https://example.com/doc{i}",
                     title=f"Document {i+1}",
                     date="2024-01-15",
+                    author=None,  # Explicit None for MyPy strict mode
+                    content_type=None,  # Explicit None for MyPy strict mode
+                    language=None,  # Explicit None for MyPy strict mode
                 ),
                 taxonomy_path=["AI", "ML"],
+                highlights=None,  # Explicit None for MyPy strict mode
+                metadata=None,  # Explicit None for MyPy strict mode
             )
             for i in range(min(3, max_results))
         ]
@@ -252,7 +264,7 @@ async def batch_search(
     http_request: Request,
     service: BatchSearchService = Depends(get_batch_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> BatchSearchResponse:
     """
     Execute multiple search queries in parallel or sequential mode
 
@@ -294,7 +306,7 @@ async def batch_search(
 # @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware
 async def get_batch_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """
     Get batch search performance metrics and recommendations
 

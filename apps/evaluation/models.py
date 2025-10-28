@@ -1,4 +1,5 @@
 # @CODE:EVAL-001 | SPEC: .moai/specs/SPEC-EVAL-001/spec.md | TEST: tests/evaluation/
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 1: SQLAlchemy Column Type Casting
 
 """
 Database models for RAGAS evaluation system
@@ -6,11 +7,13 @@ Database models for RAGAS evaluation system
 
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, Text, JSON
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, JSON
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from pydantic import BaseModel, Field
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class SearchLog(Base):
@@ -18,33 +21,33 @@ class SearchLog(Base):
 
     __tablename__ = "search_logs"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    session_id = Column(String(50), nullable=True)  # For tracking user sessions
-    query = Column(Text, nullable=False)
-    response = Column(Text, nullable=True)
-    retrieved_docs = Column(JSON, nullable=True)  # List of retrieved document chunks
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    session_id: Mapped[Optional[str]] = mapped_column(String(50))
+    query: Mapped[str] = mapped_column(Text)
+    response: Mapped[Optional[str]] = mapped_column(Text)
+    retrieved_docs: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
 
     # RAGAS Core Metrics
-    context_precision = Column(Float, nullable=True)  # Precision of retrieved context
-    context_recall = Column(Float, nullable=True)  # Recall of retrieved context
-    faithfulness = Column(Float, nullable=True)  # Factual consistency of response
-    answer_relevancy = Column(Float, nullable=True)  # Relevance of answer to query
+    context_precision: Mapped[Optional[float]] = mapped_column(Float)
+    context_recall: Mapped[Optional[float]] = mapped_column(Float)
+    faithfulness: Mapped[Optional[float]] = mapped_column(Float)
+    answer_relevancy: Mapped[Optional[float]] = mapped_column(Float)
 
     # Additional Quality Metrics
-    response_time = Column(Float, nullable=True)  # Response latency in seconds
-    num_retrieved_docs = Column(Integer, nullable=True)
-    retrieval_score = Column(Float, nullable=True)  # Average retrieval score
-    user_rating = Column(Integer, nullable=True)  # User satisfaction (1-5)
-    search_type = Column(String(50), default="hybrid")
+    response_time: Mapped[Optional[float]] = mapped_column(Float)
+    num_retrieved_docs: Mapped[Optional[int]] = mapped_column(Integer)
+    retrieval_score: Mapped[Optional[float]] = mapped_column(Float)
+    user_rating: Mapped[Optional[int]] = mapped_column(Integer)
+    search_type: Mapped[str] = mapped_column(String(50), default="hybrid")
 
     # Metadata
-    model_version = Column(String(50), nullable=True)
-    experiment_id = Column(String(100), nullable=True)  # For A/B testing
-    created_at = Column(DateTime, default=datetime.utcnow)
+    model_version: Mapped[Optional[str]] = mapped_column(String(50))
+    experiment_id: Mapped[Optional[str]] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     # Quality flags
-    is_valid_evaluation = Column(Boolean, default=True)
-    quality_issues = Column(JSON, nullable=True)  # List of detected issues
+    is_valid_evaluation: Mapped[bool] = mapped_column(Boolean, default=True)
+    quality_issues: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
 
 
 class GoldenDataset(Base):
@@ -52,26 +55,26 @@ class GoldenDataset(Base):
 
     __tablename__ = "golden_dataset"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    dataset_id = Column(String(100), nullable=False, unique=True)
-    version = Column(String(20), nullable=False, default="1.0")
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    dataset_id: Mapped[str] = mapped_column(String(100), unique=True)
+    version: Mapped[str] = mapped_column(String(20), default="1.0")
 
-    query = Column(Text, nullable=False)
-    ground_truth_answer = Column(Text, nullable=False)
-    expected_contexts = Column(JSON, nullable=False)  # List of expected context chunks
+    query: Mapped[str] = mapped_column(Text)
+    ground_truth_answer: Mapped[str] = mapped_column(Text)
+    expected_contexts: Mapped[Dict[str, Any]] = mapped_column(JSON)
 
     # Quality metadata
-    difficulty_level = Column(String(20), default="medium")  # easy, medium, hard
-    category = Column(String(50), nullable=True)
-    tags = Column(JSON, nullable=True)
+    difficulty_level: Mapped[str] = mapped_column(String(20), default="medium")
+    category: Mapped[Optional[str]] = mapped_column(String(50))
+    tags: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
 
     # Validation scores
-    inter_annotator_agreement = Column(Float, nullable=True)
-    quality_score = Column(Float, nullable=True)
+    inter_annotator_agreement: Mapped[Optional[float]] = mapped_column(Float)
+    quality_score: Mapped[Optional[float]] = mapped_column(Float)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_by = Column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by: Mapped[Optional[str]] = mapped_column(String(100))
 
 
 class ExperimentRun(Base):
@@ -79,33 +82,31 @@ class ExperimentRun(Base):
 
     __tablename__ = "experiment_runs"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    experiment_id = Column(String(100), nullable=False)
-    name = Column(String(200), nullable=False)
-    description = Column(Text, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    experiment_id: Mapped[str] = mapped_column(String(100))
+    name: Mapped[str] = mapped_column(String(200))
+    description: Mapped[Optional[str]] = mapped_column(Text)
 
     # Experiment configuration
-    control_config = Column(JSON, nullable=False)  # Control system configuration
-    treatment_config = Column(JSON, nullable=False)  # Treatment system configuration
+    control_config: Mapped[Dict[str, Any]] = mapped_column(JSON)
+    treatment_config: Mapped[Dict[str, Any]] = mapped_column(JSON)
 
     # Status and timing
-    status = Column(
-        String(20), default="planning"
-    )  # planning, running, completed, stopped
-    start_time = Column(DateTime, nullable=True)
-    end_time = Column(DateTime, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="planning")
+    start_time: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    end_time: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     # Statistical parameters
-    significance_threshold = Column(Float, default=0.05)
-    minimum_sample_size = Column(Integer, default=100)
-    power_threshold = Column(Float, default=0.8)
+    significance_threshold: Mapped[float] = mapped_column(Float, default=0.05)
+    minimum_sample_size: Mapped[int] = mapped_column(Integer, default=100)
+    power_threshold: Mapped[float] = mapped_column(Float, default=0.8)
 
     # Results
-    results = Column(JSON, nullable=True)
-    statistical_significance = Column(JSON, nullable=True)
+    results: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
+    statistical_significance: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_by: Mapped[Optional[str]] = mapped_column(String(100))
 
 
 # Pydantic models for API

@@ -18,7 +18,7 @@ class JobQueue:
         self.redis_manager = redis_manager
         self._redis_initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         if not self._redis_initialized:
             if self.redis_manager is None:
                 self.redis_manager = await get_redis_manager()

@@ -5,7 +5,7 @@
 import time
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, AsyncIterator
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
@@ -85,7 +85,8 @@ class LatencyTracker:
         self.samples = deque(maxlen=max_samples)
         self.lock = threading.Lock()
 
-    def add_sample(self, latency_ms: float):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def add_sample(self, latency_ms: float) -> None:
         """지연시간 샘플 추가"""
         with self.lock:
             self.samples.append(latency_ms)
@@ -136,7 +137,8 @@ class MetricsCollector:
             f"MetricsCollector initialized (Prometheus: {self.enable_prometheus})"
         )
 
-    def _init_prometheus_metrics(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def _init_prometheus_metrics(self) -> None:
         """Prometheus 메트릭 초기화"""
         if not self.enable_prometheus:
             return
@@ -184,8 +186,9 @@ class MetricsCollector:
 
         self.qps_gauge = Gauge("dt_rag_queries_per_second", "Queries per second")
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     @asynccontextmanager
-    async def track_operation(self, operation_name: str, labels: Dict[str, str] = None):
+    async def track_operation(self, operation_name: str, labels: Optional[Dict[str, str]] = None) -> AsyncIterator[None]:
         """작업 시간 추적 컨텍스트 매니저"""
         labels = labels or {}
         start_time = time.time()
@@ -204,9 +207,10 @@ class MetricsCollector:
             self.increment_counter(f"{operation_name}_error", labels)
             raise
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def record_latency(
         self, operation: str, latency_ms: float, labels: Dict[str, str] = None
-    ):
+    ) -> None:
         """지연시간 기록"""
         self.latency_tracker.add_sample(latency_ms)
 
@@ -220,9 +224,10 @@ class MetricsCollector:
             labels_list = [labels.get("method", ""), labels.get("endpoint", "")]
             self.request_duration.labels(*labels_list).observe(latency_ms / 1000)
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def increment_counter(
         self, counter_name: str, labels: Dict[str, str] = None, value: int = 1
-    ):
+    ) -> None:
         """카운터 증가"""
         self.counters[counter_name] += value
 
@@ -243,7 +248,8 @@ class MetricsCollector:
                 status = labels.get("status", "") if labels else ""
                 self.search_requests.labels(search_type, status).inc(value)
 
-    def set_gauge(self, gauge_name: str, value: float, labels: Dict[str, str] = None):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def set_gauge(self, gauge_name: str, value: float, labels: Dict[str, str] = None) -> None:
         """게이지 값 설정"""
         self.gauges[gauge_name] = value
 
@@ -263,9 +269,10 @@ class MetricsCollector:
             elif gauge_name == "qps" and hasattr(self, "qps_gauge"):
                 self.qps_gauge.set(value)
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def record_cache_operation(
         self, operation: str, result: str, labels: Dict[str, str] = None
-    ):
+    ) -> None:
         """캐시 작업 기록"""
         all_labels = {"operation": operation, "result": result}
         if labels:
@@ -277,7 +284,8 @@ class MetricsCollector:
         if self.enable_prometheus and hasattr(self, "cache_operations"):
             self.cache_operations.labels(operation, result).inc()
 
-    def update_system_metrics(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def update_system_metrics(self) -> None:
         """시스템 메트릭 업데이트"""
         try:
             # CPU 사용률
@@ -386,7 +394,8 @@ class MetricsCollector:
 
         return generate_latest()
 
-    def reset_metrics(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def reset_metrics(self) -> None:
         """메트릭 초기화"""
         self.metrics.clear()
         self.counters.clear()
@@ -419,16 +428,16 @@ def initialize_metrics_collector(enable_prometheus: bool = True) -> MetricsColle
 
 
 # 데코레이터
-def track_performance(operation_name: str):
+def track_performance(operation_name: str) -> Any:
     """성능 추적 데코레이터"""
 
-    def decorator(func):
-        async def async_wrapper(*args, **kwargs):
+    def decorator(func: Any) -> Any:
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             collector = get_metrics_collector()
             async with collector.track_operation(operation_name):
                 return await func(*args, **kwargs)
 
-        def sync_wrapper(*args, **kwargs):
+        def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             collector = get_metrics_collector()
             start_time = time.time()
             try:

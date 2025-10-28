@@ -30,8 +30,9 @@ router = APIRouter(
 )
 
 
-@router.get("/health", response_model=Dict[str, Any])
-async def get_embedding_health():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/health", response_model=Dict[str, Any])  # type: ignore[misc]
+async def get_embedding_health() -> Dict[str, Any]:
     """임베딩 서비스 헬스체크"""
     try:
         health_status = health_check()
@@ -45,8 +46,9 @@ async def get_embedding_health():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/info", response_model=Dict[str, Any])
-async def get_embedding_info():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/info", response_model=Dict[str, Any])  # type: ignore[misc]
+async def get_embedding_info() -> Dict[str, Any]:
     """임베딩 서비스 정보 조회"""
     try:
         service_info = get_service_info()
@@ -60,8 +62,9 @@ async def get_embedding_info():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/status", response_model=Dict[str, Any])
-async def get_embeddings_status():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/status", response_model=Dict[str, Any])  # type: ignore[misc]
+async def get_embeddings_status() -> Dict[str, Any]:
     """임베딩 데이터베이스 상태 조회"""
     try:
         status = await get_embedding_status()
@@ -75,11 +78,12 @@ async def get_embeddings_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/generate", response_model=Dict[str, Any])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/generate", response_model=Dict[str, Any])  # type: ignore[misc]
 async def generate_text_embedding(
     text: str = Body(..., description="임베딩을 생성할 텍스트", embed=True),
     use_cache: bool = Body(True, description="캐시 사용 여부", embed=True),
-):
+) -> Dict[str, Any]:
     """단일 텍스트의 임베딩 생성"""
     try:
         if not text or not text.strip():
@@ -101,11 +105,12 @@ async def generate_text_embedding(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/generate/batch", response_model=Dict[str, Any])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/generate/batch", response_model=Dict[str, Any])  # type: ignore[misc]
 async def generate_batch_embeddings(
     texts: List[str] = Body(..., description="임베딩을 생성할 텍스트 목록"),
     batch_size: int = Body(32, description="배치 크기", ge=1, le=100),
-):
+) -> Dict[str, Any]:
     """여러 텍스트의 배치 임베딩 생성"""
     try:
         if not texts:
@@ -138,11 +143,12 @@ async def generate_batch_embeddings(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/similarity", response_model=Dict[str, Any])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/similarity", response_model=Dict[str, Any])  # type: ignore[misc]
 async def calculate_embedding_similarity(
     embedding1: List[float] = Body(..., description="첫 번째 임베딩 벡터"),
     embedding2: List[float] = Body(..., description="두 번째 임베딩 벡터"),
-):
+) -> Dict[str, Any]:
     """두 임베딩 간의 코사인 유사도 계산"""
     try:
         if not embedding1 or not embedding2:
@@ -168,7 +174,8 @@ async def calculate_embedding_similarity(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/documents/update", response_model=Dict[str, Any])
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/documents/update", response_model=Dict[str, Any])  # type: ignore[misc]
 async def update_documents_embeddings(
     background_tasks: BackgroundTasks,
     document_ids: Optional[List[str]] = Body(
@@ -176,7 +183,7 @@ async def update_documents_embeddings(
     ),
     batch_size: int = Body(10, description="배치 크기", ge=1, le=50),
     run_in_background: bool = Body(False, description="백그라운드에서 실행할지 여부"),
-):
+) -> Dict[str, Any]:
     """문서들의 임베딩 업데이트"""
     try:
         if run_in_background:
@@ -201,8 +208,9 @@ async def update_documents_embeddings(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/cache/clear", response_model=Dict[str, Any])
-async def clear_embedding_cache():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.post("/cache/clear", response_model=Dict[str, Any])  # type: ignore[misc]
+async def clear_embedding_cache() -> Dict[str, Any]:
     """임베딩 캐시 클리어"""
     try:
         cleared_count = embedding_service.clear_cache()
@@ -218,8 +226,9 @@ async def clear_embedding_cache():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/models", response_model=Dict[str, Any])
-async def get_supported_models():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/models", response_model=Dict[str, Any])  # type: ignore[misc]
+async def get_supported_models() -> Dict[str, Any]:
     """지원하는 모델 목록 조회"""
     try:
         return {
@@ -234,8 +243,9 @@ async def get_supported_models():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/analytics", response_model=Dict[str, Any])
-async def get_embedding_analytics():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/analytics", response_model=Dict[str, Any])  # type: ignore[misc]
+async def get_embedding_analytics() -> Dict[str, Any]:
     """임베딩 시스템 분석 정보"""
     try:
         # 서비스 상태
@@ -243,31 +253,34 @@ async def get_embedding_analytics():
         service_info = get_service_info()
         db_status = await get_embedding_status()
 
-        # 종합 분석
-        analysis = {
-            "service_health": service_health,
-            "service_info": service_info,
-            "database_status": db_status,
-            "recommendations": [],
-        }
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (list type annotation)
+        recommendations: List[str] = []
 
         # 권장사항 생성
         if service_health.get("status") != "healthy":
-            analysis["recommendations"].append("임베딩 서비스 상태를 확인하세요")
+            recommendations.append("임베딩 서비스 상태를 확인하세요")
 
         if not service_info.get("sentence_transformers_available"):
-            analysis["recommendations"].append(
+            recommendations.append(
                 "sentence-transformers 라이브러리를 설치하세요"
             )
 
         embedding_coverage = db_status.get("embedding_coverage_percent", 0)
         if embedding_coverage < 100:
-            analysis["recommendations"].append(
+            recommendations.append(
                 f"임베딩 커버리지가 {embedding_coverage:.1f}%입니다. 문서 임베딩 업데이트를 실행하세요"
             )
 
-        if not analysis["recommendations"]:
-            analysis["recommendations"].append("시스템이 정상 상태입니다")
+        if not recommendations:
+            recommendations.append("시스템이 정상 상태입니다")
+
+        # 종합 분석
+        analysis = {
+            "service_health": service_health,
+            "service_info": service_info,
+            "database_status": db_status,
+            "recommendations": recommendations,
+        }
 
         return {"timestamp": datetime.utcnow().isoformat(), **analysis}
 

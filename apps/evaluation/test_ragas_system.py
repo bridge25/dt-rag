@@ -33,13 +33,15 @@ from apps.api.database import init_database  # noqa: E402
 class RAGASSystemTester:
     """Comprehensive RAGAS system tester"""
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
         self.sample_generator = SampleDataGenerator()
 
-    async def test_basic_evaluation(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_basic_evaluation(self) -> Any:
         """Test basic RAGAS evaluation functionality"""
         print("\n=== Testing Basic RAGAS Evaluation ===")
 
@@ -72,7 +74,8 @@ class RAGASSystemTester:
 
         return result
 
-    async def test_quality_scenarios(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_quality_scenarios(self) -> None:
         """Test different quality scenarios"""
         print("\n=== Testing Quality Scenarios ===")
 
@@ -116,7 +119,8 @@ class RAGASSystemTester:
             ):
                 print("⚠️  Warning: Low precision not detected")
 
-    async def test_quality_monitoring(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_quality_monitoring(self) -> Any:
         """Test quality monitoring system"""
         print("\n=== Testing Quality Monitoring ===")
 
@@ -152,11 +156,13 @@ class RAGASSystemTester:
         )
 
         # Test threshold updates
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         new_thresholds = QualityThresholds(
             faithfulness_min=0.90,
             context_precision_min=0.80,
             context_recall_min=0.75,
             answer_relevancy_min=0.85,
+            response_time_max=5.0,  # Explicit value for MyPy strict mode
         )
 
         await self.quality_monitor.update_thresholds(new_thresholds)
@@ -164,18 +170,22 @@ class RAGASSystemTester:
 
         return quality_status
 
-    async def test_ab_testing(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_ab_testing(self) -> Any:
         """Test A/B testing functionality"""
         print("\n=== Testing A/B Testing ===")
 
         # Create experiment
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         config = ExperimentConfig(
             experiment_id="test_exp_001",
             name="Test Retrieval Algorithm",
             description="Testing BM25 vs hybrid search",
             control_config={"search_type": "bm25", "top_k": 5},
             treatment_config={"search_type": "hybrid", "top_k": 5, "rerank": True},
+            significance_threshold=0.05,  # Explicit value for MyPy strict mode
             minimum_sample_size=20,
+            power_threshold=0.8,  # Explicit value for MyPy strict mode
         )
 
         experiment_id = await self.experiment_tracker.create_experiment(config)
@@ -205,6 +215,7 @@ class RAGASSystemTester:
             from apps.evaluation.models import EvaluationResult, EvaluationMetrics
             import random
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             mock_result = EvaluationResult(
                 evaluation_id=f"mock_{user_id}",
                 query="test query",
@@ -221,7 +232,10 @@ class RAGASSystemTester:
                     answer_relevancy=min(
                         0.99, 0.82 * metrics_modifier + random.uniform(-0.05, 0.05)
                     ),
+                    response_time=None,  # Explicit None for MyPy strict mode
+                    retrieval_score=None,  # Explicit None for MyPy strict mode
                 ),
+                overall_score=0.0,  # Explicit value for MyPy strict mode
                 quality_flags=[],
                 recommendations=[],
                 timestamp=datetime.utcnow(),
@@ -261,7 +275,8 @@ class RAGASSystemTester:
 
         return results
 
-    async def test_canary_deployment(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_canary_deployment(self) -> Dict[str, str]:
         """Test canary deployment monitoring"""
         print("\n=== Testing Canary Deployment ===")
 
@@ -281,7 +296,8 @@ class RAGASSystemTester:
 
         return monitoring_result
 
-    async def test_golden_dataset(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def test_golden_dataset(self) -> Any:
         """Test golden dataset functionality"""
         print("\n=== Testing Golden Dataset ===")
 
@@ -305,7 +321,8 @@ class RAGASSystemTester:
 
         return validation_result
 
-    async def run_integration_test(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def run_integration_test(self) -> bool:
         """Run integration test with database"""
         print("\n=== Running Integration Test ===")
 
@@ -357,7 +374,8 @@ class RAGASSystemTester:
             print(f"❌ Integration test failed: {e}")
             return False
 
-    async def run_performance_test(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def run_performance_test(self) -> float:
         """Run performance test"""
         print("\n=== Running Performance Test ===")
 
@@ -395,7 +413,8 @@ class RAGASSystemTester:
 
         return total_time / len(requests)
 
-    async def generate_dashboard_test_data(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def generate_dashboard_test_data(self) -> None:
         """Generate test data for dashboard"""
         print("\n=== Generating Dashboard Test Data ===")
 
@@ -412,6 +431,7 @@ class RAGASSystemTester:
         ]:  # Only process recent 50 to avoid overwhelming
             from apps.evaluation.models import EvaluationResult, EvaluationMetrics
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             mock_result = EvaluationResult(
                 evaluation_id=f"hist_{hash(str(data['timestamp'])) % 10000}",
                 query="historical query",
@@ -421,7 +441,9 @@ class RAGASSystemTester:
                     context_recall=data["context_recall"],
                     answer_relevancy=data["answer_relevancy"],
                     response_time=data["response_time"],
+                    retrieval_score=None,  # Explicit None for MyPy strict mode
                 ),
+                overall_score=0.0,  # Explicit value for MyPy strict mode
                 quality_flags=[],
                 recommendations=[],
                 timestamp=data["timestamp"],
@@ -431,7 +453,8 @@ class RAGASSystemTester:
 
         print("✅ Dashboard test data generated")
 
-    async def run_all_tests(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def run_all_tests(self) -> Dict[str, Any]:
         """Run all tests in sequence"""
         print("🚀 Starting RAGAS System Comprehensive Test")
         print("=" * 60)
@@ -484,7 +507,8 @@ class RAGASSystemTester:
             return {"error": str(e)}
 
 
-async def main():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+async def main() -> None:
     """Main test function"""
     # Check if Gemini API key is available
     gemini_key = os.getenv("GEMINI_API_KEY")

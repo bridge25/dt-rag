@@ -85,7 +85,7 @@ class AgentDAO:
 
     # @IMPL:AGENT-GROWTH-001:0.3.3
     @staticmethod
-    async def update_agent(session: AsyncSession, agent_id: UUID, **kwargs) -> Agent:
+    async def update_agent(session: AsyncSession, agent_id: UUID, **kwargs: Any) -> Agent:
         query = select(Agent).where(Agent.agent_id == agent_id)
         result = await session.execute(query)
         agent = result.scalar_one_or_none()

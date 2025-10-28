@@ -23,11 +23,11 @@ class HybridClassifier:
 
     def __init__(
         self,
-        embedding_service,
-        taxonomy_dao,
-        llm_service,
+        embedding_service: Any,
+        taxonomy_dao: Any,
+        llm_service: Any,
         confidence_threshold: float = 0.70,
-    ):
+    ) -> None:
         """
         Initialize hybrid classifier
 

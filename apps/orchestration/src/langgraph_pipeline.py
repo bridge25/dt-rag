@@ -34,7 +34,8 @@ _search_engine = None
 _llm_service = None
 
 
-def get_search_engine():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def get_search_engine() -> Any:
     """Lazy load search engine"""
     global _search_engine
     if _search_engine is None:
@@ -44,7 +45,8 @@ def get_search_engine():
     return _search_engine
 
 
-def get_llm_service_cached():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def get_llm_service_cached() -> Any:
     """Lazy load LLM service"""
     global _llm_service
     if _llm_service is None:
@@ -115,7 +117,7 @@ STEP_TIMEOUTS = {
 }
 
 
-async def execute_with_timeout(step_func, state: PipelineState, step_name: str):
+async def execute_with_timeout(step_func: Any, state: PipelineState, step_name: str) -> Any:
     """Execute step with timeout enforcement"""
     timeout = STEP_TIMEOUTS.get(step_name, 1.0)
     step_start = time.time()
@@ -339,13 +341,15 @@ async def step4_tools_debate(state: PipelineState) -> PipelineState:
             input_data = plan.get(f"{tool_name}_input", {})
             result = await execute_tool(tool_name, input_data, timeout=30.0)
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
+            # TODO: execute_tool() return type mismatch - should have ToolResult/ExecutionResult type
             tool_results.append(
                 {
                     "tool": tool_name,
-                    "success": result.success,
-                    "result": result.result,
-                    "error": result.error,
-                    "elapsed": result.elapsed,
+                    "success": result.success,  # type: ignore[attr-defined]
+                    "result": result.result,  # type: ignore[attr-defined]
+                    "error": result.error,  # type: ignore[attr-defined]
+                    "elapsed": result.elapsed,  # type: ignore[attr-defined]
                 }
             )
 
@@ -486,7 +490,8 @@ async def step7_respond(state: PipelineState) -> PipelineState:
 _global_replay_buffer = None
 
 
-def get_global_replay_buffer():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def get_global_replay_buffer() -> Any:
     """Get global replay buffer instance"""
     global _global_replay_buffer
     if _global_replay_buffer is None:
@@ -499,7 +504,8 @@ def get_global_replay_buffer():
 class LangGraphPipeline:
     """LangGraph 7-Step Pipeline"""
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
 
         self.name = "DT-RAG-7Step-Pipeline"

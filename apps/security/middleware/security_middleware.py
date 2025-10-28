@@ -15,7 +15,8 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.responses import JSONResponse
 
 from ..core.security_manager import SecurityManager, SecurityException, SecurityContext
-from ..audit.audit_logger import EventType, SeverityLevel
+# Future implementations - not yet available
+from ..audit.audit_logger import EventType, SeverityLevel  # type: ignore[import-not-found]  # TODO: Implement audit logger module
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +70,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(
-        self, app, security_manager: SecurityManager, config: Dict[str, Any] = None
-    ):
+        self, app: Any, security_manager: SecurityManager, config: Optional[Dict[str, Any]] = None
+    ) -> None:
         super().__init__(app)
         self.security_manager = security_manager
         self.config = config or {}
@@ -196,9 +197,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 request_id,
             )
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _pre_request_checks(
         self, request: Request, client_ip: str, request_id: str
-    ):
+    ) -> None:
         """Pre-request security checks"""
 
         # 1. IP filtering
@@ -294,12 +296,13 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         # Authorization will be checked per-endpoint basis
         return security_context
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _validate_and_sanitize_input(
         self,
         request: Request,
         security_context: Optional[SecurityContext],
         request_id: str,
-    ):
+    ) -> None:
         """Validate and sanitize request input"""
 
         try:
@@ -377,7 +380,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             logger.error(f"Response sanitization failed: {e}")
             return response
 
-    def _add_security_headers(self, response: Response):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def _add_security_headers(self, response: Response) -> None:
         """Add security headers to response"""
 
         security_headers = SecurityHeaders.get_default_headers()
@@ -512,6 +516,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
     # Logging methods
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _log_request_success(
         self,
         request: Request,
@@ -519,7 +524,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         response: Response,
         start_time: float,
         request_id: str,
-    ):
+    ) -> None:
         """Log successful request"""
 
         duration = time.time() - start_time
@@ -541,9 +546,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         await self.security_manager.audit_logger.log_event(event_data)
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _log_security_violation(
         self, request: Request, error_message: str, client_ip: str, request_id: str
-    ):
+    ) -> None:
         """Log security violation"""
 
         event_data = {
@@ -561,13 +567,14 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         await self.security_manager.audit_logger.log_event(event_data)
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _log_http_error(
         self,
         request: Request,
         exception: HTTPException,
         client_ip: str,
         request_id: str,
-    ):
+    ) -> None:
         """Log HTTP error"""
 
         severity = (
@@ -589,9 +596,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         await self.security_manager.audit_logger.log_event(event_data)
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _log_unexpected_error(
         self, request: Request, error_message: str, client_ip: str, request_id: str
-    ):
+    ) -> None:
         """Log unexpected error"""
 
         event_data = {
@@ -656,10 +664,10 @@ def create_security_dependency(security_manager: SecurityManager) -> SecurityDep
 class CSRFProtection:
     """CSRF protection middleware"""
 
-    def __init__(self, secret_key: str):
+    def __init__(self, secret_key: str) -> None:
         self.secret_key = secret_key
 
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, request: Request, call_next: Any) -> Response:
         """CSRF protection middleware"""
 
         # Skip CSRF for GET, HEAD, OPTIONS
@@ -693,11 +701,11 @@ class CSRFProtection:
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Request logging middleware for security monitoring"""
 
-    def __init__(self, app, security_manager: SecurityManager):
+    def __init__(self, app: Any, security_manager: SecurityManager) -> None:
         super().__init__(app)
         self.security_manager = security_manager
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Any) -> Response:
         """Log all requests for security monitoring"""
 
         start_time = time.time()

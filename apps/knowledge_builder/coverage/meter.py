@@ -4,7 +4,7 @@ from .models import CoverageMetrics, CoverageResult, Gap
 
 
 class CoverageMeterService:
-    def __init__(self, session_factory=None):
+    def __init__(self, session_factory: Optional[Any] = None) -> None:
         self._session_factory = session_factory
 
     # @IMPL:AGENT-GROWTH-001:0.2.1
@@ -92,7 +92,7 @@ class CoverageMeterService:
 
     async def _get_descendant_nodes(
         self,
-        session,
+        session: Any,
         root_node_ids: List[str],
         version: str
     ) -> List[str]:
@@ -117,8 +117,9 @@ class CoverageMeterService:
     ) -> List[Gap]:
         gaps = []
 
-        for node_id, coverage_data in coverage_result.node_coverage.items():
-            doc_count = coverage_data.get("document_count", 0)
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (int has no get method)
+        for node_id, doc_count in coverage_result.node_coverage.items():
+            # node_coverage is Dict[str, int], so value is int, not dict
             target_count = max(doc_count, 10)
 
             current_coverage = (doc_count / target_count * 100) if target_count > 0 else 0.0

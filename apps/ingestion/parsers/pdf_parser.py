@@ -12,7 +12,8 @@ except ImportError:
 
 
 class PDFParser(BaseParser):
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         if not PYMUPDF_AVAILABLE:
             raise ParserError("pymupdf and pymupdf4llm not installed")
 
@@ -20,7 +21,7 @@ class PDFParser(BaseParser):
         try:
             pdf_stream = io.BytesIO(file_content)
             doc = pymupdf.open(stream=pdf_stream, filetype="pdf")
-            markdown_text = pymupdf4llm.to_markdown(doc)
+            markdown_text: str = pymupdf4llm.to_markdown(doc)
 
             if not markdown_text or not markdown_text.strip():
                 raise ParserError("PDF parsing resulted in empty content")

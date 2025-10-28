@@ -1,3 +1,4 @@
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 """
 Database Migration: Add API Key Security Tables
 
@@ -9,10 +10,11 @@ This migration adds comprehensive API key management tables with security featur
 Run with: python -m alembic revision --autogenerate -m "Add API key security tables"
 """
 
-from alembic import op
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
+from alembic import op  # type: ignore[attr-defined]  # op is provided by Alembic at runtime
 import sqlalchemy as sa
 
-def upgrade():
+def upgrade() -> None:
     """Add API key security tables"""
 
     # Create api_keys table
@@ -89,7 +91,7 @@ def upgrade():
     op.create_index('idx_api_key_audit_performed_by', 'api_key_audit_log', ['performed_by', 'timestamp'])
     op.create_index('idx_api_key_audit_timestamp', 'api_key_audit_log', ['timestamp'])
 
-def downgrade():
+def downgrade() -> None:
     """Remove API key security tables"""
 
     # Drop tables in reverse order (due to potential foreign key constraints)
@@ -98,23 +100,23 @@ def downgrade():
     op.drop_table('api_keys')
 
 # Additional helper functions for data migration if needed
-def create_default_admin_key():
+def create_default_admin_key() -> None:
     """Create a default admin API key for initial setup"""
 
     # This would be called after the migration to create an initial admin key
     # Implementation would depend on your specific database setup
     pass
 
-def migrate_existing_api_keys():
+def migrate_existing_api_keys() -> None:
     """Migrate any existing API keys to the new secure format"""
     # If you have existing API keys in a different format, migrate them here
     pass
 
 # Security validation functions
-def validate_migration():
+def validate_migration() -> None:
     """Validate that the migration was successful"""
     from sqlalchemy import create_engine, text
-    from ...config import get_api_config
+    from apps.api.config import get_api_config
 
     config = get_api_config()
     engine = create_engine(config.database.url)

@@ -48,8 +48,8 @@ async def upload_document(
     language: str = Form("ko"),
     priority: int = Form(5),
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-    http_request: Request = None,
-):
+    http_request: Optional[Request] = None,
+) -> JSONResponse:
     try:
         correlation_id = (
             http_request.headers.get("X-Correlation-ID")
@@ -152,7 +152,7 @@ async def upload_document(
 async def get_job_status(
     job_id: str,
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-):
+) -> JobStatusResponseV1:
     try:
         status_data = await orchestrator.get_job_status(job_id)
 
@@ -177,7 +177,7 @@ async def get_job_status(
 
 
 @router.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     global _job_orchestrator
     if _job_orchestrator is not None:
         await _job_orchestrator.stop()

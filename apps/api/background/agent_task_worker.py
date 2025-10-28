@@ -16,6 +16,7 @@ from apps.api.background.coverage_history_dao import CoverageHistoryDAO
 from apps.api.background.webhook_service import WebhookService
 from apps.api.agent_dao import AgentDAO
 from apps.knowledge_builder.coverage.meter import CoverageMeterService
+from apps.knowledge_builder.coverage.models import CoverageMetrics
 from apps.core.db_session import async_session
 from apps.api.database import BackgroundTask
 
@@ -53,13 +54,15 @@ class AgentTaskWorker:
             f"AgentTaskWorker initialized: worker_id={worker_id}, timeout={timeout}s"
         )
 
-    async def start(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def start(self) -> None:
         """Start worker loop"""
         self.running = True
         logger.info(f"AgentTaskWorker {self.worker_id} started")
         await self._worker_loop()
 
-    async def stop(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def stop(self) -> None:
         """Stop worker gracefully"""
         self.running = False
         logger.info(f"AgentTaskWorker {self.worker_id} stopping...")
@@ -71,7 +74,8 @@ class AgentTaskWorker:
             except asyncio.CancelledError:
                 pass
 
-    async def _worker_loop(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def _worker_loop(self) -> None:
         """
         Main worker loop
 
@@ -100,7 +104,8 @@ class AgentTaskWorker:
                 logger.error(f"Worker {self.worker_id} error: {e}", exc_info=True)
                 await asyncio.sleep(1)
 
-    async def _process_coverage_task(self, task_id: str, job_data: Dict[str, Any]):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def _process_coverage_task(self, task_id: str, job_data: Dict[str, Any]) -> None:
         """
         Process coverage refresh task
 
@@ -206,9 +211,10 @@ class AgentTaskWorker:
                     f"Fatal error processing task {task_id}: {e}", exc_info=True
                 )
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (return type annotation)
     async def _calculate_coverage(
-        self, session, task: BackgroundTask, job_data: Dict[str, Any]
-    ):
+        self, session: Any, task: BackgroundTask, job_data: Dict[str, Any]
+    ) -> CoverageMetrics:
         """
         Calculate coverage with cancellation checks
 
@@ -234,11 +240,11 @@ class AgentTaskWorker:
         task.progress_percentage = 25.0
         await session.commit()
 
-        # Calculate coverage
-        result = await CoverageMeterService.calculate_coverage(
-            session=session,
-            taxonomy_node_ids=agent.taxonomy_node_ids,
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix call-arg errors
+        # Calculate coverage - Fixed method signature
+        result = await CoverageMeterService().calculate_coverage(
             taxonomy_version=agent.taxonomy_version,
+            node_ids=agent.taxonomy_node_ids,
         )
 
         # Update progress
@@ -247,9 +253,10 @@ class AgentTaskWorker:
 
         return result
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _send_webhook(
         self, task: BackgroundTask, job_data: Dict[str, Any], webhook_url: str
-    ):
+    ) -> None:
         """
         Send webhook notification
 

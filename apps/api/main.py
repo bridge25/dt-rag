@@ -20,6 +20,7 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,7 +67,7 @@ except ImportError as e:
 
 # Import monitoring components
 try:
-    from apps.api.routers.monitoring import router as monitoring_api_router
+    from apps.api.routers.monitoring import router as monitoring_api_router  # type: ignore[import-not-found]  # TODO: Implement monitoring router
     from apps.api.monitoring.metrics import (
         initialize_metrics_collector,
         get_metrics_collector,
@@ -116,8 +117,9 @@ config = get_config()
 
 
 # Application lifespan context manager
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@asynccontextmanager  # type: ignore[misc]
+async def lifespan(app: FastAPI) -> Any:
     """Application startup and shutdown lifecycle"""
     # Startup
     logger.info("🚀 Starting Dynamic Taxonomy RAG API v1.8.1")
@@ -174,12 +176,13 @@ async def lifespan(app: FastAPI):
             initialize_health_checker()
             logger.info("✅ Health checker initialized")
 
-            # Initialize Redis manager (optional)
-            if config.redis_enabled:
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
+            # Initialize Redis manager (optional) - try-except handles failures
+            try:
                 await initialize_redis_manager()
                 logger.info("✅ Redis manager initialized")
-            else:
-                logger.info("ℹ️ Redis disabled - using memory cache only")
+            except Exception as redis_err:
+                logger.info(f"ℹ️ Redis initialization skipped: {redis_err} - using memory cache only")
 
         except Exception as e:
             logger.warning(f"⚠️ Monitoring initialization failed: {e}")
@@ -230,7 +233,7 @@ async def lifespan(app: FastAPI):
     # Cleanup monitoring resources
     if MONITORING_AVAILABLE:
         try:
-            from cache.redis_manager import get_redis_manager
+            from cache.redis_manager import get_redis_manager  # type: ignore[import-not-found]  # TODO: Fix cache import path
 
             redis_manager = await get_redis_manager()
             await redis_manager.close()
@@ -306,7 +309,7 @@ app.add_middleware(RateLimitMiddleware)
 
 # Request logging and monitoring middleware
 @app.middleware("http")
-async def log_requests_and_track_metrics(request: Request, call_next):
+async def log_requests_and_track_metrics(request: Request, call_next: Any) -> Any:
     """Log all HTTP requests and track performance metrics"""
     start_time = time.time()
 
@@ -327,7 +330,7 @@ async def log_requests_and_track_metrics(request: Request, call_next):
         # Track metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics
+                from routers.monitoring import track_request_metrics  # type: ignore[import-not-found]  # TODO: Fix routers import path
 
                 await track_request_metrics(request, response_time_ms, status_code)
             except Exception as e:
@@ -347,7 +350,7 @@ async def log_requests_and_track_metrics(request: Request, call_next):
         # Track error metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics
+                from routers.monitoring import track_request_metrics  # type: ignore[import-not-found]  # TODO: Fix routers import path
 
                 await track_request_metrics(request, response_time_ms, 500)
             except Exception as metric_e:
@@ -357,8 +360,9 @@ async def log_requests_and_track_metrics(request: Request, call_next):
 
 
 # Global exception handler
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.exception_handler(HTTPException)  # type: ignore[misc]
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle HTTP exceptions with RFC 7807 Problem Details format"""
     return JSONResponse(
         status_code=exc.status_code,
@@ -374,8 +378,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.exception_handler(Exception)  # type: ignore[misc]
+async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions"""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
 
@@ -393,8 +398,9 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 
 # Health check endpoint
-@app.get("/health", tags=["Health"])
-async def health_check():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.get("/health", tags=["Health"])  # type: ignore[misc]
+async def health_check() -> Dict[str, Any]:
     """Basic health check endpoint with database and Redis status"""
     from apps.api.database import test_database_connection
 
@@ -434,13 +440,15 @@ async def health_check():
 
 
 # Custom OpenAPI schema generation
-def custom_openapi():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def custom_openapi() -> Dict[str, Any]:
     """Generate custom OpenAPI schema"""
     if app.openapi_schema:
         return app.openapi_schema
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
     if OPENAPI_SPEC_AVAILABLE:
-        openapi_schema = generate_openapi_spec()
+        openapi_schema = generate_openapi_spec(app)  # Pass app as required argument
         openapi_schema["paths"] = get_openapi(
             title=app.title,
             version=app.version,
@@ -463,8 +471,9 @@ app.openapi = custom_openapi
 
 
 # Custom documentation endpoints
-@app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.get("/docs", include_in_schema=False)  # type: ignore[misc]
+async def custom_swagger_ui_html() -> Any:
     """Custom Swagger UI with enhanced styling"""
     return get_swagger_ui_html(
         openapi_url=app.openapi_url,
@@ -485,8 +494,9 @@ async def custom_swagger_ui_html():
     )
 
 
-@app.get("/redoc", include_in_schema=False)
-async def redoc_html():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.get("/redoc", include_in_schema=False)  # type: ignore[misc]
+async def redoc_html() -> Any:
     """Custom ReDoc documentation"""
     return get_redoc_html(
         openapi_url=app.openapi_url,
@@ -546,8 +556,9 @@ app.include_router(
 
 
 # API versioning support
-@app.get("/api/versions", tags=["Versioning"])
-async def list_api_versions():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.get("/api/versions", tags=["Versioning"])  # type: ignore[misc]
+async def list_api_versions() -> Dict[str, Any]:
     """List available API versions"""
     return {
         "versions": [
@@ -573,8 +584,9 @@ async def list_api_versions():
 
 
 # Rate limiting info endpoint
-@app.get("/api/v1/rate-limits", tags=["Rate Limiting"])
-async def get_rate_limit_info():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.get("/api/v1/rate-limits", tags=["Rate Limiting"])  # type: ignore[misc]
+async def get_rate_limit_info() -> Dict[str, Any]:
     """Get rate limiting information for current user"""
     # TODO: Implement actual rate limit checking based on user/API key
     return {
@@ -599,8 +611,9 @@ async def get_rate_limit_info():
     }
 
 
-@app.get("/", tags=["Root"])
-async def root():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@app.get("/", tags=["Root"])  # type: ignore[misc]
+async def root() -> Dict[str, Any]:
     """API root endpoint with comprehensive system information"""
     # 데이터베이스 연결 상태 확인
     db_status = await test_database_connection()

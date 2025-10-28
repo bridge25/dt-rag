@@ -28,14 +28,14 @@ logger = logging.getLogger(__name__)
 class RAGEvaluationMiddleware(BaseHTTPMiddleware):
     """Middleware to automatically evaluate RAG responses"""
 
-    def __init__(self, app, enable_evaluation: bool = True):
+    def __init__(self, app: Any, enable_evaluation: bool = True) -> None:
         super().__init__(app)
         self.enable_evaluation = enable_evaluation
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Any) -> Any:
         response = await call_next(request)
 
         # Only evaluate search endpoints
@@ -51,7 +51,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    async def _evaluate_search_response(self, request: Request, response: Response):
+    async def _evaluate_search_response(self, request: Request, response: Response) -> None:
         """Evaluate search response in background"""
         try:
             # Extract query and response data
@@ -138,12 +138,15 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
             session_id = request.headers.get("X-Session-ID")
             experiment_id = request.headers.get("X-Experiment-ID")
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             return EvaluationRequest(
                 query=query,
                 response=response_text,
                 retrieved_contexts=contexts,
+                ground_truth=None,  # Explicit None for MyPy strict mode
                 session_id=session_id,
                 experiment_id=experiment_id,
+                model_version=None,  # Explicit None for MyPy strict mode
             )
 
         except Exception as e:
@@ -178,7 +181,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
 class EvaluationIntegration:
     """Integration utilities for evaluation system"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
@@ -210,12 +213,15 @@ class EvaluationIntegration:
             generated_response = self._generate_response_from_contexts(query, contexts)
 
         # Create evaluation request
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         eval_request = EvaluationRequest(
             query=query,
             response=generated_response,
             retrieved_contexts=contexts,
+            ground_truth=None,  # Explicit None for MyPy strict mode
             session_id=session_id,
             experiment_id=experiment_id,
+            model_version=None,  # Explicit None for MyPy strict mode
         )
 
         # Perform evaluation
@@ -269,15 +275,17 @@ class EvaluationIntegration:
         precision_threshold: float = 0.75,
         recall_threshold: float = 0.70,
         relevancy_threshold: float = 0.80,
-    ):
+    ) -> None:
         """Setup quality monitoring with custom thresholds"""
         from .models import QualityThresholds
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         thresholds = QualityThresholds(
             faithfulness_min=faithfulness_threshold,
             context_precision_min=precision_threshold,
             context_recall_min=recall_threshold,
             answer_relevancy_min=relevancy_threshold,
+            response_time_max=5.0,  # Explicit value for MyPy strict mode
         )
 
         await self.quality_monitor.update_thresholds(thresholds)
@@ -292,12 +300,15 @@ class EvaluationIntegration:
         """Start A/B testing experiment"""
         from .models import ExperimentConfig
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         config = ExperimentConfig(
             experiment_id=f"exp_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             name=experiment_name,
             control_config=control_config,
             treatment_config=treatment_config,
+            significance_threshold=0.05,  # Explicit value for MyPy strict mode
             minimum_sample_size=target_sample_size,
+            power_threshold=0.8,  # Explicit value for MyPy strict mode
         )
 
         experiment_id = await self.experiment_tracker.create_experiment(config)

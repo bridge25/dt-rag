@@ -20,7 +20,8 @@ try:
     from ..deps import verify_api_key
 except ImportError:
 
-    def verify_api_key():
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def verify_api_key():  # type: ignore[no-untyped-def]
         return None
 
 
@@ -68,12 +69,13 @@ async def get_evaluator() -> RAGASEvaluator:
     return RAGASEvaluator()
 
 
-@evaluation_router.post("/evaluate", response_model=EvaluationResult)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@evaluation_router.post("/evaluate", response_model=EvaluationResult)  # type: ignore[misc]
 async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
     api_key: str = Depends(verify_api_key),
-):
+) -> JSONResponse:
     """
     Evaluate a single RAG response using RAGAS metrics
 
@@ -128,12 +130,13 @@ async def evaluate_rag_response(
         )
 
 
-@evaluation_router.post("/evaluate/batch", response_model=BatchEvaluationResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@evaluation_router.post("/evaluate/batch", response_model=BatchEvaluationResponse)  # type: ignore[misc]
 async def evaluate_batch(
     request: BatchEvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
     api_key: str = Depends(verify_api_key),
-):
+) -> JSONResponse:
     """
     Evaluate multiple RAG responses in batch
 
@@ -213,15 +216,23 @@ async def evaluate_batch(
         )
 
 
-@evaluation_router.get("/thresholds", response_model=QualityThresholds)
-async def get_quality_thresholds(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@evaluation_router.get("/thresholds", response_model=QualityThresholds)  # type: ignore[misc]
+async def get_quality_thresholds(api_key: str = Depends(verify_api_key)) -> QualityThresholds:
     """
     Get current quality thresholds for monitoring
 
     Thresholds are used to trigger quality alerts and recommendations.
     """
     try:
-        thresholds = QualityThresholds()
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+        thresholds = QualityThresholds(
+            faithfulness_min=0.85,
+            context_precision_min=0.75,
+            context_recall_min=0.70,
+            answer_relevancy_min=0.80,
+            response_time_max=5.0,
+        )
         return thresholds
 
     except Exception as e:
@@ -232,10 +243,11 @@ async def get_quality_thresholds(api_key: str = Depends(verify_api_key)):
         )
 
 
-@evaluation_router.put("/thresholds", response_model=QualityThresholds)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@evaluation_router.put("/thresholds", response_model=QualityThresholds)  # type: ignore[misc]
 async def update_quality_thresholds(
     thresholds: QualityThresholds, api_key: str = Depends(verify_api_key)
-):
+) -> QualityThresholds:
     """
     Update quality thresholds for monitoring
 
@@ -253,8 +265,9 @@ async def update_quality_thresholds(
         )
 
 
-@evaluation_router.get("/status")
-async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@evaluation_router.get("/status")  # type: ignore[misc]
+async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get evaluation system status and health
 
@@ -296,7 +309,14 @@ async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)):
             },
             "configuration": {
                 "max_batch_size": 50,
-                "default_thresholds": QualityThresholds().dict(),
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+                "default_thresholds": QualityThresholds(
+                    faithfulness_min=0.85,
+                    context_precision_min=0.75,
+                    context_recall_min=0.70,
+                    answer_relevancy_min=0.80,
+                    response_time_max=5.0,
+                ).dict(),
             },
         }
 

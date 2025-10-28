@@ -57,64 +57,65 @@ BM25_WEIGHT = 0.5
 VECTOR_WEIGHT = 0.5
 
 
-class JSONType(TypeDecorator):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: Type Annotations
+class JSONType(TypeDecorator[Any]):
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: Any, dialect: Any) -> Optional[str]:
         if value is not None:
             return json.dumps(value)
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Any, dialect: Any) -> Any:
         if value is not None:
             return json.loads(value)
         return value
 
 
-class ArrayType(TypeDecorator):
+class ArrayType(TypeDecorator[Any]):
     impl = TEXT
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: Any, dialect: Any) -> Optional[str]:
         if value is not None:
             return json.dumps(value)
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Any, dialect: Any) -> Any:
         if value is not None:
             return json.loads(value)
         return value
 
 
-class UUIDType(TypeDecorator):
+class UUIDType(TypeDecorator[uuid.UUID]):
     impl = String(36)
     cache_ok = True
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: Any, dialect: Any) -> Optional[str]:
         if value is not None:
             return str(value)
         return value
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Any, dialect: Any) -> Optional[uuid.UUID]:
         if value is not None:
             return uuid.UUID(value)
         return value
 
 
-def get_json_type():
+def get_json_type() -> Any:
     if "sqlite" in DATABASE_URL:
         return JSONType()
     return JSON
 
 
-def get_array_type(item_type=String):
+def get_array_type(item_type: Any = String) -> Any:
     if "sqlite" in DATABASE_URL:
         return ArrayType()
     return ARRAY(item_type)
 
 
-def get_vector_type(dimensions=1536):
+def get_vector_type(dimensions: int = 1536) -> Any:
     """Get appropriate vector type based on database"""
     if "postgresql" in DATABASE_URL and PGVECTOR_AVAILABLE:
         return Vector(dimensions)
@@ -122,7 +123,7 @@ def get_vector_type(dimensions=1536):
     return get_array_type(Float)
 
 
-def get_uuid_type():
+def get_uuid_type() -> Any:
     if "sqlite" in DATABASE_URL:
         return UUIDType()
     return UUID(as_uuid=True)
@@ -389,7 +390,7 @@ class Agent(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_query_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Agent(id={self.agent_id}, name='{self.name}', level={self.level}, coverage={self.coverage_percent:.2f}%)>"
 
 
@@ -429,7 +430,7 @@ class BackgroundTask(Base):
         DateTime, nullable=True
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<BackgroundTask(id={self.task_id}, agent_id={self.agent_id}, type='{self.task_type}', status='{self.status}')>"
 
 
@@ -453,7 +454,7 @@ class CoverageHistory(Base):
     total_chunks: Mapped[int] = mapped_column(Integer, nullable=False)
     version: Mapped[str] = mapped_column(String(20), nullable=False, default="1.0.0")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<CoverageHistory(id={self.history_id}, agent_id={self.agent_id}, coverage={self.overall_coverage:.2f}%, timestamp={self.timestamp})>"
 
 
@@ -565,11 +566,11 @@ async def optimize_casebank_indices(session: AsyncSession) -> Dict[str, Any]:
 class DatabaseManager:
     """실제 PostgreSQL 데이터베이스 매니저"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.engine = engine
         self.async_session = async_session
 
-    async def init_database(self):
+    async def init_database(self) -> bool:
         """데이터베이스 초기화 및 테이블 생성"""
         try:
             async with self.engine.begin() as conn:
@@ -593,7 +594,7 @@ class DatabaseManager:
             logger.error(f"데이터베이스 초기화 실패: {e}")
             return False
 
-    async def get_session(self):
+    async def get_session(self) -> AsyncSession:
         """데이터베이스 세션 반환"""
         return self.async_session()
 
@@ -659,7 +660,7 @@ class TaxonomyDAO:
                 return await TaxonomyDAO._get_fallback_tree(version)
 
     @staticmethod
-    async def _insert_default_taxonomy(session, version: str):
+    async def _insert_default_taxonomy(session: AsyncSession, version: str) -> None:
         """기본 분류체계 데이터 삽입"""
         default_nodes = [
             ("AI", ["AI"], version),
@@ -714,7 +715,7 @@ class TaxonomyDAO:
 
 # 임베딩 서비스 클래스 (최적화된 버전 사용)
 try:
-    from ..search.vector_engine import EmbeddingService as OptimizedEmbeddingService
+    from ..search.vector_engine import EmbeddingService as OptimizedEmbeddingService  # type: ignore[import-not-found]  # TODO: Implement vector engine module
 
     OPTIMIZED_EMBEDDING_AVAILABLE = True
 except ImportError:
@@ -963,9 +964,10 @@ class SearchDAO:
         """최적화된 하이브리드 검색 (BM25 + Vector 병렬 처리)"""
         # 비동기 최적화 엔진 사용
         try:
-            from .optimization.async_executor import get_async_optimizer
-            from .optimization.memory_optimizer import get_gc_optimizer
-            from .optimization.concurrency_control import get_concurrency_controller
+            # Future implementations - not yet available
+            from .optimization.async_executor import get_async_optimizer  # type: ignore[import-not-found]  # TODO: Implement async executor
+            from .optimization.memory_optimizer import get_gc_optimizer  # type: ignore[import-not-found]  # TODO: Implement memory optimizer
+            from .optimization.concurrency_control import get_concurrency_controller  # type: ignore[import-not-found]  # TODO: Implement concurrency control
 
             optimizer = await get_async_optimizer()
             gc_optimizer = get_gc_optimizer()
@@ -996,12 +998,12 @@ class SearchDAO:
     @staticmethod
     async def _execute_optimized_hybrid_search(
         query: str,
-        filters: Dict,
+        filters: Dict[str, Any],
         topk: int,
         bm25_topk: int,
         vector_topk: int,
         rerank_candidates: int,
-        optimizer,
+        optimizer: Any,
     ) -> List[Dict[str, Any]]:
         """최적화된 하이브리드 검색 실행"""
         async with db_manager.async_session() as session:
@@ -1365,7 +1367,7 @@ class SearchDAO:
         return sorted_results[:max_candidates]
 
     @staticmethod
-    async def _insert_sample_chunks(session):
+    async def _insert_sample_chunks(session: AsyncSession) -> None:
         """샘플 청크 데이터 삽입"""
         # 문서 먼저 삽입
         sample_docs = [
@@ -1427,7 +1429,7 @@ class SearchDAO:
         await session.commit()
 
     @staticmethod
-    async def optimize_search_indices(session) -> Dict[str, Any]:
+    async def optimize_search_indices(session: AsyncSession) -> Dict[str, Any]:
         """검색 인덱스 최적화 (SQLite/PostgreSQL 호환)"""
         try:
             if "sqlite" in DATABASE_URL:
@@ -1486,7 +1488,7 @@ class SearchDAO:
             return {"success": False, "error": str(e), "indices_created": []}
 
     @staticmethod
-    async def get_search_analytics(session) -> Dict[str, Any]:
+    async def get_search_analytics(session: AsyncSession) -> Dict[str, Any]:
         """검색 시스템 분석 정보 조회"""
         try:
             # 기본 통계 쿼리
@@ -1697,19 +1699,19 @@ class ClassifyDAO:
 
 
 # 초기화 함수
-async def init_database():
+async def init_database() -> bool:
     """데이터베이스 초기화"""
     return await db_manager.init_database()
 
 
 # 연결 테스트 함수
-async def test_database_connection():
+async def test_database_connection() -> bool:
     """데이터베이스 연결 테스트"""
     return await db_manager.test_connection()
 
 
 # 유틸리티 함수들
-async def setup_search_system():
+async def setup_search_system() -> bool:
     """검색 시스템 초기 설정"""
     try:
         async with db_manager.async_session() as session:
@@ -1796,13 +1798,13 @@ async def get_search_performance_metrics() -> Dict[str, Any]:
 class SearchMetrics:
     """검색 성능 지표 수집"""
 
-    def __init__(self):
-        self.search_latencies = []
-        self.search_counts = {"bm25": 0, "vector": 0, "hybrid": 0}
-        self.error_counts = 0
-        self.last_reset = datetime.utcnow()
+    def __init__(self) -> None:
+        self.search_latencies: List[float] = []
+        self.search_counts: Dict[str, int] = {"bm25": 0, "vector": 0, "hybrid": 0}
+        self.error_counts: int = 0
+        self.last_reset: datetime = datetime.utcnow()
 
-    def record_search(self, search_type: str, latency: float, error: bool = False):
+    def record_search(self, search_type: str, latency: float, error: bool = False) -> None:
         """검색 메트릭 기록"""
         self.search_latencies.append(latency)
         self.search_counts[search_type] = self.search_counts.get(search_type, 0) + 1
@@ -1831,7 +1833,7 @@ class SearchMetrics:
             "period_start": self.last_reset.isoformat(),
         }
 
-    def reset(self):
+    def reset(self) -> None:
         """메트릭 초기화"""
         self.search_latencies = []
         self.search_counts = {"bm25": 0, "vector": 0, "hybrid": 0}
@@ -1852,7 +1854,7 @@ class QTableDAO:
     향후 PostgreSQL JSON 컬럼으로 마이그레이션 예정.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Q-table DAO 초기화"""
         self.q_table_storage: Dict[str, List[float]] = {}
         logger.info("QTableDAO initialized (memory-based storage)")
@@ -1887,7 +1889,7 @@ class QTableDAO:
 
 
 # FastAPI Dependency for database sessions
-async def get_async_session():
+async def get_async_session() -> Any:
     """
     FastAPI dependency for providing async database sessions
 

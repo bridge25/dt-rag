@@ -190,7 +190,8 @@ def _check_rate_limit(client_ip: str, api_key: str) -> bool:
         _blocked_keys.add(api_key)
 
         # Schedule unblocking (in production, use Redis with TTL)
-        async def unblock_later():
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+        async def unblock_later() -> None:
             await asyncio.sleep(APIKeyValidator.BLOCK_DURATION)
             _blocked_keys.discard(api_key)
 
@@ -207,7 +208,8 @@ def _hash_api_key(api_key: str) -> str:
     return hashlib.sha256(api_key.encode()).hexdigest()[:16]
 
 
-def _log_security_event(event_type: str, api_key: str, client_ip: str, details: str):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def _log_security_event(event_type: str, api_key: str, client_ip: str, details: str) -> None:
     """Log security events for monitoring and compliance"""
     key_hash = _hash_api_key(api_key) if api_key else "unknown"
 
@@ -220,11 +222,12 @@ def _log_security_event(event_type: str, api_key: str, client_ip: str, details: 
     )
 
 
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def verify_api_key(
     request: Request,
     x_api_key: Optional[str] = Header(None),
     db: AsyncSession = Depends(lambda: None),  # Will be injected by FastAPI
-):
+) -> APIKeyInfo:
     """
     Production-ready API key validation with comprehensive security checks
 
@@ -340,20 +343,24 @@ async def verify_api_key(
             db = session
 
     # Database validation
-    from .security.api_key_storage import APIKeyManager
+    from .security.api_key_storage import APIKeyManager, APIKeyInfo
 
     try:
         key_manager = APIKeyManager(db)
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (type annotation)
         # Verify API key against database
-        key_info = await key_manager.verify_api_key(
+        key_info: Optional[APIKeyInfo] = await key_manager.verify_api_key(
             plaintext_key=x_api_key,
             client_ip=client_ip,
             endpoint=request.url.path,
             method=request.method,
         )
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (type narrowing)
         if key_info:
+            # MyPy type narrowing: key_info is APIKeyInfo here, not dict
+            assert isinstance(key_info, APIKeyInfo), "Type narrowing for MyPy"
             _log_security_event(
                 "VALID_API_KEY",
                 x_api_key,
@@ -430,7 +437,7 @@ def _get_required_scope(endpoint: str, method: str) -> str:
     return scope_map.get((method, endpoint), method_defaults.get(method, "read"))
 
 
-def _check_permission(api_key_info, required_scope: str) -> bool:
+def _check_permission(api_key_info: Any, required_scope: str) -> bool:
     """Check if API key has required permissions"""
     # Define scope hierarchy: admin > write > read
     scope_hierarchy = {"read": 0, "write": 1, "admin": 2}

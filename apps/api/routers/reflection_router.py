@@ -32,7 +32,7 @@ if orchestration_src not in sys.path:
     sys.path.insert(0, orchestration_src)
 
 try:
-    from reflection_engine import ReflectionEngine
+    from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
 except ImportError:
     ReflectionEngine = None
 
@@ -91,7 +91,7 @@ class ImprovementSuggestionsResponse(BaseModel):
 async def get_reflection_engine() -> AsyncGenerator[Any, None]:
     """ReflectionEngine 인스턴스 생성"""
     try:
-        from reflection_engine import ReflectionEngine as RE
+        from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
     except ImportError:
         RE = None
 
@@ -119,7 +119,7 @@ async def analyze_case_performance(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine as RE
+                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
 
                 engine = RE(db_session=session)
             except ImportError:
@@ -157,7 +157,7 @@ async def run_reflection_batch(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine as RE
+                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
 
                 engine = RE(db_session=session)
             except ImportError:
@@ -191,7 +191,7 @@ async def generate_improvement_suggestions(
     try:
         async with db_manager.async_session() as session:
             try:
-                from reflection_engine import ReflectionEngine as RE
+                from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine as RE
 
                 engine = RE(db_session=session)
             except ImportError:
