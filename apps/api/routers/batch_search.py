@@ -20,7 +20,7 @@ sys.path.insert(0, str(project_root))
 import logging  # noqa: E402
 import time  # noqa: E402
 import asyncio  # noqa: E402
-from typing import List  # noqa: E402
+from typing import List, Dict, Any  # noqa: E402
 from datetime import datetime  # noqa: E402
 import uuid  # noqa: E402
 
@@ -252,7 +252,7 @@ async def batch_search(
     http_request: Request,
     service: BatchSearchService = Depends(get_batch_search_service),
     api_key: APIKeyInfo = Depends(verify_api_key),
-):
+) -> BatchSearchResponse:
     """
     Execute multiple search queries in parallel or sequential mode
 
@@ -294,7 +294,7 @@ async def batch_search(
 # @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware
 async def get_batch_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
     """
     Get batch search performance metrics and recommendations
 

@@ -70,12 +70,12 @@ async def get_evaluator() -> RAGASEvaluator:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@evaluation_router.post("/evaluate", response_model=EvaluationResult)
+@evaluation_router.post("/evaluate", response_model=EvaluationResult)  # type: ignore[misc]
 async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
     api_key: str = Depends(verify_api_key),
-):  # type: ignore[misc]
+) -> JSONResponse:
     """
     Evaluate a single RAG response using RAGAS metrics
 
@@ -131,12 +131,12 @@ async def evaluate_rag_response(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@evaluation_router.post("/evaluate/batch", response_model=BatchEvaluationResponse)
+@evaluation_router.post("/evaluate/batch", response_model=BatchEvaluationResponse)  # type: ignore[misc]
 async def evaluate_batch(
     request: BatchEvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
     api_key: str = Depends(verify_api_key),
-):  # type: ignore[misc]
+) -> JSONResponse:
     """
     Evaluate multiple RAG responses in batch
 
@@ -217,8 +217,8 @@ async def evaluate_batch(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@evaluation_router.get("/thresholds", response_model=QualityThresholds)
-async def get_quality_thresholds(api_key: str = Depends(verify_api_key)):  # type: ignore[misc]
+@evaluation_router.get("/thresholds", response_model=QualityThresholds)  # type: ignore[misc]
+async def get_quality_thresholds(api_key: str = Depends(verify_api_key)) -> QualityThresholds:
     """
     Get current quality thresholds for monitoring
 
@@ -237,10 +237,10 @@ async def get_quality_thresholds(api_key: str = Depends(verify_api_key)):  # typ
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@evaluation_router.put("/thresholds", response_model=QualityThresholds)
+@evaluation_router.put("/thresholds", response_model=QualityThresholds)  # type: ignore[misc]
 async def update_quality_thresholds(
     thresholds: QualityThresholds, api_key: str = Depends(verify_api_key)
-):  # type: ignore[misc]
+) -> QualityThresholds:
     """
     Update quality thresholds for monitoring
 
@@ -259,8 +259,8 @@ async def update_quality_thresholds(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@evaluation_router.get("/status")
-async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)):  # type: ignore[misc]
+@evaluation_router.get("/status")  # type: ignore[misc]
+async def get_evaluation_system_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get evaluation system status and health
 

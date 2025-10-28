@@ -5,7 +5,7 @@
 import time
 import asyncio
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, AsyncIterator
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
@@ -188,7 +188,7 @@ class MetricsCollector:
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     @asynccontextmanager
-    async def track_operation(self, operation_name: str, labels: Dict[str, str] = None):  # type: ignore[misc]
+    async def track_operation(self, operation_name: str, labels: Optional[Dict[str, str]] = None) -> AsyncIterator[None]:
         """작업 시간 추적 컨텍스트 매니저"""
         labels = labels or {}
         start_time = time.time()

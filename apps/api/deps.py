@@ -190,7 +190,8 @@ def _check_rate_limit(client_ip: str, api_key: str) -> bool:
         _blocked_keys.add(api_key)
 
         # Schedule unblocking (in production, use Redis with TTL)
-        async def unblock_later():
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+        async def unblock_later() -> None:
             await asyncio.sleep(APIKeyValidator.BLOCK_DURATION)
             _blocked_keys.discard(api_key)
 
@@ -207,7 +208,8 @@ def _hash_api_key(api_key: str) -> str:
     return hashlib.sha256(api_key.encode()).hexdigest()[:16]
 
 
-def _log_security_event(event_type: str, api_key: str, client_ip: str, details: str):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def _log_security_event(event_type: str, api_key: str, client_ip: str, details: str) -> None:
     """Log security events for monitoring and compliance"""
     key_hash = _hash_api_key(api_key) if api_key else "unknown"
 
@@ -220,11 +222,12 @@ def _log_security_event(event_type: str, api_key: str, client_ip: str, details: 
     )
 
 
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def verify_api_key(
     request: Request,
     x_api_key: Optional[str] = Header(None),
     db: AsyncSession = Depends(lambda: None),  # Will be injected by FastAPI
-):
+) -> APIKeyInfo:
     """
     Production-ready API key validation with comprehensive security checks
 

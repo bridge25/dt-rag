@@ -308,7 +308,8 @@ def generate_custom_key(
 
 
 # CLI utility function
-def main():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def main() -> None:
     """CLI utility for generating API keys"""
     import argparse
 

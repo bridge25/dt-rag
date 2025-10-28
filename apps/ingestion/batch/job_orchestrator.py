@@ -47,7 +47,8 @@ class JobOrchestrator:
         self.internal_queue: asyncio.Queue = asyncio.Queue(maxsize=100)
         self.dispatcher_task: Optional[asyncio.Task] = None
 
-    async def start(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def start(self) -> None:
         self.running = True
         await self.job_queue.initialize()
 
@@ -62,7 +63,8 @@ class JobOrchestrator:
 
         logger.info("Job Orchestrator started successfully")
 
-    async def stop(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def stop(self) -> None:
         self.running = False
         logger.info("Stopping Job Orchestrator...")
 
@@ -82,7 +84,8 @@ class JobOrchestrator:
         logger.info("Job Orchestrator stopped")
 
     # @CODE:JOB-OPTIMIZE-001:DISPATCHER
-    async def _dispatcher(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def _dispatcher(self) -> None:
         """Single Redis connection for job reception and internal queue distribution"""
         logger.info("Dispatcher started")
         retry_count = 0
@@ -123,7 +126,8 @@ class JobOrchestrator:
         logger.info("Dispatcher stopped")
 
     # @CODE:JOB-OPTIMIZE-001:WORKER
-    async def _worker(self, worker_id: int):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    async def _worker(self, worker_id: int) -> None:
         logger.info(f"Worker {worker_id} started")
 
         QUEUE_TIMEOUT = 5.0

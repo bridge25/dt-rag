@@ -51,7 +51,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
 
         return response
 
-    async def _evaluate_search_response(self, request: Request, response: Response):
+    async def _evaluate_search_response(self, request: Request, response: Response) -> None:
         """Evaluate search response in background"""
         try:
             # Extract query and response data
@@ -178,7 +178,7 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
 class EvaluationIntegration:
     """Integration utilities for evaluation system"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.evaluator = RAGASEvaluator()
         self.quality_monitor = QualityMonitor()
         self.experiment_tracker = ExperimentTracker()
@@ -269,7 +269,7 @@ class EvaluationIntegration:
         precision_threshold: float = 0.75,
         recall_threshold: float = 0.70,
         relevancy_threshold: float = 0.80,
-    ):
+    ) -> None:
         """Setup quality monitoring with custom thresholds"""
         from .models import QualityThresholds
 

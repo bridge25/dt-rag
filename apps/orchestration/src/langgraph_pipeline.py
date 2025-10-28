@@ -34,7 +34,8 @@ _search_engine = None
 _llm_service = None
 
 
-def get_search_engine():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def get_search_engine() -> Any:
     """Lazy load search engine"""
     global _search_engine
     if _search_engine is None:
@@ -44,7 +45,8 @@ def get_search_engine():
     return _search_engine
 
 
-def get_llm_service_cached():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def get_llm_service_cached() -> Any:
     """Lazy load LLM service"""
     global _llm_service
     if _llm_service is None:
@@ -486,7 +488,8 @@ async def step7_respond(state: PipelineState) -> PipelineState:
 _global_replay_buffer = None
 
 
-def get_global_replay_buffer():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+def get_global_replay_buffer() -> Any:
     """Get global replay buffer instance"""
     global _global_replay_buffer
     if _global_replay_buffer is None:
@@ -499,7 +502,8 @@ def get_global_replay_buffer():
 class LangGraphPipeline:
     """LangGraph 7-Step Pipeline"""
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         from apps.orchestration.src.bandit.replay_buffer import ReplayBuffer
 
         self.name = "DT-RAG-7Step-Pipeline"

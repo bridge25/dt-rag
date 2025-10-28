@@ -66,7 +66,7 @@ class SystemHealth:
 class HealthChecker:
     """헬스 체크 관리자"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.start_time = datetime.now()
         self.health_checks: Dict[str, Callable] = {}
         self.last_results: Dict[str, ComponentHealth] = {}
@@ -78,14 +78,14 @@ class HealthChecker:
 
         logger.info("HealthChecker initialized")
 
-    def _register_default_checks(self):
+    def _register_default_checks(self) -> None:
         """기본 헬스 체크 등록"""
         self.register_check("system", self._check_system_health)
         self.register_check("database", self._check_database_health)
         self.register_check("cache", self._check_cache_health)
         self.register_check("storage", self._check_storage_health)
 
-    def register_check(self, name: str, check_function: Callable):
+    def register_check(self, name: str, check_function: Callable) -> None:
         """헬스 체크 함수 등록"""
         self.health_checks[name] = check_function
         logger.info(f"Health check '{name}' registered")
@@ -473,7 +473,7 @@ class HealthChecker:
             "uptime_seconds": (datetime.now() - self.start_time).total_seconds(),
         }
 
-    async def start_background_monitoring(self):
+    async def start_background_monitoring(self) -> None:
         """백그라운드 헬스 모니터링 시작"""
         logger.info("Starting background health monitoring")
 

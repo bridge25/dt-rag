@@ -31,7 +31,7 @@ class LangGraphService:
     the standalone LangGraph pipeline implementation.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize LangGraph service with pipeline instance"""
         self.pipeline: LangGraphPipeline = get_pipeline()
         logger.info("LangGraphService initialized with 7-step pipeline")

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class MonitoringDashboard:
     """모니터링 대시보드"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.metrics_collector = get_metrics_collector()
         self.health_checker = get_health_checker()
 

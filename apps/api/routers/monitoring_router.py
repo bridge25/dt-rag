@@ -15,7 +15,8 @@ try:
 except ImportError:
     AUTH_AVAILABLE = False
 
-    def verify_api_key():
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def verify_api_key() -> None:
         return None
 
 
@@ -35,8 +36,9 @@ except ImportError:
 router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 
 
-@router.get("/health")
-async def get_system_health():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/health")  # type: ignore[misc]
+async def get_system_health() -> Dict[str, Any]:
     """Get comprehensive system health status"""
     try:
         cpu_percent = psutil.cpu_percent(interval=1)
@@ -73,8 +75,9 @@ async def get_system_health():
         }
 
 
-@router.get("/llm-costs")
-async def get_llm_costs():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/llm-costs")  # type: ignore[misc]
+async def get_llm_costs() -> Dict[str, Any]:
     """
     Get LLM cost tracking dashboard (Gemini 2.5 Flash + OpenAI Embedding)
 
@@ -196,8 +199,9 @@ async def get_llm_costs():
         }
 
 
-@router.get("/langfuse-status")
-async def get_langfuse_integration_status():
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@router.get("/langfuse-status")  # type: ignore[misc]
+async def get_langfuse_integration_status() -> Dict[str, Any]:
     """Get Langfuse integration status and configuration"""
     if not LANGFUSE_AVAILABLE:
         return {"available": False, "message": "Langfuse package not installed"}

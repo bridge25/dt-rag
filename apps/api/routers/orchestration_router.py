@@ -20,8 +20,8 @@ from pydantic import BaseModel, Field
 try:
     from ..deps import verify_api_key
 except ImportError:
-
-    def verify_api_key():
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def verify_api_key() -> None:
         return None
 
 
@@ -116,7 +116,8 @@ class PipelineAnalytics(BaseModel):
 class PipelineService:
     """Real pipeline orchestration service using LangGraph 7-step pipeline"""
 
-    def __init__(self):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    def __init__(self) -> None:
         """Initialize with LangGraph service"""
         self.langgraph_service = get_langgraph_service()
 
@@ -243,12 +244,13 @@ async def get_pipeline_service() -> PipelineService:
 # API Endpoints
 
 
-@orchestration_router.post("/execute", response_model=PipelineResponse)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@orchestration_router.post("/execute", response_model=PipelineResponse)  # type: ignore[misc]
 async def execute_pipeline(
     request: PipelineRequest,
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> JSONResponse:
     """
     Execute the complete 7-step RAG pipeline
 
@@ -293,13 +295,14 @@ async def execute_pipeline(
         )
 
 
-@orchestration_router.post("/execute/async")
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@orchestration_router.post("/execute/async")  # type: ignore[misc]
 async def execute_pipeline_async(
     request: PipelineRequest,
     background_tasks: BackgroundTasks,
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> Dict[str, Any]:
     """
     Start asynchronous pipeline execution
 
@@ -327,12 +330,13 @@ async def execute_pipeline_async(
         )
 
 
-@orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)  # type: ignore[misc]
 async def get_pipeline_job(
     job_id: str,
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> PipelineJob:
     """
     Get pipeline job status and results
 
@@ -362,11 +366,12 @@ async def get_pipeline_job(
         )
 
 
-@orchestration_router.get("/config", response_model=PipelineConfig)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@orchestration_router.get("/config", response_model=PipelineConfig)  # type: ignore[misc]
 async def get_pipeline_config(
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> PipelineConfig:
     """
     Get current pipeline configuration
 
@@ -387,12 +392,13 @@ async def get_pipeline_config(
         )
 
 
-@orchestration_router.put("/config", response_model=PipelineConfig)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@orchestration_router.put("/config", response_model=PipelineConfig)  # type: ignore[misc]
 async def update_pipeline_config(
     config: PipelineConfig,
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> PipelineConfig:
     """
     Update pipeline configuration
 
@@ -422,11 +428,12 @@ async def update_pipeline_config(
         )
 
 
-@orchestration_router.get("/analytics", response_model=PipelineAnalytics)
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@orchestration_router.get("/analytics", response_model=PipelineAnalytics)  # type: ignore[misc]
 async def get_pipeline_analytics(
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
-):
+) -> PipelineAnalytics:
     """
     Get pipeline analytics and performance metrics
 
@@ -447,8 +454,9 @@ async def get_pipeline_analytics(
         )
 
 
-@orchestration_router.get("/status")
-async def get_pipeline_status(api_key: str = Depends(verify_api_key)):
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+@orchestration_router.get("/status")  # type: ignore[misc]
+async def get_pipeline_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get pipeline system status and health
 

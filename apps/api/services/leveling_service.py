@@ -184,7 +184,7 @@ class LevelingService:
 
     async def calculate_xp_and_level_up(
         self, session: AsyncSession, agent_id: str, query_result: Dict
-    ):
+    ) -> None:
         try:
             xp_result = await self.calculate_xp(agent_id, query_result)
             if xp_result:
