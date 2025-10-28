@@ -9,7 +9,7 @@ including proper hashing, rate limiting, and audit logging.
 import hashlib
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List
+from typing import Optional, List, cast
 from sqlalchemy import (
     Integer,
     String,
@@ -756,4 +756,4 @@ class APIKeyManager:
         await self.db.commit()
 
         logger.info(f"Cleaned up {result.rowcount} old usage log entries")
-        return result.rowcount
+        return cast(int, result.rowcount)
