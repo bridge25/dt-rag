@@ -6,7 +6,7 @@ Redis 연결 관리 및 최적화 시스템
 import logging
 import pickle
 import gzip
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, cast
 from dataclasses import dataclass
 from datetime import datetime
 import os
@@ -371,7 +371,7 @@ class RedisManager:
             return None
 
         try:
-            return await self.client.memory_usage(key)
+            return cast(Optional[int], await self.client.memory_usage(key))
         except Exception as e:
             logger.warning(f"Redis MEMORY USAGE failed for key {key}: {e}")
             return None
@@ -400,7 +400,7 @@ class RedisManager:
             self.stats["operations_total"] += 1
             result = await self.client.brpop(*keys, timeout=timeout)
             self.stats["operations_success"] += 1
-            return result
+            return cast(Optional[tuple[Any, ...]], result)
         except Exception as e:
             logger.warning(f"Redis BRPOP failed: {e}")
             self.stats["operations_failed"] += 1
