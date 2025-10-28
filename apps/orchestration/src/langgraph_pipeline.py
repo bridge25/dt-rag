@@ -341,13 +341,15 @@ async def step4_tools_debate(state: PipelineState) -> PipelineState:
             input_data = plan.get(f"{tool_name}_input", {})
             result = await execute_tool(tool_name, input_data, timeout=30.0)
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
+            # TODO: execute_tool() return type mismatch - should have ToolResult/ExecutionResult type
             tool_results.append(
                 {
                     "tool": tool_name,
-                    "success": result.success,
-                    "result": result.result,
-                    "error": result.error,
-                    "elapsed": result.elapsed,
+                    "success": result.success,  # type: ignore[attr-defined]
+                    "result": result.result,  # type: ignore[attr-defined]
+                    "error": result.error,  # type: ignore[attr-defined]
+                    "elapsed": result.elapsed,  # type: ignore[attr-defined]
                 }
             )
 

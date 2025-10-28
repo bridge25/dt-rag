@@ -1710,6 +1710,7 @@ def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
             for s in suggestions
         ]
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
         # 로그 기록
         log_id = str(uuid.uuid4())
         cbr_log = CBRLog(
@@ -1722,6 +1723,8 @@ def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
             success_flag=True,
             execution_time_ms=exec_time,
             similarity_method=request.similarity_method,
+            feedback=None,  # Explicit None for MyPy strict mode
+            user_id=None,  # Explicit None for MyPy strict mode
         )
 
         cbr_system.log_cbr_interaction(cbr_log)
@@ -1934,7 +1937,8 @@ def export_cbr_training_data() -> Dict[str, Any]:
         import sqlite3
         import json
 
-        training_data = {
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (Collection.append)
+        training_data: Dict[str, Any] = {
             "cases": [],
             "interactions": [],
             "metadata": {
