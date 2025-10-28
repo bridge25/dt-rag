@@ -165,10 +165,12 @@ class SampleDataGenerator:
                     + " However, this approach has significant limitations and may not be suitable for all applications."
                 )
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
             request = EvaluationRequest(
                 query=query,
                 response=response,
                 retrieved_contexts=contexts,
+                ground_truth=None,  # Optional field - explicit None for MyPy strict mode
                 session_id=f"session_{i // 5 + 1}",
                 model_version=random.choice(["v1.8.1", "v1.8.0", "v1.7.9"]),
             )

@@ -524,6 +524,7 @@ async def simulate_evaluation() -> Dict[str, Any]:
     from .models import EvaluationResult, EvaluationMetrics
     import random
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
     # Create simulated evaluation result
     simulated_metrics = EvaluationMetrics(
         faithfulness=random.uniform(0.75, 0.95),
@@ -531,12 +532,15 @@ async def simulate_evaluation() -> Dict[str, Any]:
         context_recall=random.uniform(0.65, 0.85),
         answer_relevancy=random.uniform(0.80, 0.95),
         response_time=random.uniform(0.5, 3.0),
+        retrieval_score=random.uniform(0.70, 0.90),  # Explicit for MyPy strict mode
     )
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
     simulated_result = EvaluationResult(
         evaluation_id=f"sim_{datetime.now().strftime('%H%M%S')}",
         query="What is machine learning?",
         metrics=simulated_metrics,
+        overall_score=0.85,  # Explicit for MyPy strict mode
         quality_flags=[],
         recommendations=[],
         timestamp=datetime.utcnow(),

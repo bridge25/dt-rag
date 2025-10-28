@@ -176,12 +176,13 @@ async def lifespan(app: FastAPI) -> Any:
             initialize_health_checker()
             logger.info("✅ Health checker initialized")
 
-            # Initialize Redis manager (optional)
-            if config.redis_enabled:
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
+            # Initialize Redis manager (optional) - try-except handles failures
+            try:
                 await initialize_redis_manager()
                 logger.info("✅ Redis manager initialized")
-            else:
-                logger.info("ℹ️ Redis disabled - using memory cache only")
+            except Exception as redis_err:
+                logger.info(f"ℹ️ Redis initialization skipped: {redis_err} - using memory cache only")
 
         except Exception as e:
             logger.warning(f"⚠️ Monitoring initialization failed: {e}")
@@ -445,8 +446,9 @@ def custom_openapi() -> Dict[str, Any]:
     if app.openapi_schema:
         return app.openapi_schema
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
     if OPENAPI_SPEC_AVAILABLE:
-        openapi_schema = generate_openapi_spec()
+        openapi_schema = generate_openapi_spec(app)  # Pass app as required argument
         openapi_schema["paths"] = get_openapi(
             title=app.title,
             version=app.version,

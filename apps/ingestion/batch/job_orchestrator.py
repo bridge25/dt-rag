@@ -351,6 +351,7 @@ class JobOrchestrator:
 
         correlation_id = job_data.get("correlation_id", command_id)
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
         event = DocumentProcessedEventV1(
             correlationId=correlation_id,
             command_id=command_id,
@@ -360,6 +361,8 @@ class JobOrchestrator:
             total_chunks=len(chunk_signals),
             total_tokens=total_tokens,
             processing_duration_ms=processing_duration_ms,
+            error_message=None,  # Explicit None for successful processing
+            error_code=None,  # Explicit None for successful processing
         )
 
         return event

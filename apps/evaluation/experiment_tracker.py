@@ -338,6 +338,7 @@ class ExperimentTracker:
         canary_id = f"canary_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         try:
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
             # Create temporary experiment for canary
             config = ExperimentConfig(
                 experiment_id=canary_id,
@@ -346,6 +347,7 @@ class ExperimentTracker:
                 treatment_config=canary_config,
                 significance_threshold=0.1,  # More sensitive for canary
                 minimum_sample_size=30,  # Smaller sample size for faster detection
+                power_threshold=0.8,  # Explicit default for MyPy strict mode
             )
 
             await self.create_experiment(config)

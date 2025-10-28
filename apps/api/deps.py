@@ -357,7 +357,10 @@ async def verify_api_key(
             method=request.method,
         )
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (type narrowing)
         if key_info:
+            # MyPy type narrowing: key_info is APIKeyInfo here, not dict
+            assert isinstance(key_info, APIKeyInfo), "Type narrowing for MyPy"
             _log_security_event(
                 "VALID_API_KEY",
                 x_api_key,

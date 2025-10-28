@@ -10,7 +10,8 @@ This migration adds comprehensive API key management tables with security featur
 Run with: python -m alembic revision --autogenerate -m "Add API key security tables"
 """
 
-from alembic import op
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
+from alembic import op  # type: ignore[attr-defined]  # op is provided by Alembic at runtime
 import sqlalchemy as sa
 
 def upgrade() -> None:
