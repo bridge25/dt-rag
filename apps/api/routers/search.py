@@ -143,7 +143,7 @@ class LegacySearchResponse(BaseModel):
     taxonomy_version: str = "1.8.1"
 
 
-@router.post("/search", response_model=LegacySearchResponse)
+@router.post("/search", response_model=LegacySearchResponse)  # type: ignore[misc]
 async def search_documents(
     request: LegacySearchRequest,
     http_request: Request,
@@ -405,7 +405,7 @@ class EmbeddingResponse(BaseModel):
     error: Optional[str] = None
 
 
-@router.post("/admin/create-embeddings", response_model=EmbeddingResponse)
+@router.post("/admin/create-embeddings", response_model=EmbeddingResponse)  # type: ignore[misc]
 async def create_embeddings(
     request: EmbeddingRequest, api_key: str = Depends(verify_api_key)
 ) -> EmbeddingResponse:
@@ -428,7 +428,7 @@ async def create_embeddings(
         return EmbeddingResponse(processed=0, message="임베딩 생성 실패", error=str(e))
 
 
-@router.get("/admin/search-analytics")
+@router.get("/admin/search-analytics")  # type: ignore[misc]
 async def get_search_analytics(api_key: str = Depends(verify_api_key)) -> Any:
     """
     검색 시스템 분석 정보 조회 (관리자용)
@@ -457,7 +457,7 @@ class CacheWarmUpRequest(BaseModel):
     common_queries: List[str] = Field(..., description="주요 쿼리 목록")
 
 
-@router.post("/admin/cache/warm-up")
+@router.post("/admin/cache/warm-up")  # type: ignore[misc]
 async def warm_up_cache(
     request: CacheWarmUpRequest, api_key: str = Depends(verify_api_key)
 ) -> Dict[str, Any]:
@@ -484,7 +484,7 @@ async def warm_up_cache(
         raise HTTPException(status_code=500, detail=f"Cache warm-up error: {str(e)}")
 
 
-@router.delete("/admin/cache/clear")
+@router.delete("/admin/cache/clear")  # type: ignore[misc]
 async def clear_search_cache(
     pattern: Optional[str] = Query(None, description="삭제할 패턴 (비어있으면 전체)"),
     api_key: str = Depends(verify_api_key),
@@ -506,7 +506,7 @@ async def clear_search_cache(
         raise HTTPException(status_code=500, detail=f"Cache clear error: {str(e)}")
 
 
-@router.post("/admin/optimize-indices")
+@router.post("/admin/optimize-indices")  # type: ignore[misc]
 async def optimize_search_indices(api_key: str = Depends(verify_api_key)) -> Any:
     """
     검색 인덱스 최적화 (관리자용)
@@ -524,7 +524,7 @@ async def optimize_search_indices(api_key: str = Depends(verify_api_key)) -> Any
         )
 
 
-@router.get("/admin/metrics")
+@router.get("/admin/metrics")  # type: ignore[misc]
 async def get_search_metrics(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     실시간 검색 성능 메트릭 조회
@@ -537,7 +537,7 @@ async def get_search_metrics(api_key: str = Depends(verify_api_key)) -> Dict[str
         raise HTTPException(status_code=500, detail=f"Metrics error: {str(e)}")
 
 
-@router.post("/admin/reset-metrics")
+@router.post("/admin/reset-metrics")  # type: ignore[misc]
 async def reset_search_metrics(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     검색 메트릭 초기화
@@ -551,7 +551,7 @@ async def reset_search_metrics(api_key: str = Depends(verify_api_key)) -> Dict[s
 
 
 # 개별 검색 모드 엔드포인트 (테스트/비교용)
-@router.post("/dev/search-bm25")
+@router.post("/dev/search-bm25")  # type: ignore[misc]
 async def search_bm25_only(
     request: LegacySearchRequest, api_key: str = Depends(verify_api_key)
 ) -> LegacySearchResponse:
@@ -594,7 +594,7 @@ async def search_bm25_only(
         raise HTTPException(status_code=500, detail=f"BM25 search error: {str(e)}")
 
 
-@router.post("/dev/search-vector")
+@router.post("/dev/search-vector")  # type: ignore[misc]
 async def search_vector_only(
     request: LegacySearchRequest, api_key: str = Depends(verify_api_key)
 ) -> LegacySearchResponse:
@@ -676,7 +676,7 @@ class OptimizedSearchRequest(BaseModel):
     )
 
 
-@router.post("/v2/search", response_model=LegacySearchResponse)
+@router.post("/v2/search", response_model=LegacySearchResponse)  # type: ignore[misc]
 async def optimized_search(
     request: OptimizedSearchRequest, api_key: str = Depends(verify_api_key)
 ) -> LegacySearchResponse:
@@ -789,7 +789,7 @@ async def optimized_search(
         raise HTTPException(status_code=500, detail=f"Optimized search error: {str(e)}")
 
 
-@router.post("/v2/search/benchmark")
+@router.post("/v2/search/benchmark")  # type: ignore[misc]
 async def benchmark_search_engines(
     request: LegacySearchRequest, api_key: str = Depends(verify_api_key)
 ) -> Dict[str, Any]:
@@ -944,7 +944,7 @@ class AnswerResponse(BaseModel):
     timestamp: str
 
 
-@router.post("/answer", response_model=AnswerResponse)
+@router.post("/answer", response_model=AnswerResponse)  # type: ignore[misc]
 async def generate_answer(
     request: AnswerRequest, api_key: str = Depends(verify_api_key)
 ) -> AnswerResponse:

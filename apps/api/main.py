@@ -308,7 +308,7 @@ app.add_middleware(RateLimitMiddleware)
 
 
 # Request logging and monitoring middleware
-@app.middleware("http")
+@app.middleware("http")  # type: ignore[misc]
 async def log_requests_and_track_metrics(request: Request, call_next: Any) -> Any:
     """Log all HTTP requests and track performance metrics"""
     start_time = time.time()

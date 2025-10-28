@@ -257,7 +257,7 @@ async def get_batch_search_service() -> BatchSearchService:
     return BatchSearchService()
 
 
-@router.post("/", response_model=BatchSearchResponse)
+@router.post("/", response_model=BatchSearchResponse)  # type: ignore[misc]
 # @limiter.limit(RATE_LIMIT_WRITE)  # Disabled: replaced with custom Redis middleware
 async def batch_search(
     request: BatchSearchRequest,
@@ -302,8 +302,8 @@ async def batch_search(
         )
 
 
-@router.get("/performance")
-# @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware
+@router.get("/performance")  # type: ignore[misc]
+# @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware  # type: ignore[misc]
 async def get_batch_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
 ) -> Dict[str, Any]:

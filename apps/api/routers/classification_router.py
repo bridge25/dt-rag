@@ -270,7 +270,7 @@ async def get_db_session() -> Any:
 # API Endpoints
 
 
-@classification_router.post("/", response_model=ClassifyResponse)
+@classification_router.post("/", response_model=ClassifyResponse)  # type: ignore[misc]
 async def classify_document_chunk(
     request: ClassifyRequest,
     http_request: Request,
@@ -330,8 +330,8 @@ async def classify_document_chunk(
         )
 
 
-@classification_router.post("/batch", response_model=BatchClassifyResponse)
-async def classify_batch(
+@classification_router.post("/batch", response_model=BatchClassifyResponse)  # type: ignore[misc]
+async def classify_batch(  # type: ignore[misc]
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
     service: ClassificationService = Depends(get_classification_service),
