@@ -18,7 +18,7 @@ Performance targets:
 import time
 import logging
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Union
 from datetime import datetime
 import numpy as np
 from dataclasses import dataclass, field
@@ -486,7 +486,7 @@ class ResultCache:
         self.cache.clear()
         self.access_times.clear()
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> Dict[str, Union[int, float]]:
         """Get cache statistics"""
         return {
             "size": len(self.cache),

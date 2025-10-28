@@ -90,7 +90,7 @@ class MonitoringDashboard:
 
     async def _get_active_alerts(self) -> List[Dict[str, Any]]:
         """활성 알람 조회"""
-        alerts = []
+        alerts: List[Dict[str, Any]] = []
 
         # 시스템 헬스 기반 알람
         health = await self.health_checker.get_system_health()
