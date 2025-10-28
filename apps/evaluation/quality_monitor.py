@@ -28,7 +28,14 @@ class QualityMonitor:
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def __init__(self) -> None:
-        self.thresholds = QualityThresholds()
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
+        self.thresholds = QualityThresholds(
+            faithfulness_min=0.85,
+            context_precision_min=0.75,
+            context_recall_min=0.70,
+            answer_relevancy_min=0.80,
+            response_time_max=5.0,
+        )
 
         # In-memory metric buffers for real-time monitoring
         self.metric_buffer_size = 100

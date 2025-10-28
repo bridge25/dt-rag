@@ -156,11 +156,13 @@ class RAGASSystemTester:
         )
 
         # Test threshold updates
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         new_thresholds = QualityThresholds(
             faithfulness_min=0.90,
             context_precision_min=0.80,
             context_recall_min=0.75,
             answer_relevancy_min=0.85,
+            response_time_max=5.0,  # Explicit value for MyPy strict mode
         )
 
         await self.quality_monitor.update_thresholds(new_thresholds)
@@ -174,13 +176,16 @@ class RAGASSystemTester:
         print("\n=== Testing A/B Testing ===")
 
         # Create experiment
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
         config = ExperimentConfig(
             experiment_id="test_exp_001",
             name="Test Retrieval Algorithm",
             description="Testing BM25 vs hybrid search",
             control_config={"search_type": "bm25", "top_k": 5},
             treatment_config={"search_type": "hybrid", "top_k": 5, "rerank": True},
+            significance_threshold=0.05,  # Explicit value for MyPy strict mode
             minimum_sample_size=20,
+            power_threshold=0.8,  # Explicit value for MyPy strict mode
         )
 
         experiment_id = await self.experiment_tracker.create_experiment(config)
@@ -210,6 +215,7 @@ class RAGASSystemTester:
             from apps.evaluation.models import EvaluationResult, EvaluationMetrics
             import random
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             mock_result = EvaluationResult(
                 evaluation_id=f"mock_{user_id}",
                 query="test query",
@@ -226,7 +232,10 @@ class RAGASSystemTester:
                     answer_relevancy=min(
                         0.99, 0.82 * metrics_modifier + random.uniform(-0.05, 0.05)
                     ),
+                    response_time=None,  # Explicit None for MyPy strict mode
+                    retrieval_score=None,  # Explicit None for MyPy strict mode
                 ),
+                overall_score=0.0,  # Explicit value for MyPy strict mode
                 quality_flags=[],
                 recommendations=[],
                 timestamp=datetime.utcnow(),
@@ -422,6 +431,7 @@ class RAGASSystemTester:
         ]:  # Only process recent 50 to avoid overwhelming
             from apps.evaluation.models import EvaluationResult, EvaluationMetrics
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution (Pydantic Field defaults)
             mock_result = EvaluationResult(
                 evaluation_id=f"hist_{hash(str(data['timestamp'])) % 10000}",
                 query="historical query",
@@ -431,7 +441,9 @@ class RAGASSystemTester:
                     context_recall=data["context_recall"],
                     answer_relevancy=data["answer_relevancy"],
                     response_time=data["response_time"],
+                    retrieval_score=None,  # Explicit None for MyPy strict mode
                 ),
+                overall_score=0.0,  # Explicit value for MyPy strict mode
                 quality_flags=[],
                 recommendations=[],
                 timestamp=data["timestamp"],
