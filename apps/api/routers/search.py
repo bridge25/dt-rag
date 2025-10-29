@@ -94,20 +94,21 @@ async def get_search_engine() -> Any:
     raise NotImplementedError("Search engine not available")
 
 
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: unused-ignore (Fix 29-31 - decorator type stubs now available)
 class SearchEngineFactory:
-    @staticmethod  # type: ignore[misc]  # Decorator lacks type stubs
+    @staticmethod
     def create_fast_engine() -> Any:
         if HYBRID_ENGINE_AVAILABLE:
             return HybridSearchEngine()
         raise NotImplementedError("Fast engine not available")
 
-    @staticmethod  # type: ignore[misc]  # Decorator lacks type stubs
+    @staticmethod
     def create_accurate_engine() -> Any:
         if HYBRID_ENGINE_AVAILABLE:
             return HybridSearchEngine()
         raise NotImplementedError("Accurate engine not available")
 
-    @staticmethod  # type: ignore[misc]  # Decorator lacks type stubs
+    @staticmethod
     def create_balanced_engine() -> Any:
         if HYBRID_ENGINE_AVAILABLE:
             return HybridSearchEngine()

@@ -405,7 +405,8 @@ class CBRSystem:
         self.db_path = str(self.data_dir / "cbr_system.db")
         self._ensure_database()
 
-    @staticmethod  # type: ignore[misc]  # Decorator lacks type stubs
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14: unused-ignore (Fix 27 - decorator type stubs now available)
+    @staticmethod
     async def generate_case_embedding(query: str) -> List[float]:
         """
         # @SPEC:FOUNDATION-001 @IMPL:0.2-casebank-vector
@@ -1052,8 +1053,8 @@ from contextlib import asynccontextmanager  # noqa: E402
 # CBR 시스템 초기화
 cbr_system = None  # 실제 초기화는 lifespan에서 환경변수에 따라 수행
 
-
-@asynccontextmanager  # type: ignore[misc]  # Decorator lacks type stubs
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: unused-ignore (Fix 28 - decorator type stubs now available)
+@asynccontextmanager
 async def lifespan(app: FastAPI) -> Any:
     # Startup
     global cbr_system

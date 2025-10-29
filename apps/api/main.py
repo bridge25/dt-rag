@@ -118,7 +118,8 @@ config = get_config()
 
 # Application lifespan context manager
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@asynccontextmanager  # type: ignore[misc]  # Decorator lacks type stubs
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: unused-ignore (Fix 32 - decorator type stubs now available)
+@asynccontextmanager
 async def lifespan(app: FastAPI) -> Any:
     """Application startup and shutdown lifecycle"""
     # Startup
