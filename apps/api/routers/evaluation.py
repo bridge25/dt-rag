@@ -41,7 +41,8 @@ evaluation_router = APIRouter(prefix="/evaluation", tags=["Evaluation"])
 class BatchEvaluationRequest(BaseModel):
     """Request for batch evaluation"""
 
-    evaluations: List[EvaluationRequest] = Field(..., min_items=1, max_items=50)
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 37 - Pydantic v2 min_length/max_length)
+    evaluations: List[EvaluationRequest] = Field(..., min_length=1, max_length=50)
 
 
 class BatchEvaluationResponse(BaseModel):

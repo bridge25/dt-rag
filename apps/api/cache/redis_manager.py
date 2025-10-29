@@ -412,7 +412,8 @@ class RedisManager:
         assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
-            result = await self.client.brpop(*keys, timeout=timeout)
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 40 - pass keys as list, not unpacked)
+            result = await self.client.brpop(list(keys), timeout=timeout)
             self.stats["operations_success"] += 1
             return cast(Optional[tuple[Any, ...]], result)
         except Exception as e:

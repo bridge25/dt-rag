@@ -13,7 +13,8 @@ Provides real-time quality monitoring, alerting, and trend analysis:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 41 - add cast import)
+from typing import Dict, List, Any, cast
 from collections import defaultdict, deque
 import statistics
 
@@ -306,7 +307,8 @@ class QualityMonitor:
 
         all_passing = True
         for gate_name, gate_config in quality_gates.items():
-            metric_value = current_metrics.get(gate_config["metric"])
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 41 - cast dict value to str for .get())
+            metric_value = current_metrics.get(cast(str, gate_config["metric"]))
 
             if metric_value is not None:
                 if gate_config["operator"] == ">=":

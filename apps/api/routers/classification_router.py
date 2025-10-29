@@ -61,7 +61,8 @@ classification_router = APIRouter(prefix="/classify", tags=["Classification"])
 class BatchClassifyRequest(BaseModel):
     """Request for batch classification"""
 
-    items: List[ClassifyRequest] = Field(..., min_items=1, max_items=100)
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 38 - Pydantic v2 min_length/max_length)
+    items: List[ClassifyRequest] = Field(..., min_length=1, max_length=100)
     taxonomy_version: Optional[str] = None
 
 
