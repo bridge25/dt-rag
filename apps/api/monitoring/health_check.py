@@ -388,6 +388,8 @@ class HealthChecker:
                     )
                 )
             else:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (explicit type narrowing for asyncio.gather results)
+                assert isinstance(result, ComponentHealth)  # Type narrowing for Union[ComponentHealth, BaseException]
                 component_results.append(result)
 
         return component_results

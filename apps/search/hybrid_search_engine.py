@@ -596,20 +596,28 @@ class HybridSearchEngine:
             )
 
             # Handle exceptions
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (explicit typing for asyncio.gather results)
+            bm25_results_list: List[SearchResult]
+            vector_results_list: List[SearchResult]
+
             if isinstance(bm25_results, Exception):
                 logger.error(f"BM25 search failed: {bm25_results}")
-                bm25_results = []
+                bm25_results_list = []
+            else:
+                bm25_results_list = bm25_results
 
             if isinstance(vector_results, Exception):
                 logger.error(f"Vector search failed: {vector_results}")
-                vector_results = []
+                vector_results_list = []
+            else:
+                vector_results_list = vector_results
 
-            metrics.bm25_candidates = len(bm25_results)
-            metrics.vector_candidates = len(vector_results)
+            metrics.bm25_candidates = len(bm25_results_list)
+            metrics.vector_candidates = len(vector_results_list)
 
             # Fuse results
             fusion_start = time.time()
-            fused_results = self._fuse_results(query, bm25_results, vector_results)
+            fused_results = self._fuse_results(query, bm25_results_list, vector_results_list)
             metrics.fusion_time = time.time() - fusion_start
 
             # Apply cross-encoder reranking

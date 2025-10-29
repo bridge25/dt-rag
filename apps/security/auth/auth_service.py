@@ -509,7 +509,8 @@ class RBACManager:
                     return False
 
             # Additional context-based checks
-            if context:
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (ensure resource is not None)
+            if context and resource:
                 return await self._check_context_permissions(
                     permission, resource, context
                 )

@@ -1,7 +1,7 @@
 # @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.2
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 import os
@@ -157,7 +157,8 @@ class ReflectionEngine:
             for error_type, count in error_counts.items()
         ]
 
-        patterns.sort(key=lambda x: x["count"], reverse=True)
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (Fix 26 - cast to int for comparison)
+        patterns.sort(key=lambda x: cast(int, x["count"]), reverse=True)
         return patterns
 
     async def generate_improvement_suggestions(self, case_id: str) -> List[str]:

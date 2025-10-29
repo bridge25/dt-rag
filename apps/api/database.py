@@ -975,9 +975,10 @@ class SearchDAO:
 
             async with concurrency_controller.controlled_execution("hybrid_search"):
                 async with gc_optimizer.optimized_gc_context():
+                    # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (provide empty dict if filters is None)
                     return await SearchDAO._execute_optimized_hybrid_search(
                         query,
-                        filters,
+                        filters or {},
                         topk,
                         bm25_topk,
                         vector_topk,
@@ -988,8 +989,9 @@ class SearchDAO:
         except ImportError:
             # 폴백: 기존 방식
             logger.warning("Optimization modules not available, using legacy search")
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (provide empty dict if filters is None)
             return await SearchDAO._execute_legacy_hybrid_search(
-                query, filters, topk, bm25_topk, vector_topk, rerank_candidates
+                query, filters or {}, topk, bm25_topk, vector_topk, rerank_candidates
             )
         except Exception as e:
             logger.error(f"최적화된 하이브리드 검색 실패: {e}")

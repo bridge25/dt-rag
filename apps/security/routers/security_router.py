@@ -165,6 +165,7 @@ async def register(
             request.username, request.email, request.password, request.roles
         )
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (ensure created_at is not None)
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -173,7 +174,7 @@ async def register(
             permissions=[perm.value for perm in user.permissions],
             clearance_level=user.clearance_level,
             is_active=user.is_active,
-            created_at=user.created_at,
+            created_at=user.created_at or datetime.utcnow(),
         )
 
     except Exception as e:

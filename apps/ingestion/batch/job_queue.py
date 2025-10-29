@@ -23,6 +23,7 @@ class JobQueue:
             if self.redis_manager is None:
                 self.redis_manager = await get_redis_manager()
             self._redis_initialized = True
+        assert self.redis_manager is not None  # Ensured by initialization
 
     def _get_queue_key(self, priority: str) -> str:
         return f"{self.QUEUE_KEY_PREFIX}:{priority}"
@@ -35,6 +36,7 @@ class JobQueue:
 
     async def check_idempotency_key(self, idempotency_key: str) -> Optional[str]:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             key = self._get_idempotency_key(idempotency_key)
@@ -48,6 +50,7 @@ class JobQueue:
         self, idempotency_key: str, job_id: str, ttl: int = 3600
     ) -> bool:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             key = self._get_idempotency_key(idempotency_key)
@@ -69,6 +72,7 @@ class JobQueue:
         idempotency_key: Optional[str] = None,
     ) -> bool:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             if idempotency_key:
@@ -119,6 +123,7 @@ class JobQueue:
 
     async def dequeue_job(self, timeout: int = 5) -> Optional[Dict[str, Any]]:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             for priority in self.PRIORITY_QUEUES:
@@ -160,6 +165,7 @@ class JobQueue:
         next_retry_at: Optional[str] = None,
     ) -> bool:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             status_key = self._get_job_status_key(job_id)
@@ -195,6 +201,7 @@ class JobQueue:
 
     async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             status_key = self._get_job_status_key(job_id)
@@ -208,6 +215,7 @@ class JobQueue:
 
     async def get_queue_size(self, priority: Optional[str] = None) -> int:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             if priority:
@@ -226,6 +234,7 @@ class JobQueue:
 
     async def clear_queue(self, priority: Optional[str] = None) -> bool:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             if priority:
@@ -248,9 +257,10 @@ class JobQueue:
         job_id: str,
         command_id: str,
         job_data: Dict[str, Any],
-        priority: str = "medium",
+        priority: int = 5,
     ) -> bool:
         await self.initialize()
+        assert self.redis_manager is not None  # Ensured by initialize()
 
         try:
             status = await self.get_job_status(job_id)

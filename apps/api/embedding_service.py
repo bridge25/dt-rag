@@ -177,6 +177,7 @@ class EmbeddingService:
 
     async def _generate_openai_embedding(self, text: str) -> List[float]:
         """OpenAI API로 임베딩 생성 (SPEC-ENV-VALIDATE-001 Phase 4)"""
+        assert self._openai_client is not None  # Ensured by caller
         try:
             response = await self._openai_client.embeddings.create(
                 model=self.model_name,

@@ -8,7 +8,7 @@ AI 모델 협업 및 CBR 시스템 통합 레이어
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional, cast, TYPE_CHECKING
+from typing import List, Dict, Any, Optional, Union, cast, TYPE_CHECKING
 import os
 import sqlite3
 import httpx
@@ -479,7 +479,8 @@ class CBRSystem:
                     FROM cbr_cases
                     WHERE quality_score >= ?
                 """
-                params = [request.min_quality_score]
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (SQL params accept mixed types)
+                params: List[Union[float, str, int]] = [request.min_quality_score]
 
                 # 카테고리 필터링
                 if request.category_path:
@@ -1131,6 +1132,7 @@ TAXONOMY_BASE = "http://api:8000"
 def _require_cbr() -> None:
     if cbr_system is None:
         raise HTTPException(status_code=501, detail="CBR is disabled")
+    assert cbr_system is not None  # Type narrowing for mypy
 
 
 class FromCategoryRequest(BaseModel):
@@ -1674,6 +1676,7 @@ async def chat_run(req: ChatRequest) -> ChatResponse:
 def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
     """B-O4: CBR k-NN 기반 케이스 추천"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     logger.info(
         f"CBR 케이스 추천: query='{request.query}', k={request.k}, method={request.similarity_method}"
     )
@@ -1751,6 +1754,7 @@ def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
 def submit_case_feedback(request: CBRFeedbackRequest) -> Dict[str, Any]:
     """CBR 케이스 피드백 수집 (Neural Selector 학습용)"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     logger.info(
         f"CBR 피드백: log_id={request.log_id}, case_id={request.case_id}, feedback={request.feedback}"
     )
@@ -1789,6 +1793,7 @@ def submit_case_feedback(request: CBRFeedbackRequest) -> Dict[str, Any]:
 def get_cbr_statistics() -> Dict[str, Any]:
     """CBR 시스템 통계 조회"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         stats = cbr_system.get_cbr_stats()
 
@@ -1823,6 +1828,7 @@ def get_cbr_statistics() -> Dict[str, Any]:
 def add_cbr_case(case_data: Dict[str, Any]) -> Dict[str, Any]:
     """CBR 케이스 추가 (관리용)"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         # 필수 필드 검증
         required_fields = ["query", "category_path", "content"]
@@ -1874,6 +1880,7 @@ def add_cbr_case(case_data: Dict[str, Any]) -> Dict[str, Any]:
 def get_cbr_logs(limit: int = 100, success_only: bool = False) -> Dict[str, Any]:
     """CBR 상호작용 로그 조회 (Neural Selector 학습데이터)"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         import sqlite3
 
@@ -1933,6 +1940,7 @@ def get_cbr_logs(limit: int = 100, success_only: bool = False) -> Dict[str, Any]
 def export_cbr_training_data() -> Dict[str, Any]:
     """Neural Selector 학습을 위한 CBR 데이터 내보내기"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         import sqlite3
         import json
@@ -2125,6 +2133,7 @@ def get_filter_metrics() -> Dict[str, Any]:
 def get_cbr_case(case_id: str) -> CBRCaseResponse:
     """특정 CBR 케이스 조회"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():
@@ -2163,6 +2172,7 @@ def get_cbr_case(case_id: str) -> CBRCaseResponse:
 def update_cbr_case(case_id: str, update_request: CBRUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 업데이트"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():
@@ -2231,6 +2241,7 @@ def update_cbr_case(case_id: str, update_request: CBRUpdateRequest) -> Dict[str,
 def delete_cbr_case(case_id: str) -> Dict[str, Any]:
     """CBR 케이스 삭제"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():
@@ -2270,6 +2281,7 @@ def delete_cbr_case(case_id: str) -> Dict[str, Any]:
 def update_cbr_case_quality(case_id: str, quality_request: CBRQualityUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 품질 점수 업데이트"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():

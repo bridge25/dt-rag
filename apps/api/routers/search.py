@@ -694,7 +694,8 @@ async def optimized_search(
 
     try:
         # 검색 설정 딕셔너리
-        search_config = {
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (explicit typing for config dict)
+        search_config: Dict[str, Union[float, bool, str]] = {
             "bm25_weight": 0.5,
             "vector_weight": 0.5,
             "enable_caching": True,
@@ -704,11 +705,11 @@ async def optimized_search(
 
         # 커스텀 검색 엔진 생성
         search_engine = HybridSearchEngine(
-            bm25_weight=search_config["bm25_weight"],
-            vector_weight=search_config["vector_weight"],
-            enable_caching=search_config["enable_caching"],
-            enable_reranking=search_config["enable_reranking"],
-            normalization=search_config["normalization"],
+            bm25_weight=float(search_config["bm25_weight"]),
+            vector_weight=float(search_config["vector_weight"]),
+            enable_caching=bool(search_config["enable_caching"]),
+            enable_reranking=bool(search_config["enable_reranking"]),
+            normalization=str(search_config["normalization"]),
         )
 
         # 캐시 확인 (선택적)

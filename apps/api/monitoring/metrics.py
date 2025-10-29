@@ -220,7 +220,7 @@ class MetricsCollector:
         self.metrics[f"{operation}_latency"].append(metric_value)
 
         # Prometheus 메트릭 업데이트
-        if self.enable_prometheus and hasattr(self, "request_duration"):
+        if self.enable_prometheus and hasattr(self, "request_duration") and labels is not None:
             labels_list = [labels.get("method", ""), labels.get("endpoint", "")]
             self.request_duration.labels(*labels_list).observe(latency_ms / 1000)
 

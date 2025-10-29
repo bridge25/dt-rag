@@ -155,14 +155,15 @@ class SecurityManager:
                 user_info["user_id"]
             )
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (type conversions for SecurityContext)
             # 7. Create security context
             context = SecurityContext(
                 user_id=user_info["user_id"],
-                session_id=session_id,
+                session_id=session_id if session_id else str(uuid.uuid4()),  # Generate UUID if missing
                 ip_address=ip_address,
                 user_agent=user_agent,
-                permissions=permissions,
-                clearance_level=clearance_level,
+                permissions={perm.value for perm in permissions},  # Convert Permission enum to str
+                clearance_level=SecurityLevel(clearance_level),  # Convert str to SecurityLevel enum
                 request_id=request_id,
                 timestamp=datetime.utcnow(),
                 is_authenticated=True,
