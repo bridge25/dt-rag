@@ -39,7 +39,7 @@ async def get_job_orchestrator() -> JobOrchestrator:
     "/upload",
     status_code=status.HTTP_202_ACCEPTED,
     summary="Upload document for processing",
-)
+)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 async def upload_document(
     file: UploadFile = File(...),
     taxonomy_path: Optional[str] = Form(None),
@@ -148,7 +148,7 @@ async def upload_document(
     "/status/{job_id}",
     response_model=JobStatusResponseV1,
     summary="Get ingestion job status",
-)
+)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 async def get_job_status(
     job_id: str,
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
@@ -176,7 +176,7 @@ async def get_job_status(
         )
 
 
-@router.on_event("shutdown")
+@router.on_event("shutdown")  # type: ignore[misc]  # Decorator lacks type stubs
 async def shutdown_event() -> None:
     global _job_orchestrator
     if _job_orchestrator is not None:

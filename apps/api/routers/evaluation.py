@@ -21,7 +21,7 @@ try:
 except ImportError:
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def verify_api_key():  # type: ignore[no-untyped-def]
+    def verify_api_key():  # type: ignore[no-untyped-def, misc]  # Fallback function for testing
         return None
 
 

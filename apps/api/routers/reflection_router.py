@@ -106,7 +106,7 @@ async def get_reflection_engine() -> AsyncGenerator[Any, None]:
 
 
 # API Endpoints
-@router.post("/analyze", response_model=ReflectionAnalysisResponse)
+@router.post("/analyze", response_model=ReflectionAnalysisResponse)  # type: ignore[misc]  # Decorator lacks type stubs
 async def analyze_case_performance(
     request: ReflectionAnalysisRequest, api_key: APIKeyInfo = Depends(verify_api_key)
 ) -> ReflectionAnalysisResponse:
@@ -144,7 +144,7 @@ async def analyze_case_performance(
         )
 
 
-@router.post("/batch", response_model=ReflectionBatchResponse)
+@router.post("/batch", response_model=ReflectionBatchResponse)  # type: ignore[misc]  # Decorator lacks type stubs
 async def run_reflection_batch(
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> ReflectionBatchResponse:
@@ -180,7 +180,7 @@ async def run_reflection_batch(
         )
 
 
-@router.post("/suggestions", response_model=ImprovementSuggestionsResponse)
+@router.post("/suggestions", response_model=ImprovementSuggestionsResponse)  # type: ignore[misc]  # Decorator lacks type stubs
 async def generate_improvement_suggestions(
     request: ImprovementSuggestionsRequest,
     api_key: APIKeyInfo = Depends(verify_api_key),
@@ -221,7 +221,7 @@ async def generate_improvement_suggestions(
         )
 
 
-@router.get("/health")
+@router.get("/health")  # type: ignore[misc]  # Decorator lacks type stubs
 async def health_check() -> Dict[str, str]:
     """Reflection 서비스 상태 확인"""
     return {

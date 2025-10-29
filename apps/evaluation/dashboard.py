@@ -402,14 +402,14 @@ DASHBOARD_HTML = """
 """
 
 
-@dashboard_router.get("/", response_class=HTMLResponse)
+@dashboard_router.get("/", response_class=HTMLResponse)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def get_dashboard(request: Request) -> HTMLResponse:
     """Get the evaluation dashboard HTML page"""
     return HTMLResponse(content=DASHBOARD_HTML)
 
 
-@dashboard_router.websocket("/ws")
+@dashboard_router.websocket("/ws")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """WebSocket endpoint for real-time dashboard updates"""
@@ -510,14 +510,14 @@ async def get_system_statistics() -> Dict[str, Any]:
         }
 
 
-@dashboard_router.get("/api/metrics")
+@dashboard_router.get("/api/metrics")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def get_dashboard_metrics() -> Dict[str, Any]:
     """API endpoint to get current dashboard metrics"""
     return await get_dashboard_data()
 
 
-@dashboard_router.post("/api/simulate-evaluation")
+@dashboard_router.post("/api/simulate-evaluation")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def simulate_evaluation() -> Dict[str, Any]:
     """Simulate an evaluation for dashboard testing"""

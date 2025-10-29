@@ -17,7 +17,7 @@ except ImportError:
     AUTH_AVAILABLE = False
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def verify_api_key() -> None:
+    def verify_api_key() -> None:  # type: ignore[misc]  # Fallback function for testing
         return None
 
 
