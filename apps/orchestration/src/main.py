@@ -59,15 +59,17 @@ else:
             score: float
             source: Dict[str, Any]
 
-    class OrchestrationSearchRequest(BaseModel):
-        query: str
-        filters: Optional[Dict[str, Any]] = None
-        limit: int = 10
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: name-defined (Fix 35 - move classes to module level for TYPE_CHECKING visibility)
+class OrchestrationSearchRequest(BaseModel):
+    query: str
+    filters: Optional[Dict[str, Any]] = None
+    limit: int = 10
 
-    class OrchestrationSearchResponse(BaseModel):
-        hits: List[SearchHit]
-        latency: float
-        total_count: int
+
+class OrchestrationSearchResponse(BaseModel):
+    hits: List[SearchHit]
+    latency: float
+    total_count: int
 
 
 # ChatRequest와 ChatResponse는 common_schemas에 없으므로 로컬에서 정의

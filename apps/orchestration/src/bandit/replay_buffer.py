@@ -6,7 +6,8 @@ from collections import deque
 import asyncio
 import random
 import logging
-from typing import List, Tuple
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: name-defined (Fix 33 - add Any to imports)
+from typing import List, Tuple, Any
 
 logger = logging.getLogger(__name__)
 

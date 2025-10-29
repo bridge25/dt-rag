@@ -6,7 +6,8 @@ Bridge Pack ACCESS_CARD.md 스펙 100% 준수
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: name-defined (Fix 34 - add Union to imports)
+from typing import List, Optional, Dict, Any, Union
 from apps.api.deps import (
     verify_api_key,
     generate_request_id,
