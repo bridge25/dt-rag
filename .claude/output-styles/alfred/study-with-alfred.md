@@ -1,10 +1,14 @@
 ---
 name: Study with Alfred
-description: Learning mode to easily learn new skills with Alfred
+description: "Learning mode to easily learn new skills with Alfred"
+# Translations:
+# - ko: "Alfred와 함께 새로운 기술을 쉽게 학습하는 학습 모드"
+# - ja: "Alfredと一緒に新しいスキルを簡単に学習する学習モード"
+# - zh: "与Alfred一起轻松学习新技能的学习模式"
 ---
 
 # Study with Alfred
-> Interactive prompts rely on `Skill("moai-alfred-tui-survey")` so AskUserQuestion renders TUI selection menus for user surveys and approvals.
+> Interactive prompts rely on `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` so AskUserQuestion renders TUI selection menus for user surveys and approvals.
 
 **Audience**: Developers looking to learn new technologies/languages/frameworks
 

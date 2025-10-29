@@ -1,23 +1,27 @@
 ---
 name: alfred:1-plan
-description: Planning (brainstorming, plan writing, design discussion) + Branch/PR creation
-argument-hint: "Title 1 Title 2 ... | SPEC-ID modifications"
+description: "Planning (brainstorming, plan writing, design discussion) + Branch/PR creation"
+# Translations:
+# - ko: "계획 수립 (브레인스토밍, 설계 논의) + 브랜치/PR 생성"
+# - ja: "計画策定（ブレインストーミング、設計議論）+ ブランチ/PR作成"
+# - zh: "规划（头脑风暴、设计讨论）+ 分支/PR创建"
+argument-hint: Title 1 Title 2 ... | SPEC-ID modifications
 allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - MultiEdit
-  - Grep
-  - Glob
-  - TodoWrite
-  - Bash(git:*)
-  - Bash(gh:*)
-  - Bash(rg:*)
-  - Bash(mkdir:*)
+- Read
+- Write
+- Edit
+- MultiEdit
+- Grep
+- Glob
+- TodoWrite
+- Bash(git:*)
+- Bash(gh:*)
+- Bash(rg:*)
+- Bash(mkdir:*)
 ---
 
 # 🏗️ MoAI-ADK Step 1: Establish a plan (Plan) - Always make a plan first and then proceed.
-> Interactive prompts rely on `Skill("moai-alfred-tui-survey")` so AskUserQuestion renders TUI selection menus for user surveys and approvals.
+> **Note**: Interactive prompts use `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` for TUI selection menus. The skill is loaded on-demand when user interaction is required.
 
 ## 🎯 Command Purpose
 
@@ -25,7 +29,23 @@ allowed-tools:
 
 **Plan for**: $ARGUMENTS
 
-## 💡 Planning philosophy: “Always make a plan first and then proceed.”
+## 🤖 CodeRabbit AI Integration (Local Only)
+
+This local environment includes CodeRabbit AI review integration for SPEC documents:
+
+**Automatic workflows:**
+- ✅ SPEC review: CodeRabbit analyzes SPEC metadata and EARS structure
+- ✅ GitHub Issue sync: SPEC files automatically create/update GitHub Issues
+- ✅ Auto-approval: Draft PRs are approved when quality meets standards (80%+)
+- ✅ SPEC quality validation: Checklist for metadata, structure, and content
+
+**Scope:**
+- 🏠 **Local environment**: Full CodeRabbit integration with auto-approval
+- 📦 **Published packages**: Users get GitHub Issue sync only (no CodeRabbit)
+
+> See `.coderabbit.yaml` for detailed review rules and SPEC validation checklist
+
+## 💡 Planning philosophy: "Always make a plan first and then proceed."
 
 `/alfred:1-plan` is a general-purpose command that **creates a plan**, rather than simply “creating” a SPEC document.
 
@@ -68,10 +88,10 @@ allowed-tools:
 
 ## 🧠 Associated Skills & Agents
 
-| Agent | Core Skill | Purpose |
-| ----- | -------- | ------- |
-| spec-builder | `moai-foundation-ears` | Write SPEC with EARS syntax |
-| git-manager | `moai-alfred-git-workflow` | Create branch and PR |
+| Agent        | Core Skill                 | Purpose                     |
+| ------------ | -------------------------- | --------------------------- |
+| spec-builder | `moai-foundation-ears`     | Write SPEC with EARS syntax |
+| git-manager  | `moai-alfred-git-workflow` | Create branch and PR        |
 
 **Note**: TUI Survey Skill is used for user confirmations during the plan phase and is shared across all interactive prompts.
 
@@ -89,13 +109,59 @@ Users can run commands like this:
 
 ## 🔍 STEP 1: Project analysis and planning
 
-Analyze project documents to propose SPEC candidates, establish implementation strategies, and receive user confirmation.
+STEP 1 consists of **two independent phases** to provide flexible workflow based on user request clarity:
 
-**The spec-builder agent automatically loads and analyzes the required documents.**
+### 📋 STEP 1 Workflow Overview
 
-### 🔍 Explore the codebase (optional)
+```
+┌─────────────────────────────────────────────────────────────┐
+│ STEP 1: Project Analysis & Planning                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Phase A (OPTIONAL)                                         │
+│  ┌─────────────────────────────────────────┐               │
+│  │ 🔍 Explore Agent                        │               │
+│  │ • Find relevant files by keywords       │               │
+│  │ • Locate existing SPEC documents        │               │
+│  │ • Identify implementation patterns      │               │
+│  └─────────────────────────────────────────┘               │
+│                    ↓                                        │
+│          (exploration results)                              │
+│                    ↓                                        │
+│  Phase B (REQUIRED)                                         │
+│  ┌─────────────────────────────────────────┐               │
+│  │ ⚙️ spec-builder Agent                   │               │
+│  │ • Analyze project documents             │               │
+│  │ • Propose SPEC candidates               │               │
+│  │ • Design EARS structure                 │               │
+│  │ • Request user approval                 │               │
+│  └─────────────────────────────────────────┘               │
+│                    ↓                                        │
+│          (user approval via AskUserQuestion)                │
+│                    ↓                                        │
+│              PROCEED TO STEP 2                              │
+└─────────────────────────────────────────────────────────────┘
+```
 
-**If the user request is unclear or requires understanding of existing code** Use the Explore agent first:
+**Key Points**:
+- **Phase A is optional** - Skip if user provides clear SPEC title
+- **Phase B is required** - Always runs to analyze project and create SPEC
+- **Results flow forward** - Exploration results (if any) are passed to spec-builder
+
+---
+
+### 🔍 Phase A: Codebase Exploration (OPTIONAL)
+
+**Use the Explore agent when user request is unclear or needs context.**
+
+#### When to use Phase A:
+
+- ✅ User uses vague keywords ("where is...", "find me...", "related to...")
+- ✅ Need to understand existing code structure before planning
+- ✅ Feature spans multiple files or modules
+- ❌ User provides clear SPEC title (skip to Phase B)
+
+#### How to invoke Explore agent:
 
 ```
 Invoking the Task tool (Explore agent):
@@ -105,32 +171,56 @@ Invoking the Task tool (Explore agent):
  - File location (src/, tests/, docs/)
  - Relevant SPEC document (.moai/specs/)
  - Existing implementation code
-          thoroughness level: medium"
+ thoroughness level: medium"
 ```
 
-**Criteria for using the Explore Agent**:
-- ✅ Users use keywords like “where am”, “find me”, etc.
-- ✅ Need to understand existing code structure
-- ✅ Investigate features across multiple files
-- ❌ Given a clear SPEC title (straight into spec-builder)
+**Note**: If user provides clear SPEC title, skip Phase A and proceed directly to Phase B.
 
-### ⚙️ How to call an agent
+---
 
-**STEP 1 calls the spec-builder agent using the Task tool**:
+### ⚙️ Phase B: SPEC Planning (REQUIRED)
+
+**Call the spec-builder agent to analyze project and create SPEC documents.**
+
+This phase is **always required** regardless of whether Phase A was executed.
+
+#### How to invoke spec-builder:
 
 ```
 Call the Task tool:
 - subagent_type: "spec-builder"
 - description: "Analyze the plan and establish a plan"
-- prompt: "Please analyze the project document and suggest SPEC candidates.
- Run in analysis mode, and must include the following:
- 1. In-depth analysis of product/structure/tech.md
- 2. Identify SPEC candidates and Determine priorities
- 3. Design EARS structure
- 4. Wait for user approval
- User input: $ARGUMENTS
- (Optional) Explore results: $EXPLORE_RESULTS"
+- prompt: """You are spec-builder agent.
+
+LANGUAGE CONFIGURATION:
+- conversation_language: {{CONVERSATION_LANGUAGE}}
+- language_name: {{CONVERSATION_LANGUAGE_NAME}}
+
+CRITICAL INSTRUCTION:
+All SPEC documents and analysis must be generated in conversation_language.
+- If conversation_language is 'ko' (Korean): Generate ALL analysis, plans, and SPEC documents in Korean
+- If conversation_language is 'ja' (Japanese): Generate ALL analysis, plans, and SPEC documents in Japanese
+- If conversation_language is other language: Follow the specified language
+
+SKILL INVOCATION:
+Use explicit Skill() calls when needed:
+- Skill("moai-foundation-specs") for SPEC structure guidance
+- Skill("moai-foundation-ears") for EARS syntax requirements
+- Skill("moai-alfred-spec-metadata-validation") for metadata validation
+
+TASK:
+Please analyze the project document and suggest SPEC candidates.
+Run in analysis mode, and must include the following:
+1. In-depth analysis of product/structure/tech.md
+2. Identify SPEC candidates and Determine priorities
+3. Design EARS structure
+4. Wait for user approval
+
+User input: $ARGUMENTS
+(Optional) Explore results: $EXPLORE_RESULTS"""
 ```
+
+**Note**: If Phase A was executed, pass the exploration results via `$EXPLORE_RESULTS` variable.
 
 ### Plan analysis progress
 
@@ -152,7 +242,7 @@ Call the Task tool:
 
 ### User verification steps
 
-After reviewing your implementation plan, Alfred invokes `Skill("moai-alfred-tui-survey")` to present the following options:
+After reviewing your implementation plan, Alfred invokes `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` to present the following options:
 - **"Go"** or **"Start"**: Start writing the plan as planned
 - **"Modify [Content]"**: Request modifications to the plan
 - **"Stop"**: Stop writing the plan
@@ -161,21 +251,44 @@ After reviewing your implementation plan, Alfred invokes `Skill("moai-alfred-tui
 
 ## 🚀 STEP 2: Create plan document (after user approval)
 
-After user approval (collected via `Skill("moai-alfred-tui-survey")`), call the spec-builder and git-manager agents using the **Task tool**.
+After user approval (collected via `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)`), call the spec-builder and git-manager agents using the **Task tool**.
 
 ### ⚙️ How to call an agent
 
 ```
 1. Call spec-builder (create plan):
    - subagent_type: "spec-builder"
-- description: "Create SPEC document"
- - prompt: "Please fill out the SPEC document according to the plan approved in STEP 1.
- Create a specification for the EARS structure."
+   - description: "Create SPEC document"
+   - prompt: """You are spec-builder agent.
+
+LANGUAGE CONFIGURATION:
+- conversation_language: {{CONVERSATION_LANGUAGE}}
+- language_name: {{CONVERSATION_LANGUAGE_NAME}}
+
+CRITICAL INSTRUCTION:
+ALL SPEC documents MUST be generated in conversation_language:
+- spec.md: Full document in conversation_language
+- plan.md: Full document in conversation_language
+- acceptance.md: Full document in conversation_language
+
+YAML frontmatter and @TAG identifiers MUST remain in English.
+Code examples and technical keywords can be mixed (code in English, narrative in user language).
+
+SKILL INVOCATION:
+Use explicit Skill() calls when needed:
+- Skill("moai-foundation-specs") for SPEC structure guidance
+- Skill("moai-foundation-ears") for EARS syntax requirements
+- Skill("moai-alfred-spec-metadata-validation") for metadata validation
+- Skill("moai-alfred-tag-scanning") for TAG chain references
+
+TASK:
+Please fill out the SPEC document according to the plan approved in STEP 1.
+Create a specification for the EARS structure."""
 
 2. Invoke git-manager (Git task):
    - subagent_type: "git-manager"
-- description: "Create Git branch/PR"
- - prompt: "After completing the plan, please create a branch and Draft PR."
+   - description: "Create Git branch/PR"
+   - prompt: "After completing the plan, please create a branch and Draft PR."
 ```
 
 ## function
@@ -322,7 +435,7 @@ Only if the user selects **"Proceed"** or **"Start"** will Alfred call the spec-
 ### State-driven Requirements
 - When the WHILE token is in an unexpired state, the system must allow access to the protected resource.
 
-### Constraints
+### Unwanted Behaviors
 - If the IF token has expired, the system must return a 401 Unauthorized response.
 ```
 
@@ -364,7 +477,7 @@ priority: high
 You must include a HISTORY section **right after the YAML Front Matter**:
 
 ```markdown
-# @SPEC:AUTH-001: JWT-based authentication system
+# @SPEC:DOMAIN-NNN: JWT-based authentication system
 
 ## HISTORY
 
@@ -410,7 +523,7 @@ updated: 2025-09-15
 author: @username
 ---
 
-# @SPEC:AUTH-001: [SPEC title]
+# @SPEC:DOMAIN-NNN: [SPEC title]
 
 ## HISTORY
 [Change history by version – see example above]
@@ -434,11 +547,11 @@ author: @username
 ### Optional (Optional function)
 - If WHERE [condition], the system can [operate]
 
-### Constraints
-- IF [condition], the system must be [constrained]
+### Unwanted Behaviors
+- IF [condition], the system must [respond appropriately with error handling or quality gates]
 
 ## Traceability (@TAG)
-- **SPEC**: @SPEC:AUTH-001
+- **SPEC**: @SPEC:DOMAIN-NNN
 - **TEST**: tests/auth/test_service.py
 - **CODE**: src/auth/service.py
 - **DOC**: docs/api/authentication.md
@@ -544,6 +657,48 @@ The `git-manager` agent does **all at once** after the SPEC is complete:
 2. **GitHub Issue**: Create SPEC Issue in Team mode
 3. **Initial commit**: Commit SPEC document and create tags
 4. **Remote Sync**: Apply synchronization strategy for each mode
+
+### Phase 3.5: CodeRabbit SPEC Review (Local Only)
+
+**After Draft PR is created, CodeRabbit automatically:**
+
+```bash
+echo "🤖 Waiting for CodeRabbit SPEC review..."
+
+# CodeRabbit triggers automatically on Draft PR creation
+# Review includes:
+# - SPEC metadata validation (YAML frontmatter)
+# - EARS structure completeness check
+# - Acceptance criteria quality (Given-When-Then)
+# - @TAG system traceability
+# - Documentation clarity
+
+# Expected time: 1-2 minutes
+for i in {1..12}; do
+    sleep 10
+
+    # Check PR review status
+    approval=$(gh pr view $pr_num --json reviewDecision --jq '.reviewDecision')
+
+    if [ "$approval" = "APPROVED" ]; then
+        echo "✅ CodeRabbit approved SPEC PR!"
+        echo "→ Ready for development with /alfred:2-run SPEC-$spec_id"
+        break
+    fi
+
+    echo "⏳ CodeRabbit reviewing... ($i/12)"
+done
+```
+
+**CodeRabbit review includes:**
+- ✅ YAML frontmatter validation (7 required fields)
+- ✅ HISTORY section structure and completeness
+- ✅ EARS requirements clarity (Ubiquitous/Event-driven/State-driven/Optional/Unwanted Behaviors)
+- ✅ Acceptance criteria quality (Given-When-Then scenarios)
+- ✅ @TAG system compliance (SPEC/TEST/CODE/DOC traceability)
+- ✅ Documentation and formatting
+
+See `.coderabbit.yaml` for detailed SPEC review checklist.
 
 ## Writing Tips
 

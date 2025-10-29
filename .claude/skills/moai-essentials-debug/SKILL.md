@@ -1,5 +1,4 @@
 ---
-
 name: moai-essentials-debug
 description: Advanced debugging with stack trace analysis, error pattern detection, and fix suggestions. Use when delivering quick diagnostic support for everyday issues.
 allowed-tools:
@@ -10,93 +9,295 @@ allowed-tools:
   - TodoWrite
 ---
 
-# Alfred Debugger Pro
+# MoAI Essentials Debug v2.1
 
 ## Skill Metadata
 | Field | Value |
 | ----- | ----- |
-| Allowed tools | Read (read_file), Write (write_file), Edit (edit_file), Bash (terminal), TodoWrite (todo_write) |
+| Version | 2.1.0 |
+| Created | 2025-10-22 |
+| Last Updated | 2025-10-27 |
+| Language Coverage | 23 languages + containers + distributed systems |
+| Allowed tools | Read, Write, Edit, Bash, TodoWrite |
 | Auto-load | On demand during Run stage (debug-helper) |
-| Trigger cues | Runtime error triage, stack trace analysis, root cause investigation requests. |
+| Trigger cues | Runtime error triage, stack trace analysis, root cause investigation requests |
 
 ## What it does
 
-Advanced debugging support with stack trace analysis, common error pattern detection, and actionable fix suggestions.
+Comprehensive debugging support across all 23 MoAI-ADK languages with:
+- Language-specific debugger integration
+- Stack trace analysis and error pattern detection
+- Container and Kubernetes debugging
+- Distributed tracing with OpenTelemetry
+- Cloud debugger integration (AWS X-Ray, GCP Cloud Debugger)
+- Performance profiling with Prometheus
 
 ## When to use
 
-- Loads when users share stack traces or ask why a failure occurred.
-- “Resolve the error”, “What is the cause of this error?”, “Stack trace analysis”
-- Automatically invoked on runtime errors (via debug-helper sub-agent)
-- "Why not?", "Solving NullPointerException"
+- Runtime errors, exceptions, crashes
+- Stack trace analysis requests
+- "Why is this failing?", "Debug this error"
+- Container/K8s debugging scenarios
+- Distributed system tracing
+- Performance bottleneck investigation
+- Automatically invoked via debug-helper sub-agent
 
-## How it works
+---
 
-**Stack Trace Analysis**:
-```python
-# Error example
-jwt.exceptions.ExpiredSignatureError: Signature has expired
+## Quick Reference: Debugger by Language
 
-# Alfred Analysis
-📍 Error Location: src/auth/service.py:142
-🔍 Root Cause: JWT token has expired
-💡 Fix Suggestion:
-   1. Implement token refresh logic
-   2. Check expiration before validation
-   3. Handle ExpiredSignatureError gracefully
+### Systems Programming
+- **C/C++**: gdb 14.x, lldb 17.x, AddressSanitizer
+- **Rust**: rust-lldb, rust-gdb, RUST_BACKTRACE=1
+- **Go**: Delve 1.22.x, goroutine debugging
+
+### JVM Ecosystem
+- **Java**: jdb, IntelliJ IDEA, Remote JDWP
+- **Kotlin**: IntelliJ Kotlin Debugger, Coroutines debugger
+- **Scala**: IntelliJ Scala Plugin, sbt debug mode
+- **Clojure**: CIDER, Cursive, REPL-based debugging
+
+### Scripting Languages
+- **Python**: pdb, debugpy 1.8.0, pudb (TUI)
+- **Ruby**: debug gem (built-in), byebug, pry-byebug
+- **PHP**: Xdebug 3.3.x, phpdbg
+- **Lua**: ZeroBrane Studio, MobDebug
+- **Shell**: bash -x, set -x toggle
+
+### Web & Mobile
+- **JavaScript**: Chrome DevTools, node --inspect
+- **TypeScript**: Chrome DevTools with source maps, VS Code debugger
+- **Dart/Flutter**: Flutter DevTools, hot reload
+- **Swift**: LLDB (Xcode), Instruments profiling
+
+### Functional & Concurrency
+- **Haskell**: GHCi debugger, Debug.Trace
+- **Elixir**: IEx debugger, :observer.start()
+- **Julia**: Debugger.jl, Infiltrator.jl
+- **R**: browser(), debug(), RStudio debugger
+
+### Enterprise & Data
+- **C#**: Visual Studio Debugger, Rider, vsdbg
+- **SQL**: EXPLAIN ANALYZE, pg_stat_statements
+
+> **Complete debugger matrix with CLI commands**: See [reference.md](reference.md)
+
+---
+
+## Debugging Workflow (6-Step Process)
+
+### 1. Reproduce
+- [ ] Minimal reproducible example (MRE)
+- [ ] Consistent reproduction steps
+- [ ] Document environment (OS, language version, dependencies)
+
+### 2. Isolate
+- [ ] Binary search the code (comment out sections)
+- [ ] Check recent changes (git diff, git log)
+- [ ] Verify input data and edge cases
+
+### 3. Investigate
+- [ ] Read stack trace from bottom (entry point) to top (error site)
+- [ ] Add logging at key decision points
+- [ ] Use debugger breakpoints before error location
+- [ ] Check variable state in debugger
+
+### 4. Hypothesize
+- [ ] Form theory about root cause
+- [ ] Identify 2-3 most likely culprits
+- [ ] Design experiment to test hypothesis
+
+### 5. Fix
+- [ ] Implement minimal fix first
+- [ ] Add regression test (RED → GREEN)
+- [ ] Refactor if needed (REFACTOR stage)
+- [ ] Update documentation
+
+### 6. Verify
+- [ ] Run full test suite
+- [ ] Test edge cases explicitly
+- [ ] Verify fix in production-like environment
+- [ ] Monitor for recurrence
+
+---
+
+## Common Error Patterns by Language Category
+
+### Memory Safety
+- **C/C++**: Buffer overflow, use-after-free, memory leaks
+  - Tools: Valgrind, AddressSanitizer (`-fsanitize=address`)
+- **Rust**: Ownership violations (prevented at compile time)
+- **Go**: Goroutine leaks, improper channel usage
+
+### Null/Nil Handling
+- **Java**: NullPointerException → Use Optional<T>
+- **Kotlin**: NullPointerException → Leverage null safety (?.)
+- **TypeScript**: undefined access → Optional chaining (?.)
+- **Go**: Nil pointer → Early nil checks
+- **Rust**: Option<T> unwrap → Pattern matching
+
+### Type Errors
+- **Python**: TypeError, AttributeError → Type hints + mypy
+- **JavaScript**: Type coercion bugs → Use TypeScript
+- **Ruby**: NoMethodError → Duck typing checks
+
+### Concurrency Issues
+- **Go**: Data races → `go build -race`, proper channel usage
+- **Java**: ConcurrentModificationException → Use concurrent collections
+- **Rust**: Data races (prevented by borrow checker)
+- **Python**: GIL limitations → Use multiprocessing for CPU-bound tasks
+
+### Async/Await Pitfalls
+- **Python**: `RuntimeError: Event loop is closed` → Proper asyncio usage
+- **JavaScript**: Unhandled promise rejections → Always catch async errors
+- **Rust**: Send/Sync trait violations → Understand thread safety
+
+> **Detailed error pattern analysis**: See [examples.md](examples.md)
+
+---
+
+## Container & Kubernetes Debugging
+
+### Docker Debugging
+```bash
+# Attach to running container
+docker exec -it <container> /bin/sh
+
+# Debug with debugger ports exposed
+docker run -p 5005:5005 -e JAVA_TOOL_OPTIONS='-agentlib:jdwp=...' myapp
+
+# Python remote debugging
+docker run -p 5678:5678 -e DEBUGPY_ENABLE=true myapp
 ```
 
-**Common Error Patterns**:
-- `NullPointerException` → Optional usage, guard clauses
-- `IndexError` → Boundary checks
-- `KeyError` → `.get()` with defaults
-- `TypeError` → Type hints, input validation
-- `ConnectionError` → Retry logic, timeouts
+### Kubernetes Debugging
+```bash
+# Port-forward debugger port
+kubectl port-forward pod/myapp-pod 5005:5005
 
-**Debugging Checklist**:
-- [ ] Reproducible?
-- [ ] Log messages?
-- [ ] Input data?
-- [ ] Recent changes?
-- [ ] Dependency versions?
+# Exec into pod
+kubectl exec -it myapp-pod -- /bin/bash
 
-**Language-specific Tips**:
-- **Python**: Logging, type guards
-- **TypeScript**: Type guards, null checks
-- **Java**: Optional, try-with-resources
-
-## Examples
-```markdown
-- Checks the current diff and lists items that can be modified immediately.
-- Schedule follow-up tasks with TodoWrite.
+# Debug with ephemeral container (K8s 1.23+)
+kubectl debug -it myapp-pod --image=busybox --target=myapp
 ```
+
+> **Complete container debugging guide**: See [reference.md](reference.md)
+
+---
+
+## Distributed Tracing
+
+### OpenTelemetry 1.24.0+
+- Python: opentelemetry-api, opentelemetry-sdk
+- TypeScript: @opentelemetry/sdk-trace-node
+- Exporters: Jaeger, Zipkin, OTLP
+
+### Prometheus 2.48.x Integration
+- Metrics: Counter, Gauge, Histogram, Summary
+- Python: prometheus-client 0.19.0
+- Go: prometheus/client_golang
+
+### Cloud Debuggers
+- **AWS X-Ray**: aws-xray-sdk, auto-instrumentation
+- **GCP Cloud Debugger**: googleclouddebugger Python package
+
+> **Complete distributed tracing setup**: See [reference.md](reference.md)
+
+---
+
+## Stack Trace Analysis Quick Guide
+
+### Reading Stack Traces
+
+**Direction**: Bottom (entry point) → Top (error site)
+
+**Key information**:
+- 📍 **Location**: File and line number
+- 🔍 **Context**: Function name and arguments
+- 💡 **Error type**: Exception class or error message
+
+### Analysis Pattern
+
+1. **Identify error type**: What exception/error?
+2. **Locate error site**: Top of stack trace
+3. **Trace execution path**: Follow stack from bottom
+4. **Identify root cause**: Where did bad data/state originate?
+5. **Suggest fix**: 1-3 actionable options
+
+> **Language-specific stack trace examples**: See [examples.md](examples.md)
+
+---
+
+## Performance Profiling Integration
+
+### CPU Profiling
+- **Python**: cProfile, py-spy (production-safe)
+- **Go**: pprof, go test -cpuprofile
+- **Rust**: flamegraph crate
+- **Java**: Java Flight Recorder (JFR)
+
+### Memory Profiling
+- **Python**: memory_profiler, tracemalloc
+- **Go**: pprof memory profiling
+- **C/C++**: Valgrind massif
+- **Rust**: heaptrack
+
+> **Complete profiling guide**: See [reference.md](reference.md)
+
+---
 
 ## Inputs
-- A snapshot of the code/tests/documentation you are currently working on.
-- Ongoing agent status information.
+- Stack traces, error messages, logs
+- Code context (relevant files)
+- Environment information (versions, config)
+- Reproduction steps
 
 ## Outputs
-- Immediately actionable checklists or improvement suggestions.
-- Recommendations on whether to take next steps or not.
+- Root cause analysis with evidence
+- Actionable fix suggestions (1-3 options)
+- Debugging checklist tailored to error type
+- Code snippets demonstrating fix
+
+---
 
 ## Failure Modes
-- If you cannot find the required files or test results.
-- When the scope of work is excessively large and cannot be resolved with simple support.
+- Insufficient stack trace or log information
+- Unable to reproduce error locally
+- Complex distributed system failures requiring multi-service tracing
+- Race conditions or timing-dependent bugs
+
+---
 
 ## Dependencies
-- Mainly used in conjunction with `tdd-implementer`, `quality-gate`, etc.
+- Works with: tdd-implementer, debug-helper, quality-gate
+- Requires: Language-specific debugger tools installed
+- Optional: OpenTelemetry, Prometheus, cloud debugger SDKs
 
-## References
-- Microsoft. "Debugging Techniques." https://learn.microsoft.com/visualstudio/debugger/ (accessed 2025-03-29).
-- JetBrains. "Debugging Code." https://www.jetbrains.com/help/idea/debugging-code.html (accessed 2025-03-29).
+---
 
-## Changelog
-- 2025-03-29: Overhauled input/output definitions for Essentials skills.
+## Related Skills
+- moai-essentials-refactor (clean up code after debugging)
+- moai-essentials-perf (performance bottleneck investigation)
+- moai-alfred-debugger-pro (advanced debugging strategies)
+- moai-foundation-trust (ensure debugging doesn't skip tests)
 
-## Works well with
-
-- moai-essentials-refactor
+---
 
 ## Best Practices
-- Record results, even for simple improvements, to increase traceability.
-- Clearly mark items that require human review to distinguish them from automation.
+- Always create regression test after fixing bug (TDD cycle)
+- Log debugging insights in code comments with @TAG references
+- Use language-appropriate debugger (don't force Python workflow on Go)
+- Enable source maps for compiled/transpiled languages
+- Set up distributed tracing early in microservices projects
+- Use production-safe profilers (py-spy, async-profiler) in live systems
+- Document reproduction steps in issue tracker or SPEC HISTORY
+
+---
+
+**For complete 23-language debugger matrix**: [reference.md](reference.md)  
+**For language-specific debugging examples**: [examples.md](examples.md)
+
+---
+
+**End of Skill** | Refactored 2025-10-27
