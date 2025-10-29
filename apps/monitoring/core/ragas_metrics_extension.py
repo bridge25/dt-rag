@@ -298,7 +298,8 @@ class RAGASMetricsExtension:
         except Exception as e:
             logger.error(f"Failed to record RAGAS metrics: {e}")
 
-    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, float]]) -> None:
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: comparison-overlap (Fix 65 - Dict[str, Dict[str, float]] → Dict[str, Any])
+    def update_quality_gates_status(self, quality_gates: Dict[str, Any]) -> None:
         """
         Update quality gates status metrics
 

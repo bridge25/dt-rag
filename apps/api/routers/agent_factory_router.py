@@ -188,9 +188,10 @@ class AgentFactoryService:
             )
         return None
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: return-value (Fix 63 - change return type to Optional[AgentStatus])
     async def update_agent(
         self, agent_id: str, update: AgentUpdateRequest
-    ) -> AgentStatus:
+    ) -> Optional[AgentStatus]:
         """Update agent configuration"""
         agent = await self.get_agent(agent_id)
         if not agent:

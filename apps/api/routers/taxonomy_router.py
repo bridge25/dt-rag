@@ -136,7 +136,8 @@ async def list_taxonomy_versions(
         has_next = offset + limit < total_count
         has_previous = page > 1
 
-        response = {
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: index (Fix 58-59 - explicit type annotation for response dict)
+        response: Dict[str, Any] = {
             "versions": versions,
             "pagination": {
                 "page": page,
@@ -238,7 +239,8 @@ async def get_taxonomy_statistics(
     """
     try:
         statistics = await service.get_statistics(version)
-        return statistics
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: return-value (Fix 60 - model_validate dict to TaxonomyStatistics)
+        return TaxonomyStatistics.model_validate(statistics)
 
     except HTTPException:
         raise
@@ -268,7 +270,8 @@ async def validate_taxonomy(
     """
     try:
         validation_result = await service.validate_taxonomy(version)
-        return validation_result
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: return-value (Fix 61 - model_validate dict to ValidationResult)
+        return ValidationResult.model_validate(validation_result)
 
     except HTTPException:
         raise
@@ -316,7 +319,8 @@ async def compare_taxonomy_versions(
             )
 
         comparison = await service.compare_versions(base_version, target_version)
-        return comparison
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: return-value (Fix 62 - model_validate dict to VersionComparison)
+        return VersionComparison.model_validate(comparison)
 
     except HTTPException:
         raise

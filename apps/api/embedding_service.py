@@ -109,6 +109,9 @@ class EmbeddingService:
             logger.error("sentence-transformers 패키지가 설치되지 않음")
             return None
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: index (Fix 56-57 - assert model_config is not None)
+        assert self.model_config is not None, "model_config must be initialized in __init__"
+
         try:
             logger.info(f"폴백 모델 로딩 중: {self.model_config['name']}")
             self._sentence_transformer = SentenceTransformer(self.model_config["name"])

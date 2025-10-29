@@ -3,7 +3,8 @@
 import logging
 import math
 import random
-from typing import List, Dict
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: valid-type (Fix 64 - add Any import)
+from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,10 @@ class SoftQPolicy:
     - τ 높음 (1.0) -> exploration (균등 분포)
     """
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: valid-type (Fix 64 - any → Any)
     def select_action(
         self, q_values: List[float], temperature: float = 0.5
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Softmax 정책으로 action 선택
 

@@ -157,9 +157,11 @@ class SecurityManager:
 
             # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (type conversions for SecurityContext)
             # 7. Create security context
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: index (Fix 55 - narrow session_id type to str)
+            session_id_str: str = session_id if session_id else str(uuid.uuid4())
             context = SecurityContext(
                 user_id=user_info["user_id"],
-                session_id=session_id if session_id else str(uuid.uuid4()),  # Generate UUID if missing
+                session_id=session_id_str,  # Use narrowed str type
                 ip_address=ip_address,
                 user_agent=user_agent,
                 permissions={perm.value for perm in permissions},  # Convert Permission enum to str
@@ -172,7 +174,7 @@ class SecurityManager:
             )
 
             # 8. Store active session
-            self._active_sessions[session_id] = context
+            self._active_sessions[session_id_str] = context
 
             # 9. Log successful authentication
             await self._log_security_event(

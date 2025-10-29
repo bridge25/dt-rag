@@ -418,7 +418,9 @@ async def create_embeddings(
         from database import db_manager  # type: ignore[import-not-found]  # TODO: Fix database import path
 
         async with db_manager.async_session() as session:
-            result = await SearchDAO.create_embeddings_for_chunks(
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: attr-defined (Fix 68 - method not yet implemented in SearchDAO)
+            # TODO: Implement SearchDAO.create_embeddings_for_chunks(session, chunk_ids, batch_size)
+            result = await SearchDAO.create_embeddings_for_chunks(  # type: ignore[attr-defined]
                 session=session,
                 chunk_ids=request.chunk_ids,
                 batch_size=request.batch_size,

@@ -11,7 +11,8 @@ Provides REST endpoints for document classification including:
 # @CODE:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md | TEST: tests/e2e/test_complete_workflow.py
 
 import logging
-from typing import List, Dict, Any, Optional
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: syntax (Fix 54 - add Union import for Python 3.9 compatibility)
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 import uuid
 
@@ -339,7 +340,7 @@ async def classify_batch(
     service: ClassificationService = Depends(get_classification_service),
     db_session: Any = Depends(get_db_session),
     api_key: str = Depends(verify_api_key),
-) -> JSONResponse | BatchClassifyResponse:
+) -> Union[JSONResponse, BatchClassifyResponse]:  # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: syntax (Fix 54 - Python 3.9 compatible Union syntax)
     """
     Classify multiple document chunks in batch
 
