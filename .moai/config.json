@@ -4,7 +4,7 @@
     "@SPEC:PROJECT-CONFIG-001": "@SPEC:MOAI-CONFIG-001"
   },
   "moai": {
-    "version": "0.8.3",
+    "version": "0.10.1",
     "update_check_frequency": "daily",
     "version_check": {
       "enabled": true,
@@ -69,11 +69,11 @@
     "description": "Dynamic Taxonomy RAG System - Fullstack hybrid architecture",
     "mode": "personal",
     "locale": "ko",
-    "language": "{{CODEBASE_LANGUAGE}}",
+    "language": "{'conversation_language': '{{CONVERSATION_LANGUAGE}}', 'conversation_language_name': '{{CONVERSATION_LANGUAGE_NAME}}'}",
     "created_at": "2025-10-13T10:00:00Z",
     "initialized": true,
     "optimized": false,
-    "template_version": "0.8.3"
+    "template_version": "0.10.1"
   },
   "tags": {
     "auto_sync": true,
