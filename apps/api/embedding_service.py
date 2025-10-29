@@ -134,7 +134,7 @@ class EmbeddingService:
         else:
             return cast(List[float], vector[: self.TARGET_DIMENSIONS].tolist())
 
-    @observe(name="generate_embedding", as_type="embedding")
+    @observe(name="generate_embedding", as_type="embedding")  # type: ignore[misc]  # Langfuse decorator lacks type stubs
     async def generate_embedding(
         self, text: str, use_cache: bool = True
     ) -> List[float]:
@@ -215,7 +215,7 @@ class EmbeddingService:
 
         return self._pad_or_truncate_vector(embedding)
 
-    @observe(name="batch_generate_embeddings", as_type="embedding")
+    @observe(name="batch_generate_embeddings", as_type="embedding")  # type: ignore[misc]  # Langfuse decorator lacks type stubs
     async def batch_generate_embeddings(
         self, texts: List[str], batch_size: int = 100, show_progress: bool = True
     ) -> List[List[float]]:
