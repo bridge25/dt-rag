@@ -122,15 +122,16 @@ class RAGASEvaluator:
 
             # Parse results
             # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (explicit typing for asyncio.gather results)
-            context_precision: float = (
-                results[0] if not isinstance(results[0], Exception) else 0.0
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 47-50 - cast Union[float, BaseException] to float)
+            context_precision: float = cast(
+                float, results[0] if not isinstance(results[0], Exception) else 0.0
             )
-            context_recall: float = (
-                results[1] if not isinstance(results[1], Exception) else 0.0
+            context_recall: float = cast(
+                float, results[1] if not isinstance(results[1], Exception) else 0.0
             )
-            faithfulness: float = results[2] if not isinstance(results[2], Exception) else 0.0
-            answer_relevancy: float = (
-                results[3] if not isinstance(results[3], Exception) else 0.0
+            faithfulness: float = cast(float, results[2] if not isinstance(results[2], Exception) else 0.0)
+            answer_relevancy: float = cast(
+                float, results[3] if not isinstance(results[3], Exception) else 0.0
             )
 
             # Create metrics object

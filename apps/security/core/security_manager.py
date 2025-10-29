@@ -262,7 +262,8 @@ class SecurityManager:
 
             # 4. Risk-based authorization
             if context.risk_score > 0.8:  # High risk
-                if operation in self.policy.sensitive_operations:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: operator (Fix 42 - check for None before 'in' operator)
+                if self.policy.sensitive_operations and operation in self.policy.sensitive_operations:
                     await self._log_security_event(
                         EventType.HIGH_RISK_OPERATION_BLOCKED,
                         {

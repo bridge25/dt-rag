@@ -18,7 +18,8 @@ Performance targets:
 import time
 import logging
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple, Union
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 51-52 - add cast import)
+from typing import List, Dict, Any, Optional, Tuple, Union, cast
 from datetime import datetime
 import numpy as np
 from dataclasses import dataclass, field
@@ -604,13 +605,15 @@ class HybridSearchEngine:
                 logger.error(f"BM25 search failed: {bm25_results}")
                 bm25_results_list = []
             else:
-                bm25_results_list = bm25_results
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 51 - cast Union[list[SearchResult], BaseException] to list[SearchResult])
+                bm25_results_list = cast(List[SearchResult], bm25_results)
 
             if isinstance(vector_results, Exception):
                 logger.error(f"Vector search failed: {vector_results}")
                 vector_results_list = []
             else:
-                vector_results_list = vector_results
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 52 - cast Union[list[SearchResult], BaseException] to list[SearchResult])
+                vector_results_list = cast(List[SearchResult], vector_results)
 
             metrics.bm25_candidates = len(bm25_results_list)
             metrics.vector_candidates = len(vector_results_list)

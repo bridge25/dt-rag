@@ -274,7 +274,8 @@ class QualityMonitor:
 
     def _check_quality_gates(self, current_metrics: Dict[str, float]) -> Dict[str, Any]:
         """Check if quality gates are passing"""
-        gates = {}
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: dict-item (Fix 53 - explicit Dict[str, Any] for mixed value types)
+        gates: Dict[str, Any] = {}
 
         # Define quality gates
         quality_gates = {
@@ -311,16 +312,18 @@ class QualityMonitor:
             metric_value = current_metrics.get(cast(str, gate_config["metric"]))
 
             if metric_value is not None:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: operator (Fix 43-45 - cast threshold to float)
+                threshold = cast(float, gate_config["threshold"])
                 if gate_config["operator"] == ">=":
-                    passing = metric_value >= gate_config["threshold"]
+                    passing = metric_value >= threshold
                 else:  # '<='
-                    passing = metric_value <= gate_config["threshold"]
+                    passing = metric_value <= threshold
 
                 gates[gate_name] = {
                     "passing": passing,
                     "current_value": metric_value,
-                    "threshold": gate_config["threshold"],
-                    "margin": abs(metric_value - gate_config["threshold"]),
+                    "threshold": threshold,
+                    "margin": abs(metric_value - threshold),
                 }
 
                 if not passing:
