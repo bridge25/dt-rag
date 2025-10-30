@@ -14,6 +14,89 @@ DT-RAG는 동적 분류체계(Dynamic Taxonomy)와 사례 기반 추론(Case-Bas
 - MCP Protocol 기반 Tool Execution
 - PostgreSQL + pgvector 기반 프로덕션 인프라
 
+<!-- @DOC:AGENT-CARD-001-ROOT-README -->
+## 🎮 Frontend: Pokemon-Style Agent Growth System (v2.1.0)
+
+**프로덕션 준비 완료!** 에이전트 성장을 Pokemon 카드 스타일로 시각화하는 게임화 UI/UX 시스템입니다.
+
+### 핵심 기능
+- **XP/레벨 시스템** (1-10+ levels): 대화, 피드백, RAGAS 평가를 통한 경험치 획득 및 레벨업
+- **4단계 희귀도**: Common → Rare → Epic → Legendary 진화 시스템
+- **실시간 애니메이션**: framer-motion 6.1.9 + react-confetti 6.2.0를 활용한 레벨업 축하 효과
+- **반응형 그리드**: 1/2/3/4 컬럼 자동 조정 (모바일, 태블릿, 데스크톱)
+- **TanStack Query 5.90.5**: 에이전트 상태 자동 동기화 및 캐싱
+- **타입 안전성**: Zod 3.25.1 스키마 검증 (UUID, ISO datetime, range checks)
+- **100% 접근성**: ARIA 레이블, 키보드 내비게이션, 스크린 리더 지원
+
+### 기술 스택
+- **Framework**: React 19.1.1 + TypeScript 5.9.3 + Vite 6.2.1
+- **Styling**: Tailwind CSS 4.1.16
+- **State Management**: TanStack Query 5.90.5
+- **Animation**: framer-motion 6.1.9, react-confetti 6.2.0
+- **Validation**: Zod 3.25.1
+- **HTTP Client**: Axios 1.7.9
+
+### 컴포넌트 구조 (18개 파일)
+```
+frontend/src/
+├── components/agent-card/
+│   ├── AgentCard.tsx               # 메인 카드 컴포넌트
+│   ├── RarityBadge.tsx            # 희귀도 배지 (4단계)
+│   ├── ProgressBar.tsx            # XP 진행률 바
+│   ├── StatDisplay.tsx            # 통계 표시 (Docs/Queries/Quality)
+│   ├── ActionButtons.tsx          # View/Delete 액션
+│   ├── LevelUpModal.tsx           # 레벨업 축하 모달
+│   └── ErrorBoundary.tsx          # 에러 경계 처리
+├── utils/
+│   ├── rarityConfig.ts            # 희귀도 설정 (색상, 아이콘)
+│   ├── levelConfig.ts             # 레벨 요구사항 테이블
+│   ├── xpCalculator.ts            # XP 계산 유틸리티
+│   └── animationVariants.ts       # framer-motion 애니메이션
+├── hooks/
+│   └── useAgents.ts               # TanStack Query 훅
+├── lib/api/
+│   └── types.ts                   # Zod 스키마 (AgentCardData)
+└── app/
+    └── AgentCardGallery.tsx       # 그리드 레이아웃 페이지
+```
+
+### 테스트 커버리지 (154/154 tests, 100%)
+- **컴포넌트 테스트** (6개 파일, 63 tests): AgentCard, RarityBadge, ProgressBar, StatDisplay, ActionButtons, ErrorBoundary
+- **유틸리티 테스트** (4개 파일, 42 tests): rarityConfig, levelConfig, xpCalculator, animationVariants
+- **통합 테스트** (2개 파일, 49 tests): useAgents hook, AgentCardGallery
+
+### Feature Flag 활성화
+```bash
+# Backend 연동 시 활성화
+export FEATURE_AGENT_CARD=true
+
+# Frontend 개발 서버
+cd frontend && npm run dev
+```
+
+### 사용 예시
+```typescript
+import { AgentCardGallery } from '@/app/AgentCardGallery'
+
+function App() {
+  return <AgentCardGallery />
+}
+```
+
+### 문서
+- **컴포넌트 가이드**: [frontend/docs/COMPONENTS.md](./frontend/docs/COMPONENTS.md)
+- **유틸리티 가이드**: [frontend/docs/UTILITIES.md](./frontend/docs/UTILITIES.md)
+- **테스트 가이드**: [frontend/docs/TESTING.md](./frontend/docs/TESTING.md)
+- **Frontend README**: [frontend/README.md](./frontend/README.md)
+
+### TAG 체인
+- **@SPEC:SPEC-AGENT-CARD-001** (23 locations)
+- **@CODE:AGENT-CARD-001** (40 locations)
+- **@TEST:AGENT-CARD-001** (31 locations)
+- **@DOC:AGENT-CARD-001** (16 locations)
+
+---
+
 ## 🧪 실험 기능 (Phase 0-3.2)
 
 > **참고**: 아래 기능들은 Feature Flag로 제어되며, 현재 개발/테스트 단계입니다.

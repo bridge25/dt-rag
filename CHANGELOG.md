@@ -5,6 +5,42 @@
 
 ---
 
+<!-- @DOC:AGENT-CARD-001-CHANGELOG -->
+## [2.1.0] - 2025-10-30
+
+### Added
+
+#### Frontend - Pokemon-Style Agent Card System
+- **SPEC-AGENT-CARD-001**: 게임화 에이전트 성장 시스템 구현
+  - **XP/레벨 시스템** (1-10+ levels): 대화, 피드백, RAGAS 평가를 통한 경험치 획득
+  - **4단계 희귀도**: Common → Rare → Epic → Legendary 진화 시스템
+  - **레벨업 애니메이션**: framer-motion 6.1.9 + react-confetti 6.2.0 통합
+  - **반응형 그리드 레이아웃**: 1/2/3/4 columns 자동 조정 (모바일/태블릿/데스크톱)
+  - **실시간 데이터 페칭**: TanStack Query 5.90.5로 에이전트 상태 자동 동기화
+  - **접근성 강화**: ARIA 레이블, 키보드 내비게이션, 스크린 리더 지원
+  - **타입 안전성**: Zod 3.25.1 스키마 검증 (UUID, ISO datetime, range checks)
+  - **컴포넌트 구조**:
+    - 5개 UI 컴포넌트 (AgentCard, RarityBadge, ProgressBar, StatDisplay, ActionButtons)
+    - 4개 유틸리티 (rarityConfig, levelConfig, xpCalculator, animationVariants)
+    - 1개 React Hook (useAgents with TanStack Query)
+    - 1개 애니메이션 컴포넌트 (LevelUpModal)
+    - 1개 페이지 (AgentCardGallery)
+  - **테스트 커버리지**: 154/154 테스트 통과 (100%)
+    - 컴포넌트 테스트: 6개 파일 (63 tests)
+    - 유틸리티 테스트: 4개 파일 (42 tests)
+    - 통합 테스트: 2개 파일 (49 tests)
+  - **문서화**: COMPONENTS.md, UTILITIES.md, TESTING.md, frontend/README.md
+  - **TAG 체인**: @SPEC (23) → @CODE (40) → @TEST (31) → @DOC (16)
+  - **기술 스택**: React 19.1.1, TypeScript 5.9.3, Tailwind CSS 4.1.16, Vite 6.2.1
+
+#### Quality Improvements
+- **Error Boundary**: 컴포넌트 레벨 에러 처리 및 fallback UI
+- **API Client Integration**: Axios 1.7.9 기반 에이전트 데이터 페칭
+- **Zod Validation 강화**: UUID, ISO datetime, range 검증 추가
+- **Accessibility**: ARIA 속성, semantic HTML, 키보드 접근성 100% 지원
+
+---
+
 ## [1.9.0] - 2025-10-24
 
 ### Added
