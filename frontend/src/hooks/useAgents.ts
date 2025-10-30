@@ -1,7 +1,12 @@
 // @CODE:AGENT-CARD-001-HOOK-001
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api/client'
-import type { AgentCardData } from '@/lib/api/types'
+import { AgentCardDataSchema, type AgentCardData } from '@/lib/api/types'
+import { z } from 'zod'
+
+const AgentsResponseSchema = z.object({
+  agents: z.array(AgentCardDataSchema),
+})
 
 interface AgentsResponse {
   agents: AgentCardData[]
@@ -16,7 +21,18 @@ interface UseAgentsReturn {
 
 async function fetchAgents(): Promise<AgentsResponse> {
   const { data } = await apiClient.get<AgentsResponse>('/agents')
-  return data
+
+  // Validate response data with Zod
+  try {
+    const validated = AgentsResponseSchema.parse(data)
+    return validated
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Agent data validation failed:', error.errors)
+      throw new Error(`Invalid agent data: ${error.errors.map(e => e.message).join(', ')}`)
+    }
+    throw error
+  }
 }
 
 export function useAgents(): UseAgentsReturn {

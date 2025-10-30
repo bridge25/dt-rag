@@ -17,7 +17,7 @@ const mockApiClient = apiClient as { get: ReturnType<typeof vi.fn> }
 const mockAgentsData = {
   agents: [
     {
-      agent_id: 'agent-1',
+      agent_id: '550e8400-e29b-41d4-a716-446655440001',
       name: 'Test Agent 1',
       level: 3,
       current_xp: 150,
@@ -27,11 +27,11 @@ const mockAgentsData = {
       total_queries: 50,
       quality_score: 85,
       status: 'active',
-      created_at: '2025-01-01T00:00:00Z',
-      last_used: '2025-01-15T00:00:00Z',
+      created_at: '2025-01-01T00:00:00.000Z',
+      last_used: '2025-01-15T00:00:00.000Z',
     },
     {
-      agent_id: 'agent-2',
+      agent_id: '550e8400-e29b-41d4-a716-446655440002',
       name: 'Test Agent 2',
       level: 5,
       current_xp: 500,
@@ -41,7 +41,7 @@ const mockAgentsData = {
       total_queries: 100,
       quality_score: 92,
       status: 'active',
-      created_at: '2025-01-01T00:00:00Z',
+      created_at: '2025-01-01T00:00:00.000Z',
     },
   ]
 }
