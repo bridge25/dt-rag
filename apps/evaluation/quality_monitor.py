@@ -13,7 +13,8 @@ Provides real-time quality monitoring, alerting, and trend analysis:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 41 - add cast import)
+from typing import Dict, List, Any, cast
 from collections import defaultdict, deque
 import statistics
 
@@ -39,7 +40,7 @@ class QualityMonitor:
 
         # In-memory metric buffers for real-time monitoring
         self.metric_buffer_size = 100
-        self.metric_buffers = {
+        self.metric_buffers: Any = {
             "faithfulness": deque(maxlen=self.metric_buffer_size),
             "context_precision": deque(maxlen=self.metric_buffer_size),
             "context_recall": deque(maxlen=self.metric_buffer_size),
@@ -48,15 +49,15 @@ class QualityMonitor:
         }
 
         # Alert state tracking
-        self.active_alerts = {}
+        self.active_alerts: dict[str, Any] = {}
         self.alert_cooldown = timedelta(minutes=10)  # Prevent alert spam
 
         # Quality trend tracking
         self.trend_window_minutes = 60
-        self.quality_history = deque(maxlen=1440)  # 24 hours of minute-level data
+        self.quality_history: Any = deque(maxlen=1440)  # 24 hours of minute-level data
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    async def record_evaluation(self, evaluation: EvaluationResult) -> None:
+    async def record_evaluation(self, evaluation: EvaluationResult) -> List[QualityAlert]:
         """Record new evaluation result and check for quality issues"""
         try:
             # Update metric buffers
@@ -256,7 +257,7 @@ class QualityMonitor:
         if not self.active_alerts:
             return {"total_alerts": 0, "severity_breakdown": {}}
 
-        severity_counts = defaultdict(int)
+        severity_counts: Any = defaultdict(int)
         for alert in self.active_alerts.values():
             severity_counts[alert.severity] += 1
 
@@ -273,7 +274,8 @@ class QualityMonitor:
 
     def _check_quality_gates(self, current_metrics: Dict[str, float]) -> Dict[str, Any]:
         """Check if quality gates are passing"""
-        gates = {}
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: dict-item (Fix 53 - explicit Dict[str, Any] for mixed value types)
+        gates: Dict[str, Any] = {}
 
         # Define quality gates
         quality_gates = {
@@ -306,19 +308,22 @@ class QualityMonitor:
 
         all_passing = True
         for gate_name, gate_config in quality_gates.items():
-            metric_value = current_metrics.get(gate_config["metric"])
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 41 - cast dict value to str for .get())
+            metric_value = current_metrics.get(cast(str, gate_config["metric"]))
 
             if metric_value is not None:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: operator (Fix 43-45 - cast threshold to float)
+                threshold = cast(float, gate_config["threshold"])
                 if gate_config["operator"] == ">=":
-                    passing = metric_value >= gate_config["threshold"]
+                    passing = metric_value >= threshold
                 else:  # '<='
-                    passing = metric_value <= gate_config["threshold"]
+                    passing = metric_value <= threshold
 
                 gates[gate_name] = {
                     "passing": passing,
                     "current_value": metric_value,
-                    "threshold": gate_config["threshold"],
-                    "margin": abs(metric_value - gate_config["threshold"]),
+                    "threshold": threshold,
+                    "margin": abs(metric_value - threshold),
                 }
 
                 if not passing:

@@ -72,14 +72,13 @@ class CoverageMeterService:
                 )
                 node_chunk_count = node_chunk_count_result.scalar() or 0
 
-                node_coverage[node_id_str] = {
-                    "document_count": node_doc_count,
-                    "chunk_count": node_chunk_count
-                }
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (Fix 24 - store only int, not dict)
+                node_coverage[node_id_str] = node_doc_count
 
             coverage_percent = 0.0
             if total_nodes > 0:
-                covered_nodes = sum(1 for cov in node_coverage.values() if cov["document_count"] > 0)
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (Fix 24 - cov is now int, not dict)
+                covered_nodes = sum(1 for cov in node_coverage.values() if cov > 0)
                 coverage_percent = (covered_nodes / total_nodes) * 100.0
 
             return CoverageMetrics(
@@ -99,7 +98,8 @@ class CoverageMeterService:
         from apps.api.taxonomy_dag import taxonomy_dag_manager
         import networkx as nx
 
-        graph = await taxonomy_dag_manager._build_networkx_graph(version)
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (Fix 25 - convert str to int)
+        graph = await taxonomy_dag_manager._build_networkx_graph(int(version))
 
         descendants = set(root_node_ids)
         for root_id in root_node_ids:

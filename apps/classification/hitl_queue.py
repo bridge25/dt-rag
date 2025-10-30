@@ -59,7 +59,8 @@ class HITLQueue:
         try:
             async with db_manager.async_session() as session:
                 # Insert into doc_taxonomy with hitl_required=true
-                query = text(
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: operator (Fix 46 - SQLAlchemy text() untyped)
+                query = text(  # type: ignore[operator]
                     """
                     UPDATE doc_taxonomy
                     SET hitl_required = true,

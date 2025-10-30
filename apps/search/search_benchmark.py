@@ -390,7 +390,7 @@ class SearchBenchmark:
         start_time = time.time()
         test_queries = self.generate_test_queries()
 
-        benchmark_results = {
+        benchmark_results: Dict[str, Any] = {
             "timestamp": datetime.utcnow().isoformat(),
             "test_configuration": {
                 "total_queries": len(test_queries),
@@ -443,7 +443,7 @@ class SearchBenchmark:
         return benchmark_results
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def save_results(self, results: Dict[str, Any], filename: str = None) -> None:
+    def save_results(self, results: Dict[str, Any], filename: Optional[str] = None) -> None:
         """Save benchmark results to file"""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

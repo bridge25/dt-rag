@@ -6,7 +6,8 @@ from collections import deque
 import asyncio
 import random
 import logging
-from typing import List, Tuple
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: name-defined (Fix 33 - add Any to imports)
+from typing import List, Tuple, Any
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ class ReplayBuffer:
         if max_size <= 0:
             raise ValueError(f"max_size must be positive, got {max_size}")
 
-        self.buffer = deque(maxlen=max_size)
+        self.buffer: Any = deque(maxlen=max_size)
         self.lock = asyncio.Lock()
         logger.debug(f"ReplayBuffer initialized with max_size={max_size}")
 

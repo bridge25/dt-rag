@@ -5,7 +5,7 @@
 
 import os
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import (
@@ -734,7 +734,7 @@ class EmbeddingService:
                 embedding_array = await OptimizedEmbeddingService.generate_embedding(
                     text, model
                 )
-                return embedding_array.tolist()
+                return cast(List[float], embedding_array.tolist())
             except Exception as e:
                 logger.warning(f"Optimized embedding failed, using fallback: {e}")
 
@@ -763,7 +763,7 @@ class EmbeddingService:
                     return EmbeddingService._get_dummy_embedding(text)
 
                 result = response.json()
-                return result["data"][0]["embedding"]
+                return cast(List[float], result["data"][0]["embedding"])
 
         except Exception as e:
             logger.error(f"임베딩 생성 실패: {e}")
@@ -780,7 +780,7 @@ class EmbeddingService:
         norm = np.linalg.norm(embedding)
         if norm > 0:
             embedding = embedding / norm
-        return embedding.tolist()
+        return cast(List[float], embedding.tolist())
 
     @staticmethod
     async def generate_batch_embeddings(
@@ -955,7 +955,7 @@ class SearchDAO:
     @staticmethod
     async def hybrid_search(
         query: str,
-        filters: Dict = None,
+        filters: Optional[Dict] = None,
         topk: int = 5,
         bm25_topk: int = 12,
         vector_topk: int = 12,
@@ -975,9 +975,10 @@ class SearchDAO:
 
             async with concurrency_controller.controlled_execution("hybrid_search"):
                 async with gc_optimizer.optimized_gc_context():
+                    # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (provide empty dict if filters is None)
                     return await SearchDAO._execute_optimized_hybrid_search(
                         query,
-                        filters,
+                        filters or {},
                         topk,
                         bm25_topk,
                         vector_topk,
@@ -988,8 +989,9 @@ class SearchDAO:
         except ImportError:
             # 폴백: 기존 방식
             logger.warning("Optimization modules not available, using legacy search")
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (provide empty dict if filters is None)
             return await SearchDAO._execute_legacy_hybrid_search(
-                query, filters, topk, bm25_topk, vector_topk, rerank_candidates
+                query, filters or {}, topk, bm25_topk, vector_topk, rerank_candidates
             )
         except Exception as e:
             logger.error(f"최적화된 하이브리드 검색 실패: {e}")
@@ -1053,7 +1055,7 @@ class SearchDAO:
                         "optimization_enabled": True,
                     }
 
-                return final_results
+                return cast(List[Dict[str, Any]], final_results)
 
             except Exception as e:
                 logger.error(f"최적화된 검색 실행 실패: {e}")
@@ -1111,7 +1113,7 @@ class SearchDAO:
 
     @staticmethod
     async def _perform_bm25_search(
-        session: AsyncSession, query: str, topk: int, filters: Dict = None
+        session: AsyncSession, query: str, topk: int, filters: Optional[Dict] = None
     ) -> List[Dict[str, Any]]:
         """BM25 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -1187,7 +1189,7 @@ class SearchDAO:
         session: AsyncSession,
         query_embedding: List[float],
         topk: int,
-        filters: Dict = None,
+        filters: Optional[Dict] = None,
     ) -> List[Dict[str, Any]]:
         """Vector 유사도 검색 수행 (SQLite/PostgreSQL 호환)"""
         try:
@@ -1287,7 +1289,7 @@ class SearchDAO:
             return []
 
     @staticmethod
-    def _build_filter_clause(filters: Dict = None) -> str:
+    def _build_filter_clause(filters: Optional[Dict] = None) -> str:
         """필터 조건 SQL 절 생성 (SQLite/PostgreSQL 호환)"""
         if not filters:
             return ""
@@ -1578,7 +1580,7 @@ class ClassifyDAO:
 
     @staticmethod
     async def classify_text(
-        text: str, hint_paths: List[List[str]] = None
+        text: str, hint_paths: Optional[List[List[str]]] = None
     ) -> Dict[str, Any]:
         """실제 분류 로직 - ML 모델 기반 (키워드 기반 제거)"""
         try:

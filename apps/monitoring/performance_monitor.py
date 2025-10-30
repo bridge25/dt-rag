@@ -79,7 +79,8 @@ class RAGPerformanceMonitor:
         }
 
         self.running = False
-        self._monitor_task = None
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 4-3: assignment resolution (Optional Task type)
+        self._monitor_task: Optional["asyncio.Task[None]"] = None
 
     async def start_monitoring(self, session_factory: Any) -> None:
         """Start continuous performance monitoring"""

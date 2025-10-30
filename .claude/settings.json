@@ -1,116 +1,158 @@
 {
   "env": {
     "MOAI_RUNTIME": "typescript",
-    "MOAI_PROJECT_PATH": "./.",
     "MOAI_AUTO_ROUTING": "true",
     "MOAI_PERFORMANCE_MONITORING": "true",
+    "PYTHON_ENV": "{{PROJECT_MODE}}",
+    "MOAI_PROJECT_PATH": "./.",
     "NODE_ENV": "personal"
   },
   "hooks": {
-    "PostToolUse": [],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "node .claude/hooks/alfred/pre-write-guard.cjs",
-            "type": "command"
-          },
-          {
-            "command": "node .claude/hooks/alfred/tag-enforcer.cjs",
-            "type": "command"
-          }
-        ],
-        "matcher": "Edit|Write|MultiEdit"
-      },
-      {
-        "hooks": [
-          {
-            "command": "node .claude/hooks/alfred/policy-block.cjs",
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash"
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [
           {
-            "command": "node .claude/hooks/alfred/session-notice.cjs",
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/alfred/session_start__show_project_info.py",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/alfred/pre_tool__auto_checkpoint.py",
             "type": "command"
           }
         ],
-        "matcher": "*"
+        "matcher": "Edit|Write|MultiEdit"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/alfred/user_prompt__jit_load_docs.py",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/alfred/session_end__cleanup.py",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "uv run \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/alfred/post_tool__log_changes.py",
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write|MultiEdit"
       }
     ]
   },
   "permissions": {
+    "defaultMode": "default",
     "allow": [
-      "Task",
-      "Read",
-      "Write",
+      "Bash(alfred:*)",
+      "Bash(black:*)",
+      "Bash(cat:*)",
+      "Bash(coverage:*)",
+      "Bash(cp:*)",
+      "Bash(diff:*)",
+      "Bash(echo:*)",
+      "Bash(find:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh repo view:*)",
+      "Bash(git:*)",
+      "Bash(jest:*)",
+      "Bash(ls:*)",
+      "Bash(make:*)",
+      "Bash(mkdir:*)",
+      "Bash(moai-adk:*)",
+      "Bash(moai-ts:*)",
+      "Bash(mv:*)",
+      "Bash(mypy:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(pytest:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(rg:*)",
+      "Bash(ruff:*)",
+      "Bash(sort:*)",
+      "Bash(touch:*)",
+      "Bash(tree:*)",
+      "Bash(ts-node:*)",
+      "Bash(tsc:*)",
+      "Bash(tsx:*)",
+      "Bash(uniq:*)",
+      "Bash(uv:*)",
+      "Bash(wc:*)",
+      "Bash(which:*)",
+      "BashOutput",
       "Edit",
+      "Glob",
+      "Grep",
+      "KillShell",
       "MultiEdit",
       "NotebookEdit",
-      "Grep",
-      "Glob",
+      "Read",
+      "Task",
       "TodoWrite",
       "WebFetch",
       "WebSearch",
-      "BashOutput",
-      "KillShell",
-      "Bash(git:*)",
-      "Bash(rg:*)",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(echo:*)",
-      "Bash(which:*)",
-      "Bash(make:*)",
-      "Bash(node:*)",
-      "Bash(tsx:*)",
-      "Bash(moai-ts:*)",
-      "Bash(npm:*)",
-      "Bash(node:*)",
-      "Bash(pnpm:*)",
-      "Bash(npx:*)",
-      "Bash(tsc:*)",
-      "Bash(jest:*)",
-      "Bash(ts-node:*)",
-      "Bash(alfred:*)",
-      "Bash(gh pr create:*)",
-      "Bash(gh pr view:*)",
-      "Bash(gh pr list:*)",
-      "Bash(gh repo view:*)",
-      "Bash(find:*)",
-      "Bash(mkdir:*)",
-      "Bash(touch:*)",
-      "Bash(cp:*)",
-      "Bash(mv:*)",
-      "Bash(tree:*)",
-      "Bash(diff:*)",
-      "Bash(wc:*)",
-      "Bash(sort:*)",
-      "Bash(uniq:*)"
+      "Write"
     ],
     "ask": [
-      "Bash(git push:*)",
-      "Bash(git merge:*)",
       "Bash(gh pr merge:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
       "Bash(npm install:*)",
-      "Bash(rm:*)"
+      "Bash(pip install:*)",
+      "Bash(pip3 install:*)",
+      "Bash(rm -rf:*)",
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "Bash(uv add:*)",
+      "Bash(uv remove:*)"
     ],
-    "defaultMode": "default",
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)",
       "Read(~/.ssh/**)",
-      "Bash(sudo:*)",
-      "Bash(rm -rf :*)",
-      "Bash(chmod -R 777 :*)",
+      "Read(~/.aws/**)",
+      "Read(~/.config/gcloud/**)",
+      "Bash(rm -rf /:*)",
+      "Bash(rm -rf /*:*)",
+      "Bash(rm -rf C\\:/:*)",
+      "Bash(rm -rf C\\:/*:*)",
+      "Bash(del /S /Q C\\:/:*)",
+      "Bash(rmdir /S /Q C\\:/:*)",
+      "Bash(format:*)",
+      "Bash(chmod -R 777:*)",
       "Bash(dd:*)",
       "Bash(mkfs:*)",
-      "Bash(fdisk:*)"
+      "Bash(fdisk:*)",
+      "Bash(reboot:*)",
+      "Bash(shutdown:*)"
     ]
   }
 }

@@ -1,7 +1,11 @@
 ---
 name: alfred:2-run
-description: "Implement all SPECs with SPEC ID to implement (e.g. SPEC-001) or all - Execute planned work (TDD implementation, prototyping, documentation, etc.)" 
-argument-hint: "SPEC-ID - All with SPEC ID to implement (e.g. SPEC-001) or all “SPEC Implementation”
+description: "Execute planned work (TDD implementation, prototyping, documentation, etc.)"
+# Translations:
+# - ko: "계획된 작업 실행 (TDD 구현, 프로토타이핑, 문서화 등)"
+# - ja: "計画されたタスクの実行（TDD実装、プロトタイピング、ドキュメント作成など）"
+# - zh: "执行计划任务（TDD实现、原型开发、文档编写等）"
+argument-hint: "SPEC-ID - All with SPEC ID to implement (e.g. SPEC-001) or all \"SPEC Implementation\""
 allowed-tools:
   - Read
   - Write
@@ -20,7 +24,7 @@ allowed-tools:
 ---
 
 # ⚒️ MoAI-ADK Phase 2: Run the plan - Flexible implementation strategy
-> Interactive prompts rely on `Skill("moai-alfred-tui-survey")` so AskUserQuestion renders TUI selection menus for user surveys and approvals.
+> **Note**: Interactive prompts use `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` for TUI selection menus. The skill is loaded on-demand when user interaction is required.
 
 ## 🎯 Command Purpose
 
@@ -67,12 +71,12 @@ Analyze SPEC documents to execute planned tasks. It supports not only TDD implem
 
 ## 🧠 Associated Skills & Agents
 
-| Agent | Core Skill | Purpose |
-| ----- | -------- | ------- |
+| Agent                  | Core Skill                       | Purpose                                 |
+| ---------------------- | -------------------------------- | --------------------------------------- |
 | implementation-planner | `moai-alfred-language-detection` | Detect language and design architecture |
-| tdd-implementer | `moai-essentials-debug` | Implement TDD (RED → GREEN → REFACTOR) |
-| quality-gate | `moai-alfred-trust-validation` | Verify TRUST 5 principles |
-| git-manager | `moai-alfred-git-workflow` | Commit and manage Git workflows |
+| tdd-implementer        | `moai-essentials-debug`          | Implement TDD (RED → GREEN → REFACTOR)  |
+| quality-gate           | `moai-alfred-trust-validation`   | Verify TRUST 5 principles               |
+| git-manager            | `moai-alfred-git-workflow`       | Commit and manage Git workflows         |
 
 **Note**: TUI Survey Skill is used for user confirmations during the run phase and is shared across all interactive prompts.
 
@@ -92,13 +96,59 @@ Users can run commands as follows:
 
 ## 🔍 STEP 1: SPEC analysis and execution plan establishment
 
-First, the specified SPEC is analyzed to establish an action plan and receive user confirmation.
+STEP 1 consists of **two independent phases** to provide flexible workflow based on task complexity:
 
-**The implementation-planner agent automatically loads and analyzes the required documents.**
+### 📋 STEP 1 Workflow Overview
 
-### 🔍 Browse the code base (recommended)
+```
+┌─────────────────────────────────────────────────────────────┐
+│ STEP 1: SPEC Analysis & Planning                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Phase A (OPTIONAL)                                         │
+│  ┌─────────────────────────────────────────┐               │
+│  │ 🔍 Explore Agent                        │               │
+│  │ • Browse existing codebase              │               │
+│  │ • Find similar implementations          │               │
+│  │ • Identify patterns & architecture      │               │
+│  └─────────────────────────────────────────┘               │
+│                    ↓                                        │
+│          (exploration results)                              │
+│                    ↓                                        │
+│  Phase B (REQUIRED)                                         │
+│  ┌─────────────────────────────────────────┐               │
+│  │ ⚙️ implementation-planner Agent         │               │
+│  │ • Analyze SPEC requirements             │               │
+│  │ • Design execution strategy             │               │
+│  │ • Create implementation plan            │               │
+│  │ • Request user approval                 │               │
+│  └─────────────────────────────────────────┘               │
+│                    ↓                                        │
+│          (user approval via AskUserQuestion)                │
+│                    ↓                                        │
+│              PROCEED TO STEP 2                              │
+└─────────────────────────────────────────────────────────────┘
+```
 
-**If you need to understand existing code structure or find similar patterns** Use the Explore agent first:
+**Key Points**:
+- **Phase A is optional** - Skip if you don't need to explore existing code
+- **Phase B is required** - Always runs to analyze SPEC and create execution plan
+- **Results flow forward** - Exploration results (if any) are passed to implementation-planner
+
+---
+
+### 🔍 Phase A: Codebase Exploration (OPTIONAL)
+
+**Use the Explore agent when you need to understand existing code before planning.**
+
+#### When to use Phase A:
+
+- ✅ Need to understand existing code structure/patterns
+- ✅ Need to find similar function implementations for reference
+- ✅ Need to understand project architectural rules
+- ✅ Need to check libraries and versions being used
+
+#### How to invoke Explore agent:
 
 ```
 Invoking the Task tool (Explore agent):
@@ -108,34 +158,38 @@ Invoking the Task tool (Explore agent):
  - Similar function implementation code (src/)
  - Test patterns for reference (tests/)
  - Architectural patterns and design patterns
- - Use Current libraries and versions (package.json, requirements.txt)
+ - Current libraries and versions (package.json, requirements.txt)
  thoroughness level: medium"
 ```
 
-**When to use the Explore Agent**:
-- ✅ When you need to understand the existing code structure/pattern
-- ✅ When you need to refer to how a similar function is implemented
-- ✅ When you need to understand the architectural rules of the project
-- ✅ Check the library and version being used
+**Note**: If you skip Phase A, proceed directly to Phase B.
 
-### ⚙️ How to call an agent
+---
 
-**In STEP 1, we call the implementation-planner agent using the Task tool**:
+### ⚙️ Phase B: Execution Planning (REQUIRED)
+
+**Call the implementation-planner agent to analyze SPEC and establish execution strategy.**
+
+This phase is **always required** regardless of whether Phase A was executed.
+
+#### How to invoke implementation-planner:
 
 ```
-Task tool call example:
+Task tool call:
 - subagent_type: "implementation-planner"
 - description: "SPEC analysis and establishment of execution strategy"
 - prompt: "Please analyze the SPEC of $ARGUMENTS and establish an execution plan.
  It must include the following:
  1. SPEC requirements extraction and complexity assessment
  2. Library and tool selection (using WebFetch)
-          3. TAG chain design
+ 3. TAG chain design
  4. Step-by-step execution plan
  5. Risks and response plans
-6. Create action plan and use `Skill("moai-alfred-tui-survey")` to confirm the next action with the user
+ 6. Create action plan and use `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` to confirm the next action with the user
  (Optional) Explore results: $EXPLORE_RESULTS"
 ```
+
+**Note**: If Phase A was executed, pass the exploration results via `$EXPLORE_RESULTS` variable.
 
 ### SPEC analysis in progress
 
@@ -177,26 +231,45 @@ After reviewing the action plan, select one of the following:
 
 ## 🚀 STEP 2: Execute task (after user approval)
 
-After user approval (gathered through `Skill("moai-alfred-tui-survey")`), **call the tdd-implementer agent using the Task tool**.
+After user approval (gathered through `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)`), **call the tdd-implementer agent using the Task tool**.
 
 ### ⚙️ How to call an agent
 
 **STEP 2 calls tdd-implementer using the Task tool**:
 
 ```
-Task tool call example:
+Call the Task tool:
 - subagent_type: "tdd-implementer"
-- description: "Execute task"
-- prompt: "Please execute the task according to the plan approved in STEP 1.
- For TDD scenario:
- - Perform RED → GREEN → REFACTOR cycle,
- Perform the following for each TAG:
- 1. RED Phase: Write a test that fails with the @TEST:ID tag
- 2. GREEN Phase: Minimal implementation with the @CODE:ID tag
- 3. REFACTOR Phase: Improve code quality
- 4. Verify TAG completion conditions and proceed to the next TAG
+- description: "Execute task with TDD implementation"
+- prompt: """You are tdd-implementer agent.
 
-Execute on: $ARGUMENTS"
+LANGUAGE CONFIGURATION:
+- conversation_language: {{CONVERSATION_LANGUAGE}}
+- language_name: {{CONVERSATION_LANGUAGE_NAME}}
+
+CRITICAL INSTRUCTION:
+Code and technical output MUST be in English.
+Code comments MAY be in {{CONVERSATION_LANGUAGE}} if appropriate.
+Test descriptions and documentation can use {{CONVERSATION_LANGUAGE}}.
+
+SKILL INVOCATION:
+Use explicit Skill() calls when needed:
+- Skill("moai-alfred-language-detection") for project language detection
+- Skill("moai-lang-python") or language-specific Skills for best practices
+- Skill("moai-essentials-debug") when tests fail
+- Skill("moai-essentials-refactor") during REFACTOR phase
+
+TASK: Execute the task according to the plan approved in STEP 1.
+
+For TDD scenario:
+- Perform RED → GREEN → REFACTOR cycle
+- Perform the following for each TAG:
+  1. RED Phase: Write a test that fails with the @TEST:ID tag
+  2. GREEN Phase: Minimal implementation with the @CODE:ID tag
+  3. REFACTOR Phase: Improve code quality
+  4. Verify TAG completion conditions and proceed to the next TAG
+
+Execute on: $ARGUMENTS"""
 ```
 
 ## 🔗 TDD optimization for each language
@@ -214,22 +287,22 @@ Execute on: $ARGUMENTS"
 
 #### Backend/System
 
-| SPEC Type | Implementation language | Test Framework | Performance Goals | Coverage Goals |
-|-----------|-----------|-------------------|-----------|---------------|
-| **CLI/System** | TypeScript | jest + ts-node | < 18ms | 95%+ |
-| **API/Backend** | TypeScript | Jest + SuperTest | < 50ms | 90%+ |
-| **Frontend** | TypeScript | Jest + Testing Library | < 100ms | 85%+ |
-| **Data Processing** | TypeScript | Jest + Mock | < 200ms | 85%+ |
-| **Python Project** | Python | pytest + mypy | Custom | 85%+ |
+| SPEC Type           | Implementation language | Test Framework         | Performance Goals | Coverage Goals |
+| ------------------- | ----------------------- | ---------------------- | ----------------- | -------------- |
+| **CLI/System**      | TypeScript              | jest + ts-node         | < 18ms            | 95%+           |
+| **API/Backend**     | TypeScript              | Jest + SuperTest       | < 50ms            | 90%+           |
+| **Frontend**        | TypeScript              | Jest + Testing Library | < 100ms           | 85%+           |
+| **Data Processing** | TypeScript              | Jest + Mock            | < 200ms           | 85%+           |
+| **Python Project**  | Python                  | pytest + mypy          | Custom            | 85%+           |
 
 #### Mobile Framework
 
-| SPEC Type | Implementation language | Test Framework | Performance Goals | Coverage Goals |
-|-----------|-----------|-------------------|-----------|---------------|
-| **Flutter App** | Dart | flutter test + widget test | < 100ms | 85%+ |
-| **React Native** | TypeScript | Jest + RN Testing Library | < 100ms | 85%+ |
-| **iOS App** | Swift | XCTest + XCUITest | < 150ms | 80%+ |
-| **Android App** | Kotlin | JUnit + Espresso | < 150ms | 80%+ |
+| SPEC Type        | Implementation language | Test Framework             | Performance Goals | Coverage Goals |
+| ---------------- | ----------------------- | -------------------------- | ----------------- | -------------- |
+| **Flutter App**  | Dart                    | flutter test + widget test | < 100ms           | 85%+           |
+| **React Native** | TypeScript              | Jest + RN Testing Library  | < 100ms           | 85%+           |
+| **iOS App**      | Swift                   | XCTest + XCUITest          | < 150ms           | 80%+           |
+| **Android App**  | Kotlin                  | JUnit + Espresso           | < 150ms           | 80%+           |
 
 ## 🚀 Optimized agent collaboration structure
 
@@ -250,7 +323,7 @@ The `implementation-planner` agent does the following:
 2. **Library selection**: Check the latest stable version and verify compatibility through WebFetch
 3. **TAG chain design**: Determine TAG order and dependency
 4. **Establishment of implementation strategy**: Step-by-step implementation plan and risk identification
-5. **Create action plan**: Create a structured plan and, via `Skill("moai-alfred-tui-survey")`, collect user approval before proceeding
+5. **Create action plan**: Create a structured plan and, via `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)`, collect user approval before proceeding
 
 ### Phase 2: Task execution phase (after approval)
 
@@ -326,13 +399,13 @@ Alfred calls the implementation-planner agent to check the SPEC document and cre
 
 #### TypeScript execution criteria
 
-| SPEC characteristics | execution language | Reason |
-|-----------|-----------|------|
-| CLI/System Tools | TypeScript | High performance (18ms), type safety, SQLite3 integration |
-| API/Backend | TypeScript | Node.js ecosystem, Express/Fastify compatibility |
-| Frontend | TypeScript | React/Vue native support |
-| data processing | TypeScript | High-performance asynchronous processing, type safety |
-| User Python Project | Python tool support | MoAI-ADK provides Python project development tools |
+| SPEC characteristics | execution language  | Reason                                                    |
+| -------------------- | ------------------- | --------------------------------------------------------- |
+| CLI/System Tools     | TypeScript          | High performance (18ms), type safety, SQLite3 integration |
+| API/Backend          | TypeScript          | Node.js ecosystem, Express/Fastify compatibility          |
+| Frontend             | TypeScript          | React/Vue native support                                  |
+| data processing      | TypeScript          | High-performance asynchronous processing, type safety     |
+| User Python Project  | Python tool support | MoAI-ADK provides Python project development tools        |
 
 #### Approach
 
@@ -359,16 +432,16 @@ Present your plan in the following format:
 
 ### 📦 Library version (required - based on web search)
 **Backend dependencies** (example):
-| package | Latest stable version | installation command |
-|--------|--------------|----------|
-| FastAPI | 0.118.3 | fastapi>=0.118.3 |
-| SQLAlchemy | 2.0.43 | sqlalchemy>=2.0.43 |
+| package    | Latest stable version | installation command |
+| ---------- | --------------------- | -------------------- |
+| FastAPI    | 0.118.3               | fastapi>=0.118.3     |
+| SQLAlchemy | 2.0.43                | sqlalchemy>=2.0.43   |
 
 **Frontend dependency** (example):
 | package | Latest stable version | installation command |
-|--------|--------------|----------|
-| React | 18.3.1 | react@^18.3.1 |
-| Vite | 7.1.9 | vite@^7.1.9 |
+| ------- | --------------------- | -------------------- |
+| React   | 18.3.1                | react@^18.3.1        |
+| Vite    | 7.1.9                 | vite@^7.1.9          |
 
 **Important Compatibility Information**:
 - [Specific Version Requirements]

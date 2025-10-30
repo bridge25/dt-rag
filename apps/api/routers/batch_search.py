@@ -49,8 +49,9 @@ except ImportError as e:
 
 
 class BatchSearchRequest(BaseModel):
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 39 - Pydantic v2 min_length/max_length)
     queries: List[str] = Field(
-        ..., min_items=1, max_items=50, description="List of search queries"
+        ..., min_length=1, max_length=50, description="List of search queries"
     )
     max_results_per_query: int = Field(
         10, ge=1, le=100, description="Maximum results per query"
@@ -257,7 +258,7 @@ async def get_batch_search_service() -> BatchSearchService:
     return BatchSearchService()
 
 
-@router.post("/", response_model=BatchSearchResponse)
+@router.post("/", response_model=BatchSearchResponse)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 # @limiter.limit(RATE_LIMIT_WRITE)  # Disabled: replaced with custom Redis middleware
 async def batch_search(
     request: BatchSearchRequest,
@@ -302,7 +303,7 @@ async def batch_search(
         )
 
 
-@router.get("/performance")
+@router.get("/performance")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 # @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware
 async def get_batch_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)

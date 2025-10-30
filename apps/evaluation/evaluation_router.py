@@ -14,7 +14,7 @@ Provides comprehensive REST endpoints for RAG evaluation:
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List, Dict, Any, cast
 
 from fastapi import APIRouter, HTTPException, Depends, Query, status
 from pydantic import BaseModel
@@ -91,7 +91,7 @@ async def get_experiment_tracker() -> ExperimentTracker:
 # Core evaluation endpoints
 
 
-@evaluation_router.post("/evaluate", response_model=EvaluationResult)
+@evaluation_router.post("/evaluate", response_model=EvaluationResult)  # type: ignore[misc]  # Decorator lacks type stubs
 async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
@@ -127,7 +127,7 @@ async def evaluate_rag_response(
         if alerts:
             result.quality_flags.extend([alert.alert_id for alert in alerts])
 
-        return result
+        return cast(EvaluationResult, result)
 
     except Exception as e:
         logger.error(f"Evaluation failed: {e}")
@@ -137,7 +137,7 @@ async def evaluate_rag_response(
         )
 
 
-@evaluation_router.post("/evaluate/batch")
+@evaluation_router.post("/evaluate/batch")  # type: ignore[misc]  # Decorator lacks type stubs
 async def evaluate_batch(
     request: EvaluationBatchRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
@@ -198,11 +198,10 @@ async def evaluate_batch(
 # Quality monitoring endpoints
 
 
-@evaluation_router.get("/quality/dashboard", response_model=QualityDashboard)
+@evaluation_router.get("/quality/dashboard", response_model=QualityDashboard)  # type: ignore[misc]  # Decorator lacks type stubs
 async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_monitor)) -> QualityDashboard:
     """
     Get comprehensive quality monitoring dashboard
-
     Returns:
     - Current quality metrics and status
     - Quality trends over time
@@ -231,14 +230,13 @@ async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_mo
         )
 
 
-@evaluation_router.get("/quality/trends")
+@evaluation_router.get("/quality/trends")  # type: ignore[misc]  # Decorator lacks type stubs
 async def get_quality_trends(
     hours: int = Query(24, ge=1, le=168, description="Hours of trend data to retrieve"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
 ) -> Any:
     """
     Get quality trends over specified time period
-
     Returns hourly aggregated quality metrics with trend analysis.
     """
     try:
@@ -253,14 +251,13 @@ async def get_quality_trends(
         )
 
 
-@evaluation_router.get("/quality/alerts", response_model=List[QualityAlert])
+@evaluation_router.get("/quality/alerts", response_model=List[QualityAlert])  # type: ignore[misc]  # Decorator lacks type stubs
 async def get_quality_alerts(
     active_only: bool = Query(True, description="Only return active alerts"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
 ) -> List[QualityAlert]:
     """
     Get quality monitoring alerts
-
     Returns list of quality alerts with severity and suggested actions.
     """
     try:
@@ -275,7 +272,7 @@ async def get_quality_alerts(
         )
 
 
-@evaluation_router.put("/quality/thresholds")
+@evaluation_router.put("/quality/thresholds")  # type: ignore[misc]  # Decorator lacks type stubs
 async def update_quality_thresholds(
     thresholds: QualityThresholds,
     monitor: QualityMonitor = Depends(get_quality_monitor),
@@ -287,7 +284,6 @@ async def update_quality_thresholds(
     """
     try:
         await monitor.update_thresholds(thresholds)
-
         return {
             "message": "Quality thresholds updated successfully",
             "thresholds": thresholds.dict(),
@@ -305,19 +301,17 @@ async def update_quality_thresholds(
 # A/B testing and experiment endpoints
 
 
-@evaluation_router.post("/experiments")
+@evaluation_router.post("/experiments")  # type: ignore[misc]  # Decorator lacks type stubs
 async def create_experiment(
     config: ExperimentConfig,
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
 ) -> Dict[str, Any]:
     """
     Create new A/B testing experiment
-
     Sets up experiment configuration for comparing different RAG system versions.
     """
     try:
         experiment_id = await tracker.create_experiment(config)
-
         return {
             "experiment_id": experiment_id,
             "message": "Experiment created successfully",
@@ -336,7 +330,7 @@ async def create_experiment(
         )
 
 
-@evaluation_router.post("/experiments/{experiment_id}/start")
+@evaluation_router.post("/experiments/{experiment_id}/start")  # type: ignore[misc]  # Decorator lacks type stubs
 async def start_experiment(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
 ) -> Dict[str, Any]:
@@ -371,7 +365,7 @@ async def start_experiment(
         )
 
 
-@evaluation_router.post("/experiments/{experiment_id}/stop")
+@evaluation_router.post("/experiments/{experiment_id}/stop")  # type: ignore[misc]  # Decorator lacks type stubs
 async def stop_experiment(
     experiment_id: str,
     reason: str = Query("manual_stop", description="Reason for stopping experiment"),
@@ -379,7 +373,6 @@ async def stop_experiment(
 ) -> Dict[str, Any]:
     """
     Stop a running A/B testing experiment
-
     Stops data collection and generates final results analysis.
     """
     try:
@@ -409,7 +402,7 @@ async def stop_experiment(
         )
 
 
-@evaluation_router.get("/experiments/{experiment_id}/status")
+@evaluation_router.get("/experiments/{experiment_id}/status")  # type: ignore[misc]  # Decorator lacks type stubs
 async def get_experiment_status(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
 ) -> Any:
@@ -427,7 +420,6 @@ async def get_experiment_status(
             )
 
         return status_info
-
     except HTTPException:
         raise
     except Exception as e:
@@ -440,7 +432,7 @@ async def get_experiment_status(
 
 @evaluation_router.get(
     "/experiments/{experiment_id}/results", response_model=ExperimentResults
-)
+)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
 async def get_experiment_results(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
 ) -> ExperimentResults:
@@ -473,7 +465,7 @@ async def get_experiment_results(
 # Canary deployment endpoints
 
 
-@evaluation_router.post("/canary/deploy")
+@evaluation_router.post("/canary/deploy")  # type: ignore[misc]  # Decorator lacks type stubs
 async def deploy_canary(
     canary_config: Dict[str, Any],
     traffic_percentage: float = Query(
@@ -509,7 +501,7 @@ async def deploy_canary(
 # Golden dataset endpoints
 
 
-@evaluation_router.post("/dataset/validate")
+@evaluation_router.post("/dataset/validate")  # type: ignore[misc]  # Decorator lacks type stubs
 async def validate_dataset(entries: List[DatasetEntry]) -> DatasetValidationResult:
     """
     Validate golden dataset entries
@@ -540,7 +532,6 @@ async def validate_dataset(entries: List[DatasetEntry]) -> DatasetValidationResu
 
             if len(entry.ground_truth_answer.split()) < 5:
                 entry_errors.append(f"Entry {i}: Answer too short (< 5 words)")
-
             validation_errors.extend(entry_errors)
 
             # Calculate quality score for entry (0-1)
@@ -582,7 +573,7 @@ async def validate_dataset(entries: List[DatasetEntry]) -> DatasetValidationResu
         )
 
 
-@evaluation_router.post("/dataset/benchmark")
+@evaluation_router.post("/dataset/benchmark")  # type: ignore[misc]  # Decorator lacks type stubs
 async def run_dataset_benchmark(
     dataset_id: str = Query(..., description="Golden dataset ID to benchmark against"),
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
@@ -595,7 +586,6 @@ async def run_dataset_benchmark(
     try:
         # TODO: Load golden dataset from database
         # For now, return mock benchmark results
-
         benchmark_results = {
             "dataset_id": dataset_id,
             "benchmark_id": str(uuid.uuid4()),
@@ -639,7 +629,7 @@ async def run_dataset_benchmark(
 # Analytics endpoints
 
 
-@evaluation_router.get("/analytics/summary")
+@evaluation_router.get("/analytics/summary")  # type: ignore[misc]  # Decorator lacks type stubs
 async def get_evaluation_analytics(
     days: int = Query(7, ge=1, le=90, description="Days of analytics data")
 ) -> Dict[str, Any]:
@@ -653,7 +643,6 @@ async def get_evaluation_analytics(
 
         async with db_manager.async_session() as session:
             from sqlalchemy import text
-
             # Query evaluation statistics
             query = text(
                 """

@@ -18,7 +18,8 @@ Performance targets:
 import time
 import logging
 import asyncio
-from typing import List, Dict, Any, Optional, Tuple
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 51-52 - add cast import)
+from typing import List, Dict, Any, Optional, Tuple, Union, cast
 from datetime import datetime
 import numpy as np
 from dataclasses import dataclass, field
@@ -269,7 +270,7 @@ class CrossEncoderReranker:
 
     def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
         self.model_name = model_name
-        self.model = None
+        self.model: Optional[Any] = None
         self._load_model()
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
@@ -486,7 +487,7 @@ class ResultCache:
         self.cache.clear()
         self.access_times.clear()
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> Dict[str, Union[int, float]]:
         """Get cache statistics"""
         return {
             "size": len(self.cache),
@@ -596,20 +597,30 @@ class HybridSearchEngine:
             )
 
             # Handle exceptions
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (explicit typing for asyncio.gather results)
+            bm25_results_list: List[SearchResult]
+            vector_results_list: List[SearchResult]
+
             if isinstance(bm25_results, Exception):
                 logger.error(f"BM25 search failed: {bm25_results}")
-                bm25_results = []
+                bm25_results_list = []
+            else:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 51 - cast Union[list[SearchResult], BaseException] to list[SearchResult])
+                bm25_results_list = cast(List[SearchResult], bm25_results)
 
             if isinstance(vector_results, Exception):
                 logger.error(f"Vector search failed: {vector_results}")
-                vector_results = []
+                vector_results_list = []
+            else:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 52 - cast Union[list[SearchResult], BaseException] to list[SearchResult])
+                vector_results_list = cast(List[SearchResult], vector_results)
 
-            metrics.bm25_candidates = len(bm25_results)
-            metrics.vector_candidates = len(vector_results)
+            metrics.bm25_candidates = len(bm25_results_list)
+            metrics.vector_candidates = len(vector_results_list)
 
             # Fuse results
             fusion_start = time.time()
-            fused_results = self._fuse_results(query, bm25_results, vector_results)
+            fused_results = self._fuse_results(query, bm25_results_list, vector_results_list)
             metrics.fusion_time = time.time() - fusion_start
 
             # Apply cross-encoder reranking

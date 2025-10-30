@@ -14,7 +14,7 @@ import asyncio
 import logging
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 from dataclasses import dataclass
 from enum import Enum
 
@@ -86,7 +86,7 @@ class TaxonomyDAGManager:
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     def __init__(self) -> None:
         self.current_version = 1
-        self._graph_cache = {}
+        self._graph_cache: dict[str, Any] = {}
         self._lock = asyncio.Lock()
 
     async def initialize(self) -> bool:
@@ -343,7 +343,7 @@ class TaxonomyDAGManager:
             # Check cache first
             cache_key = f"tree_{version}"
             if cache_key in self._graph_cache:
-                return self._graph_cache[cache_key]
+                return cast(Dict[str, Any], self._graph_cache[cache_key])
 
             async with async_session() as session:
                 # Get all nodes for version
@@ -509,7 +509,7 @@ class TaxonomyDAGManager:
 
                 # Get node details for each node in path
                 async with async_session() as session:
-                    ancestry = []
+                    ancestry: list[Any] = []
                     for node in path:
                         result = await session.execute(
                             select(TaxonomyNode).where(
@@ -609,7 +609,7 @@ class TaxonomyDAGManager:
                 paths = [row[0] for row in result.fetchall()]
 
                 # Check for duplicates
-                path_count = defaultdict(int)
+                path_count: Any = defaultdict(int)
                 for path in paths:
                     if path:
                         path_str = " -> ".join(path)
@@ -877,7 +877,7 @@ class TaxonomyDAGManager:
         if rollback_plan.get("requires_full_rebuild"):
             estimated *= 2  # Double time for complex rollbacks
 
-        return estimated
+        return cast(float, estimated)
 
     async def _execute_rollback_plan(
         self, session: AsyncSession, rollback_plan: Dict[str, Any]

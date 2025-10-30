@@ -115,7 +115,7 @@ def get_security_manager() -> SecurityManager:
 # Authentication Endpoints
 
 
-@security_router.post("/auth/login", response_model=LoginResponse)
+@security_router.post("/auth/login", response_model=LoginResponse)  # type: ignore[misc]
 async def login(
     request: LoginRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -152,7 +152,7 @@ async def login(
         )
 
 
-@security_router.post("/auth/register", response_model=UserResponse)
+@security_router.post("/auth/register", response_model=UserResponse)  # type: ignore[misc]
 async def register(
     request: RegisterRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -165,6 +165,7 @@ async def register(
             request.username, request.email, request.password, request.roles
         )
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (ensure created_at is not None)
         return UserResponse(
             user_id=user.user_id,
             username=user.username,
@@ -173,7 +174,7 @@ async def register(
             permissions=[perm.value for perm in user.permissions],
             clearance_level=user.clearance_level,
             is_active=user.is_active,
-            created_at=user.created_at,
+            created_at=user.created_at or datetime.utcnow(),
         )
 
     except Exception as e:
@@ -181,7 +182,7 @@ async def register(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@security_router.post("/auth/logout")
+@security_router.post("/auth/logout")  # type: ignore[misc]
 async def logout(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -200,7 +201,7 @@ async def logout(
         )
 
 
-@security_router.post("/auth/change-password")
+@security_router.post("/auth/change-password")  # type: ignore[misc]
 async def change_password(
     request: ChangePasswordRequest,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -241,7 +242,7 @@ async def change_password(
 # PII and Privacy Endpoints
 
 
-@security_router.post("/pii/detect")
+@security_router.post("/pii/detect")  # type: ignore[misc]
 async def detect_pii(
     request: PIIDetectionRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -282,7 +283,7 @@ async def detect_pii(
         )
 
 
-@security_router.post("/pii/mask")
+@security_router.post("/pii/mask")  # type: ignore[misc]
 async def mask_pii(
     request: PIIDetectionRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -327,7 +328,7 @@ async def mask_pii(
 # Compliance Endpoints
 
 
-@security_router.post("/compliance/data-subject-request")
+@security_router.post("/compliance/data-subject-request")  # type: ignore[misc]
 async def submit_data_subject_request(
     request: DataSubjectRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -369,7 +370,7 @@ async def submit_data_subject_request(
         )
 
 
-@security_router.post("/compliance/consent")
+@security_router.post("/compliance/consent")  # type: ignore[misc]
 async def record_consent(
     request: ConsentRequest,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -417,7 +418,7 @@ async def record_consent(
         )
 
 
-@security_router.post("/compliance/check")
+@security_router.post("/compliance/check")  # type: ignore[misc]
 async def run_compliance_check(
     request: ComplianceCheckRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -445,7 +446,7 @@ async def run_compliance_check(
 # Security Monitoring Endpoints
 
 
-@security_router.get("/monitoring/dashboard")
+@security_router.get("/monitoring/dashboard")  # type: ignore[misc]
 async def get_security_dashboard(
     security_manager: SecurityManager = Depends(get_security_manager),
 ) -> Any:
@@ -466,7 +467,7 @@ async def get_security_dashboard(
         )
 
 
-@security_router.get("/monitoring/alerts")
+@security_router.get("/monitoring/alerts")  # type: ignore[misc]
 async def get_security_alerts(
     threat_level: Optional[ThreatLevel] = Query(None),
     limit: int = Query(100, ge=1, le=1000),
@@ -506,7 +507,7 @@ async def get_security_alerts(
         )
 
 
-@security_router.post("/monitoring/alert")
+@security_router.post("/monitoring/alert")  # type: ignore[misc]
 async def create_security_alert(
     request: SecurityAlertRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -533,7 +534,7 @@ async def create_security_alert(
         )
 
 
-@security_router.put("/monitoring/alert/{alert_id}/acknowledge")
+@security_router.put("/monitoring/alert/{alert_id}/acknowledge")  # type: ignore[misc]
 async def acknowledge_alert(
     alert_id: str,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -576,7 +577,7 @@ async def acknowledge_alert(
 # Vulnerability Scanning Endpoints
 
 
-@security_router.post("/scanning/scan")
+@security_router.post("/scanning/scan")  # type: ignore[misc]
 async def start_security_scan(
     request: SecurityScanRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -606,7 +607,7 @@ async def start_security_scan(
         )
 
 
-@security_router.get("/scanning/scan/{scan_id}")
+@security_router.get("/scanning/scan/{scan_id}")  # type: ignore[misc]
 async def get_scan_result(
     scan_id: str, security_manager: SecurityManager = Depends(get_security_manager)
 ) -> Dict[str, Any]:
@@ -660,7 +661,7 @@ async def get_scan_result(
         )
 
 
-@security_router.get("/scanning/report/{scan_id}")
+@security_router.get("/scanning/report/{scan_id}")  # type: ignore[misc]
 async def get_vulnerability_report(
     scan_id: str,
     include_false_positives: bool = Query(False),
@@ -687,7 +688,7 @@ async def get_vulnerability_report(
 # Metrics and Status Endpoints
 
 
-@security_router.get("/metrics")
+@security_router.get("/metrics")  # type: ignore[misc]
 async def get_security_metrics(
     security_manager: SecurityManager = Depends(get_security_manager),
 ) -> Any:
@@ -706,7 +707,7 @@ async def get_security_metrics(
         )
 
 
-@security_router.get("/status")
+@security_router.get("/status")  # type: ignore[misc]
 async def get_security_status(
     security_manager: SecurityManager = Depends(get_security_manager),
 ) -> Dict[str, Any]:

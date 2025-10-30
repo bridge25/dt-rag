@@ -20,7 +20,7 @@ from typing import Optional, Dict, Any
 logger = logging.getLogger(__name__)
 
 # Lazy import to avoid startup errors
-_langfuse_client = None
+_langfuse_client: Optional[Any] = None
 _langfuse_available = False
 
 try:
@@ -95,7 +95,7 @@ def get_langfuse_status() -> Dict[str, Any]:
     Returns:
         Status dictionary with availability, configuration, and health info
     """
-    status = {
+    status: Dict[str, Any] = {
         "available": _langfuse_available,
         "enabled": os.getenv("LANGFUSE_ENABLED", "false").lower() == "true",
         "configured": False,

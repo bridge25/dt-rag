@@ -6,7 +6,7 @@ Redis 연결 관리 및 최적화 시스템
 import logging
 import pickle
 import gzip
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, cast
 from dataclasses import dataclass
 from datetime import datetime
 import os
@@ -37,7 +37,7 @@ class RedisConfig:
     max_connections: int = 50
     retry_on_timeout: bool = True
     socket_keepalive: bool = True
-    socket_keepalive_options: Dict = None
+    socket_keepalive_options: Optional[Dict] = None
     health_check_interval: int = 30
 
     # 타임아웃 설정
@@ -51,7 +51,7 @@ class RedisConfig:
 
     # TTL 설정
     default_ttl: int = 3600  # 1시간
-    ttl_configs: Dict[str, int] = None
+    ttl_configs: Optional[Dict[str, int]] = None
 
     def __post_init__(self) -> None:
         if self.socket_keepalive_options is None:
@@ -73,7 +73,7 @@ class RedisConfig:
 class RedisManager:
     """Redis 연결 및 작업 관리자"""
 
-    def __init__(self, config: RedisConfig = None):
+    def __init__(self, config: Optional[RedisConfig] = None):
         self.config = config or RedisConfig()
         self.client: Optional[redis.Redis] = None
         self.connection_pool: Optional[redis.ConnectionPool] = None
@@ -203,6 +203,7 @@ class RedisManager:
 
     def _get_ttl_for_key(self, key: str) -> int:
         """키에 따른 TTL 결정"""
+        assert self.config.ttl_configs is not None  # Initialized in __post_init__
         for prefix, ttl in self.config.ttl_configs.items():
             if key.startswith(prefix):
                 return ttl
@@ -213,6 +214,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return None
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
 
@@ -234,6 +236,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
 
@@ -260,6 +263,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
             result = await self.client.delete(key)
@@ -276,6 +280,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return 0
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
 
@@ -299,6 +304,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             result = await self.client.exists(key)
             return result > 0
@@ -311,6 +317,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             result = await self.client.expire(key, ttl)
             return result
@@ -323,6 +330,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return -1
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             return await self.client.ttl(key)
         except Exception as e:
@@ -334,6 +342,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return []
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             keys = await self.client.keys(pattern)
             return [key.decode() if isinstance(key, bytes) else key for key in keys]
@@ -346,6 +355,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return False
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             await self.client.flushdb()
             return True
@@ -358,6 +368,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return {}
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             info = await self.client.info()
             return dict(info)
@@ -370,8 +381,9 @@ class RedisManager:
         if not await self.ensure_connection():
             return None
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
-            return await self.client.memory_usage(key)
+            return cast(Optional[int], await self.client.memory_usage(key))
         except Exception as e:
             logger.warning(f"Redis MEMORY USAGE failed for key {key}: {e}")
             return None
@@ -381,6 +393,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return None
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
             result = await self.client.lpush(key, *values)
@@ -396,11 +409,13 @@ class RedisManager:
         if not await self.ensure_connection():
             return None
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
-            result = await self.client.brpop(*keys, timeout=timeout)
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14c: call-overload (Fix 40 - pass keys as list, not unpacked)
+            result = await self.client.brpop(list(keys), timeout=timeout)
             self.stats["operations_success"] += 1
-            return result
+            return cast(Optional[tuple[Any, ...]], result)
         except Exception as e:
             logger.warning(f"Redis BRPOP failed: {e}")
             self.stats["operations_failed"] += 1
@@ -411,6 +426,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return 0
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
             result = await self.client.llen(key)
@@ -426,6 +442,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return []
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
             result = await self.client.lrange(key, start, stop)
@@ -441,6 +458,7 @@ class RedisManager:
         if not await self.ensure_connection():
             return 0
 
+        assert self.client is not None  # Ensured by ensure_connection()
         try:
             self.stats["operations_total"] += 1
             result = await self.client.lrem(key, count, value)
@@ -495,6 +513,7 @@ class RedisManager:
                     "connection_attempts": self.connection_attempts,
                 }
 
+            assert self.client is not None  # Ensured by ensure_connection()
             # PING 테스트
             await self.client.ping()
 
@@ -563,7 +582,7 @@ async def get_redis_manager() -> RedisManager:
     return _redis_manager
 
 
-async def initialize_redis_manager(config: RedisConfig = None) -> RedisManager:
+async def initialize_redis_manager(config: Optional[RedisConfig] = None) -> RedisManager:
     """Redis 매니저 초기화"""
     global _redis_manager
     _redis_manager = RedisManager(config)

@@ -20,7 +20,7 @@ try:
     from ..deps import verify_api_key
 except ImportError:
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def verify_api_key() -> None:
+    def verify_api_key() -> None:  # type: ignore[misc]  # Fallback function for testing
         return None
 
 
@@ -188,9 +188,10 @@ class AgentFactoryService:
             )
         return None
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: return-value (Fix 63 - change return type to Optional[AgentStatus])
     async def update_agent(
         self, agent_id: str, update: AgentUpdateRequest
-    ) -> AgentStatus:
+    ) -> Optional[AgentStatus]:
         """Update agent configuration"""
         agent = await self.get_agent(agent_id)
         if not agent:
@@ -287,7 +288,7 @@ async def create_agent_from_category(
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 @agent_factory_router.get("/", response_model=AgentListResponse)  # type: ignore[misc]
 async def list_agents(
-    status: Optional[str] = Query(None, description="Filter by status"),
+    status_filter: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum agents to return"),
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),
@@ -301,7 +302,7 @@ async def list_agents(
     - Performance metrics overview
     """
     try:
-        agents_response = await service.list_agents(status)
+        agents_response = await service.list_agents(status_filter)
 
         # Apply limit
         if len(agents_response.agents) > limit:

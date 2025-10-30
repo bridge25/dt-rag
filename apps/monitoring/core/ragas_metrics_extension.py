@@ -7,45 +7,46 @@ for comprehensive RAG system quality monitoring.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, TYPE_CHECKING
 
-try:
+PROMETHEUS_AVAILABLE = False
+
+if TYPE_CHECKING:
     from prometheus_client import Counter, Gauge, Histogram
+else:
+    try:
+        from prometheus_client import Counter, Gauge, Histogram
+        PROMETHEUS_AVAILABLE = True
+    except ImportError:
+        class Counter:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    PROMETHEUS_AVAILABLE = True
-except ImportError:
-    PROMETHEUS_AVAILABLE = False
+            def inc(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    # Use same mock classes as in metrics_collector.py
-    class Counter:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
+            def labels(self, *args: Any, **kwargs: Any) -> "Counter":
+                return self
 
-        def inc(self, *args: Any, **kwargs: Any) -> None:
-            pass
+        class Gauge:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-        def labels(self, *args: Any, **kwargs: Any) -> "Counter":
-            return self
+            def set(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    class Gauge:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
+            def labels(self, *args: Any, **kwargs: Any) -> "Gauge":
+                return self
 
-        def set(self, *args: Any, **kwargs: Any) -> None:
-            pass
+        class Histogram:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-        def labels(self, *args: Any, **kwargs: Any) -> "Gauge":
-            return self
+            def observe(self, *args: Any, **kwargs: Any) -> None:
+                pass
 
-    class Histogram:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
-
-        def observe(self, *args: Any, **kwargs: Any) -> None:
-            pass
-
-        def labels(self, *args: Any, **kwargs: Any) -> "Histogram":
-            return self
+            def labels(self, *args: Any, **kwargs: Any) -> "Histogram":
+                return self
 
 
 logger = logging.getLogger(__name__)
@@ -297,7 +298,8 @@ class RAGASMetricsExtension:
         except Exception as e:
             logger.error(f"Failed to record RAGAS metrics: {e}")
 
-    def update_quality_gates_status(self, quality_gates: Dict[str, Dict[str, float]]) -> None:
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: comparison-overlap (Fix 65 - Dict[str, Dict[str, float]] → Dict[str, Any])
+    def update_quality_gates_status(self, quality_gates: Dict[str, Any]) -> None:
         """
         Update quality gates status metrics
 

@@ -9,7 +9,7 @@ import os
 import asyncio
 import logging
 import hashlib
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, cast
 import numpy as np
 
 # Langfuse integration for LLM cost tracking
@@ -74,15 +74,15 @@ class EmbeddingService:
         },
     }
 
-    TARGET_DIMENSIONS = 1536
+    TARGET_DIMENSIONS: int = 1536
 
     def __init__(self, model_name: str = "text-embedding-3-large"):
         self.model_name = model_name
         self.model_config = self.SUPPORTED_MODELS.get(model_name)
-        self._openai_client = None
-        self._sentence_transformer = None
+        self._openai_client: Optional[Any] = None
+        self._sentence_transformer: Optional[Any] = None
         self._model_loaded = False
-        self.embedding_cache = {}
+        self.embedding_cache: Dict[str, List[float]] = {}
 
         if not self.model_config:
             logger.warning(f"지원되지 않는 모델: {model_name}, 기본 모델로 변경")
@@ -109,6 +109,9 @@ class EmbeddingService:
             logger.error("sentence-transformers 패키지가 설치되지 않음")
             return None
 
+        # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: index (Fix 56-57 - assert model_config is not None)
+        assert self.model_config is not None, "model_config must be initialized in __init__"
+
         try:
             logger.info(f"폴백 모델 로딩 중: {self.model_config['name']}")
             self._sentence_transformer = SentenceTransformer(self.model_config["name"])
@@ -126,15 +129,15 @@ class EmbeddingService:
         current_dim = len(vector)
 
         if current_dim == self.TARGET_DIMENSIONS:
-            return vector.tolist()
+            return cast(List[float], vector.tolist())
         elif current_dim < self.TARGET_DIMENSIONS:
             padded = np.zeros(self.TARGET_DIMENSIONS)
             padded[:current_dim] = vector
-            return padded.tolist()
+            return cast(List[float], padded.tolist())
         else:
-            return vector[: self.TARGET_DIMENSIONS].tolist()
+            return cast(List[float], vector[: self.TARGET_DIMENSIONS].tolist())
 
-    @observe(name="generate_embedding", as_type="embedding")
+    @observe(name="generate_embedding", as_type="embedding")  # type: ignore[misc]  # Langfuse decorator lacks type stubs
     async def generate_embedding(
         self, text: str, use_cache: bool = True
     ) -> List[float]:
@@ -177,6 +180,7 @@ class EmbeddingService:
 
     async def _generate_openai_embedding(self, text: str) -> List[float]:
         """OpenAI API로 임베딩 생성 (SPEC-ENV-VALIDATE-001 Phase 4)"""
+        assert self._openai_client is not None  # Ensured by caller
         try:
             response = await self._openai_client.embeddings.create(
                 model=self.model_name,
@@ -185,7 +189,7 @@ class EmbeddingService:
                 dimensions=1536,
             )
             embedding = response.data[0].embedding
-            return embedding
+            return cast(List[float], embedding)
 
         except Exception as e:
             error_type = type(e).__name__
@@ -215,7 +219,7 @@ class EmbeddingService:
 
         return self._pad_or_truncate_vector(embedding)
 
-    @observe(name="batch_generate_embeddings", as_type="embedding")
+    @observe(name="batch_generate_embeddings", as_type="embedding")  # type: ignore[misc]  # Langfuse decorator lacks type stubs
     async def batch_generate_embeddings(
         self, texts: List[str], batch_size: int = 100, show_progress: bool = True
     ) -> List[List[float]]:
@@ -329,11 +333,11 @@ class EmbeddingService:
             return vector
 
         normalized = vec_array / norm
-        return normalized.tolist()
+        return cast(List[float], normalized.tolist())
 
     def _generate_zero_vector(self) -> List[float]:
         """제로 벡터 생성"""
-        return [0.0] * self.TARGET_DIMENSIONS
+        return cast(List[float], [0.0] * self.TARGET_DIMENSIONS)
 
     async def _generate_dummy_embedding(self, text: str) -> List[float]:
         """더미 임베딩 생성"""
@@ -348,7 +352,7 @@ class EmbeddingService:
         if norm > 0:
             vector = vector / norm
 
-        return vector.tolist()
+        return cast(List[float], vector.tolist())
 
     def get_model_info(self) -> Dict[str, Any]:
         """모델 정보 반환"""
@@ -593,16 +597,18 @@ document_embedding_service = DocumentEmbeddingService(embedding_service)
 
 async def generate_embedding(text: str, use_cache: bool = True) -> List[float]:
     """전역 임베딩 생성 함수"""
-    return await embedding_service.generate_embedding(text, use_cache=use_cache)
+    result = await embedding_service.generate_embedding(text, use_cache=use_cache)
+    return cast(List[float], result)
 
 
 async def generate_embeddings(
     texts: List[str], batch_size: int = 100
 ) -> List[List[float]]:
     """전역 배치 임베딩 생성 함수"""
-    return await embedding_service.batch_generate_embeddings(
+    result = await embedding_service.batch_generate_embeddings(
         texts, batch_size=batch_size
     )
+    return cast(List[List[float]], result)
 
 
 def calculate_similarity(emb1: List[float], emb2: List[float]) -> float:

@@ -1,10 +1,14 @@
 ---
 name: Agentic Coding
-description: Agent-based coding mode that integrates hands-on development and collaboration
+description: "Agent-based coding mode that integrates hands-on development and collaboration"
+# Translations:
+# - ko: "실무 개발과 협업을 통합하는 에이전트 기반 코딩 모드"
+# - ja: "実務開発とコラボレーションを統合するエージェントベースのコーディングモード"
+# - zh: "集成实战开发和协作的基于代理的编码模式"
 ---
 
 # Agentic Coding
-> Interactive prompts rely on `Skill("moai-alfred-tui-survey")` so AskUserQuestion renders TUI selection menus for user surveys and approvals.
+> Interactive prompts rely on `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` so AskUserQuestion renders TUI selection menus for user surveys and approvals.
 
 **Audience**: Professional developers, team leaders, architects
 

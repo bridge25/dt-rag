@@ -13,10 +13,12 @@ import os
 from fastapi import Header, HTTPException, Request, Depends
 from uuid import uuid4
 from datetime import datetime, timezone
-from typing import Optional, Dict, Set
+from typing import Any, Dict, Optional, Set
 from collections import defaultdict
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from .security.api_key_storage import APIKeyInfo
 
 # Configure security logging
 security_logger = logging.getLogger("security")
@@ -64,7 +66,7 @@ class APIKeyValidator:
             return 0.0
 
         # Count character frequencies
-        frequencies = {}
+        frequencies: dict[str, int] = {}
         for char in key:
             frequencies[char] = frequencies.get(char, 0) + 1
 
@@ -308,12 +310,12 @@ async def verify_api_key(
         )
         from .security.api_key_storage import APIKeyInfo
 
-        key_info = ALLOWED_TEST_KEYS[x_api_key]
+        test_key_info = ALLOWED_TEST_KEYS[x_api_key]
         return APIKeyInfo(
-            key_id=key_info["key_id"],
-            name=key_info["name"],
+            key_id=test_key_info["key_id"],
+            name=test_key_info["name"],
             description=f"Development test key ({CURRENT_ENV})",
-            scope=key_info["scope"],
+            scope=test_key_info["scope"],
             permissions=["*"],
             allowed_ips=None,
             rate_limit=1000,

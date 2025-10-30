@@ -280,18 +280,19 @@ async def step4_tools_debate(state: PipelineState) -> PipelineState:
         debate_engine = DebateEngine()
 
         try:
-            result = await debate_engine.run_debate(
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 4-3: assignment resolution (variable name clash)
+            debate_result = await debate_engine.run_debate(
                 query=state.query,
                 context=state.retrieved_chunks,
                 max_rounds=2,
                 timeout=10.0,
             )
 
-            state.answer = result.final_answer
-            state.debate_result = result
+            state.answer = debate_result.final_answer
+            state.debate_result = debate_result
 
             logger.info(
-                f"Debate completed: {result.rounds} rounds, {result.llm_calls} LLM calls, {result.elapsed_time:.2f}s"
+                f"Debate completed: {debate_result.rounds} rounds, {debate_result.llm_calls} LLM calls, {debate_result.elapsed_time:.2f}s"
             )
 
         except asyncio.TimeoutError:
@@ -346,10 +347,10 @@ async def step4_tools_debate(state: PipelineState) -> PipelineState:
             tool_results.append(
                 {
                     "tool": tool_name,
-                    "success": result.success,  # type: ignore[attr-defined]
-                    "result": result.result,  # type: ignore[attr-defined]
-                    "error": result.error,  # type: ignore[attr-defined]
-                    "elapsed": result.elapsed,  # type: ignore[attr-defined]
+                    "success": result.success,
+                    "result": result.result,
+                    "error": result.error,
+                    "elapsed": result.elapsed,
                 }
             )
 

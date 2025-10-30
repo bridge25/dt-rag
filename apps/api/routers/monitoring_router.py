@@ -1,5 +1,6 @@
 """Monitoring router with Langfuse LLM cost tracking"""
 
+from typing import Any, Dict
 from fastapi import APIRouter
 import time
 import psutil
@@ -16,7 +17,7 @@ except ImportError:
     AUTH_AVAILABLE = False
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def verify_api_key() -> None:
+    def verify_api_key() -> None:  # type: ignore[misc]  # Fallback function for testing
         return None
 
 
@@ -126,7 +127,7 @@ async def get_llm_costs() -> Dict[str, Any]:
         # This is a placeholder for the structure
 
         # Simulated data structure (replace with actual client.get_traces())
-        traces = []  # client.get_traces(limit=1000)
+        traces: list[Any] = []  # client.get_traces(limit=1000)
 
         # Calculate costs by model
         gemini_cost_usd = 0.0

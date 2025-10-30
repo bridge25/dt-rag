@@ -8,7 +8,7 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, cast
 from fastapi import Request, Response, HTTPException, status
 from fastapi.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
@@ -425,15 +425,15 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
             # Take the first IP in the chain
-            return forwarded_for.split(",")[0].strip()
+            return cast(str, forwarded_for.split(",")[0].strip())
 
         real_ip = request.headers.get("x-real-ip")
         if real_ip:
-            return real_ip
+            return cast(str, real_ip)
 
         # Fall back to direct connection
         if hasattr(request.client, "host"):
-            return request.client.host
+            return cast(str, request.client.host)
 
         return "unknown"
 
@@ -626,7 +626,7 @@ class SecurityDependency:
         self.security_manager = security_manager
 
     async def __call__(
-        self, request: Request, required_permission: str = None, resource: str = None
+        self, request: Request, required_permission: Optional[str] = None, resource: Optional[str] = None
     ) -> SecurityContext:
         """Security dependency for endpoints"""
 
@@ -653,7 +653,7 @@ class SecurityDependency:
                     detail="Insufficient permissions",
                 )
 
-        return security_context
+        return cast(SecurityContext, security_context)
 
 
 def create_security_dependency(security_manager: SecurityManager) -> SecurityDependency:
@@ -745,8 +745,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         """Get client IP address"""
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
-        return getattr(request.client, "host", "unknown")
+            return cast(str, forwarded_for.split(",")[0].strip())
+        return cast(str, getattr(request.client, "host", "unknown"))
 
 
 class SecurityMiddlewareError(Exception):

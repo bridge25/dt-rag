@@ -8,7 +8,7 @@ AI 모델 협업 및 CBR 시스템 통합 레이어
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union, cast, TYPE_CHECKING
 import os
 import sqlite3
 import httpx
@@ -22,52 +22,54 @@ import sys
 from pathlib import Path
 
 # 견고한 경로 설정 - GitHub Actions 환경에서도 안정적으로 작동
-try:
-    # 현재 파일의 절대 경로 기준으로 프로젝트 루트 찾기
-    current_file = Path(__file__).resolve()
-    project_root = current_file.parent.parent.parent.parent
-    common_schemas_path = project_root / "packages" / "common-schemas"
+if TYPE_CHECKING:
+    from common_schemas.models import SearchRequest, SearchResponse, SearchHit
+else:
+    try:
+        # 현재 파일의 절대 경로 기준으로 프로젝트 루트 찾기
+        current_file = Path(__file__).resolve()
+        project_root = current_file.parent.parent.parent.parent
+        common_schemas_path = project_root / "packages" / "common-schemas"
 
-    # 경로가 존재하는 경우에만 추가
-    if common_schemas_path.exists():
-        sys.path.insert(0, str(common_schemas_path))
-    else:
-        # GitHub Actions에서 다른 구조일 수 있으므로 대안 경로들 시도
-        alternative_paths = [
-            Path.cwd() / "packages" / "common-schemas",
-            project_root / "dt-rag" / "packages" / "common-schemas",
-            Path(
-                "/github/workspace/packages/common-schemas"
-            ),  # GitHub Actions 기본 경로
-        ]
+        # 경로가 존재하는 경우에만 추가
+        if common_schemas_path.exists():
+            sys.path.insert(0, str(common_schemas_path))
+        else:
+            # GitHub Actions에서 다른 구조일 수 있으므로 대안 경로들 시도
+            alternative_paths = [
+                Path.cwd() / "packages" / "common-schemas",
+                project_root / "dt-rag" / "packages" / "common-schemas",
+                Path(
+                    "/github/workspace/packages/common-schemas"
+                ),  # GitHub Actions 기본 경로
+            ]
 
-        for alt_path in alternative_paths:
-            if alt_path.exists():
-                sys.path.insert(0, str(alt_path))
-                break
+            for alt_path in alternative_paths:
+                if alt_path.exists():
+                    sys.path.insert(0, str(alt_path))
+                    break
 
-    from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]  # TODO: Implement common schemas
-except ImportError as e:
-    # Import 실패 시 graceful fallback - 로컬 모델 정의
-    print(f"Warning: Could not import common_schemas, using local definitions: {e}")
+        from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]  # TODO: Implement common schemas
+    except ImportError as e:
+        # Import 실패 시 graceful fallback - 로컬 모델 정의
+        print(f"Warning: Could not import common_schemas, using local definitions: {e}")
 
-    from pydantic import BaseModel
-    from typing import List, Dict, Any, Optional
+        class SearchHit(BaseModel):
+            chunk_id: str
+            score: float
+            source: Dict[str, Any]
 
-    class SearchHit(BaseModel):
-        chunk_id: str
-        score: float
-        source: Dict[str, Any]
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: name-defined (Fix 35 - move classes to module level for TYPE_CHECKING visibility)
+class OrchestrationSearchRequest(BaseModel):
+    query: str
+    filters: Optional[Dict[str, Any]] = None
+    limit: int = 10
 
-    class OrchestrationSearchRequest(BaseModel):
-        query: str
-        filters: Optional[Dict[str, Any]] = None
-        limit: int = 10
 
-    class OrchestrationSearchResponse(BaseModel):
-        hits: List[SearchHit]
-        latency: float
-        total_count: int
+class OrchestrationSearchResponse(BaseModel):
+    hits: List[SearchHit]
+    latency: float
+    total_count: int
 
 
 # ChatRequest와 ChatResponse는 common_schemas에 없으므로 로컬에서 정의
@@ -128,10 +130,10 @@ def _import_pipeline() -> Any:
 
     try:
         # Method 2: 절대 import 시도
-        from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import get_pipeline as _get_pipeline_absolute  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import from langgraph_pipeline")
-        return get_pipeline
+        return _get_pipeline_absolute
     except ImportError as e:
         print(f"[DEBUG] Absolute import failed: {e}")
 
@@ -149,10 +151,10 @@ def _import_pipeline() -> Any:
         pipeline_file = current_dir / "langgraph_pipeline.py"
         if pipeline_file.exists():
             print(f"[DEBUG] Found pipeline file: {pipeline_file}")
-            from langgraph_pipeline import get_pipeline  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+            from langgraph_pipeline import get_pipeline as _get_pipeline_directory  # TODO: Implement langgraph pipeline
 
             print("[DEBUG] Success: directory-based import")
-            return get_pipeline
+            return _get_pipeline_directory
         else:
             print(f"[DEBUG] Pipeline file not found: {pipeline_file}")
 
@@ -256,10 +258,10 @@ def _get_pipeline_request_class() -> Any:
 
     try:
         # 절대 import 시도
-        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import PipelineRequest as _PipelineRequest_absolute  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: absolute import PipelineRequest")
-        return PipelineRequest
+        return _PipelineRequest_absolute
     except ImportError as e:
         print(f"[DEBUG] Absolute PipelineRequest import failed: {e}")
 
@@ -271,10 +273,10 @@ def _get_pipeline_request_class() -> Any:
         current_dir = Path(__file__).parent
         if str(current_dir) not in sys.path:
             sys.path.insert(0, str(current_dir))
-        from langgraph_pipeline import PipelineRequest  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+        from langgraph_pipeline import PipelineRequest as _PipelineRequest_directory  # TODO: Implement langgraph pipeline
 
         print("[DEBUG] Success: directory-based PipelineRequest import")
-        return PipelineRequest
+        return _PipelineRequest_directory
     except ImportError as e:
         print(f"[DEBUG] Directory-based PipelineRequest import failed: {e}")
 
@@ -405,6 +407,7 @@ class CBRSystem:
         self.db_path = str(self.data_dir / "cbr_system.db")
         self._ensure_database()
 
+    # @CODE:MYPY-CONSOLIDATION-002 | Phase 14: unused-ignore (Fix 27 - decorator type stubs now available)
     @staticmethod
     async def generate_case_embedding(query: str) -> List[float]:
         """
@@ -479,7 +482,8 @@ class CBRSystem:
                     FROM cbr_cases
                     WHERE quality_score >= ?
                 """
-                params = [request.min_quality_score]
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (SQL params accept mixed types)
+                params: List[Union[float, str, int]] = [request.min_quality_score]
 
                 # 카테고리 필터링
                 if request.category_path:
@@ -1051,7 +1055,7 @@ from contextlib import asynccontextmanager  # noqa: E402
 # CBR 시스템 초기화
 cbr_system = None  # 실제 초기화는 lifespan에서 환경변수에 따라 수행
 
-
+# @CODE:MYPY-CONSOLIDATION-002 | Phase 14: unused-ignore (Fix 28 - decorator type stubs now available)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> Any:
     # Startup
@@ -1131,6 +1135,7 @@ TAXONOMY_BASE = "http://api:8000"
 def _require_cbr() -> None:
     if cbr_system is None:
         raise HTTPException(status_code=501, detail="CBR is disabled")
+    assert cbr_system is not None  # Type narrowing for mypy
 
 
 class FromCategoryRequest(BaseModel):
@@ -1202,7 +1207,7 @@ class CBRCaseResponse(BaseModel):
     updated_at: str
 
 
-@app.get("/health", tags=["health"])
+@app.get("/health", tags=["health"])  # type: ignore[misc]  # Decorator lacks type stubs
 def health_check() -> Dict[str, Any]:
     """헬스체크 엔드포인트 - B-O2 필터링 시스템 상태 포함"""
     # 기본 필터 테스트
@@ -1236,14 +1241,14 @@ def health_check() -> Dict[str, Any]:
     }
 
 
-@app.get("/api/taxonomy/tree/{version}", tags=["taxonomy"])
+@app.get("/api/taxonomy/tree/{version}", tags=["taxonomy"])  # type: ignore[misc]  # Decorator lacks type stubs
 async def get_taxonomy_tree(version: str) -> Dict[str, Any]:
     """Taxonomy API를 프록시하여 트리 데이터 반환"""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"{TAXONOMY_BASE}/taxonomy/{version}/tree")
             response.raise_for_status()
-            return response.json()
+            return cast(Dict[str, Any], response.json())
     except httpx.HTTPError as e:
         logger.error(f"Taxonomy API 호출 실패: {e}")
         raise HTTPException(status_code=502, detail=f"Taxonomy API 호출 실패: {str(e)}")
@@ -1469,7 +1474,7 @@ def _validate_manifest(manifest: AgentManifest) -> None:
         )
 
 
-@app.post("/agents/from-category", response_model=AgentManifest, tags=["agents"])
+@app.post("/agents/from-category", response_model=AgentManifest, tags=["agents"])  # type: ignore[misc]  # Decorator lacks type stubs
 def create_agent_from_category(req: FromCategoryRequest) -> AgentManifest:
     """노드 경로에서 Agent Manifest 생성 (B-O1: 완료)"""
     # 입력 검증
@@ -1519,7 +1524,7 @@ def create_agent_from_category(req: FromCategoryRequest) -> AgentManifest:
     return manifest
 
 
-@app.post("/search", response_model=OrchestrationSearchResponse, tags=["search"])
+@app.post("/search", response_model=OrchestrationSearchResponse, tags=["search"])  # type: ignore[misc]  # Decorator lacks type stubs
 def hybrid_search(req: OrchestrationSearchRequest) -> OrchestrationSearchResponse:
     """하이브리드 검색 (BM25 + Vector + Rerank) with B-O2 필터링"""
     logger.info(f"검색 요청: query='{req.query}', filters={req.filters}")
@@ -1606,7 +1611,7 @@ def hybrid_search(req: OrchestrationSearchRequest) -> OrchestrationSearchRespons
     )
 
 
-@app.post("/chat/run", response_model=ChatResponse, tags=["chat"])
+@app.post("/chat/run", response_model=ChatResponse, tags=["chat"])  # type: ignore[misc]  # Decorator lacks type stubs
 async def chat_run(req: ChatRequest) -> ChatResponse:
     """LangGraph 7-Step 채팅 파이프라인 (B-O3 구현)"""
     logger.info(
@@ -1670,10 +1675,11 @@ async def chat_run(req: ChatRequest) -> ChatResponse:
         )
 
 
-@app.post("/cbr/suggest", response_model=CBRSuggestResponse, tags=["cbr"])
+@app.post("/cbr/suggest", response_model=CBRSuggestResponse, tags=["cbr"])  # type: ignore[misc]  # Decorator lacks type stubs
 def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
     """B-O4: CBR k-NN 기반 케이스 추천"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     logger.info(
         f"CBR 케이스 추천: query='{request.query}', k={request.k}, method={request.similarity_method}"
     )
@@ -1747,10 +1753,11 @@ def suggest_cases(request: CBRSuggestRequest) -> CBRSuggestResponse:
         raise HTTPException(status_code=500, detail=f"CBR suggestion failed: {str(e)}")
 
 
-@app.post("/cbr/feedback", tags=["cbr"])
+@app.post("/cbr/feedback", tags=["cbr"])  # type: ignore[misc]  # Decorator lacks type stubs
 def submit_case_feedback(request: CBRFeedbackRequest) -> Dict[str, Any]:
     """CBR 케이스 피드백 수집 (Neural Selector 학습용)"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     logger.info(
         f"CBR 피드백: log_id={request.log_id}, case_id={request.case_id}, feedback={request.feedback}"
     )
@@ -1785,10 +1792,11 @@ def submit_case_feedback(request: CBRFeedbackRequest) -> Dict[str, Any]:
         )
 
 
-@app.get("/cbr/stats", tags=["cbr"])
+@app.get("/cbr/stats", tags=["cbr"])  # type: ignore[misc]  # Decorator lacks type stubs
 def get_cbr_statistics() -> Dict[str, Any]:
     """CBR 시스템 통계 조회"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         stats = cbr_system.get_cbr_stats()
 
@@ -1819,10 +1827,11 @@ def get_cbr_statistics() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Stats retrieval failed: {str(e)}")
 
 
-@app.post("/cbr/case", tags=["cbr"])
+@app.post("/cbr/case", tags=["cbr"])  # type: ignore[misc]  # Decorator lacks type stubs
 def add_cbr_case(case_data: Dict[str, Any]) -> Dict[str, Any]:
     """CBR 케이스 추가 (관리용)"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         # 필수 필드 검증
         required_fields = ["query", "category_path", "content"]
@@ -1870,10 +1879,11 @@ def add_cbr_case(case_data: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Failed to add case: {str(e)}")
 
 
-@app.get("/cbr/logs", tags=["cbr"])
+@app.get("/cbr/logs", tags=["cbr"])  # type: ignore[misc]  # Decorator lacks type stubs
 def get_cbr_logs(limit: int = 100, success_only: bool = False) -> Dict[str, Any]:
     """CBR 상호작용 로그 조회 (Neural Selector 학습데이터)"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         import sqlite3
 
@@ -1929,10 +1939,11 @@ def get_cbr_logs(limit: int = 100, success_only: bool = False) -> Dict[str, Any]
         )
 
 
-@app.get("/cbr/export", tags=["cbr"])
+@app.get("/cbr/export", tags=["cbr"])  # type: ignore[misc]  # Decorator lacks type stubs
 def export_cbr_training_data() -> Dict[str, Any]:
     """Neural Selector 학습을 위한 CBR 데이터 내보내기"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
     try:
         import sqlite3
         import json
@@ -2010,7 +2021,7 @@ def export_cbr_training_data() -> Dict[str, Any]:
 
 
 # B-O2 관리용 엔드포인트들
-@app.post("/filter/validate", tags=["filter"])
+@app.post("/filter/validate", tags=["filter"])  # type: ignore[misc]  # Decorator lacks type stubs
 def validate_filter_paths(paths: List[List[str]]) -> Dict[str, Any]:
     """필터 경로 유효성 검증 엔드포인트"""
     try:
@@ -2039,7 +2050,7 @@ def validate_filter_paths(paths: List[List[str]]) -> Dict[str, Any]:
         }
 
 
-@app.post("/filter/test", tags=["filter"])
+@app.post("/filter/test", tags=["filter"])  # type: ignore[misc]  # Decorator lacks type stubs
 def test_filter_performance(test_data: Dict[str, Any]) -> Dict[str, Any]:
     """필터 성능 테스트 엔드포인트"""
     allowed_paths = test_data.get("allowed_paths", [])
@@ -2090,7 +2101,7 @@ def test_filter_performance(test_data: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Filter test failed: {str(e)}")
 
 
-@app.get("/metrics/filter", tags=["filter"])
+@app.get("/metrics/filter", tags=["filter"])  # type: ignore[misc]  # Decorator lacks type stubs
 def get_filter_metrics() -> Dict[str, Any]:
     """필터링 시스템 메트릭 조회"""
     # TODO: 실제 메트릭 수집 시스템과 연동
@@ -2121,10 +2132,11 @@ def get_filter_metrics() -> Dict[str, Any]:
 # 새로운 CBR CRUD API 엔드포인트들 추가
 
 
-@app.get("/cbr/cases/{case_id}", response_model=CBRCaseResponse, tags=["cbr-cases"])
+@app.get("/cbr/cases/{case_id}", response_model=CBRCaseResponse, tags=["cbr-cases"])  # type: ignore[misc]  # Decorator lacks type stubs
 def get_cbr_case(case_id: str) -> CBRCaseResponse:
     """특정 CBR 케이스 조회"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():
@@ -2159,10 +2171,11 @@ def get_cbr_case(case_id: str) -> CBRCaseResponse:
         raise HTTPException(status_code=500, detail=f"케이스 조회 실패: {str(e)}")
 
 
-@app.put("/cbr/cases/{case_id}", tags=["cbr-cases"])
+@app.put("/cbr/cases/{case_id}", tags=["cbr-cases"])  # type: ignore[misc]  # Decorator lacks type stubs
 def update_cbr_case(case_id: str, update_request: CBRUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 업데이트"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():
@@ -2227,10 +2240,11 @@ def update_cbr_case(case_id: str, update_request: CBRUpdateRequest) -> Dict[str,
         raise HTTPException(status_code=500, detail=f"케이스 업데이트 실패: {str(e)}")
 
 
-@app.delete("/cbr/cases/{case_id}", tags=["cbr-cases"])
+@app.delete("/cbr/cases/{case_id}", tags=["cbr-cases"])  # type: ignore[misc]  # Decorator lacks type stubs
 def delete_cbr_case(case_id: str) -> Dict[str, Any]:
     """CBR 케이스 삭제"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():
@@ -2266,10 +2280,11 @@ def delete_cbr_case(case_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"케이스 삭제 실패: {str(e)}")
 
 
-@app.put("/cbr/cases/{case_id}/quality", tags=["cbr-cases"])
+@app.put("/cbr/cases/{case_id}/quality", tags=["cbr-cases"])  # type: ignore[misc]  # Decorator lacks type stubs
 def update_cbr_case_quality(case_id: str, quality_request: CBRQualityUpdateRequest) -> Dict[str, Any]:
     """CBR 케이스 품질 점수 업데이트"""
     _require_cbr()
+    assert cbr_system is not None  # Ensured by _require_cbr()
 
     # case_id 유효성 검증
     if not case_id or not case_id.strip():

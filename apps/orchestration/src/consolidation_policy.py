@@ -1,7 +1,7 @@
 # @SPEC:CONSOLIDATION-001 @IMPL:CONSOLIDATION-001:0.1
 
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta, timezone
@@ -32,9 +32,9 @@ class ConsolidationPolicy:
         """
         self.db = db_session
         self.dry_run = dry_run
-        self.removed_cases = []
-        self.merged_cases = []
-        self.archived_cases = []
+        self.removed_cases: list[str] = []
+        self.merged_cases: list[str] = []
+        self.archived_cases: list[str] = []
 
     async def run_consolidation(
         self,
@@ -264,12 +264,12 @@ class ConsolidationPolicy:
 
         return archived_ids
 
-    def _parse_vector(self, vector_str: str) -> Optional[List[float]]:
+    def _parse_vector(self, vector_str: Union[str, List[float]]) -> Optional[List[float]]:
         """
         Parse vector from string format to list of floats.
 
         Args:
-            vector_str: Vector in JSON string format
+            vector_str: Vector in JSON string format or already parsed list
 
         Returns:
             List of floats or None if parsing fails
@@ -277,10 +277,8 @@ class ConsolidationPolicy:
         try:
             if isinstance(vector_str, str):
                 vec = json.loads(vector_str)
-            elif isinstance(vector_str, list):
+            else:  # isinstance(vector_str, list)
                 vec = vector_str
-            else:
-                return None
 
             return [float(v) for v in vec]
         except (json.JSONDecodeError, ValueError, TypeError):

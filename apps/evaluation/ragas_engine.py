@@ -17,7 +17,7 @@ import asyncio
 import logging
 import re
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from dataclasses import dataclass
 
 import google.generativeai as genai
@@ -84,7 +84,7 @@ class RAGASEvaluator:
             response_time_max=5.0,
         )
 
-    @observe(name="ragas_evaluation", as_type="generation")
+    @observe(name="ragas_evaluation", as_type="generation")  # type: ignore[misc]  # Langfuse decorator lacks type stubs
     async def evaluate_rag_response(
         self,
         query: str,
@@ -121,15 +121,17 @@ class RAGASEvaluator:
             )
 
             # Parse results
-            context_precision = (
-                results[0] if not isinstance(results[0], Exception) else 0.0
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (explicit typing for asyncio.gather results)
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: assignment (Fix 47-50 - cast Union[float, BaseException] to float)
+            context_precision: float = cast(
+                float, results[0] if not isinstance(results[0], Exception) else 0.0
             )
-            context_recall = (
-                results[1] if not isinstance(results[1], Exception) else 0.0
+            context_recall: float = cast(
+                float, results[1] if not isinstance(results[1], Exception) else 0.0
             )
-            faithfulness = results[2] if not isinstance(results[2], Exception) else 0.0
-            answer_relevancy = (
-                results[3] if not isinstance(results[3], Exception) else 0.0
+            faithfulness: float = cast(float, results[2] if not isinstance(results[2], Exception) else 0.0)
+            answer_relevancy: float = cast(
+                float, results[3] if not isinstance(results[3], Exception) else 0.0
             )
 
             # Create metrics object
@@ -354,7 +356,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("coverage_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -389,7 +391,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("coverage_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("coverage_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -424,7 +426,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("faithfulness_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("faithfulness_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -455,7 +457,7 @@ class RAGASEvaluator:
             import json
 
             parsed = json.loads(result.strip())
-            return min(1.0, max(0.0, parsed.get("relevancy_score", 0.0)))
+            return cast(float, min(1.0, max(0.0, parsed.get("relevancy_score", 0.0))))
         except Exception:
             return 0.0
 
@@ -466,7 +468,7 @@ class RAGASEvaluator:
 
         try:
             response = self.model.generate_content(prompt)
-            return response.text
+            return cast(str, response.text)
         except Exception as e:
             logger.error(f"Gemini generation failed: {e}")
             return ""

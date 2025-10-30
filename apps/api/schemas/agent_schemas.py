@@ -10,7 +10,7 @@ class AgentCreateRequest(BaseModel):
         ..., min_length=1, max_length=255, description="Agent display name"
     )
     taxonomy_node_ids: List[UUID4] = Field(
-        ..., min_items=1, description="Selected taxonomy node IDs"
+        ..., min_length=1, description="Selected taxonomy node IDs"
     )
     taxonomy_version: str = Field(default="1.0.0", description="Taxonomy version")
     scope_description: Optional[str] = Field(

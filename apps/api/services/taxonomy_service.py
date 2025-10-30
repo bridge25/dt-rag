@@ -218,7 +218,7 @@ class TaxonomyService:
 
             errors = []
             warnings = []
-            suggestions = []
+            suggestions: list[str] = []
 
             if not nodes:
                 warnings.append(f"No nodes found for version {version}")

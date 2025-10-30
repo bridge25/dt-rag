@@ -91,7 +91,7 @@ try:
         vector_search,
         get_search_engine_config,
         update_search_engine_config,
-        clear_search_cache,
+        clear_search_cache as _clear_search_cache,
         get_search_statistics,
     )
 
@@ -1006,7 +1006,7 @@ async def clear_search_cache(
     """
     try:
         if HYBRID_SEARCH_AVAILABLE:
-            clear_search_cache()
+            _clear_search_cache()
             return {"message": "Search cache cleared successfully"}
         else:
             return {"message": "Search cache not available (hybrid search disabled)"}

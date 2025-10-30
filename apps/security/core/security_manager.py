@@ -6,7 +6,7 @@ Orchestrates all security components and provides unified security interface
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Set
+from typing import Dict, List, Any, Set, Optional, cast
 from dataclasses import dataclass
 from enum import Enum
 import uuid
@@ -46,7 +46,7 @@ class SecurityContext:
     timestamp: datetime
     is_authenticated: bool = False
     risk_score: float = 0.0
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -62,7 +62,7 @@ class SecurityPolicy:
     session_timeout_minutes: int = 30
     require_encryption: bool = True
     allow_anonymous_read: bool = False
-    sensitive_operations: List[str] = None
+    sensitive_operations: Optional[List[str]] = None
 
 
 class SecurityManager:
@@ -70,7 +70,7 @@ class SecurityManager:
     Central security manager that orchestrates all security components
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.policy = SecurityPolicy(**self.config.get("policy", {}))
 
@@ -93,7 +93,7 @@ class SecurityManager:
         logger.info("SecurityManager initialized with OWASP Top 10 compliance")
 
     async def authenticate_request(
-        self, token: str, ip_address: str, user_agent: str, operation: str = None
+        self, token: str, ip_address: str, user_agent: str, operation: Optional[str] = None
     ) -> SecurityContext:
         """
         Authenticate and authorize a request
@@ -155,14 +155,17 @@ class SecurityManager:
                 user_info["user_id"]
             )
 
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (type conversions for SecurityContext)
             # 7. Create security context
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: index (Fix 55 - narrow session_id type to str)
+            session_id_str: str = session_id if session_id else str(uuid.uuid4())
             context = SecurityContext(
                 user_id=user_info["user_id"],
-                session_id=session_id,
+                session_id=session_id_str,  # Use narrowed str type
                 ip_address=ip_address,
                 user_agent=user_agent,
-                permissions=permissions,
-                clearance_level=clearance_level,
+                permissions={perm.value for perm in permissions},  # Convert Permission enum to str
+                clearance_level=SecurityLevel(clearance_level),  # Convert str to SecurityLevel enum
                 request_id=request_id,
                 timestamp=datetime.utcnow(),
                 is_authenticated=True,
@@ -171,7 +174,7 @@ class SecurityManager:
             )
 
             # 8. Store active session
-            self._active_sessions[session_id] = context
+            self._active_sessions[session_id_str] = context
 
             # 9. Log successful authentication
             await self._log_security_event(
@@ -203,8 +206,8 @@ class SecurityManager:
         self,
         context: SecurityContext,
         operation: str,
-        resource: str = None,
-        data: Dict[str, Any] = None,
+        resource: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> bool:
         """
         Authorize an operation based on RBAC
@@ -261,7 +264,8 @@ class SecurityManager:
 
             # 4. Risk-based authorization
             if context.risk_score > 0.8:  # High risk
-                if operation in self.policy.sensitive_operations:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 14d: operator (Fix 42 - check for None before 'in' operator)
+                if self.policy.sensitive_operations and operation in self.policy.sensitive_operations:
                     await self._log_security_event(
                         EventType.HIGH_RISK_OPERATION_BLOCKED,
                         {
@@ -396,7 +400,7 @@ class SecurityManager:
                         context.request_id,
                     )
 
-                    return masked_data
+                    return cast(Dict[str, Any], masked_data)
                 else:
                     # 5. Log PII access
                     await self._log_security_event(

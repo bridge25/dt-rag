@@ -5,7 +5,7 @@
 import asyncio
 import logging
 import time
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, cast
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
@@ -33,7 +33,7 @@ class ComponentHealth:
     response_time_ms: Optional[float] = None
     last_check: Optional[datetime] = None
     error_message: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         result = asdict(self)
@@ -343,7 +343,7 @@ class HealthChecker:
                 self.health_checks[name](), timeout=self.timeout
             )
             self.last_results[name] = result
-            return result
+            return cast(ComponentHealth, result)
 
         except asyncio.TimeoutError:
             logger.warning(f"Health check for {name} timed out")
@@ -388,6 +388,8 @@ class HealthChecker:
                     )
                 )
             else:
+                # @CODE:MYPY-CONSOLIDATION-002 | Phase 13: arg-type resolution (explicit type narrowing for asyncio.gather results)
+                assert isinstance(result, ComponentHealth)  # Type narrowing for Union[ComponentHealth, BaseException]
                 component_results.append(result)
 
         return component_results
@@ -415,8 +417,8 @@ class HealthChecker:
             "storage": 0.8,  # 중요하지만 필수는 아님
         }
 
-        total_weight = 0
-        weighted_score = 0
+        total_weight = 0.0
+        weighted_score = 0.0
 
         for component in components:
             importance = component_importance.get(component.name, 0.5)

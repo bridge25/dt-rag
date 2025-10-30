@@ -86,3 +86,13 @@ new-automation-proposal/
 __pycache__/
 *.pyc
 .pytest_cache/
+*.temp
+.venv/
+*.tmp
+*.pyo
+# Build artifacts
+.env/
+# Temporary files
+.tscache/
+# Virtual environment
+# Cache
