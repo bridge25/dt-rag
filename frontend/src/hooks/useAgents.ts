@@ -28,8 +28,8 @@ async function fetchAgents(): Promise<AgentsResponse> {
     return validated
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Agent data validation failed:', error.errors)
-      throw new Error(`Invalid agent data: ${error.errors.map(e => e.message).join(', ')}`)
+      console.error('Agent data validation failed:', error.issues)
+      throw new Error(`Invalid agent data: ${error.issues.map((e: z.ZodIssue) => e.message).join(', ')}`)
     }
     throw error
   }
