@@ -1,5 +1,6 @@
 // @TEST:TAXONOMY-VIZ-001-003
-// TaxonomyTreeView component tests - React Flow canvas with Dagre layout
+// @TEST:TAXONOMY-VIZ-001-014
+// TaxonomyTreeView component tests - React Flow canvas with Dagre layout and layout switching
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -162,5 +163,50 @@ describe('TaxonomyTreeView', () => {
 
     const errorMessage = await screen.findByText(/error/i, {}, { timeout: 3000 })
     expect(errorMessage).toBeInTheDocument()
+  })
+
+  describe('Layout Switching', () => {
+    it('should render layout toggle button after data loads', async () => {
+      vi.mocked(taxonomyApi.fetchTaxonomyTree).mockResolvedValue(
+        mockTaxonomyData
+      )
+
+      render(<TaxonomyTreeView />, { wrapper: createWrapper() })
+
+      await waitFor(() => {
+        const toggleButton = screen.getByRole('button', {
+          name: /switch to radial layout/i,
+        })
+        expect(toggleButton).toBeInTheDocument()
+      })
+    })
+
+    it('should render search filter after data loads', async () => {
+      vi.mocked(taxonomyApi.fetchTaxonomyTree).mockResolvedValue(
+        mockTaxonomyData
+      )
+
+      render(<TaxonomyTreeView />, { wrapper: createWrapper() })
+
+      await waitFor(() => {
+        const searchInput = screen.getByLabelText(/search taxonomy nodes/i)
+        expect(searchInput).toBeInTheDocument()
+      })
+    })
+
+    it('should start with tree layout by default', async () => {
+      vi.mocked(taxonomyApi.fetchTaxonomyTree).mockResolvedValue(
+        mockTaxonomyData
+      )
+
+      render(<TaxonomyTreeView />, { wrapper: createWrapper() })
+
+      await waitFor(() => {
+        const toggleButton = screen.getByRole('button', {
+          name: /switch to radial layout/i,
+        })
+        expect(toggleButton).toBeInTheDocument()
+      })
+    })
   })
 })

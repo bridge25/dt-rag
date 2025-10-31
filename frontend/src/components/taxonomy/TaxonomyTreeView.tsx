@@ -4,6 +4,7 @@
 // @CODE:TAXONOMY-VIZ-001-007
 // @CODE:TAXONOMY-VIZ-001-012
 // @CODE:TAXONOMY-VIZ-001-013
+// @CODE:TAXONOMY-VIZ-001-014
 // TaxonomyTreeView component - optimized for 500+ nodes with performance monitoring
 
 import { useCallback, useMemo, useState, useEffect } from 'react'
@@ -19,13 +20,14 @@ import {
   type NodeMouseHandler,
 } from '@xyflow/react'
 import { useQuery } from '@tanstack/react-query'
-import dagre from 'dagre'
 import { fetchTaxonomyTree } from '../../lib/api/taxonomy'
 import type { TaxonomyNode } from '../../lib/api/types'
 import TaxonomyNodeComponent from './TaxonomyNode'
 import TaxonomyEdgeComponent from './TaxonomyEdge'
 import TaxonomyDetailPanel from './TaxonomyDetailPanel'
 import TaxonomySearchFilter from './TaxonomySearchFilter'
+import TaxonomyLayoutToggle from './TaxonomyLayoutToggle'
+import { applyLayout, type LayoutType } from './taxonomyLayouts'
 import '@xyflow/react/dist/style.css'
 
 interface FlowNode extends Node {
@@ -69,32 +71,6 @@ function convertTaxonomyToFlow(
   return { nodes, edges }
 }
 
-function applyDagreLayout(nodes: FlowNode[], edges: Edge[]): FlowNode[] {
-  const dagreGraph = new dagre.graphlib.Graph()
-  dagreGraph.setDefaultEdgeLabel(() => ({}))
-  dagreGraph.setGraph({ rankdir: 'TB' })
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: 150, height: 50 })
-  })
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target)
-  })
-
-  dagre.layout(dagreGraph)
-
-  return nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id)
-    return {
-      ...node,
-      position: {
-        x: nodeWithPosition.x - 75,
-        y: nodeWithPosition.y - 25,
-      },
-    }
-  })
-}
 
 const nodeTypes = {
   taxonomyNode: TaxonomyNodeComponent,
@@ -108,6 +84,7 @@ export default function TaxonomyTreeView() {
   const [selectedNode, setSelectedNode] = useState<TaxonomyNode | null>(null)
   const [showPerformanceWarning, setShowPerformanceWarning] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentLayout, setCurrentLayout] = useState<LayoutType>('tree')
 
   const {
     data: taxonomyData,
@@ -127,12 +104,12 @@ export default function TaxonomyTreeView() {
 
     const startTime = performance.now()
     const { nodes, edges } = convertTaxonomyToFlow(taxonomyData)
-    const layoutedNodes = applyDagreLayout(nodes, edges)
+    const layoutedNodes = applyLayout(nodes, edges, currentLayout)
     const endTime = performance.now()
 
     // Log performance metrics for large graphs
     if (nodes.length > 100) {
-      console.log(`[TaxonomyTreeView] Processed ${nodes.length} nodes in ${Math.round(endTime - startTime)}ms`)
+      console.log(`[TaxonomyTreeView] Processed ${nodes.length} nodes with ${currentLayout} layout in ${Math.round(endTime - startTime)}ms`)
     }
 
     // Show warning for very large graphs
@@ -141,7 +118,7 @@ export default function TaxonomyTreeView() {
     }
 
     return { nodes: layoutedNodes, edges }
-  }, [taxonomyData])
+  }, [taxonomyData, currentLayout])
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, , onEdgesChange] = useEdgesState(initialEdges)
@@ -165,6 +142,10 @@ export default function TaxonomyTreeView() {
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query)
+  }, [])
+
+  const handleLayoutChange = useCallback((newLayout: LayoutType) => {
+    setCurrentLayout(newLayout)
   }, [])
 
   // Update node styles based on search
@@ -239,6 +220,12 @@ export default function TaxonomyTreeView() {
     <div className="relative h-full w-full">
       {/* Search Filter */}
       <TaxonomySearchFilter onSearch={handleSearch} matchCount={matchCount} />
+
+      {/* Layout Toggle */}
+      <TaxonomyLayoutToggle
+        currentLayout={currentLayout}
+        onLayoutChange={handleLayoutChange}
+      />
 
       {/* Performance Warning Banner */}
       {showPerformanceWarning && (
