@@ -1,5 +1,6 @@
 // @CODE:TAXONOMY-VIZ-001-003
-// TaxonomyTreeView component - React Flow canvas with Dagre layout
+// @CODE:TAXONOMY-VIZ-001-004
+// TaxonomyTreeView component - React Flow canvas with Dagre layout and custom nodes
 
 import { useCallback, useMemo } from 'react'
 import {
@@ -16,6 +17,7 @@ import { useQuery } from '@tanstack/react-query'
 import dagre from 'dagre'
 import { fetchTaxonomyTree } from '../../lib/api/taxonomy'
 import type { TaxonomyNode } from '../../lib/api/types'
+import TaxonomyNodeComponent from './TaxonomyNode'
 import '@xyflow/react/dist/style.css'
 
 interface FlowNode extends Node {
@@ -34,7 +36,7 @@ function convertTaxonomyToFlow(
   function traverse(node: TaxonomyNode) {
     nodes.push({
       id: node.id,
-      type: 'default',
+      type: 'taxonomyNode',
       position: { x: 0, y: 0 }, // Will be calculated by Dagre
       data: {
         taxonomyNode: node,
@@ -84,6 +86,10 @@ function applyDagreLayout(nodes: FlowNode[], edges: Edge[]): FlowNode[] {
       },
     }
   })
+}
+
+const nodeTypes = {
+  taxonomyNode: TaxonomyNodeComponent,
 }
 
 export default function TaxonomyTreeView() {
@@ -137,6 +143,7 @@ export default function TaxonomyTreeView() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onInit={onInit}
