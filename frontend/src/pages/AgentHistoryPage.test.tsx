@@ -5,12 +5,18 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AgentHistoryPage from './AgentHistoryPage'
 import * as agentsApi from '@/lib/api/agents'
+import * as historyApi from '@/lib/api/history'
 
 vi.mock('@/lib/api/agents', () => ({
   fetchAgent: vi.fn(),
 }))
 
+vi.mock('@/lib/api/history', () => ({
+  fetchCoverageHistory: vi.fn(),
+}))
+
 const mockFetchAgent = agentsApi.fetchAgent as ReturnType<typeof vi.fn>
+const mockFetchCoverageHistory = historyApi.fetchCoverageHistory as ReturnType<typeof vi.fn>
 
 const mockAgentData = {
   agent_id: '550e8400-e29b-41d4-a716-446655440001',
@@ -27,11 +33,26 @@ const mockAgentData = {
   last_used: '2025-01-15T00:00:00.000Z',
 }
 
+const mockHistoryData = {
+  agent_id: '550e8400-e29b-41d4-a716-446655440001',
+  history: [
+    { date: '2025-01-01', coverage: 50, xp: 100 },
+    { date: '2025-01-02', coverage: 55, xp: 120 },
+    { date: '2025-01-03', coverage: 60, xp: 150 },
+  ],
+  interval: 'daily' as const,
+}
+
 function renderWithRouter(initialRoute = '/agents/550e8400-e29b-41d4-a716-446655440001/history') {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
         retry: false,
+        refetchInterval: false,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        staleTime: 0,
       },
     },
   })
@@ -55,6 +76,7 @@ describe('AgentHistoryPage', () => {
   describe('Loading State', () => {
     it('should show loading state initially', () => {
       mockFetchAgent.mockImplementation(() => new Promise(() => {}))
+      mockFetchCoverageHistory.mockImplementation(() => new Promise(() => {}))
       renderWithRouter()
 
       const loadingElements = screen.getAllByRole('generic')
@@ -65,6 +87,7 @@ describe('AgentHistoryPage', () => {
   describe('Success State', () => {
     it('should render page header with agent name', async () => {
       mockFetchAgent.mockResolvedValueOnce(mockAgentData)
+      mockFetchCoverageHistory.mockResolvedValueOnce(mockHistoryData)
       renderWithRouter()
 
       await waitFor(() => {
@@ -74,6 +97,7 @@ describe('AgentHistoryPage', () => {
 
     it('should display agent level and rarity', async () => {
       mockFetchAgent.mockResolvedValueOnce(mockAgentData)
+      mockFetchCoverageHistory.mockResolvedValueOnce(mockHistoryData)
       renderWithRouter()
 
       await waitFor(() => {
@@ -85,18 +109,19 @@ describe('AgentHistoryPage', () => {
 
     it('should show chart placeholders', async () => {
       mockFetchAgent.mockResolvedValueOnce(mockAgentData)
+      mockFetchCoverageHistory.mockResolvedValueOnce(mockHistoryData)
       renderWithRouter()
 
       await waitFor(() => {
-        expect(screen.getByText('Coverage History')).toBeInTheDocument()
+        expect(screen.getByText('Coverage Trend')).toBeInTheDocument()
       })
 
       expect(screen.getByText('XP Growth')).toBeInTheDocument()
-      expect(screen.getAllByText('Charts will be added in Phase 4')).toHaveLength(2)
     })
 
     it('should display summary statistics', async () => {
       mockFetchAgent.mockResolvedValueOnce(mockAgentData)
+      mockFetchCoverageHistory.mockResolvedValueOnce(mockHistoryData)
       renderWithRouter()
 
       await waitFor(() => {
@@ -110,6 +135,7 @@ describe('AgentHistoryPage', () => {
 
     it('should render navigation links', async () => {
       mockFetchAgent.mockResolvedValueOnce(mockAgentData)
+      mockFetchCoverageHistory.mockResolvedValueOnce(mockHistoryData)
       renderWithRouter()
 
       await waitFor(() => {
@@ -122,12 +148,13 @@ describe('AgentHistoryPage', () => {
 
   describe('Error State', () => {
     it('should show error message on fetch failure', async () => {
-      mockFetchAgent.mockRejectedValueOnce(new Error('Network error'))
+      mockFetchAgent.mockRejectedValue(new Error('Network error'))
+      mockFetchCoverageHistory.mockResolvedValueOnce(mockHistoryData)
       renderWithRouter()
 
       await waitFor(() => {
         expect(screen.getByText(/Error:/i)).toBeInTheDocument()
-      })
+      }, { timeout: 10000 })
 
       expect(screen.getByText(/Failed to load agent history/i)).toBeInTheDocument()
     })

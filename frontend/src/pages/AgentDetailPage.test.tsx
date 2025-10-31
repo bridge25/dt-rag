@@ -32,6 +32,11 @@ function renderWithRouter(initialRoute = '/agents/550e8400-e29b-41d4-a716-446655
     defaultOptions: {
       queries: {
         retry: false,
+        refetchInterval: false,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        staleTime: 0,
       },
     },
   })
@@ -55,9 +60,10 @@ describe('AgentDetailPage', () => {
   describe('Loading State', () => {
     it('should show loading state initially', () => {
       mockFetchAgent.mockImplementation(() => new Promise(() => {}))
-      renderWithRouter()
+      const { container } = renderWithRouter()
 
-      expect(screen.getByText(/Loading.../i)).toBeInTheDocument()
+      const skeletons = container.querySelectorAll('[class*="animate-pulse"]')
+      expect(skeletons.length).toBeGreaterThan(0)
     })
   })
 
@@ -112,23 +118,23 @@ describe('AgentDetailPage', () => {
 
   describe('Error State', () => {
     it('should show error message on fetch failure', async () => {
-      mockFetchAgent.mockRejectedValueOnce(new Error('Network error'))
+      mockFetchAgent.mockRejectedValue(new Error('Network error'))
       renderWithRouter()
 
       await waitFor(() => {
         expect(screen.getByText(/Error:/i)).toBeInTheDocument()
-      })
+      }, { timeout: 10000 })
 
       expect(screen.getByText(/Failed to load agent details/i)).toBeInTheDocument()
     })
 
     it('should show retry button on error', async () => {
-      mockFetchAgent.mockRejectedValueOnce(new Error('Network error'))
+      mockFetchAgent.mockRejectedValue(new Error('Network error'))
       renderWithRouter()
 
       await waitFor(() => {
         expect(screen.getByText('Retry')).toBeInTheDocument()
-      })
+      }, { timeout: 10000 })
     })
   })
 

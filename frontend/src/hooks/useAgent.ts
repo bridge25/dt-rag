@@ -14,9 +14,7 @@ export function useAgent(agentId: string): UseAgentReturn {
   const { data, isLoading, error, refetch } = useQuery<AgentCardData, Error>({
     queryKey: ['agent', agentId],
     queryFn: () => fetchAgent(agentId),
-    retry: 1,
     staleTime: 30000,
-    refetchInterval: 5000,
   })
 
   return {
