@@ -3,6 +3,7 @@
 // @CODE:TAXONOMY-VIZ-001-005
 // @CODE:TAXONOMY-VIZ-001-007
 // @CODE:TAXONOMY-VIZ-001-012
+// @CODE:TAXONOMY-VIZ-001-013
 // TaxonomyTreeView component - optimized for 500+ nodes with performance monitoring
 
 import { useCallback, useMemo, useState, useEffect } from 'react'
@@ -24,6 +25,7 @@ import type { TaxonomyNode } from '../../lib/api/types'
 import TaxonomyNodeComponent from './TaxonomyNode'
 import TaxonomyEdgeComponent from './TaxonomyEdge'
 import TaxonomyDetailPanel from './TaxonomyDetailPanel'
+import TaxonomySearchFilter from './TaxonomySearchFilter'
 import '@xyflow/react/dist/style.css'
 
 interface FlowNode extends Node {
@@ -105,6 +107,7 @@ const edgeTypes = {
 export default function TaxonomyTreeView() {
   const [selectedNode, setSelectedNode] = useState<TaxonomyNode | null>(null)
   const [showPerformanceWarning, setShowPerformanceWarning] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const {
     data: taxonomyData,
@@ -140,7 +143,7 @@ export default function TaxonomyTreeView() {
     return { nodes: layoutedNodes, edges }
   }, [taxonomyData])
 
-  const [nodes, , onNodesChange] = useNodesState(initialNodes)
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, , onEdgesChange] = useEdgesState(initialEdges)
 
   // Monitor node count
@@ -149,6 +152,53 @@ export default function TaxonomyTreeView() {
       console.warn(`[TaxonomyTreeView] Rendering ${nodes.length} nodes - performance may be impacted`)
     }
   }, [nodes.length])
+
+  // Search and highlight logic
+  const matchCount = useMemo(() => {
+    if (!searchQuery) return 0
+    const query = searchQuery.toLowerCase()
+    return nodes.filter((node) => {
+      const flowNode = node as FlowNode
+      return flowNode.data.taxonomyNode.name.toLowerCase().includes(query)
+    }).length
+  }, [nodes, searchQuery])
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query)
+  }, [])
+
+  // Update node styles based on search
+  useEffect(() => {
+    if (!searchQuery) {
+      // Reset all nodes to default style
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          style: undefined,
+        }))
+      )
+      return
+    }
+
+    const query = searchQuery.toLowerCase()
+    setNodes((nds) =>
+      nds.map((node) => {
+        const flowNode = node as FlowNode
+        const isMatch = flowNode.data.taxonomyNode.name.toLowerCase().includes(query)
+        return {
+          ...node,
+          style: isMatch
+            ? {
+                backgroundColor: '#fef3c7', // yellow-100
+                border: '2px solid #f59e0b', // yellow-500
+              }
+            : {
+                opacity: 0.3,
+              },
+        }
+      })
+    )
+  }, [searchQuery, setNodes])
 
   const onNodeClick: NodeMouseHandler = useCallback((_, node) => {
     const flowNode = node as FlowNode
@@ -187,6 +237,9 @@ export default function TaxonomyTreeView() {
 
   return (
     <div className="relative h-full w-full">
+      {/* Search Filter */}
+      <TaxonomySearchFilter onSearch={handleSearch} matchCount={matchCount} />
+
       {/* Performance Warning Banner */}
       {showPerformanceWarning && (
         <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 transform">
