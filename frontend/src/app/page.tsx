@@ -1,14 +1,36 @@
 // @CODE:AGENT-CARD-001-PAGE-001
+// @CODE:FRONTEND-INTEGRATION-001:HOME-PAGE-UPDATE
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAgents } from '../hooks/useAgents'
 import { AgentCard } from '../components/agent-card/AgentCard'
+import { VirtualList } from '../components/common/VirtualList'
+import { LoadingSpinner } from '../components/common/LoadingSpinner'
+
+const VIRTUAL_SCROLL_THRESHOLD = Number(import.meta.env.VITE_VIRTUAL_SCROLL_THRESHOLD) || 100
 
 export default function HomePage() {
+  const navigate = useNavigate()
   const { agents, isLoading, error, refetch } = useAgents()
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth - 64,
+        height: window.innerHeight - 200,
+      })
+    }
+
+    updateDimensions()
+    window.addEventListener('resize', updateDimensions)
+    return () => window.removeEventListener('resize', updateDimensions)
+  }, [])
 
   const handleView = (agentId: string) => {
-    console.log('View agent:', agentId)
+    navigate(`/agents/${agentId}`)
   }
 
   const handleDelete = (agentId: string) => {
@@ -19,15 +41,7 @@ export default function HomePage() {
     return (
       <main className="p-8">
         <h1 className="text-3xl font-bold mb-8">Agents</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-96 bg-gray-200 rounded-lg animate-pulse"
-            />
-          ))}
-        </div>
-        <p className="text-center text-gray-600 mt-8">Loading agents...</p>
+        <LoadingSpinner />
       </main>
     )
   }
@@ -67,19 +81,42 @@ export default function HomePage() {
     )
   }
 
+  const useVirtualScroll = agents.length > VIRTUAL_SCROLL_THRESHOLD
+  const columnCount = Math.floor(dimensions.width / 320) || 1
+  const columnWidth = 320
+  const rowHeight = 450
+
   return (
     <main className="p-8">
-      <h1 className="text-3xl font-bold mb-8">Agents</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {agents.map((agent) => (
-          <AgentCard
-            key={agent.agent_id}
-            agent={agent}
-            onView={() => handleView(agent.agent_id)}
-            onDelete={() => handleDelete(agent.agent_id)}
+      <h1 className="text-3xl font-bold mb-8">
+        Agents {agents.length > 0 && `(${agents.length})`}
+      </h1>
+
+      {useVirtualScroll ? (
+        <div className="flex justify-center">
+          <VirtualList
+            agents={agents}
+            columnCount={columnCount}
+            columnWidth={columnWidth}
+            rowHeight={rowHeight}
+            height={dimensions.height}
+            width={dimensions.width}
+            onView={handleView}
+            onDelete={handleDelete}
           />
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {agents.map((agent) => (
+            <AgentCard
+              key={agent.agent_id}
+              agent={agent}
+              onView={() => handleView(agent.agent_id)}
+              onDelete={() => handleDelete(agent.agent_id)}
+            />
+          ))}
+        </div>
+      )}
     </main>
   )
 }

@@ -1,16 +1,7 @@
-// @CODE:AGENT-CARD-001-HOOK-001
+// @CODE:FRONTEND-INTEGRATION-001:AGENTS-HOOK
 import { useQuery } from '@tanstack/react-query'
-import { apiClient } from '@/lib/api/client'
-import { AgentCardDataSchema, type AgentCardData } from '@/lib/api/types'
-import { z } from 'zod'
-
-const AgentsResponseSchema = z.object({
-  agents: z.array(AgentCardDataSchema),
-})
-
-interface AgentsResponse {
-  agents: AgentCardData[]
-}
+import { fetchAgents, type FetchAgentsParams } from '@/lib/api/agents'
+import type { AgentCardData } from '@/lib/api/types'
 
 interface UseAgentsReturn {
   agents: AgentCardData[]
@@ -19,32 +10,16 @@ interface UseAgentsReturn {
   refetch: () => Promise<unknown>
 }
 
-async function fetchAgents(): Promise<AgentsResponse> {
-  const { data } = await apiClient.get<AgentsResponse>('/agents')
-
-  // Validate response data with Zod
-  try {
-    const validated = AgentsResponseSchema.parse(data)
-    return validated
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error('Agent data validation failed:', error.errors)
-      throw new Error(`Invalid agent data: ${error.errors.map(e => e.message).join(', ')}`)
-    }
-    throw error
-  }
-}
-
-export function useAgents(): UseAgentsReturn {
-  const { data, isLoading, error, refetch } = useQuery<AgentsResponse, Error>({
-    queryKey: ['agents'],
-    queryFn: fetchAgents,
+export function useAgents(params?: FetchAgentsParams): UseAgentsReturn {
+  const { data, isLoading, error, refetch } = useQuery<AgentCardData[], Error>({
+    queryKey: ['agents', params],
+    queryFn: () => fetchAgents(params),
     retry: false,
     staleTime: 30000,
   })
 
   return {
-    agents: data?.agents ?? [],
+    agents: data ?? [],
     isLoading,
     error: error ?? null,
     refetch,

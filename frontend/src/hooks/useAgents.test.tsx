@@ -1,18 +1,16 @@
-// @TEST:AGENT-CARD-001-HOOK-001
+// @TEST:FRONTEND-INTEGRATION-001:AGENTS-HOOK
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAgents } from './useAgents'
-import { apiClient } from '@/lib/api/client'
+import * as agentsApi from '@/lib/api/agents'
 import type { ReactNode } from 'react'
 
-vi.mock('@/lib/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
-  },
+vi.mock('@/lib/api/agents', () => ({
+  fetchAgents: vi.fn(),
 }))
 
-const mockApiClient = apiClient as { get: ReturnType<typeof vi.fn> }
+const mockFetchAgents = agentsApi.fetchAgents as ReturnType<typeof vi.fn>
 
 const mockAgentsData = {
   agents: [
@@ -68,9 +66,7 @@ describe('useAgents', () => {
 
   describe('Successful Data Fetching', () => {
     it('should fetch agents data successfully', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: mockAgentsData,
-      })
+      mockFetchAgents.mockResolvedValueOnce(mockAgentsData.agents)
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -89,24 +85,20 @@ describe('useAgents', () => {
       expect(result.current.error).toBeNull()
     })
 
-    it('should call the correct API endpoint', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: mockAgentsData,
-      })
+    it('should call fetchAgents function', async () => {
+      mockFetchAgents.mockResolvedValueOnce(mockAgentsData.agents)
 
       renderHook(() => useAgents(), {
         wrapper: createWrapper(),
       })
 
       await waitFor(() => {
-        expect(mockApiClient.get).toHaveBeenCalledWith('/agents')
+        expect(mockFetchAgents).toHaveBeenCalledWith(undefined)
       })
     })
 
     it('should return empty array when no agents exist', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: { agents: [] },
-      })
+      mockFetchAgents.mockResolvedValueOnce([])
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -123,7 +115,7 @@ describe('useAgents', () => {
 
   describe('Loading States', () => {
     it('should show loading state initially', () => {
-      mockApiClient.get.mockImplementation(() => new Promise(() => {}))
+      mockFetchAgents.mockImplementation(() => new Promise(() => {}))
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -134,9 +126,7 @@ describe('useAgents', () => {
     })
 
     it('should transition from loading to loaded', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: mockAgentsData,
-      })
+      mockFetchAgents.mockResolvedValueOnce(mockAgentsData.agents)
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -154,7 +144,7 @@ describe('useAgents', () => {
 
   describe('Error Handling', () => {
     it('should handle network errors', async () => {
-      mockApiClient.get.mockRejectedValueOnce(new Error('Network error'))
+      mockFetchAgents.mockRejectedValueOnce(new Error('Network error'))
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -169,7 +159,7 @@ describe('useAgents', () => {
     })
 
     it('should handle HTTP error responses', async () => {
-      mockApiClient.get.mockRejectedValueOnce({
+      mockFetchAgents.mockRejectedValueOnce({
         response: {
           status: 500,
           statusText: 'Internal Server Error',
@@ -189,7 +179,7 @@ describe('useAgents', () => {
     })
 
     it('should handle 404 errors', async () => {
-      mockApiClient.get.mockRejectedValueOnce({
+      mockFetchAgents.mockRejectedValueOnce({
         response: {
           status: 404,
           statusText: 'Not Found',
@@ -208,7 +198,7 @@ describe('useAgents', () => {
     })
 
     it('should handle malformed JSON response', async () => {
-      mockApiClient.get.mockRejectedValueOnce(new Error('Invalid JSON'))
+      mockFetchAgents.mockRejectedValueOnce(new Error('Invalid JSON'))
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -224,9 +214,7 @@ describe('useAgents', () => {
 
   describe('Refetch Functionality', () => {
     it('should provide refetch function', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: mockAgentsData,
-      })
+      mockFetchAgents.mockResolvedValueOnce(mockAgentsData.agents)
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -241,20 +229,14 @@ describe('useAgents', () => {
     })
 
     it('should refetch data when refetch is called', async () => {
-      mockApiClient.get
-        .mockResolvedValueOnce({
-          data: mockAgentsData,
-        })
-        .mockResolvedValueOnce({
-          data: {
-            agents: [
-              {
-                ...mockAgentsData.agents[0],
-                level: 4,
-              },
-            ],
+      mockFetchAgents
+        .mockResolvedValueOnce(mockAgentsData.agents)
+        .mockResolvedValueOnce([
+          {
+            ...mockAgentsData.agents[0],
+            level: 4,
           },
-        })
+        ])
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -278,9 +260,7 @@ describe('useAgents', () => {
 
   describe('Data Transformation', () => {
     it('should properly type agent data', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: mockAgentsData,
-      })
+      mockFetchAgents.mockResolvedValueOnce(mockAgentsData.agents)
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -301,9 +281,7 @@ describe('useAgents', () => {
     })
 
     it('should handle agents with null next_level_xp', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: mockAgentsData,
-      })
+      mockFetchAgents.mockResolvedValueOnce(mockAgentsData.agents)
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -320,16 +298,12 @@ describe('useAgents', () => {
 
   describe('Edge Cases', () => {
     it('should handle undefined last_used field', async () => {
-      mockApiClient.get.mockResolvedValueOnce({
-        data: {
-          agents: [
-            {
-              ...mockAgentsData.agents[0],
-              last_used: undefined,
-            },
-          ],
+      mockFetchAgents.mockResolvedValueOnce([
+        {
+          ...mockAgentsData.agents[0],
+          last_used: undefined,
         },
-      })
+      ])
 
       const { result } = renderHook(() => useAgents(), {
         wrapper: createWrapper(),
@@ -346,16 +320,12 @@ describe('useAgents', () => {
       const allRarities = ['Common', 'Rare', 'Epic', 'Legendary'] as const
 
       for (const rarity of allRarities) {
-        mockApiClient.get.mockResolvedValueOnce({
-          data: {
-            agents: [
-              {
-                ...mockAgentsData.agents[0],
-                rarity,
-              },
-            ],
+        mockFetchAgents.mockResolvedValueOnce([
+          {
+            ...mockAgentsData.agents[0],
+            rarity,
           },
-        })
+        ])
 
         const { result } = renderHook(() => useAgents(), {
           wrapper: createWrapper(),
