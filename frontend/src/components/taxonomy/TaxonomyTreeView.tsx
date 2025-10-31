@@ -1,9 +1,10 @@
 // @CODE:TAXONOMY-VIZ-001-003
 // @CODE:TAXONOMY-VIZ-001-004
 // @CODE:TAXONOMY-VIZ-001-005
-// TaxonomyTreeView component - React Flow canvas with Dagre layout, custom nodes and edges
+// @CODE:TAXONOMY-VIZ-001-007
+// TaxonomyTreeView component - React Flow canvas with node selection and detail panel
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -13,6 +14,7 @@ import {
   useEdgesState,
   type Node,
   type Edge,
+  type NodeMouseHandler,
 } from '@xyflow/react'
 import { useQuery } from '@tanstack/react-query'
 import dagre from 'dagre'
@@ -20,6 +22,7 @@ import { fetchTaxonomyTree } from '../../lib/api/taxonomy'
 import type { TaxonomyNode } from '../../lib/api/types'
 import TaxonomyNodeComponent from './TaxonomyNode'
 import TaxonomyEdgeComponent from './TaxonomyEdge'
+import TaxonomyDetailPanel from './TaxonomyDetailPanel'
 import '@xyflow/react/dist/style.css'
 
 interface FlowNode extends Node {
@@ -99,6 +102,8 @@ const edgeTypes = {
 }
 
 export default function TaxonomyTreeView() {
+  const [selectedNode, setSelectedNode] = useState<TaxonomyNode | null>(null)
+
   const {
     data: taxonomyData,
     isLoading,
@@ -121,6 +126,19 @@ export default function TaxonomyTreeView() {
 
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [edges, , onEdgesChange] = useEdgesState(initialEdges)
+
+  const onNodeClick: NodeMouseHandler = useCallback((_, node) => {
+    const flowNode = node as FlowNode
+    setSelectedNode(flowNode.data.taxonomyNode)
+  }, [])
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null)
+  }, [])
+
+  const handleCloseDetailPanel = useCallback(() => {
+    setSelectedNode(null)
+  }, [])
 
   const onInit = useCallback(() => {
     // React Flow initialization callback
@@ -145,7 +163,7 @@ export default function TaxonomyTreeView() {
   }
 
   return (
-    <div className="h-full w-full">
+    <div className="relative h-full w-full">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -153,6 +171,8 @@ export default function TaxonomyTreeView() {
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         onInit={onInit}
         fitView
       >
@@ -160,6 +180,7 @@ export default function TaxonomyTreeView() {
         <Controls />
         <MiniMap />
       </ReactFlow>
+      <TaxonomyDetailPanel node={selectedNode} onClose={handleCloseDetailPanel} />
     </div>
   )
 }
