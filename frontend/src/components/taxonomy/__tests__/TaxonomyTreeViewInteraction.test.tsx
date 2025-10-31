@@ -2,7 +2,7 @@
 // TaxonomyTreeView interaction tests - node selection and highlighting
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import TaxonomyTreeView from '../TaxonomyTreeView'
@@ -40,10 +40,11 @@ vi.mock('@xyflow/react', () => ({
   Background: () => <div data-testid="background" />,
   Controls: () => <div data-testid="controls" />,
   MiniMap: () => <div data-testid="minimap" />,
-  useNodesState: (initialNodes: unknown[]) => {
-    const [nodes, setNodes] = vi.fn(() => [initialNodes, vi.fn()])() as [unknown[], (nodes: unknown[]) => void]
-    return [nodes, setNodes, vi.fn()]
-  },
+  useNodesState: (initialNodes: unknown[]) => [
+    initialNodes,
+    vi.fn(),
+    vi.fn(),
+  ],
   useEdgesState: (initialEdges: unknown[]) => [
     initialEdges,
     vi.fn(),
@@ -144,8 +145,10 @@ describe('TaxonomyTreeView - Node Selection & Highlighting', () => {
     await userEvent.click(node)
 
     await waitFor(() => {
-      expect(screen.getByText('Technology')).toBeInTheDocument()
-      expect(screen.getByText(/level 1/i)).toBeInTheDocument()
+      const detailPanel = screen.getByTestId('detail-panel')
+      // Technology appears in both name and path sections - use getAllByText
+      expect(within(detailPanel).getAllByText('Technology').length).toBeGreaterThan(0)
+      expect(within(detailPanel).getByText(/level 1/i)).toBeInTheDocument()
     })
   })
 
@@ -190,7 +193,8 @@ describe('TaxonomyTreeView - Node Selection & Highlighting', () => {
 
     await waitFor(() => {
       const detailPanel = screen.getByTestId('detail-panel')
-      expect(detailPanel).toHaveTextContent('Technology')
+      // Technology appears in both name and path sections - use getAllByText
+      expect(within(detailPanel).getAllByText('Technology').length).toBeGreaterThan(0)
     })
 
     // Select second node
@@ -199,7 +203,8 @@ describe('TaxonomyTreeView - Node Selection & Highlighting', () => {
 
     await waitFor(() => {
       const detailPanel = screen.getByTestId('detail-panel')
-      expect(detailPanel).toHaveTextContent('Science')
+      // Science appears in both name and path sections - use getAllByText
+      expect(within(detailPanel).getAllByText('Science').length).toBeGreaterThan(0)
     })
   })
 })
