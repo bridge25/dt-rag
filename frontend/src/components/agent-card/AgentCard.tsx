@@ -21,6 +21,17 @@ const rarityBorderStyles = {
   Legendary: 'border-accent-gold',
 }
 
+// @CODE:FRONTEND-INTEGRATION-001:MEMO-CARDS
+const arePropsEqual = (prevProps: AgentCardProps, nextProps: AgentCardProps) => {
+  return (
+    prevProps.agent.agent_id === nextProps.agent.agent_id &&
+    prevProps.agent.current_xp === nextProps.agent.current_xp &&
+    prevProps.agent.level === nextProps.agent.level &&
+    prevProps.agent.rarity === nextProps.agent.rarity &&
+    prevProps.className === nextProps.className
+  )
+}
+
 export const AgentCard = memo<AgentCardProps>(function AgentCard({ agent, onView, onDelete, className }) {
   return (
     <article
@@ -62,4 +73,4 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({ agent, onView
       <ActionButtons onView={onView} onDelete={onDelete} agentName={agent.name} />
     </article>
   )
-})
+}, arePropsEqual)

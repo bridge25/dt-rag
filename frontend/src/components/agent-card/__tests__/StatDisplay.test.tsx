@@ -45,19 +45,19 @@ describe('StatDisplay', () => {
     })
 
     it('should apply primary variant styling', () => {
-      const { container } = render(<StatDisplay label="Test" value={100} variant="primary" />)
+      render(<StatDisplay label="Test" value={100} variant="primary" />)
       const valueElement = screen.getByText('100')
       expect(valueElement.className).toContain('text-primary')
     })
 
     it('should apply success variant styling', () => {
-      const { container } = render(<StatDisplay label="Test" value={100} variant="success" />)
+      render(<StatDisplay label="Test" value={100} variant="success" />)
       const valueElement = screen.getByText('100')
       expect(valueElement.className).toContain('text-green')
     })
 
     it('should apply warning variant styling', () => {
-      const { container } = render(<StatDisplay label="Test" value={100} variant="warning" />)
+      render(<StatDisplay label="Test" value={100} variant="warning" />)
       const valueElement = screen.getByText('100')
       expect(valueElement.className).toContain('text-yellow')
     })

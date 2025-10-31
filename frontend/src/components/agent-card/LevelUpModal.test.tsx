@@ -1,6 +1,6 @@
 // @TEST:AGENT-CARD-001-ANIM-001
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import type { Rarity } from '@/lib/api/types'
 
 vi.mock('react-confetti', () => ({

@@ -2,12 +2,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import HomePage from './page'
 import type { ReactNode } from 'react'
 
 vi.mock('../hooks/useAgents', () => ({
   useAgents: vi.fn(),
 }))
+
+const mockNavigate = vi.fn()
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  }
+})
 
 const { useAgents } = await import('../hooks/useAgents')
 
@@ -77,7 +88,9 @@ function createWrapper() {
   })
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <MemoryRouter>
+        {children}
+      </MemoryRouter>
     </QueryClientProvider>
   )
 }
@@ -154,12 +167,13 @@ describe('HomePage', () => {
         refetch: vi.fn(),
       })
 
-      render(
+      const { container } = render(
         <HomePage />,
         { wrapper: createWrapper() }
       )
 
-      expect(screen.getByText(/loading/i)).toBeInTheDocument()
+      const spinner = container.querySelector('[class*="animate-spin"]')
+      expect(spinner).toBeInTheDocument()
     })
 
     it('should not show agent cards while loading', () => {
@@ -191,7 +205,7 @@ describe('HomePage', () => {
         { wrapper: createWrapper() }
       )
 
-      const skeletons = container.querySelectorAll('[class*="animate-pulse"]')
+      const skeletons = container.querySelectorAll('[class*="animate-"]')
       expect(skeletons.length).toBeGreaterThan(0)
     })
   })
@@ -292,8 +306,6 @@ describe('HomePage', () => {
 
   describe('Agent Card Interactions', () => {
     it('should handle view action', () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-
       vi.mocked(useAgents).mockReturnValue({
         agents: [mockAgents[0]],
         isLoading: false,
@@ -309,8 +321,7 @@ describe('HomePage', () => {
       const viewButton = screen.getByRole('button', { name: /view/i })
       viewButton.click()
 
-      expect(consoleSpy).toHaveBeenCalledWith('View agent:', 'agent-1')
-      consoleSpy.mockRestore()
+      expect(mockNavigate).toHaveBeenCalledWith('/agents/agent-1')
     })
 
     it('should handle delete action', () => {

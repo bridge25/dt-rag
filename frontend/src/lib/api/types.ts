@@ -439,3 +439,53 @@ export const AgentCardDataSchema = z.object({
 )
 
 export type AgentCardData = z.infer<typeof AgentCardDataSchema>
+
+// ============================================================================
+// @CODE:FRONTEND-INTEGRATION-001:TYPES-UPDATE
+// Additional Types for Backend Integration
+// ============================================================================
+
+export type AgentCardResponse = AgentCardData
+
+export const CoverageResponseSchema = z.object({
+  agent_id: z.string(),
+  coverage_percentage: z.number(),
+  total_documents: z.number(),
+  covered_documents: z.number(),
+  taxonomy_depth: z.number(),
+})
+
+export type CoverageResponse = z.infer<typeof CoverageResponseSchema>
+
+export const AwardXPRequestSchema = z.object({
+  agentId: z.string(),
+  amount: z.number().positive(),
+  reason: z.enum(['chat', 'positive_feedback', 'ragas_bonus']),
+})
+
+export type AwardXPRequestType = z.infer<typeof AwardXPRequestSchema>
+
+export const AwardXPResponseSchema = z.object({
+  agent_id: z.string(),
+  current_xp: z.number(),
+  new_level: z.number(),
+  leveled_up: z.boolean(),
+})
+
+export type AwardXPResponseType = z.infer<typeof AwardXPResponseSchema>
+
+export const CoverageHistoryItemSchema = z.object({
+  date: z.string(),
+  coverage: z.number(),
+  xp: z.number(),
+})
+
+export type CoverageHistoryItemType = z.infer<typeof CoverageHistoryItemSchema>
+
+export const CoverageHistoryResponseSchema = z.object({
+  agent_id: z.string(),
+  history: z.array(CoverageHistoryItemSchema),
+  interval: z.enum(['daily', 'weekly', 'monthly']),
+})
+
+export type CoverageHistoryResponseType = z.infer<typeof CoverageHistoryResponseSchema>
