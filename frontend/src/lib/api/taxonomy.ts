@@ -13,7 +13,10 @@ export interface FetchTaxonomyTreeParams {
 export async function fetchTaxonomyTree(
   params?: FetchTaxonomyTreeParams
 ): Promise<TaxonomyNode> {
-  const response = await apiClient.get<TaxonomyNode>('/api/taxonomy/tree', params)
+  const response = await apiClient.get<TaxonomyNode>(
+    '/api/taxonomy/tree',
+    params as Record<string, unknown>
+  )
   const validated = TaxonomyNodeSchema.parse(response)
   return validated
 }
