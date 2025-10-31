@@ -28,11 +28,12 @@ describe('App Router', () => {
     })
   })
 
-  it('should provide QueryClientProvider', async () => {
-    render(<App />)
-    
-    await waitFor(() => {
-      expect(screen.getByText('HomePage')).toBeInTheDocument()
-    })
+  it('should provide QueryClientProvider context', () => {
+    const { container } = render(<App />)
+
+    // Verify that the app renders without QueryClient errors
+    // If QueryClientProvider is missing, the app would throw errors
+    expect(container.firstChild).toBeTruthy()
+    expect(screen.getByText('HomePage')).toBeInTheDocument()
   })
 })
