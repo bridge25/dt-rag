@@ -2,9 +2,10 @@
 // @CODE:TAXONOMY-VIZ-001-004
 // @CODE:TAXONOMY-VIZ-001-005
 // @CODE:TAXONOMY-VIZ-001-007
-// TaxonomyTreeView component - React Flow canvas with node selection and detail panel
+// @CODE:TAXONOMY-VIZ-001-012
+// TaxonomyTreeView component - optimized for 500+ nodes with performance monitoring
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import {
   ReactFlow,
   Background,
@@ -103,6 +104,7 @@ const edgeTypes = {
 
 export default function TaxonomyTreeView() {
   const [selectedNode, setSelectedNode] = useState<TaxonomyNode | null>(null)
+  const [showPerformanceWarning, setShowPerformanceWarning] = useState(false)
 
   const {
     data: taxonomyData,
@@ -119,13 +121,34 @@ export default function TaxonomyTreeView() {
     if (!taxonomyData) {
       return { nodes: [], edges: [] }
     }
+
+    const startTime = performance.now()
     const { nodes, edges } = convertTaxonomyToFlow(taxonomyData)
     const layoutedNodes = applyDagreLayout(nodes, edges)
+    const endTime = performance.now()
+
+    // Log performance metrics for large graphs
+    if (nodes.length > 100) {
+      console.log(`[TaxonomyTreeView] Processed ${nodes.length} nodes in ${Math.round(endTime - startTime)}ms`)
+    }
+
+    // Show warning for very large graphs
+    if (nodes.length > 500) {
+      setShowPerformanceWarning(true)
+    }
+
     return { nodes: layoutedNodes, edges }
   }, [taxonomyData])
 
   const [nodes, , onNodesChange] = useNodesState(initialNodes)
   const [edges, , onEdgesChange] = useEdgesState(initialEdges)
+
+  // Monitor node count
+  useEffect(() => {
+    if (nodes.length > 500) {
+      console.warn(`[TaxonomyTreeView] Rendering ${nodes.length} nodes - performance may be impacted`)
+    }
+  }, [nodes.length])
 
   const onNodeClick: NodeMouseHandler = useCallback((_, node) => {
     const flowNode = node as FlowNode
@@ -164,6 +187,39 @@ export default function TaxonomyTreeView() {
 
   return (
     <div className="relative h-full w-full">
+      {/* Performance Warning Banner */}
+      {showPerformanceWarning && (
+        <div className="absolute left-1/2 top-4 z-20 -translate-x-1/2 transform">
+          <div className="flex items-center gap-2 rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2 shadow-lg">
+            <svg
+              className="h-5 w-5 text-yellow-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <p className="text-sm text-yellow-800">
+              Large taxonomy ({nodes.length} nodes) - zoom and pan performance may be affected
+            </p>
+            <button
+              onClick={() => setShowPerformanceWarning(false)}
+              className="ml-2 text-yellow-600 hover:text-yellow-800"
+              aria-label="Dismiss warning"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -175,10 +231,13 @@ export default function TaxonomyTreeView() {
         onPaneClick={onPaneClick}
         onInit={onInit}
         fitView
+        minZoom={0.1}
+        maxZoom={2}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
       >
         <Background />
         <Controls />
-        <MiniMap />
+        <MiniMap nodeStrokeWidth={3} zoomable pannable />
       </ReactFlow>
       <TaxonomyDetailPanel node={selectedNode} onClose={handleCloseDetailPanel} />
     </div>
