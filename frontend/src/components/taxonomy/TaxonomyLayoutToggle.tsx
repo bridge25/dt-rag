@@ -1,5 +1,7 @@
 // @CODE:TAXONOMY-VIZ-001-014
+// @CODE:TAXONOMY-VIZ-001-016
 // Layout toggle button - switch between tree (Dagre) and radial (D3 Force) layouts
+// Accessibility: aria-hidden for decorative SVGs
 
 import type { LayoutType } from './taxonomyLayouts'
 
@@ -31,6 +33,7 @@ export default function TaxonomyLayoutToggle({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -49,6 +52,7 @@ export default function TaxonomyLayoutToggle({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"

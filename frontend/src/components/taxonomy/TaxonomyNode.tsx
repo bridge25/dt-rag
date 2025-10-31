@@ -1,5 +1,7 @@
 // @CODE:TAXONOMY-VIZ-001-004
+// @CODE:TAXONOMY-VIZ-001-016
 // Custom Taxonomy Node Component - displays name, level, and document count
+// Accessibility: role, tab index, ARIA labels, screen reader support
 
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
@@ -19,12 +21,15 @@ function TaxonomyNode({ data, selected }: TaxonomyNodeProps) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       className={`
         min-w-[150px] rounded-lg border-2 bg-white px-4 py-3 shadow-md
         transition-all duration-200 hover:shadow-lg
         ${selected ? 'ring-2 ring-blue-500 border-blue-400' : 'border-gray-300'}
       `}
-      aria-label={`Taxonomy node: ${taxonomyNode.name}`}
+      aria-label={`Taxonomy node: ${taxonomyNode.name}, Level ${taxonomyNode.level}, ${documentCount} documents`}
+      aria-selected={selected}
     >
       <Handle type="target" position={Position.Top} />
 
@@ -41,13 +46,14 @@ function TaxonomyNode({ data, selected }: TaxonomyNodeProps) {
           </span>
 
           {/* Document Count */}
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1" aria-label={`${documentCount} documents`}>
             <svg
               className="h-3 w-3"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -65,6 +71,7 @@ function TaxonomyNode({ data, selected }: TaxonomyNodeProps) {
           <div
             data-testid="children-indicator"
             className="mt-1 flex items-center gap-1 text-xs text-gray-500"
+            aria-label={`${taxonomyNode.children?.length} subcategories`}
           >
             <svg
               className="h-3 w-3"
@@ -72,6 +79,7 @@ function TaxonomyNode({ data, selected }: TaxonomyNodeProps) {
               stroke="currentColor"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"

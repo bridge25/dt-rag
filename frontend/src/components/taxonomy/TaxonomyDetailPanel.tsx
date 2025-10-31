@@ -1,5 +1,7 @@
 // @CODE:TAXONOMY-VIZ-001-007
+// @CODE:TAXONOMY-VIZ-001-016
 // Taxonomy Detail Panel - displays selected node information
+// Accessibility: complementary role, aria-label, focus ring
 
 import { type TaxonomyNode } from '../../lib/api/types'
 
@@ -17,16 +19,18 @@ export default function TaxonomyDetailPanel({
   return (
     <div
       data-testid="detail-panel"
+      role="complementary"
+      aria-label="Taxonomy node details"
       className="absolute right-0 top-0 z-10 h-full w-80 border-l border-gray-200 bg-white shadow-lg"
     >
       <div className="flex h-full flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-          <h3 className="text-lg font-semibold text-gray-900">Node Details</h3>
+          <h3 id="detail-panel-title" className="text-lg font-semibold text-gray-900">Node Details</h3>
           <button
             onClick={onClose}
             aria-label="Close detail panel"
-            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <svg
               className="h-5 w-5"
@@ -34,6 +38,7 @@ export default function TaxonomyDetailPanel({
               stroke="currentColor"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -82,6 +87,7 @@ export default function TaxonomyDetailPanel({
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path
                           strokeLinecap="round"

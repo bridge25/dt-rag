@@ -1,5 +1,7 @@
 // @CODE:TAXONOMY-VIZ-001-013
+// @CODE:TAXONOMY-VIZ-001-016
 // Taxonomy Search Filter - search and highlight nodes by name
+// Accessibility: aria-live for match count, focus ring for clear button
 
 import { useState, useCallback } from 'react'
 
@@ -48,13 +50,14 @@ export default function TaxonomySearchFilter({
             <button
               onClick={handleClear}
               aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <svg
                 className="h-4 w-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -69,7 +72,12 @@ export default function TaxonomySearchFilter({
 
         {/* Match Count */}
         {query && (
-          <div className="text-xs text-gray-600">
+          <div
+            className="text-xs text-gray-600"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {matchCount === 0 ? (
               <span className="text-red-600">No matches found</span>
             ) : (
