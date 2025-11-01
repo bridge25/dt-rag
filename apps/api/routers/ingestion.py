@@ -39,7 +39,8 @@ async def get_job_orchestrator() -> JobOrchestrator:
     "/upload",
     status_code=status.HTTP_202_ACCEPTED,
     summary="Upload document for processing",
-)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+    response_model=None,  # JSONResponse is not a Pydantic model
+)
 async def upload_document(
     file: UploadFile = File(...),
     taxonomy_path: Optional[str] = Form(None),
