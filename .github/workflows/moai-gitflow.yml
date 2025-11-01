@@ -5,9 +5,10 @@ name: "dt-rag GitFlow Automation"
 
 on:
   push:
-    branches: [develop, "feature/**"]
+    branches: [master, develop, "feature/**"]
   pull_request:
-    types: [opened, ready_for_review, converted_to_draft]
+    branches: [master]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
 
 jobs:
   moai-pipeline:
