@@ -7,7 +7,7 @@ on:
   push:
     branches: [master, develop, "feature/**"]
   pull_request:
-    branches: [master]
+    # No branch restriction - run CI/CD for ALL pull requests
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
 
 jobs:
