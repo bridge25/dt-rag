@@ -42,6 +42,7 @@ async def get_job_orchestrator() -> JobOrchestrator:
     response_model=None,  # JSONResponse is not a Pydantic model
 )
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     taxonomy_path: Optional[str] = Form(None),
     source_url: Optional[str] = Form(None),
@@ -49,20 +50,13 @@ async def upload_document(
     language: str = Form("ko"),
     priority: int = Form(5),
     orchestrator: JobOrchestrator = Depends(get_job_orchestrator),
-    http_request: Optional[Request] = None,
 ) -> JSONResponse:
     try:
-        correlation_id = (
-            http_request.headers.get("X-Correlation-ID")
-            if http_request
-            else str(uuid.uuid4())
-        )
+        correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
         if not correlation_id:
             correlation_id = str(uuid.uuid4())
 
-        idempotency_key = (
-            http_request.headers.get("X-Idempotency-Key") if http_request else None
-        )
+        idempotency_key = request.headers.get("X-Idempotency-Key")
 
         file_extension = file.filename.split(".")[-1].lower()
 
