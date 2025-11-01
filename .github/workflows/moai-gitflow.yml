@@ -86,13 +86,11 @@ jobs:
           distribution: "temurin"
           java-version: "21"
 
-      # TRUST 5 Principles — automated validation (if enabled)
-      {% if ENABLE_TRUST_5 -%}
+      # TRUST 5 Principles — automated validation
       - name: 🧭 Quality Principles Check
         run: |
           echo "✅ Quality validation is performed"
           echo "   - Automated quality checks enabled"
-      {% endif -%}
 
       # Ignore test failures on Draft PRs; fail CI on Ready PRs
       - name: Run language-aware tests
@@ -221,14 +219,11 @@ jobs:
             fi
           fi
 
-      # TAG system validation (if enabled)
-      {% if ENABLE_TAG_SYSTEM -%}
+      # TAG system validation
       - name: 🏷️ Traceability Validation
         run: |
           echo "✅ Traceability validation is handled automatically"
-      {% endif -%}
 
-      {% if ENABLE_ALFRED_COMMANDS -%}
       # Run per-branch stages
       - name: 📝 SPEC Stage (feature branch)
         if: startsWith(github.ref, 'refs/heads/feature/')
@@ -242,9 +237,7 @@ jobs:
         run: |
           echo "📝 Draft PR: TDD implementation stage"
           echo "- code-builder agent runs RED-GREEN-REFACTOR"
-          {% if ENABLE_TRUST_5 -%}
           echo "- Validate Quality Principles compliance"
-          {% endif -%}
 
       - name: 📚 SYNC Stage (Ready PR)
         if: github.event.pull_request.draft == false && github.event.action == 'ready_for_review'
@@ -252,7 +245,6 @@ jobs:
           echo "✅ Ready PR: documentation sync stage"
           echo "- doc-syncer agent synchronizes Living Documents"
           echo "- PR is ready for review"
-      {% endif -%}
 
       # Final result report
       - name: "🎯 dt-rag Pipeline Complete"
