@@ -14,6 +14,51 @@ DT-RAG는 동적 분류체계(Dynamic Taxonomy)와 사례 기반 추론(Case-Bas
 - MCP Protocol 기반 Tool Execution
 - PostgreSQL + pgvector 기반 프로덕션 인프라
 
+<!-- @DOC:TAXONOMY-VIZ-001-ROOT-README -->
+## 🌳 Frontend: Dynamic Taxonomy Visualization (v1.0.0)
+
+**구현 완료!** React Flow 기반 인터랙티브 Taxonomy 트리 시각화 시스템입니다.
+
+### 핵심 기능
+- **트리/방사형 레이아웃**: Dagre 기반 계층적 트리 및 방사형(Radial) 레이아웃 전환
+- **노드 인터랙션**: 클릭으로 상세 정보 표시, 확장/축소 토글
+- **검색 필터**: 실시간 노드 검색 및 하이라이트 (디바운싱 300ms)
+- **줌/팬 컨트롤**: React Flow Controls (확대/축소, 이동, 화면 맞춤)
+- **미니맵**: 전체 구조 탐색 지원 (우측 하단)
+- **성능 최적화**: 500+ 노드 렌더링, React.memo 메모이제이션
+- **접근성 개선**: ARIA 레이블, role 속성, focus 관리 (WCAG 2.1 AA 진행 중)
+
+### 기술 스택
+- **Visualization**: React Flow (XYFlow/react) 12.3.8
+- **Layout**: Dagre 0.8.5 (트리 레이아웃 알고리즘)
+- **Framework**: React 19.1.1 + TypeScript 5.9.3 + Vite 7.1.7
+- **Styling**: Tailwind CSS 4.1.16
+- **State Management**: TanStack Query 5.90.5
+
+### 컴포넌트 구조 (7개 파일)
+```
+frontend/src/components/taxonomy/
+├── TaxonomyTreeView.tsx          # 메인 React Flow 캔버스
+├── TaxonomyNode.tsx              # 커스텀 노드 컴포넌트
+├── TaxonomyEdge.tsx              # 커스텀 엣지 컴포넌트
+├── TaxonomyDetailPanel.tsx       # 노드 상세 정보 패널
+├── TaxonomySearchFilter.tsx      # 검색 필터
+├── TaxonomyLayoutToggle.tsx      # 레이아웃 전환 버튼
+└── taxonomyLayouts.ts            # Dagre 레이아웃 알고리즘
+```
+
+### 테스트 커버리지 (7개 파일)
+- **컴포넌트 테스트**: TaxonomyTreeView, TaxonomyNode, TaxonomyEdge, TaxonomyLayoutToggle, TaxonomySearchFilter
+- **통합 테스트**: TaxonomyTreeViewInteraction (노드 클릭, 확장/축소, 검색)
+- **성능 테스트**: TaxonomyTreeViewPerformance (500+ 노드 렌더링)
+
+### TAG 체인
+- **@SPEC:TAXONOMY-VIZ-001** (spec.md, plan.md, acceptance.md)
+- **@CODE:TAXONOMY-VIZ-001** (19 locations across 8 files)
+- **@TEST:TAXONOMY-VIZ-001** (8 locations across 7 files)
+
+---
+
 <!-- @DOC:AGENT-CARD-001-ROOT-README -->
 ## 🎮 Frontend: Pokemon-Style Agent Growth System (v2.1.0)
 

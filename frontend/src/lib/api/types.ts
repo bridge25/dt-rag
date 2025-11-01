@@ -88,10 +88,12 @@ export const TaxonomyNodeSchema: z.ZodType<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>
     level: number
+    document_count?: number
   }>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>
   level: number
+  document_count?: number
 }> = z.object({
   id: z.string(),
   name: z.string(),
@@ -100,6 +102,7 @@ export const TaxonomyNodeSchema: z.ZodType<{
   children: z.array(z.lazy(() => TaxonomyNodeSchema)).optional(),
   metadata: z.record(z.string(), z.any()).optional(),
   level: z.number(),
+  document_count: z.number().optional(),
 })
 
 export const ClassifyRequestSchema = z.object({
