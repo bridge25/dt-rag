@@ -1,9 +1,13 @@
 // @CODE:TAXONOMY-VIZ-001-004
 // @CODE:TAXONOMY-VIZ-001-016
+// @CODE:TAXONOMY-KEYNAV-002-003
+// @CODE:TAXONOMY-KEYNAV-002-006
 // Custom Taxonomy Node Component - displays name, level, and document count
-// Accessibility: role, tab index, ARIA labels, screen reader support
+// Accessibility: role, tab index, ARIA labels, screen reader support, WCAG 2.1 AA focus indicators
+// Keyboard navigation: forwardRef for programmatic focus
+// Focus indicator: 2px blue outline with 2px offset (focus-visible:outline-2)
 
-import { memo } from 'react'
+import { memo, forwardRef } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import type { TaxonomyNode as TaxonomyNodeData } from '../../lib/api/types'
 
@@ -14,23 +18,26 @@ interface TaxonomyNodeProps extends NodeProps {
   }
 }
 
-function TaxonomyNode({ data, selected }: TaxonomyNodeProps) {
-  const { taxonomyNode } = data
-  const documentCount = taxonomyNode.document_count ?? 0
-  const hasChildren = taxonomyNode.children && taxonomyNode.children.length > 0
+const TaxonomyNode = forwardRef<HTMLDivElement, TaxonomyNodeProps>(
+  function TaxonomyNode({ data, selected }, ref) {
+    const { taxonomyNode } = data
+    const documentCount = taxonomyNode.document_count ?? 0
+    const hasChildren = taxonomyNode.children && taxonomyNode.children.length > 0
 
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className={`
-        min-w-[150px] rounded-lg border-2 bg-white px-4 py-3 shadow-md
-        transition-all duration-200 hover:shadow-lg
-        ${selected ? 'ring-2 ring-blue-500 border-blue-400' : 'border-gray-300'}
-      `}
-      aria-label={`Taxonomy node: ${taxonomyNode.name}, Level ${taxonomyNode.level}, ${documentCount} documents`}
-      aria-selected={selected}
-    >
+    return (
+      <div
+        ref={ref}
+        role="button"
+        tabIndex={0}
+        className={`
+          min-w-[150px] rounded-lg border-2 bg-white px-4 py-3 shadow-md
+          transition-all duration-200 hover:shadow-lg
+          focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500
+          ${selected ? 'ring-2 ring-blue-500 border-blue-400' : 'border-gray-300'}
+        `}
+        aria-label={`Taxonomy node: ${taxonomyNode.name}, Level ${taxonomyNode.level}, ${documentCount} documents`}
+        aria-selected={selected}
+      >
       <Handle type="target" position={Position.Top} />
 
       <div className="flex flex-col gap-2">
@@ -94,8 +101,9 @@ function TaxonomyNode({ data, selected }: TaxonomyNodeProps) {
       </div>
 
       <Handle type="source" position={Position.Bottom} />
-    </div>
-  )
-}
+      </div>
+    )
+  }
+)
 
 export default memo(TaxonomyNode)

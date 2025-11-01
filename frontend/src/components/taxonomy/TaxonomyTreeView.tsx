@@ -5,7 +5,13 @@
 // @CODE:TAXONOMY-VIZ-001-012
 // @CODE:TAXONOMY-VIZ-001-013
 // @CODE:TAXONOMY-VIZ-001-014
+// @CODE:TAXONOMY-KEYNAV-002-004
+// @CODE:TAXONOMY-KEYNAV-002-010
+// @CODE:TAXONOMY-KEYNAV-002-012
 // TaxonomyTreeView component - optimized for 500+ nodes with performance monitoring
+// Tab navigation order: Search Filter → Layout Toggle → Zoom Controls → Nodes → Detail Panel
+// Arrow key navigation: integrated with keyboard mode management
+// Keyboard shortcuts: /, +/=, -, L, Home, ?
 
 import { useCallback, useMemo, useState, useEffect } from 'react'
 import {
@@ -15,6 +21,7 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Node,
   type Edge,
   type NodeMouseHandler,
@@ -27,7 +34,12 @@ import TaxonomyEdgeComponent from './TaxonomyEdge'
 import TaxonomyDetailPanel from './TaxonomyDetailPanel'
 import TaxonomySearchFilter from './TaxonomySearchFilter'
 import TaxonomyLayoutToggle from './TaxonomyLayoutToggle'
+import KeyboardShortcutsModal from './KeyboardShortcutsModal'
 import { applyLayout, type LayoutType } from './taxonomyLayouts'
+import { useArrowKeyNavigation } from '../../hooks/useArrowKeyNavigation'
+import { useFocusManagement } from '../../hooks/useFocusManagement'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import { useTaxonomyStore } from '../../stores/useTaxonomyStore'
 import '@xyflow/react/dist/style.css'
 
 interface FlowNode extends Node {
@@ -85,6 +97,14 @@ export default function TaxonomyTreeView() {
   const [showPerformanceWarning, setShowPerformanceWarning] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentLayout, setCurrentLayout] = useState<LayoutType>('tree')
+  const [showHelpModal, setShowHelpModal] = useState(false)
+
+  // Focus management hooks
+  const { focusedNodeId, setFocus } = useFocusManagement()
+  const keyboardMode = useTaxonomyStore((state) => state.keyboardMode)
+
+  // ReactFlow zoom controls
+  const { zoomIn, zoomOut } = useReactFlow()
 
   const {
     data: taxonomyData,
@@ -123,6 +143,12 @@ export default function TaxonomyTreeView() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, , onEdgesChange] = useEdgesState(initialEdges)
 
+  // Arrow key navigation - only enabled in navigation mode
+  useArrowKeyNavigation(
+    keyboardMode === 'navigation' ? (nodes as FlowNode[]) : [],
+    currentLayout
+  )
+
   // Monitor node count
   useEffect(() => {
     if (nodes.length > 500) {
@@ -147,6 +173,34 @@ export default function TaxonomyTreeView() {
   const handleLayoutChange = useCallback((newLayout: LayoutType) => {
     setCurrentLayout(newLayout)
   }, [])
+
+  // Keyboard shortcut handlers
+  const handleZoomIn = useCallback(() => zoomIn(), [zoomIn])
+  const handleZoomOut = useCallback(() => zoomOut(), [zoomOut])
+  const handleToggleLayout = useCallback(() => {
+    const newLayout = currentLayout === 'tree' ? 'radial' : 'tree'
+    setCurrentLayout(newLayout)
+  }, [currentLayout])
+  const handleShowHelp = useCallback(() => setShowHelpModal(true), [])
+  const handleCloseHelp = useCallback(() => setShowHelpModal(false), [])
+
+  // Get root node ID for Home shortcut
+  const rootNodeId = useMemo(() => {
+    const rootNode = nodes.find((node) => {
+      const taxonomyNode = (node as FlowNode).data.taxonomyNode
+      return !taxonomyNode.parent_id || taxonomyNode.level === 0
+    })
+    return rootNode?.id
+  }, [nodes])
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts({
+    onZoomIn: handleZoomIn,
+    onZoomOut: handleZoomOut,
+    onToggleLayout: handleToggleLayout,
+    onShowHelp: handleShowHelp,
+    rootNodeId,
+  })
 
   // Update node styles based on search
   useEffect(() => {
@@ -181,10 +235,28 @@ export default function TaxonomyTreeView() {
     )
   }, [searchQuery, setNodes])
 
-  const onNodeClick: NodeMouseHandler = useCallback((_, node) => {
-    const flowNode = node as FlowNode
-    setSelectedNode(flowNode.data.taxonomyNode)
-  }, [])
+  // Programmatically focus node when focusedNodeId changes
+  useEffect(() => {
+    if (focusedNodeId) {
+      // Use data-id attribute to find the node in the DOM
+      const nodeElement = document.querySelector(
+        `[data-id="${focusedNodeId}"] div[role="button"]`
+      ) as HTMLDivElement
+
+      if (nodeElement) {
+        nodeElement.focus()
+      }
+    }
+  }, [focusedNodeId])
+
+  const onNodeClick: NodeMouseHandler = useCallback(
+    (_, node) => {
+      const flowNode = node as FlowNode
+      setSelectedNode(flowNode.data.taxonomyNode)
+      setFocus(flowNode.id)
+    },
+    [setFocus]
+  )
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null)
@@ -280,6 +352,7 @@ export default function TaxonomyTreeView() {
         <MiniMap nodeStrokeWidth={3} zoomable pannable />
       </ReactFlow>
       <TaxonomyDetailPanel node={selectedNode} onClose={handleCloseDetailPanel} />
+      <KeyboardShortcutsModal isOpen={showHelpModal} onClose={handleCloseHelp} />
     </div>
   )
 }

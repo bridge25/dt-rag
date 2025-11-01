@@ -1,7 +1,7 @@
 ---
 id: TAXONOMY-VIZ-001
-version: 0.0.1
-status: draft
+version: 1.0.0
+status: implemented
 created: 2025-10-31
 updated: 2025-10-31
 author: @sonheungmin
@@ -13,11 +13,34 @@ labels:
   - typescript
   - visualization
   - taxonomy
+implementation_status:
+  core_features: completed
+  optional_features: completed
+  accessibility: in_progress
+  documentation: completed
 ---
 
 # SPEC-TAXONOMY-VIZ-001: Dynamic Taxonomy 시각화 with React Flow
 
 ## HISTORY
+
+### v1.0.0 (2025-10-31)
+- **STATUS**: 구현 완료 (implemented)
+- **CORE FEATURES**: 모든 필수 기능 구현 완료
+  - React Flow 기반 트리 시각화
+  - 노드 클릭 → 상세 정보 패널
+  - 노드 확장/축소 토글
+  - 검색 필터 (디바운싱 300ms)
+  - 미니맵 및 줌/팬 컨트롤
+- **OPTIONAL FEATURES**: 레이아웃 전환 기능 구현 완료
+  - 트리 레이아웃 (Dagre)
+  - 방사형 레이아웃 (Radial)
+- **ACCESSIBILITY**: 접근성 개선 진행 중
+  - ARIA 레이블 및 role 속성 추가
+  - Focus 관리 개선
+  - WCAG 2.1 AA 준수 목표
+- **TESTS**: 7개 테스트 파일, 8개 TEST TAG
+- **DOCUMENTATION**: README 업데이트 완료
 
 ### v0.0.1 (2025-10-31)
 - **INITIAL**: SPEC 초안 작성
