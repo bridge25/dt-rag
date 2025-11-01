@@ -102,6 +102,15 @@ jobs:
           # Python tests
           if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
             echo "➡️  Python tests"
+            # Install project dependencies first
+            if [ -f "requirements.txt" ]; then
+              pip install -q -r requirements.txt 2>/dev/null || true
+            elif [ -f "pyproject.toml" ]; then
+              pip install -q -e . 2>/dev/null || true
+            elif [ -f "setup.py" ]; then
+              pip install -q -e . 2>/dev/null || true
+            fi
+            # Install test dependencies
             pip install -q pytest pytest-cov 2>/dev/null || true
             if [ "$ALLOW_FAILURE" = "true" ]; then
               pytest --cov --cov-report=term-missing || true
@@ -111,8 +120,12 @@ jobs:
           fi
 
           # Node.js/Bun tests
-          if [ -f "package.json" ]; then
+          if [ -f "package.json" ] || [ -f "frontend/package.json" ]; then
             echo "➡️  Node.js/Bun tests"
+            # Check if frontend directory exists
+            if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+              cd frontend
+            fi
             if [ -f "bun.lockb" ]; then
               bun install --frozen-lockfile || bun install
               if [ "$ALLOW_FAILURE" = "true" ]; then
@@ -127,6 +140,10 @@ jobs:
               else
                 npm test --if-present -- --coverage
               fi
+            fi
+            # Return to root if we changed directory
+            if [ -d "../.git" ]; then
+              cd ..
             fi
           fi
 
