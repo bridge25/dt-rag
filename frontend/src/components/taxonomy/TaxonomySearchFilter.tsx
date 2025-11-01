@@ -1,7 +1,11 @@
 // @CODE:TAXONOMY-VIZ-001-013
 // @CODE:TAXONOMY-VIZ-001-016
+// @CODE:TAXONOMY-KEYNAV-002-004
+// @CODE:TAXONOMY-KEYNAV-002-006
 // Taxonomy Search Filter - search and highlight nodes by name
-// Accessibility: aria-live for match count, focus ring for clear button
+// Accessibility: aria-live for match count, focus ring for clear button, WCAG 2.1 AA compliant
+// Tab order: First interactive element in TaxonomyTreeView
+// Focus indicators: Blue ring (focus:ring-1) and border (focus:border-blue-500)
 
 import { useState, useCallback } from 'react'
 

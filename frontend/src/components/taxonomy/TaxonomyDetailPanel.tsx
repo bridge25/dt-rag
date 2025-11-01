@@ -1,9 +1,16 @@
 // @CODE:TAXONOMY-VIZ-001-007
 // @CODE:TAXONOMY-VIZ-001-016
+// @CODE:TAXONOMY-KEYNAV-002-005
+// @CODE:TAXONOMY-KEYNAV-002-006
 // Taxonomy Detail Panel - displays selected node information
-// Accessibility: complementary role, aria-label, focus ring
+// Accessibility: complementary role, aria-label, focus ring, focus trap, WCAG 2.1 AA compliant
+// Keyboard: Escape key closes panel, Tab stays within panel
+// Focus indicators: Blue ring (focus:ring-2) on close button
 
+import { useEffect, useRef, useCallback } from 'react'
+import FocusTrap from 'focus-trap-react'
 import { type TaxonomyNode } from '../../lib/api/types'
+import { useFocusManagement } from '../../hooks/useFocusManagement'
 
 interface TaxonomyDetailPanelProps {
   node: TaxonomyNode | null
@@ -14,21 +21,63 @@ export default function TaxonomyDetailPanel({
   node,
   onClose,
 }: TaxonomyDetailPanelProps) {
+  const { saveFocus, restoreFocus } = useFocusManagement()
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Close handler that restores focus
+  const handleClose = useCallback(() => {
+    restoreFocus()
+    onClose()
+  }, [restoreFocus, onClose])
+
+  // Save focus when panel opens
+  useEffect(() => {
+    if (node) {
+      saveFocus()
+    }
+  }, [node, saveFocus])
+
+  // Handle Escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClose()
+      }
+    }
+
+    if (node) {
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [node, handleClose])
+
   if (!node) return null
 
   return (
-    <div
-      data-testid="detail-panel"
-      role="complementary"
-      aria-label="Taxonomy node details"
-      className="absolute right-0 top-0 z-10 h-full w-80 border-l border-gray-200 bg-white shadow-lg"
+    <FocusTrap
+      active={true}
+      focusTrapOptions={{
+        allowOutsideClick: true,
+        escapeDeactivates: false, // We handle Escape manually
+        initialFocus: () => panelRef.current?.querySelector('button') || panelRef.current || undefined,
+      }}
     >
+      <div
+        ref={panelRef}
+        data-testid="detail-panel"
+        role="complementary"
+        aria-label="Taxonomy node details"
+        className="absolute right-0 top-0 z-10 h-full w-80 border-l border-gray-200 bg-white shadow-lg"
+      >
       <div className="flex h-full flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <h3 id="detail-panel-title" className="text-lg font-semibold text-gray-900">Node Details</h3>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             aria-label="Close detail panel"
             className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -143,6 +192,7 @@ export default function TaxonomyDetailPanel({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </FocusTrap>
   )
 }

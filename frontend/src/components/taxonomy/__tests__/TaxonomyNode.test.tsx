@@ -1,11 +1,29 @@
 // @TEST:TAXONOMY-VIZ-001-004
+// @TEST:TAXONOMY-KEYNAV-002-003
 // Custom Taxonomy Node Component tests
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { createRef } from 'react'
 import TaxonomyNode from '../TaxonomyNode'
 import type { NodeProps } from '@xyflow/react'
 import type { TaxonomyNode as TaxonomyNodeData } from '../../../lib/api/types'
+
+// Mock React Flow Handle component to avoid zustand provider errors
+vi.mock('@xyflow/react', async () => {
+  const actual = await vi.importActual('@xyflow/react')
+  return {
+    ...actual,
+    Handle: ({ type, position }: { type: string; position: string }) => (
+      <div data-testid={`handle-${type}-${position}`} />
+    ),
+  }
+})
+
+beforeAll(() => {
+  // Mock console.error to suppress React Flow warnings in tests
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+})
 
 const mockNodeData: TaxonomyNodeData = {
   id: 'node-1',
@@ -70,13 +88,13 @@ describe('TaxonomyNode', () => {
       selected: true,
     }
     render(<TaxonomyNode {...selectedProps} />)
-    const nodeElement = screen.getByText('Technology').closest('div')
+    const nodeElement = screen.getByRole('button', { name: /taxonomy node/i })
     expect(nodeElement).toHaveClass('ring-2', 'ring-blue-500')
   })
 
   it('should not apply selected styling when node is not selected', () => {
     render(<TaxonomyNode {...mockNodeProps} />)
-    const nodeElement = screen.getByText('Technology').closest('div')
+    const nodeElement = screen.getByRole('button', { name: /taxonomy node/i })
     expect(nodeElement).not.toHaveClass('ring-2')
   })
 
@@ -129,5 +147,39 @@ describe('TaxonomyNode', () => {
   it('should not display children indicator when node has no children', () => {
     render(<TaxonomyNode {...mockNodeProps} />)
     expect(screen.queryByTestId('children-indicator')).not.toBeInTheDocument()
+  })
+
+  // TAG-003: Focus management tests
+  describe('Focus Management (TAG-003)', () => {
+    it('should accept ref and forward it to the node element', () => {
+      const ref = createRef<HTMLDivElement>()
+      render(<TaxonomyNode {...mockNodeProps} ref={ref} />)
+
+      expect(ref.current).not.toBeNull()
+      expect(ref.current?.tagName).toBe('DIV')
+      expect(ref.current?.getAttribute('role')).toBe('button')
+    })
+
+    it('should allow programmatic focus via ref', () => {
+      const ref = createRef<HTMLDivElement>()
+      render(<TaxonomyNode {...mockNodeProps} ref={ref} />)
+
+      ref.current?.focus()
+      expect(ref.current).toBe(document.activeElement)
+    })
+
+    it('should apply focus-visible styles when focused', () => {
+      const ref = createRef<HTMLDivElement>()
+      render(<TaxonomyNode {...mockNodeProps} ref={ref} />)
+
+      ref.current?.focus()
+      expect(ref.current).toHaveClass('focus-visible:outline-blue-500')
+    })
+
+    it('should maintain tabIndex={0} for keyboard accessibility', () => {
+      render(<TaxonomyNode {...mockNodeProps} />)
+      const nodeElement = screen.getByRole('button', { name: /taxonomy node/i })
+      expect(nodeElement).toHaveAttribute('tabIndex', '0')
+    })
   })
 })
