@@ -47,6 +47,7 @@ openai>=1.0.0
 
 # Configuration
 python-dotenv>=1.0.0
+jsonschema>=4.20.0
 
 # Monitoring and Observability
 sentry-sdk[fastapi]>=1.40.0
