@@ -14,6 +14,7 @@ jobs:
   moai-pipeline:
     name: "dt-rag Pipeline"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -111,12 +112,12 @@ jobs:
             elif [ -f "setup.py" ]; then
               pip install -q -e . 2>/dev/null || true
             fi
-            # Install test dependencies
-            pip install -q pytest pytest-cov 2>/dev/null || true
+            # Install test dependencies with parallel execution support
+            pip install -q pytest pytest-cov pytest-xdist 2>/dev/null || true
             if [ "$ALLOW_FAILURE" = "true" ]; then
-              pytest --cov --cov-report=term-missing || true
+              pytest -n auto --cov --cov-report=term-missing || true
             else
-              pytest --cov --cov-report=term-missing
+              pytest -n auto --cov --cov-report=term-missing
             fi
           fi
 
