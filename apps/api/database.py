@@ -131,6 +131,7 @@ def get_uuid_type() -> Any:
 
 class TaxonomyNode(Base):
     __tablename__ = "taxonomy_nodes"
+    __table_args__ = {'extend_existing': True}
 
     node_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4
@@ -143,6 +144,7 @@ class TaxonomyNode(Base):
 
 class TaxonomyEdge(Base):
     __tablename__ = "taxonomy_edges"
+    __table_args__ = {'extend_existing': True}
 
     parent: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), ForeignKey("taxonomy_nodes.node_id"), primary_key=True
@@ -155,6 +157,7 @@ class TaxonomyEdge(Base):
 
 class TaxonomyMigration(Base):
     __tablename__ = "taxonomy_migrations"
+    __table_args__ = {'extend_existing': True}
 
     migration_id: Mapped[int] = mapped_column(
         Integer, primary_key=True, autoincrement=True
@@ -171,6 +174,7 @@ class TaxonomyMigration(Base):
 
 class Document(Base):
     __tablename__ = "documents"
+    __table_args__ = {'extend_existing': True}
 
     doc_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4
@@ -193,6 +197,7 @@ class Document(Base):
 
 class DocumentChunk(Base):
     __tablename__ = "chunks"
+    __table_args__ = {'extend_existing': True}
 
     chunk_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4
@@ -223,6 +228,7 @@ class DocumentChunk(Base):
 
 class Embedding(Base):
     __tablename__ = "embeddings"
+    __table_args__ = {'extend_existing': True}
 
     embedding_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4
@@ -244,6 +250,7 @@ class Embedding(Base):
 # @CODE:SCHEMA-SYNC-001:MODEL
 class DocTaxonomy(Base):
     __tablename__ = "doc_taxonomy"
+    __table_args__ = {'extend_existing': True}
 
     doc_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(),
@@ -272,6 +279,7 @@ class DocTaxonomy(Base):
 # @SPEC:CASEBANK-002 @IMPL:CASEBANK-002:0.2
 class CaseBank(Base):
     __tablename__ = "case_bank"
+    __table_args__ = {'extend_existing': True}
 
     case_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4
@@ -308,6 +316,7 @@ class CaseBank(Base):
 # @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.1
 class ExecutionLog(Base):
     __tablename__ = "execution_log"
+    __table_args__ = {'extend_existing': True}
 
     log_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     case_id: Mapped[uuid.UUID] = mapped_column(
@@ -332,6 +341,7 @@ class ExecutionLog(Base):
 # @SPEC:CONSOLIDATION-001 @IMPL:CONSOLIDATION-001:0.3
 class CaseBankArchive(Base):
     __tablename__ = "case_bank_archive"
+    __table_args__ = {'extend_existing': True}
 
     archive_id: Mapped[int] = mapped_column(
         Integer, primary_key=True, autoincrement=True
@@ -355,6 +365,7 @@ class CaseBankArchive(Base):
 
 class Agent(Base):
     __tablename__ = "agents"
+    __table_args__ = {'extend_existing': True}
 
     agent_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4
@@ -397,6 +408,7 @@ class Agent(Base):
 # @CODE:AGENT-GROWTH-004:MODEL - BackgroundTask for Phase 3 real background tasks
 class BackgroundTask(Base):
     __tablename__ = "background_tasks"
+    __table_args__ = {'extend_existing': True}
 
     task_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4
@@ -437,6 +449,7 @@ class BackgroundTask(Base):
 # @CODE:AGENT-GROWTH-004:MODEL - CoverageHistory for time-series coverage tracking
 class CoverageHistory(Base):
     __tablename__ = "coverage_history"
+    __table_args__ = {'extend_existing': True}
 
     history_id: Mapped[uuid.UUID] = mapped_column(
         get_uuid_type(), primary_key=True, default=uuid.uuid4

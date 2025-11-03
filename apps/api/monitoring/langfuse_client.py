@@ -28,8 +28,9 @@ try:
     from langfuse.decorators import observe
 
     _langfuse_available = True
-except ImportError:
-    logger.warning("langfuse package not installed. Run: pip install langfuse>=3.6.0")
+except (ImportError, Exception) as e:
+    # Catch all exceptions including Pydantic v1 type inference errors in Python 3.14+
+    logger.warning(f"langfuse not available: {type(e).__name__}: {e}")
 
     # Fallback: no-op decorator
     def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Any:
