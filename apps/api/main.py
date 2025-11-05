@@ -445,7 +445,7 @@ async def health_check() -> Dict[str, Any]:
 def custom_openapi() -> Dict[str, Any]:
     """Generate custom OpenAPI schema"""
     if app.openapi_schema:
-        return cast(Dict[str, Any], app.openapi_schema)
+        return app.openapi_schema
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
     if OPENAPI_SPEC_AVAILABLE:

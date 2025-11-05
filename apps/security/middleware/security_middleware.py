@@ -425,15 +425,15 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
             # Take the first IP in the chain
-            return cast(str, forwarded_for.split(",")[0].strip())
+            return forwarded_for.split(",")[0].strip()
 
         real_ip = request.headers.get("x-real-ip")
         if real_ip:
-            return cast(str, real_ip)
+            return real_ip
 
         # Fall back to direct connection
         if request.client is not None and hasattr(request.client, "host"):
-            return cast(str, request.client.host)
+            return request.client.host
 
         return "unknown"
 
@@ -745,8 +745,8 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         """Get client IP address"""
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
-            return cast(str, forwarded_for.split(",")[0].strip())
-        return cast(str, getattr(request.client, "host", "unknown"))
+            return forwarded_for.split(",")[0].strip()
+        return str(getattr(request.client, "host", "unknown"))
 
 
 class SecurityMiddlewareError(Exception):

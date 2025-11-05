@@ -452,8 +452,8 @@ class TestProductionReadiness:
         import queue
 
         generated_key = generate_production_key()
-        results = queue.Queue()
-        errors = queue.Queue()
+        results: queue.Queue[bool] = queue.Queue()
+        errors: queue.Queue[Exception] = queue.Queue()
 
         def validate_key():
             try:

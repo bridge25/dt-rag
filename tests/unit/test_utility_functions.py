@@ -475,7 +475,7 @@ class TestDataStructureHelpers:
             d: Dict[str, Any], parent_key: str = "", sep: str = "."
         ) -> Dict[str, Any]:
             """Flatten nested dictionary"""
-            items = []
+            items: list[tuple[str, Any]] = []
             for k, v in d.items():
                 new_key = f"{parent_key}{sep}{k}" if parent_key else k
                 if isinstance(v, dict):
@@ -525,7 +525,7 @@ class TestDataStructureHelpers:
             items: List[Dict[str, Any]], key: str
         ) -> Dict[str, List[Dict[str, Any]]]:
             """Group list of dictionaries by specified key"""
-            grouped = {}
+            grouped: dict[Any, list[dict[str, Any]]] = {}
             for item in items:
                 group_key = item.get(key)
                 if group_key not in grouped:
@@ -661,7 +661,7 @@ class TestCacheHelpers:
         """Test TTL (time-to-live) cache behavior"""
 
         def create_ttl_cache(ttl_seconds: float = 1.0) -> None:
-            cache = {}
+            cache: dict[str, tuple[Any, float]] = {}
 
             def ttl_cache(func):
                 def wrapper(*args, **kwargs):

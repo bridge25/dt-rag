@@ -211,7 +211,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache key consistency test failed: {e}")
 
     async def test_cache_expiration_handling(
-        self, redis_manager: RedisManager, mock_redis_client
+        self, redis_manager: RedisManager, mock_redis_client: Any
     ) -> None:
         """Test cache expiration and TTL handling"""
         if not COMPONENTS_AVAILABLE:
@@ -241,7 +241,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache expiration test failed: {e}")
 
     async def test_cache_invalidation_patterns(
-        self, redis_manager: RedisManager, mock_redis_client
+        self, redis_manager: RedisManager, mock_redis_client: Any
     ) -> None:
         """Test cache invalidation strategies"""
         if not COMPONENTS_AVAILABLE:
@@ -382,7 +382,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Real Redis integration test failed: {e}")
 
     async def test_cache_error_handling(
-        self, redis_manager: RedisManager, mock_redis_client
+        self, redis_manager: RedisManager, mock_redis_client: Any
     ) -> None:
         """Test error handling in cache operations"""
         if not COMPONENTS_AVAILABLE:

@@ -146,7 +146,7 @@ class TestSecuritySystemIntegration:
             pytest.skip(f"API key authentication test failed: {e}")
 
     async def test_jwt_authentication_flow(
-        self, client: AsyncClient, sample_user_data: Dict[str, Any], test_config
+        self, client: AsyncClient, sample_user_data: Dict[str, Any], test_config: Any
     ) -> None:
         """Test JWT authentication flow"""
         try:
@@ -376,7 +376,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"Authentication bypass test failed: {e}")
 
-    async def test_session_management(self, client: AsyncClient, test_config) -> None:
+    async def test_session_management(self, client: AsyncClient, test_config: Any) -> None:
         """Test session management security"""
         try:
             # Create expired JWT token
