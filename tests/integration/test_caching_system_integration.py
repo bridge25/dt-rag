@@ -156,7 +156,9 @@ class TestCachingSystemIntegration:
         try:
             # Test cache key generation
             cache_key = search_cache._generate_cache_key(
-                sample_search_query["query"], sample_search_query["filters"]
+                "search:",
+                query=sample_search_query["query"],
+                filters=sample_search_query["filters"],
             )
             assert isinstance(cache_key, str)
             assert len(cache_key) > 0
@@ -170,9 +172,8 @@ class TestCachingSystemIntegration:
             # Test cache set
             await search_cache.set_search_results(
                 sample_search_query["query"],
-                sample_search_query["filters"],
                 sample_search_results,
-                ttl=300,
+                filters=sample_search_query["filters"],
             )
 
             # In a real scenario, this would retrieve from cache
@@ -192,15 +193,17 @@ class TestCachingSystemIntegration:
             filters = {"category": "test", "tags": ["tag1", "tag2"]}
 
             # Generate cache key multiple times
-            key1 = search_cache._generate_cache_key(query, filters)
-            key2 = search_cache._generate_cache_key(query, filters)
+            key1 = search_cache._generate_cache_key("search:", query=query, filters=filters)
+            key2 = search_cache._generate_cache_key("search:", query=query, filters=filters)
 
             # Should be identical
             assert key1 == key2
 
             # Different filters should produce different keys
             different_filters = {"category": "other"}
-            key3 = search_cache._generate_cache_key(query, different_filters)
+            key3 = search_cache._generate_cache_key(
+                "search:", query=query, filters=different_filters
+            )
 
             assert key1 != key3
 

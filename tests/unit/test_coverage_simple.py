@@ -82,8 +82,8 @@ async def test_detect_gaps_no_gaps():
         total_chunks=100,
         coverage_percent=100.0,
         node_coverage={
-            "node1": {"document_count": 15, "chunk_count": 50},
-            "node2": {"document_count": 20, "chunk_count": 50},
+            "node1": 15,  # document count for this node
+            "node2": 20,  # document count for this node
         },
     )
 
@@ -101,8 +101,8 @@ async def test_detect_gaps_with_gaps():
         total_chunks=20,
         coverage_percent=50.0,
         node_coverage={
-            "node1": {"document_count": 2, "chunk_count": 10},
-            "node2": {"document_count": 3, "chunk_count": 10},
+            "node1": 2,  # document count for this node
+            "node2": 3,  # document count for this node
         },
     )
 
@@ -122,7 +122,7 @@ async def test_detect_gaps_threshold_variation():
         total_chunks=15,
         coverage_percent=30.0,
         node_coverage={
-            "node1": {"document_count": 3, "chunk_count": 15},
+            "node1": 3,  # document count for this node
         },
     )
 

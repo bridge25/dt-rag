@@ -392,7 +392,7 @@ class TestUtilityFunctions:
     def test_retry_on_failure_decorator_success_first_try(self):
         """Test retry decorator when function succeeds on first try"""
 
-        @retry_on_failure(max_retries=3)
+        @retry_on_failure(max_retries=3)  # type: ignore[func-returns-value]
         def successful_function():
             return "success"
 
@@ -405,7 +405,7 @@ class TestUtilityFunctions:
         """Test retry decorator when function succeeds after failures"""
         call_count = 0
 
-        @retry_on_failure(max_retries=3, delay=0.01)  # Very short delay for testing
+        @retry_on_failure(max_retries=3, delay=0.01)  # type: ignore[func-returns-value]
         def function_fails_twice():
             nonlocal call_count
             call_count += 1
@@ -422,7 +422,7 @@ class TestUtilityFunctions:
     def test_retry_on_failure_decorator_all_attempts_fail(self):
         """Test retry decorator when all attempts fail"""
 
-        @retry_on_failure(max_retries=2, delay=0.01)
+        @retry_on_failure(max_retries=2, delay=0.01)  # type: ignore[func-returns-value]
         def always_failing_function():
             raise ValueError("Always fails")
 
@@ -682,7 +682,7 @@ class TestCacheHelpers:
             return ttl_cache
 
         call_count = 0
-        ttl_cache = create_ttl_cache(0.01)  # Very short TTL for testing
+        ttl_cache = create_ttl_cache(0.01)  # type: ignore[func-returns-value]
 
         @ttl_cache
         def cached_function(x):

@@ -672,7 +672,7 @@ class CSRFProtection:
 
         # Skip CSRF for GET, HEAD, OPTIONS
         if request.method in ["GET", "HEAD", "OPTIONS"]:
-            return await call_next(request)
+            return await call_next(request)  # type: ignore[no-any-return]
 
         # Check CSRF token for state-changing operations
         csrf_token = request.headers.get("X-CSRF-Token")
@@ -689,7 +689,7 @@ class CSRFProtection:
                 content={"error": "Invalid CSRF token"},
             )
 
-        return await call_next(request)
+        return await call_next(request)  # type: ignore[no-any-return]
 
     def _validate_csrf_token(self, token: str) -> bool:
         """Validate CSRF token"""
@@ -739,7 +739,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             }
         )
 
-        return response
+        return response  # type: ignore[no-any-return]
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address"""

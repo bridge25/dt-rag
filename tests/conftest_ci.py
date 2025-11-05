@@ -12,7 +12,7 @@ import pytest
 import asyncio
 import tempfile
 import logging
-from typing import AsyncGenerator, Generator, Dict, Any, Optional
+from typing import AsyncGenerator, Generator, Dict, Any, Optional, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 from pathlib import Path
 
@@ -228,14 +228,14 @@ class GracefulDegradationHelper:
     """Helper class for graceful test degradation"""
 
     @staticmethod
-    def skip_if_service_unavailable(service: str):
+    def skip_if_service_unavailable(service: str) -> Callable[[Callable], Callable]:
         """Decorator to skip tests if service is unavailable
 
         Returns:
             Decorator function
         """
 
-        def decorator(func):
+        def decorator(func: Callable) -> Callable:
             if not has_service_available(service):
                 return pytest.mark.skip(reason=f"Service '{service}' not available")(
                     func
@@ -245,14 +245,16 @@ class GracefulDegradationHelper:
         return decorator
 
     @staticmethod
-    def mock_if_service_unavailable(service: str, mock_fixture: str):
+    def mock_if_service_unavailable(
+        service: str, mock_fixture: str
+    ) -> Callable[[Callable], Callable]:
         """Use mock fixture if service is unavailable
 
         Returns:
             Decorator function
         """
 
-        def decorator(func):
+        def decorator(func: Callable) -> Callable:
             if not has_service_available(service):
                 # Add mock fixture dependency
                 func = pytest.mark.usefixtures(mock_fixture)(func)
