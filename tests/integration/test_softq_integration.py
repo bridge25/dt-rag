@@ -70,4 +70,5 @@ async def test_multiple_iterations():
         q_learner.update_q_value(state_hash, action_idx, reward, "next_state")
 
     final_q_values = q_learner.get_q_values(state_hash)
+    assert final_q_values is not None, "Q-values should not be None"
     assert any(q > 0.5 for q in final_q_values)

@@ -151,6 +151,7 @@ async def test_query_triggers_xp_calculation(sample_taxonomy_with_docs):
 
     async with async_session() as new_session:
         updated_agent = await AgentDAO.get_agent(new_session, agent.agent_id)
+        assert updated_agent is not None, f"Agent {agent.agent_id} not found"
         print(f"Initial XP: {initial_xp}, Updated XP: {updated_agent.current_xp}")
         assert updated_agent.current_xp > initial_xp
 
@@ -232,6 +233,7 @@ async def test_query_10_times_accumulates_xp(sample_taxonomy_with_docs):
 
     async with async_session() as new_session:
         updated_agent = await AgentDAO.get_agent(new_session, agent.agent_id)
+        assert updated_agent is not None, f"Agent {agent.agent_id} not found"
         assert updated_agent.current_xp >= 50.0
 
 
@@ -279,6 +281,7 @@ async def test_level_up_after_queries(sample_taxonomy_with_docs):
 
     async with async_session() as new_session:
         updated_agent = await AgentDAO.get_agent(new_session, agent.agent_id)
+        assert updated_agent is not None, f"Agent {agent.agent_id} not found"
         assert updated_agent.current_xp >= 100.0
         assert updated_agent.level == 2
 

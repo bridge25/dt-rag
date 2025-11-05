@@ -73,6 +73,7 @@ async def test_update_xp_and_level_single_xp(mock_session, test_agent):
         result = await AgentDAO.update_xp_and_level(
             mock_session, test_agent.agent_id, xp_delta=5.0
         )
+        assert result is not None, "Result should not be None"
 
         assert result.current_xp == 15.0
         assert result.level == 1
@@ -114,6 +115,7 @@ async def test_update_xp_and_level_with_level(mock_session, test_agent):
         result = await AgentDAO.update_xp_and_level(
             mock_session, test_agent.agent_id, xp_delta=10.0, level=2
         )
+        assert result is not None, "Result should not be None"
 
         assert result.current_xp == 105.0
         assert result.level == 2
@@ -165,6 +167,7 @@ async def test_concurrent_xp_updates(mock_session, test_agent):
         results = await asyncio.gather(*tasks)
 
         last_result = results[-1]
+        assert last_result is not None, "Last result should not be None"
         assert last_result.current_xp == final_xp
         assert mock_session.execute.call_count == 10
         assert mock_session.commit.call_count == 10
@@ -205,6 +208,7 @@ async def test_updated_at_timestamp(mock_session, test_agent):
         result = await AgentDAO.update_xp_and_level(
             mock_session, test_agent.agent_id, xp_delta=1.0
         )
+        assert result is not None, "Result should not be None"
 
         assert result.updated_at > old_updated_at
 
@@ -242,6 +246,7 @@ async def test_negative_xp_delta(mock_session, test_agent):
         result = await AgentDAO.update_xp_and_level(
             mock_session, test_agent.agent_id, xp_delta=-5.0
         )
+        assert result is not None, "Result should not be None"
 
         assert result.current_xp == 15.0
         mock_session.execute.assert_called_once()

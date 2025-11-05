@@ -234,6 +234,7 @@ class TestAgentAPIPhase3:
         # Verify status updated
         async with async_session() as session:
             updated_task = await session.get(BackgroundTask, task_id)
+            assert updated_task is not None, f"Task {task_id} not found"
             assert updated_task.status == "cancelled"
             assert updated_task.completed_at is not None
 
@@ -268,6 +269,7 @@ class TestAgentAPIPhase3:
         # Verify cancellation_requested flag set
         async with async_session() as session:
             updated_task = await session.get(BackgroundTask, task_id)
+            assert updated_task is not None, f"Task {task_id} not found"
             assert updated_task.cancellation_requested is True
             assert updated_task.status == "running"  # Still running until worker checks
 

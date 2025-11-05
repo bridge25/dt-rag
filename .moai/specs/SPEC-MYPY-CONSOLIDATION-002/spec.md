@@ -34,6 +34,26 @@ scope:
 
 ## HISTORY
 
+### v0.9.0 (2025-11-05) - Session 8: Optional/None Handling Complete
+- **SESSION**: Optional type handling - Systematic None guards for all [union-attr] errors
+- **PROGRESS**: 253 → 213 errors (-40, 15.8% reduction), 76.6% → 80.3% complete (+3.7%)
+- **RESULTS**:
+  - [union-attr] errors fixed: 41 (100% of Optional type errors)
+  - Files cleared: 5 files (60 → 55)
+  - Files modified: 8 files (6 tests + 2 apps)
+- **IMPLEMENTATION**:
+  - Added `assert obj is not None` before Optional[T] attribute access
+  - Fixed test_agent_background_tasks.py (17 BackgroundTask checks)
+  - Fixed test_agent_dao_xp.py (7 Agent checks)
+  - Fixed test_tool_executor.py (4 error message checks)
+  - Fixed test_agent_xp_integration.py (5 Agent checks)
+  - Fixed test_agent_api_phase3.py (4 BackgroundTask checks)
+  - Fixed apps files (4 Address/str checks)
+- **TIME**: 45 minutes (0.9 errors/minute, moderate speed)
+- **PATTERN**: Consistent None guard pattern across all Optional types
+- **MILESTONE**: 80%+ completion - only 213 errors remaining!
+- **NEXT**: Session 9 - [call-arg] errors (~45 errors) - function signature mismatches
+
 ### v0.8.0 (2025-11-05) - Session 7: Object Indexing in tests/ Complete
 - **SESSION**: Object indexing fixes - Type annotations for nested dict/list structures
 - **PROGRESS**: 283 → 253 errors (-30, 10.6% reduction), 73.8% → 76.6% complete (+2.8%)

@@ -73,6 +73,7 @@ class TestToolExecutor:
         result = await execute_tool("slow_tool", {}, timeout=0.1)
 
         assert result.success is False
+        assert result.error is not None, "Error message should not be None"
         assert "timeout" in result.error.lower()
         assert result.tool_name == "slow_tool"
 
@@ -97,6 +98,7 @@ class TestToolExecutor:
         result = await execute_tool("strict_tool", {})
 
         assert result.success is False
+        assert result.error is not None, "Error message should not be None"
         assert "validation" in result.error.lower()
         assert result.tool_name == "strict_tool"
 
@@ -105,6 +107,7 @@ class TestToolExecutor:
         result = await execute_tool("nonexistent", {})
 
         assert result.success is False
+        assert result.error is not None, "Error message should not be None"
         assert "not found" in result.error.lower()
         assert result.tool_name == "nonexistent"
 
@@ -127,6 +130,7 @@ class TestToolExecutor:
         result = await execute_tool("error_tool", {})
 
         assert result.success is False
+        assert result.error is not None, "Error message should not be None"
         assert "error" in result.error.lower()
         assert result.tool_name == "error_tool"
 

@@ -58,7 +58,7 @@ async def upload_document(
 
         idempotency_key = request.headers.get("X-Idempotency-Key")
 
-        file_extension = file.filename.split(".")[-1].lower()
+        file_extension = file.filename.split(".")[-1].lower() if file.filename and "." in file.filename else "txt"
 
         try:
             file_format = DocumentFormatV1(file_extension)

@@ -432,7 +432,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             return cast(str, real_ip)
 
         # Fall back to direct connection
-        if hasattr(request.client, "host"):
+        if request.client is not None and hasattr(request.client, "host"):
             return cast(str, request.client.host)
 
         return "unknown"
