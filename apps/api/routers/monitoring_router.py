@@ -38,7 +38,7 @@ router = APIRouter(prefix="/monitoring", tags=["Monitoring"])
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/health")  # type: ignore[misc]
+@router.get("/health")
 async def get_system_health() -> Dict[str, Any]:
     """Get comprehensive system health status"""
     try:
@@ -77,7 +77,7 @@ async def get_system_health() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/llm-costs")  # type: ignore[misc]
+@router.get("/llm-costs")
 async def get_llm_costs() -> Dict[str, Any]:
     """
     Get LLM cost tracking dashboard (Gemini 2.5 Flash + OpenAI Embedding)
@@ -201,7 +201,7 @@ async def get_llm_costs() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/langfuse-status")  # type: ignore[misc]
+@router.get("/langfuse-status")
 async def get_langfuse_integration_status() -> Dict[str, Any]:
     """Get Langfuse integration status and configuration"""
     if not LANGFUSE_AVAILABLE:

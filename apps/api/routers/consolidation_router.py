@@ -73,7 +73,7 @@ class ConsolidationSummaryResponse(BaseModel):
 
 
 # API Endpoints
-@router.post("/run", response_model=ConsolidationResponse)  # type: ignore[misc]
+@router.post("/run", response_model=ConsolidationResponse)
 async def run_consolidation(
     request: ConsolidationRequest, api_key: APIKeyInfo = Depends(verify_api_key)
 ) -> ConsolidationResponse:
@@ -107,7 +107,7 @@ async def run_consolidation(
         )
 
 
-@router.post("/dry-run", response_model=ConsolidationResponse)  # type: ignore[misc]
+@router.post("/dry-run", response_model=ConsolidationResponse)
 async def dry_run_consolidation(
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> ConsolidationResponse:
@@ -132,7 +132,7 @@ async def dry_run_consolidation(
         )
 
 
-@router.get("/summary", response_model=ConsolidationSummaryResponse)  # type: ignore[misc]
+@router.get("/summary", response_model=ConsolidationSummaryResponse)
 async def get_consolidation_summary(
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> ConsolidationSummaryResponse:
@@ -156,7 +156,7 @@ async def get_consolidation_summary(
         )
 
 
-@router.get("/health")  # type: ignore[misc]
+@router.get("/health")
 async def health_check() -> Dict[str, Any]:
     """Consolidation 서비스 상태 확인"""
     return {

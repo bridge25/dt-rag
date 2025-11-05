@@ -532,7 +532,7 @@ async def get_search_service() -> SearchService:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.post("", response_model=SearchResponse)  # type: ignore[misc]
+@search_router.post("", response_model=SearchResponse)
 async def search_documents(
     request: Request,
     search_request: SearchRequest,
@@ -612,7 +612,7 @@ async def search_documents(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.get("/analytics", response_model=SearchAnalytics)  # type: ignore[misc]
+@search_router.get("/analytics", response_model=SearchAnalytics)
 async def get_search_analytics(
     request: Request,
     service: SearchService = Depends(get_search_service),
@@ -640,7 +640,7 @@ async def get_search_analytics(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.get("/config", response_model=SearchConfig)  # type: ignore[misc]
+@search_router.get("/config", response_model=SearchConfig)
 async def get_search_config(
     request: Request,
     service: SearchService = Depends(get_search_service),
@@ -667,7 +667,7 @@ async def get_search_config(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.put("/config", response_model=SearchConfig)  # type: ignore[misc]
+@search_router.put("/config", response_model=SearchConfig)
 async def update_search_config(
     request: Request,
     config: SearchConfig,
@@ -704,7 +704,7 @@ async def update_search_config(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.post("/reindex")  # type: ignore[misc]
+@search_router.post("/reindex")
 async def reindex_search_corpus(
     request: Request,
     reindex_request: ReindexRequest,
@@ -732,7 +732,7 @@ async def reindex_search_corpus(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.get("/status")  # type: ignore[misc]
+@search_router.get("/status")
 async def get_search_status(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
 ) -> Dict[str, Any]:
@@ -779,7 +779,7 @@ async def get_search_status(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.post("/suggest")  # type: ignore[misc]
+@search_router.post("/suggest")
 async def search_suggestions(
     request: Request,
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
@@ -819,7 +819,7 @@ async def search_suggestions(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.post("/keyword", response_model=SearchResponse)  # type: ignore[misc]
+@search_router.post("/keyword", response_model=SearchResponse)
 async def search_documents_keyword_only(
     request: Request,
     search_request: SearchRequest,
@@ -907,7 +907,7 @@ async def search_documents_keyword_only(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.post("/vector", response_model=SearchResponse)  # type: ignore[misc]
+@search_router.post("/vector", response_model=SearchResponse)
 async def search_documents_vector_only(
     request: Request,
     search_request: SearchRequest,
@@ -995,7 +995,7 @@ async def search_documents_vector_only(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.post("/cache/clear")  # type: ignore[misc]
+@search_router.post("/cache/clear")
 async def clear_search_cache(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
 ) -> Dict[str, str]:
@@ -1020,7 +1020,7 @@ async def clear_search_cache(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@search_router.get("/performance")  # type: ignore[misc]
+@search_router.get("/performance")
 async def get_search_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)
 ) -> Dict[str, Any]:

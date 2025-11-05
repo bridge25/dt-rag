@@ -153,7 +153,7 @@ def get_taxonomy_tree_v181() -> List[Dict[str, Any]]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/taxonomy/{version}/tree")  # type: ignore[misc]
+@router.get("/taxonomy/{version}/tree")
 async def get_taxonomy_tree_endpoint(
     version: str, api_key: str = Depends(verify_api_key)
 ) -> List[Dict[str, Any]]:
@@ -187,7 +187,7 @@ async def get_taxonomy_tree_endpoint(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/taxonomy/versions")  # type: ignore[misc]
+@router.get("/taxonomy/versions")
 def get_taxonomy_versions(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     사용 가능한 taxonomy 버전 목록
@@ -210,7 +210,7 @@ def get_taxonomy_versions(api_key: str = Depends(verify_api_key)) -> Dict[str, A
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/taxonomy/initialize")  # type: ignore[misc]
+@router.post("/taxonomy/initialize")
 async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """Initialize the taxonomy DAG system"""
     try:
@@ -233,7 +233,7 @@ async def initialize_taxonomy_dag(api_key: str = Depends(verify_api_key)) -> Dic
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/taxonomy/validate")  # type: ignore[misc]
+@router.get("/taxonomy/validate")
 async def validate_taxonomy_structure(
     version: Optional[int] = Query(
         None, description="Version to validate (default: current)"
@@ -259,7 +259,7 @@ async def validate_taxonomy_structure(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/taxonomy/dag/tree")  # type: ignore[misc]
+@router.get("/taxonomy/dag/tree")
 async def get_taxonomy_dag_tree(
     version: Optional[int] = Query(
         None, description="Version to retrieve (default: current)"
@@ -284,7 +284,7 @@ async def get_taxonomy_dag_tree(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/taxonomy/nodes")  # type: ignore[misc]
+@router.post("/taxonomy/nodes")
 async def create_taxonomy_node(
     node_data: TaxonomyNodeCreate, api_key: str = Depends(verify_api_key)
 ) -> Dict[str, Any]:
@@ -309,7 +309,7 @@ async def create_taxonomy_node(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.patch("/taxonomy/nodes/{node_id}/move")  # type: ignore[misc]
+@router.patch("/taxonomy/nodes/{node_id}/move")
 async def move_taxonomy_node_endpoint(
     node_id: int = Path(..., description="Node ID to move"),
     move_data: TaxonomyNodeMove = Body(...),
@@ -335,7 +335,7 @@ async def move_taxonomy_node_endpoint(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/taxonomy/nodes/{node_id}/ancestry")  # type: ignore[misc]
+@router.get("/taxonomy/nodes/{node_id}/ancestry")
 async def get_node_ancestry_endpoint(
     node_id: int = Path(..., description="Node ID"),
     version: Optional[int] = Query(None, description="Version (default: current)"),
@@ -358,7 +358,7 @@ async def get_node_ancestry_endpoint(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/taxonomy/rollback")  # type: ignore[misc]
+@router.post("/taxonomy/rollback")
 async def rollback_taxonomy_version(
     rollback_data: TaxonomyRollback, api_key: str = Depends(verify_api_key)
 ) -> Dict[str, Any]:
@@ -382,7 +382,7 @@ async def rollback_taxonomy_version(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/taxonomy/history")  # type: ignore[misc]
+@router.get("/taxonomy/history")
 async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """Get complete taxonomy version history with migration details"""
     try:
@@ -400,7 +400,7 @@ async def get_taxonomy_version_history(api_key: str = Depends(verify_api_key)) -
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/taxonomy/status")  # type: ignore[misc]
+@router.get("/taxonomy/status")
 async def get_taxonomy_system_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """Get comprehensive taxonomy system status and health"""
     try:

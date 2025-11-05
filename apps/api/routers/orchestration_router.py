@@ -260,7 +260,7 @@ async def get_pipeline_service() -> PipelineService:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@orchestration_router.post("/execute", response_model=PipelineResponse)  # type: ignore[misc]
+@orchestration_router.post("/execute", response_model=PipelineResponse)
 async def execute_pipeline(
     request: PipelineRequest,
     service: PipelineService = Depends(get_pipeline_service),
@@ -311,7 +311,7 @@ async def execute_pipeline(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@orchestration_router.post("/execute/async")  # type: ignore[misc]
+@orchestration_router.post("/execute/async")
 async def execute_pipeline_async(
     request: PipelineRequest,
     background_tasks: BackgroundTasks,
@@ -346,7 +346,7 @@ async def execute_pipeline_async(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)  # type: ignore[misc]
+@orchestration_router.get("/jobs/{job_id}", response_model=PipelineJob)
 async def get_pipeline_job(
     job_id: str,
     service: PipelineService = Depends(get_pipeline_service),
@@ -382,7 +382,7 @@ async def get_pipeline_job(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@orchestration_router.get("/config", response_model=PipelineConfig)  # type: ignore[misc]
+@orchestration_router.get("/config", response_model=PipelineConfig)
 async def get_pipeline_config(
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
@@ -408,7 +408,7 @@ async def get_pipeline_config(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@orchestration_router.put("/config", response_model=PipelineConfig)  # type: ignore[misc]
+@orchestration_router.put("/config", response_model=PipelineConfig)
 async def update_pipeline_config(
     config: PipelineConfig,
     service: PipelineService = Depends(get_pipeline_service),
@@ -444,7 +444,7 @@ async def update_pipeline_config(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@orchestration_router.get("/analytics", response_model=PipelineAnalytics)  # type: ignore[misc]
+@orchestration_router.get("/analytics", response_model=PipelineAnalytics)
 async def get_pipeline_analytics(
     service: PipelineService = Depends(get_pipeline_service),
     api_key: str = Depends(verify_api_key),
@@ -470,7 +470,7 @@ async def get_pipeline_analytics(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@orchestration_router.get("/status")  # type: ignore[misc]
+@orchestration_router.get("/status")
 async def get_pipeline_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get pipeline system status and health

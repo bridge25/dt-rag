@@ -131,7 +131,7 @@ async def require_admin_key(current_key: APIKeyInfo = Depends(verify_api_key)) -
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/", response_model=CreateAPIKeyResponse, status_code=201)  # type: ignore[misc]
+@router.post("/", response_model=CreateAPIKeyResponse, status_code=201)
 async def create_api_key(
     request: CreateAPIKeyRequest,
     http_request: Request,
@@ -193,7 +193,7 @@ async def create_api_key(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/", response_model=List[APIKeyResponse])  # type: ignore[misc]
+@router.get("/", response_model=List[APIKeyResponse])
 async def list_api_keys(
     owner_id: Optional[str] = Query(None, description="Filter by owner ID"),
     active_only: bool = Query(True, description="Show only active keys"),
@@ -247,7 +247,7 @@ async def list_api_keys(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/{key_id}", response_model=APIKeyResponse)  # type: ignore[misc]
+@router.get("/{key_id}", response_model=APIKeyResponse)
 async def get_api_key(
     key_id: str,
     db: AsyncSession = Depends(get_async_session),
@@ -288,7 +288,7 @@ async def get_api_key(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.put("/{key_id}", response_model=APIKeyResponse)  # type: ignore[misc]
+@router.put("/{key_id}", response_model=APIKeyResponse)
 async def update_api_key(
     key_id: str,
     request: UpdateAPIKeyRequest,
@@ -345,7 +345,7 @@ async def update_api_key(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.delete("/{key_id}")  # type: ignore[misc]
+@router.delete("/{key_id}")
 async def revoke_api_key(
     key_id: str,
     reason: str = Body(..., description="Reason for revocation"),
@@ -384,7 +384,7 @@ async def revoke_api_key(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/{key_id}/usage", response_model=APIKeyUsageStats)  # type: ignore[misc]
+@router.get("/{key_id}/usage", response_model=APIKeyUsageStats)
 async def get_api_key_usage(
     key_id: str,
     days: int = Query(7, ge=1, le=90, description="Number of days to analyze"),
@@ -415,7 +415,7 @@ async def get_api_key_usage(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/generate", response_model=Dict[str, str])  # type: ignore[misc]
+@router.post("/generate", response_model=Dict[str, str])
 async def generate_sample_keys(
     key_type: str = Query("production", description="Type of key to generate"),
     count: int = Query(1, ge=1, le=10, description="Number of keys to generate"),
@@ -468,7 +468,7 @@ async def generate_sample_keys(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/validate")  # type: ignore[misc]
+@router.post("/validate")
 async def validate_api_key_format(
     api_key: str = Body(..., description="API key to validate"),
     current_key: APIKeyInfo = Depends(require_admin_key),

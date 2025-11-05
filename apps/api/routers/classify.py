@@ -41,7 +41,7 @@ class ClassifyResponse(BaseModel):
     taxonomy_version: str = "1.8.1"
 
 
-@router.post("/classify", response_model=ClassifyResponse)  # type: ignore[misc]
+@router.post("/classify", response_model=ClassifyResponse)
 async def classify_text(
     request: ClassifyRequest, api_key: str = Depends(verify_api_key)
 ) -> ClassifyResponse:
