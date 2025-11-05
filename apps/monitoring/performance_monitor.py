@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import text, Row
 import psutil
 import numpy as np
 
@@ -188,10 +188,10 @@ class RAGPerformanceMonitor:
                 )
             )
 
-            row = query_stats.fetchone()
-            if row:
+            query_row: Optional[Row[Any]] = query_stats.fetchone()
+            if query_row:
                 metrics.db_query_avg_time = (
-                    float(row.avg_time) / 1000
+                    float(query_row.avg_time) / 1000
                 )  # Convert to seconds
 
             # Slow queries (>1 second)

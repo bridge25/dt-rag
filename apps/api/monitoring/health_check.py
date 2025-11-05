@@ -11,6 +11,7 @@ from datetime import datetime
 from enum import Enum
 import aiohttp
 import psutil
+from sqlalchemy import Row
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +160,7 @@ class HealthChecker:
                 async with db_manager.async_session() as session:
                     # 간단한 쿼리 실행
                     result = await session.execute(text("SELECT 1"))
-                    await result.fetchone()
+                    row: Optional[Row[Any]] = result.fetchone()
 
                 response_time = (time.time() - start_time) * 1000
 
