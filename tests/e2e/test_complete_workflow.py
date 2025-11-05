@@ -353,7 +353,7 @@ class TestCompleteWorkflow:
         """
         try:
             # Test various error scenarios
-            error_scenarios = [
+            error_scenarios: List[Dict[str, Any]] = [
                 # Invalid endpoints
                 {"method": "GET", "url": "/nonexistent/endpoint", "expected": [404]},
                 # Invalid request data

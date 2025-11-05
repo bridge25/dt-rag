@@ -314,7 +314,7 @@ class TestCachingSystemIntegration:
 
         try:
             # Test different data types
-            test_data = [
+            test_data: List[Dict[str, Any]] = [
                 {"type": "dict", "value": {"key": "value", "number": 42}},
                 {"type": "list", "value": [1, 2, 3, "string", True]},
                 {"type": "string", "value": "simple string"},

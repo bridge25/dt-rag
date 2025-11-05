@@ -384,7 +384,7 @@ class TestUserScenarios:
 
             # Step 4: Developer tests error handling
             print("Step 4: Testing error handling...")
-            error_test_cases = [
+            error_test_cases: List[Dict[str, Any]] = [
                 {"endpoint": "/search", "data": {"invalid_field": "value"}},
                 {"endpoint": "/classify", "data": {}},
                 {"endpoint": "/nonexistent", "data": None},
