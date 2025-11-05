@@ -25,7 +25,7 @@ os.environ["TESTING"] = "true"
 
 try:
     # Import search-related components
-    from apps.api.cache.search_cache import SearchCache
+    from apps.api.cache.search_cache import HybridSearchCache
     from apps.api.cache.redis_manager import RedisManager
 
     # Check for search modules

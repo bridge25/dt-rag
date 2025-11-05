@@ -16,7 +16,7 @@ Performance targets:
 import pytest
 import asyncio
 import time
-from typing import List, Dict
+from typing import List, Dict, Optional
 from dataclasses import dataclass
 
 
@@ -40,7 +40,7 @@ async def run_concurrent_requests(
     endpoint: str,
     num_users: int,
     duration_seconds: int = 60,
-    payload: dict = None,
+    payload: Optional[dict] = None,
 ) -> LoadTestResult:
     """
     Run concurrent load test for specified endpoint

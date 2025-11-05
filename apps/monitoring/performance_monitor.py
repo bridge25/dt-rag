@@ -170,9 +170,9 @@ class RAGPerformanceMonitor:
 
             for row in conn_stats:
                 if row.state == "active":
-                    metrics.db_connections_active = row.count
+                    metrics.db_connections_active = row[1]  # count column
                 elif row.state == "idle":
-                    metrics.db_connections_idle = row.count
+                    metrics.db_connections_idle = row[1]  # count column
 
             # Query performance
             query_stats = await session.execute(

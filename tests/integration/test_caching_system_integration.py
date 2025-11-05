@@ -23,7 +23,7 @@ os.environ["TESTING"] = "true"
 try:
     # Import caching components
     from apps.api.cache.redis_manager import RedisManager, get_redis_manager
-    from apps.api.cache.search_cache import SearchCache
+    from apps.api.cache.search_cache import HybridSearchCache
 
     # Check for optional cache components
     try:

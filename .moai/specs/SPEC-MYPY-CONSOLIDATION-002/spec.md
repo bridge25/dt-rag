@@ -34,6 +34,29 @@ scope:
 
 ## HISTORY
 
+### v0.11.0 (2025-11-05) - Session 10: Type Confusion & Assignment Fixes Complete
+- **SESSION**: Import corrections + SQLAlchemy Result + Variable name collision resolution
+- **PROGRESS**: 166 → 143 errors (-23, 13.9% reduction), 84.6% → 86.7% complete (+2.1%)
+- **RESULTS**:
+  - [attr-defined] errors fixed: 16 (SearchCache imports, Result.rowcount, CompletedProcess confusion)
+  - [assignment] errors fixed: 5 (Callable, dict type inference, str/int conversion, Optional defaults)
+  - [arg-type] errors fixed: 2 (list[int] → list[float])
+  - Files cleared: 2 files (50 → 48)
+  - Files modified: 8 files (5 tests + 3 apps)
+- **IMPLEMENTATION**:
+  - Fixed import names: `SearchCache` → `HybridSearchCache` (2 test files)
+  - Added SQLAlchemy Result import + rowcount handling in api_key_storage.py
+  - Resolved variable name collision: `result` → `migration_result` / `query_result` (test_agent_background_tasks_migration.py, 18 errors)
+  - Fixed Row.count Callable confusion: `row.count` → `row[1]` indexing (performance_monitor.py)
+  - Added explicit type annotations: `result: Dict[str, Any] = {}` (test_utility_functions.py)
+  - Fixed Optional defaults: `payload: dict = None` → `payload: Optional[dict] = None` (2 performance tests)
+  - Added type conversions: `int(latest_version)` (taxonomy_dag.py), list[int] → list[float] (test_policy.py)
+- **TIME**: 45 minutes (0.5 errors/minute, moderate speed)
+- **PATTERN**: Variable naming clarity + explicit type annotations prevent MyPy confusion
+- **KEY LEARNING**: Avoid reusing variable names across different types (subprocess vs SQLAlchemy)
+- **MILESTONE**: 86%+ completion - closing in on 90% threshold!
+- **NEXT**: Session 11 - Remaining error types: [assignment], [arg-type], [import-not-found] (~143 errors)
+
 ### v0.10.0 (2025-11-05) - Session 9: Call Arguments & Pydantic Integration Complete
 - **SESSION**: Pydantic MyPy plugin integration + [call-arg] error fixes
 - **PROGRESS**: 213 → 166 errors (-47, 22.1% reduction), 80.3% → 84.6% complete (+4.3%)

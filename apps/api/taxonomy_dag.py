@@ -102,7 +102,7 @@ class TaxonomyDAGManager:
                 latest_version = result.scalar()
 
                 if latest_version:
-                    self.current_version = latest_version
+                    self.current_version = int(latest_version)
                 else:
                     # Create root taxonomy if none exists
                     await self._create_default_taxonomy(session)

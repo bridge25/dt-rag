@@ -32,13 +32,13 @@ class TestAgentBackgroundTasksMigration:
           cancellation_requested, queue_position, progress_percentage, estimated_completion_at
         """
         # Run migration to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_migration_result.stderr}"
 
         async with async_session() as session:
             # Verify table exists
@@ -51,8 +51,8 @@ class TestAgentBackgroundTasksMigration:
                 );
             """
             )
-            result = await session.execute(table_check)
-            table_exists = result.scalar()
+            query_result = await session.execute(table_check)
+            table_exists = query_result.scalar()
             assert table_exists, "background_tasks table does not exist after migration"
 
             # Verify columns
@@ -65,8 +65,8 @@ class TestAgentBackgroundTasksMigration:
                 ORDER BY ordinal_position;
             """
             )
-            result = await session.execute(column_check)
-            columns = result.fetchall()
+            query_result = await session.execute(column_check)
+            columns = query_result.fetchall()
 
             column_names = [col[0] for col in columns]
             expected_columns = [
@@ -123,13 +123,13 @@ class TestAgentBackgroundTasksMigration:
           total_documents, total_chunks, version
         """
         # Run migration to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Verify table exists
@@ -142,8 +142,8 @@ class TestAgentBackgroundTasksMigration:
                 );
             """
             )
-            result = await session.execute(table_check)
-            table_exists = result.scalar()
+            query_result = await session.execute(table_check)
+            table_exists = query_result.scalar()
             assert table_exists, "coverage_history table does not exist after migration"
 
             # Verify columns
@@ -156,8 +156,8 @@ class TestAgentBackgroundTasksMigration:
                 ORDER BY ordinal_position;
             """
             )
-            result = await session.execute(column_check)
-            columns = result.fetchall()
+            query_result = await session.execute(column_check)
+            columns = query_result.fetchall()
 
             column_names = [col[0] for col in columns]
             expected_columns = [
@@ -212,13 +212,13 @@ class TestAgentBackgroundTasksMigration:
         - idx_background_tasks_agent_status
         """
         # Run migration to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Query indexes
@@ -231,8 +231,8 @@ class TestAgentBackgroundTasksMigration:
                 ORDER BY indexname;
             """
             )
-            result = await session.execute(index_check)
-            indexes = result.fetchall()
+            query_result = await session.execute(index_check)
+            indexes = query_result.fetchall()
 
             index_names = [idx[0] for idx in indexes]
             required_indexes = [
@@ -269,13 +269,13 @@ class TestAgentBackgroundTasksMigration:
         - idx_coverage_history_agent_timestamp
         """
         # Run migration to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Query indexes
@@ -288,8 +288,8 @@ class TestAgentBackgroundTasksMigration:
                 ORDER BY indexname;
             """
             )
-            result = await session.execute(index_check)
-            indexes = result.fetchall()
+            query_result = await session.execute(index_check)
+            indexes = query_result.fetchall()
 
             index_names = [idx[0] for idx in indexes]
             required_indexes = [
@@ -324,13 +324,13 @@ class TestAgentBackgroundTasksMigration:
         - Delete rule: CASCADE
         """
         # Run migration to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Query foreign keys
@@ -358,8 +358,8 @@ class TestAgentBackgroundTasksMigration:
                 AND kcu.column_name = 'agent_id';
             """
             )
-            result = await session.execute(fk_check)
-            fk = result.fetchone()
+            query_result = await session.execute(fk_check)
+            fk = query_result.fetchone()
 
             assert (
                 fk is not None
@@ -379,13 +379,13 @@ class TestAgentBackgroundTasksMigration:
         - total_chunks >= 0
         """
         # Run migration to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Query CHECK constraints
@@ -402,8 +402,8 @@ class TestAgentBackgroundTasksMigration:
                 AND tc.table_name = 'coverage_history';
             """
             )
-            result = await session.execute(constraint_check)
-            constraints = result.fetchall()
+            query_result = await session.execute(constraint_check)
+            constraints = query_result.fetchall()
 
             constraint_clauses = [c[1] for c in constraints]
 
@@ -448,13 +448,13 @@ class TestAgentBackgroundTasksMigration:
         - upgrade head → success (recreate both tables)
         """
         # Upgrade to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Verify tables exist
@@ -466,7 +466,7 @@ class TestAgentBackgroundTasksMigration:
                 AND table_name IN ('background_tasks', 'coverage_history');
             """
             )
-            result = await session.execute(table_check)
+            query_result = await session.execute(table_check)
             tables = [row[0] for row in result.fetchall()]
             assert (
                 "background_tasks" in tables
@@ -476,17 +476,17 @@ class TestAgentBackgroundTasksMigration:
             ), "coverage_history should exist after upgrade"
 
         # Downgrade by 1
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "downgrade", "-1"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic downgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic downgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Verify tables removed
-            result = await session.execute(table_check)
+            query_result = await session.execute(table_check)
             tables_after_downgrade = [row[0] for row in result.fetchall()]
             assert (
                 "background_tasks" not in tables_after_downgrade
@@ -496,17 +496,17 @@ class TestAgentBackgroundTasksMigration:
             ), "coverage_history should be removed after downgrade"
 
         # Re-upgrade to head
-        result = subprocess.run(
+        migration_result = subprocess.run(
             ["alembic", "upgrade", "head"],
             cwd=alembic_dir,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0, f"Alembic re-upgrade failed: {result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic re-upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Verify tables recreated
-            result = await session.execute(table_check)
+            query_result = await session.execute(table_check)
             tables_after_reupgrade = [row[0] for row in result.fetchall()]
             assert (
                 "background_tasks" in tables_after_reupgrade

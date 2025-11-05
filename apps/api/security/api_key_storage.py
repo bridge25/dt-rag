@@ -9,7 +9,7 @@ including proper hashing, rate limiting, and audit logging.
 import hashlib
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List, cast
+from typing import Optional, List, cast, Any
 from sqlalchemy import (
     Integer,
     String,
@@ -23,6 +23,7 @@ from sqlalchemy import (
     func,
     desc,
 )
+from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from dataclasses import dataclass
@@ -752,8 +753,9 @@ class APIKeyManager:
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
 
         stmt = delete(APIKeyUsage).where(APIKeyUsage.timestamp < cutoff_date)
-        result = await self.db.execute(stmt)
+        result: Result[Any] = await self.db.execute(stmt)
         await self.db.commit()
 
-        logger.info(f"Cleaned up {result.rowcount} old usage log entries")
-        return cast(int, result.rowcount)
+        row_count = result.rowcount or 0
+        logger.info(f"Cleaned up {row_count} old usage log entries")
+        return row_count

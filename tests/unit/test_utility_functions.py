@@ -89,7 +89,7 @@ def parse_query_string(query_string: str) -> Dict[str, Any]:
     parsed = parse_qs(query_string, keep_blank_values=True)
 
     # Convert single-item lists to strings
-    result = {}
+    result: Dict[str, Any] = {}
     for key, value_list in parsed.items():
         if len(value_list) == 1:
             result[key] = value_list[0]
