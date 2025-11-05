@@ -1,0 +1,15 @@
+{
+  "total_tags": 576,
+  "orphan_tags": 41,
+  "orphan_ratio": 0.07118055555555555,
+  "total_specs": 0,
+  "complete_chains": 0,
+  "chain_integrity": 0.0,
+  "format_violations": 591,
+  "format_compliance": 100.0,
+  "overall_score": 62.15277777777778,
+  "health_grade": "D",
+  "scope": "production",
+  "production_orphans": 41,
+  "documentation_orphans": 0
+}
