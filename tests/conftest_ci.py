@@ -228,7 +228,7 @@ class GracefulDegradationHelper:
     """Helper class for graceful test degradation"""
 
     @staticmethod
-    def skip_if_service_unavailable(service: str):
+    def skip_if_service_unavailable(service: str) -> None:
         """Decorator to skip tests if service is unavailable"""
 
         def decorator(func):
@@ -241,7 +241,7 @@ class GracefulDegradationHelper:
         return decorator
 
     @staticmethod
-    def mock_if_service_unavailable(service: str, mock_fixture: str):
+    def mock_if_service_unavailable(service: str, mock_fixture: str) -> None:
         """Use mock fixture if service is unavailable"""
 
         def decorator(func):

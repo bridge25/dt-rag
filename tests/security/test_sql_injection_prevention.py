@@ -16,7 +16,7 @@ import os
 
 # @TEST:TEST-004-003:CASE-ID-INJECTION
 @pytest.mark.asyncio
-async def test_sql_injection_in_case_id_blocked(async_client: AsyncClient):
+async def test_sql_injection_in_case_id_blocked(async_client: AsyncClient) -> None:
     """
     case_id에 SQL Injection 시도 차단
     REQ-3: The system shall prevent SQL Injection attacks
@@ -62,7 +62,7 @@ async def test_sql_injection_in_case_id_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-003:SEARCH-QUERY-INJECTION
 @pytest.mark.asyncio
-async def test_sql_injection_in_search_query_blocked(async_client: AsyncClient):
+async def test_sql_injection_in_search_query_blocked(async_client: AsyncClient) -> None:
     """
     검색 쿼리에 SQL Injection 시도 차단
     REQ-3, REQ-8
@@ -98,7 +98,7 @@ async def test_sql_injection_in_search_query_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-003:UNION-ATTACK
 @pytest.mark.asyncio
-async def test_union_based_sql_injection_blocked(async_client: AsyncClient):
+async def test_union_based_sql_injection_blocked(async_client: AsyncClient) -> None:
     """
     UNION 기반 SQL Injection 차단
     REQ-3
@@ -128,7 +128,7 @@ async def test_union_based_sql_injection_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-003:BOOLEAN-ATTACK
 @pytest.mark.asyncio
-async def test_boolean_based_sql_injection_blocked(async_client: AsyncClient):
+async def test_boolean_based_sql_injection_blocked(async_client: AsyncClient) -> None:
     """
     Boolean 기반 SQL Injection 차단
     REQ-3
@@ -159,7 +159,7 @@ async def test_boolean_based_sql_injection_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-003:TIME-BASED-ATTACK
 @pytest.mark.asyncio
-async def test_time_based_sql_injection_blocked(async_client: AsyncClient):
+async def test_time_based_sql_injection_blocked(async_client: AsyncClient) -> None:
     """
     Time-based SQL Injection 차단
     REQ-3
@@ -201,7 +201,7 @@ async def test_time_based_sql_injection_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-003:NO-DATA-LEAK
 @pytest.mark.asyncio
-async def test_no_data_leakage_on_injection(async_client: AsyncClient):
+async def test_no_data_leakage_on_injection(async_client: AsyncClient) -> None:
     """
     SQL Injection 시도 시 데이터 유출 없음
     REQ-3, REQ-8

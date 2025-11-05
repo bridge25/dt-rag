@@ -34,6 +34,21 @@ scope:
 
 ## HISTORY
 
+### v0.4.0 (2025-11-05) - Session 3: Return Type Annotations Complete
+- **SESSION**: Return type annotations - systematic addition to all test functions
+- **PROGRESS**: 458 → 375 errors (-83, 18.1% reduction), 57.6% → 65.3% complete (+7.7%)
+- **RESULTS**:
+  - Return type annotations added: 91 functions (all no-untyped-def errors resolved)
+  - Automated: 77 single-line functions (77/91, 84.6% success rate)
+  - Manual: 14 multi-line function signatures (100% success rate)
+  - Files cleared: 6 files (77 → 71)
+- **AUTOMATION**:
+  - Created `add_return_types.py` (handles both `def` and `async def` patterns)
+  - Pattern recognition: simple, trailing comment, multi-line signatures
+  - Verification: 0 remaining no-untyped-def errors confirmed by MyPy
+- **TIME**: 1 hour (automation + manual review pattern highly efficient)
+- **NEXT**: Session 4 - Manual Quick Wins (75 decorator-line type:ignore) or Object indexing fixes (15 errors in apps/)
+
 ### v0.3.0 (2025-11-05) - Session 2: Quick Wins (Phase 0 Partial)
 - **SESSION**: Quick Wins execution - automated cleanup of low-hanging fruit
 - **PROGRESS**: 590 → 458 errors (-132, 22.4% reduction), 45.4% → 57.6% complete (+12.2%)

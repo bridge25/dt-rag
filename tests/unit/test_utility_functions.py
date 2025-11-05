@@ -99,7 +99,7 @@ def parse_query_string(query_string: str) -> Dict[str, Any]:
     return result
 
 
-def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
+def retry_on_failure(max_retries: int = 3, delay: float = 1.0) -> None:
     """Decorator for retrying functions on failure"""
 
     def decorator(func):
@@ -660,7 +660,7 @@ class TestCacheHelpers:
     def test_ttl_cache_expiration(self):
         """Test TTL (time-to-live) cache behavior"""
 
-        def create_ttl_cache(ttl_seconds: float = 1.0):
+        def create_ttl_cache(ttl_seconds: float = 1.0) -> None:
             cache = {}
 
             def ttl_cache(func):

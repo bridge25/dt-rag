@@ -15,7 +15,7 @@ from httpx import AsyncClient
 
 # @TEST:TEST-004-001:MISSING
 @pytest.mark.asyncio
-async def test_api_requires_authentication(async_client: AsyncClient):
+async def test_api_requires_authentication(async_client: AsyncClient) -> None:
     """
     모든 API 엔드포인트는 인증 필요
     REQ-1, REQ-5
@@ -47,7 +47,7 @@ async def test_api_requires_authentication(async_client: AsyncClient):
 
 # @TEST:TEST-004-001:INVALID
 @pytest.mark.asyncio
-async def test_invalid_api_key_rejected(async_client: AsyncClient):
+async def test_invalid_api_key_rejected(async_client: AsyncClient) -> None:
     """
     유효하지 않은 API 키는 거부됨
     REQ-6
@@ -72,7 +72,7 @@ async def test_invalid_api_key_rejected(async_client: AsyncClient):
 
 # @TEST:TEST-004-001:EXPIRED
 @pytest.mark.asyncio
-async def test_expired_api_key_rejected(async_client: AsyncClient):
+async def test_expired_api_key_rejected(async_client: AsyncClient) -> None:
     """
     만료된 API 키는 거부됨
     REQ-7
@@ -96,7 +96,7 @@ async def test_expired_api_key_rejected(async_client: AsyncClient):
 
 # @TEST:TEST-004-001:HEALTH-CHECK
 @pytest.mark.asyncio
-async def test_health_check_no_auth_required(async_client: AsyncClient):
+async def test_health_check_no_auth_required(async_client: AsyncClient) -> None:
     """
     Health check 엔드포인트는 인증 불필요
     REQ-1 (exception case)
@@ -123,7 +123,7 @@ async def test_health_check_no_auth_required(async_client: AsyncClient):
 
 # @TEST:TEST-004-001:VALID-KEY
 @pytest.mark.asyncio
-async def test_valid_api_key_accepted(async_client: AsyncClient):
+async def test_valid_api_key_accepted(async_client: AsyncClient) -> None:
     """
     유효한 API 키는 허용됨
     REQ-1 (success case)

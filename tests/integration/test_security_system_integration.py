@@ -96,7 +96,7 @@ class TestSecuritySystemIntegration:
 
     async def test_api_key_authentication_flow(
         self, client: AsyncClient, sample_api_key_data: Dict[str, Any]
-    ):
+    ) -> None:
         """Test complete API key authentication flow"""
         if not API_KEY_MANAGER_AVAILABLE:
             pytest.skip("API key manager not available")
@@ -147,7 +147,7 @@ class TestSecuritySystemIntegration:
 
     async def test_jwt_authentication_flow(
         self, client: AsyncClient, sample_user_data: Dict[str, Any], test_config
-    ):
+    ) -> None:
         """Test JWT authentication flow"""
         try:
             # Create a test JWT token
@@ -189,7 +189,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"JWT authentication test failed: {e}")
 
-    async def test_rate_limiting_integration(self, client: AsyncClient):
+    async def test_rate_limiting_integration(self, client: AsyncClient) -> None:
         """Test rate limiting functionality"""
         if not RATE_LIMITER_AVAILABLE:
             pytest.skip("Rate limiter not available")
@@ -231,7 +231,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"Rate limiting test failed: {e}")
 
-    async def test_security_headers_integration(self, client: AsyncClient):
+    async def test_security_headers_integration(self, client: AsyncClient) -> None:
         """Test security headers in API responses"""
         try:
             response = await client.get("/health")
@@ -259,7 +259,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"Security headers test failed: {e}")
 
-    async def test_cors_configuration(self, client: AsyncClient):
+    async def test_cors_configuration(self, client: AsyncClient) -> None:
         """Test CORS configuration"""
         try:
             # Test preflight request
@@ -300,7 +300,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"CORS configuration test failed: {e}")
 
-    async def test_input_validation_security(self, client: AsyncClient):
+    async def test_input_validation_security(self, client: AsyncClient) -> None:
         """Test input validation for security vulnerabilities"""
         try:
             # Test SQL injection attempt
@@ -335,7 +335,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"Input validation security test failed: {e}")
 
-    async def test_authentication_bypass_attempts(self, client: AsyncClient):
+    async def test_authentication_bypass_attempts(self, client: AsyncClient) -> None:
         """Test protection against authentication bypass attempts"""
         try:
             # Test various authentication bypass techniques
@@ -376,7 +376,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"Authentication bypass test failed: {e}")
 
-    async def test_session_management(self, client: AsyncClient, test_config):
+    async def test_session_management(self, client: AsyncClient, test_config) -> None:
         """Test session management security"""
         try:
             # Create expired JWT token
@@ -414,7 +414,7 @@ class TestSecuritySystemIntegration:
         not os.getenv("TEST_SECURITY_COMPREHENSIVE"),
         reason="Comprehensive security tests only run when TEST_SECURITY_COMPREHENSIVE is set",
     )
-    async def test_comprehensive_security_scan(self, client: AsyncClient):
+    async def test_comprehensive_security_scan(self, client: AsyncClient) -> None:
         """Comprehensive security vulnerability scan"""
         try:
             # Test multiple endpoints for common vulnerabilities
@@ -505,7 +505,7 @@ class TestSecuritySystemIntegration:
         except Exception as e:
             pytest.skip(f"Comprehensive security scan failed: {e}")
 
-    async def test_data_exposure_prevention(self, client: AsyncClient):
+    async def test_data_exposure_prevention(self, client: AsyncClient) -> None:
         """Test prevention of sensitive data exposure"""
         try:
             # Test error responses don't expose sensitive information

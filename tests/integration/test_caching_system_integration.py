@@ -148,7 +148,7 @@ class TestCachingSystemIntegration:
         search_cache: SearchCache,
         sample_search_query: Dict[str, Any],
         sample_search_results: List[Dict[str, Any]],
-    ):
+    ) -> None:
         """Test search result caching integration"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")
@@ -182,7 +182,7 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Search cache integration test failed: {e}")
 
-    async def test_cache_key_consistency(self, search_cache: SearchCache):
+    async def test_cache_key_consistency(self, search_cache: SearchCache) -> None:
         """Test cache key generation consistency"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")
@@ -212,7 +212,7 @@ class TestCachingSystemIntegration:
 
     async def test_cache_expiration_handling(
         self, redis_manager: RedisManager, mock_redis_client
-    ):
+    ) -> None:
         """Test cache expiration and TTL handling"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -242,7 +242,7 @@ class TestCachingSystemIntegration:
 
     async def test_cache_invalidation_patterns(
         self, redis_manager: RedisManager, mock_redis_client
-    ):
+    ) -> None:
         """Test cache invalidation strategies"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -277,7 +277,7 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Cache invalidation test failed: {e}")
 
-    async def test_concurrent_cache_operations(self, redis_manager: RedisManager):
+    async def test_concurrent_cache_operations(self, redis_manager: RedisManager) -> None:
         """Test concurrent cache operations"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -307,7 +307,7 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Concurrent cache operations test failed: {e}")
 
-    async def test_cache_serialization(self, redis_manager: RedisManager):
+    async def test_cache_serialization(self, redis_manager: RedisManager) -> None:
         """Test cache value serialization and deserialization"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -382,7 +382,7 @@ class TestCachingSystemIntegration:
 
     async def test_cache_error_handling(
         self, redis_manager: RedisManager, mock_redis_client
-    ):
+    ) -> None:
         """Test error handling in cache operations"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -413,7 +413,7 @@ class TestCachingSystemIntegration:
 
     async def test_cache_performance_metrics(
         self, search_cache: SearchCache, sample_search_query: Dict[str, Any]
-    ):
+    ) -> None:
         """Test cache performance tracking"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")

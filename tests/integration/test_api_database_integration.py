@@ -111,7 +111,7 @@ class TestAPIDatabaseIntegration:
             "metadata": {"test_category": True},
         }
 
-    async def test_database_connection_via_api(self, client: AsyncClient):
+    async def test_database_connection_via_api(self, client: AsyncClient) -> None:
         """Test that API can connect to database"""
         # Test health endpoint that checks database connection
         response = await client.get("/health")
@@ -126,7 +126,7 @@ class TestAPIDatabaseIntegration:
         client: AsyncClient,
         test_session: AsyncSession,
         sample_document: Dict[str, Any],
-    ):
+    ) -> None:
         """Test document CRUD operations through API with database persistence"""
         # Skip if ingestion router not available
         try:
@@ -152,7 +152,7 @@ class TestAPIDatabaseIntegration:
 
     async def test_search_integration(
         self, client: AsyncClient, test_session: AsyncSession
-    ):
+    ) -> None:
         """Test search functionality with database integration"""
         # First, add some test data
         test_query = {
@@ -180,7 +180,7 @@ class TestAPIDatabaseIntegration:
         client: AsyncClient,
         test_session: AsyncSession,
         sample_document: Dict[str, Any],
-    ):
+    ) -> None:
         """Test classification functionality with database integration"""
         classification_request = {
             "text": sample_document["content"],
@@ -204,7 +204,7 @@ class TestAPIDatabaseIntegration:
 
     async def test_taxonomy_database_integration(
         self, client: AsyncClient, test_session: AsyncSession
-    ):
+    ) -> None:
         """Test taxonomy operations with database persistence"""
         try:
             # Test getting taxonomy tree
@@ -239,7 +239,7 @@ class TestAPIDatabaseIntegration:
         except Exception as e:
             pytest.skip(f"PostgreSQL integration test failed: {e}")
 
-    async def test_error_handling_integration(self, client: AsyncClient):
+    async def test_error_handling_integration(self, client: AsyncClient) -> None:
         """Test error handling across API and database layers"""
         # Test invalid request data
         invalid_data = {"invalid_field": "invalid_value"}
@@ -255,7 +255,7 @@ class TestAPIDatabaseIntegration:
         except Exception as e:
             pytest.skip(f"Error handling test skipped: {e}")
 
-    async def test_transaction_rollback(self, test_session: AsyncSession):
+    async def test_transaction_rollback(self, test_session: AsyncSession) -> None:
         """Test database transaction rollback behavior"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Database components not available")
