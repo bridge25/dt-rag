@@ -78,7 +78,6 @@ def get_langfuse_client() -> Optional[Any]:
             public_key=public_key,
             secret_key=secret_key,
             host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
-            enabled=True,
         )
 
         logger.info(f"Langfuse client initialized: {_langfuse_client.base_url}")
@@ -111,7 +110,7 @@ def get_langfuse_status() -> Dict[str, Any]:
     if _langfuse_client:
         try:
             # Test client health
-            status["host"] = _langfuse_client.base_url
+            status["host"] = _langfuse_client._base_url
             status["health"] = "healthy"
         except Exception as e:
             status["health"] = f"unhealthy: {e}"

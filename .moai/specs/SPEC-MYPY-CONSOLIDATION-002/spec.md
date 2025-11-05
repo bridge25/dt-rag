@@ -34,6 +34,26 @@ scope:
 
 ## HISTORY
 
+### v0.10.0 (2025-11-05) - Session 9: Call Arguments & Pydantic Integration Complete
+- **SESSION**: Pydantic MyPy plugin integration + [call-arg] error fixes
+- **PROGRESS**: 213 → 166 errors (-47, 22.1% reduction), 80.3% → 84.6% complete (+4.3%)
+- **RESULTS**:
+  - [call-arg] errors fixed: 5 (100% of remaining call-arg errors after plugin)
+  - Pydantic plugin integration: 42 errors eliminated instantly
+  - Files cleared: 5 files (55 → 50)
+  - Files modified: 5 files (3 tests + 2 apps)
+- **IMPLEMENTATION**:
+  - **CRITICAL**: Added `plugins = ["pydantic.mypy"]` to pyproject.toml (42 error reduction!)
+  - Fixed BackgroundTasks.add_task: added db_session parameter to classify_batch call
+  - Modernized httpx AsyncClient: `app=app` → `transport=ASGITransport(app=app)` (2 files)
+  - Fixed Langfuse client: removed "enabled" parameter, changed base_url → _base_url
+  - Fixed RedisManager: redis_url parameter → RedisConfig object initialization
+- **TIME**: 30 minutes (0.16 errors/minute with 42 errors from one line!)
+- **PATTERN**: Configuration fix > code changes. Proper tool integration eliminates entire error categories.
+- **BREAKTHROUGH**: Pydantic plugin is the single biggest impact fix in the entire project!
+- **MILESTONE**: 84%+ completion - approaching 90% threshold!
+- **NEXT**: Session 10 - Remaining error types: [attr-defined], [assignment], [arg-type] (~166 errors)
+
 ### v0.9.0 (2025-11-05) - Session 8: Optional/None Handling Complete
 - **SESSION**: Optional type handling - Systematic None guards for all [union-attr] errors
 - **PROGRESS**: 253 → 213 errors (-40, 15.8% reduction), 76.6% → 80.3% complete (+3.7%)

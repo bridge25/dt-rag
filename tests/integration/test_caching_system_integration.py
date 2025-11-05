@@ -358,9 +358,10 @@ class TestCachingSystemIntegration:
 
         try:
             # Use a test Redis database (e.g., db=15)
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/15")
+            from apps.api.cache.redis_manager import RedisConfig
 
-            manager = RedisManager(redis_url=redis_url)
+            config = RedisConfig(host="localhost", port=6379, db=15)
+            manager = RedisManager(config=config)
             await manager.initialize()
 
             # Test basic operations

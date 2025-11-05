@@ -12,7 +12,7 @@ import os
 import asyncio
 from typing import Dict, Any, List
 from datetime import datetime, timezone
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -84,7 +84,7 @@ class TestAPIDatabaseIntegration:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Required components not available")
 
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             yield client
 
     @pytest.fixture

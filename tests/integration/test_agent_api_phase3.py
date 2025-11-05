@@ -8,7 +8,7 @@ Tests POST /refresh, GET /status, GET /history, DELETE /tasks endpoints.
 import pytest
 import uuid
 from datetime import datetime, timedelta
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from apps.api.main import app
 from apps.core.db_session import async_session
 from apps.api.agent_dao import AgentDAO
@@ -41,7 +41,7 @@ class TestAgentAPIPhase3:
     @pytest.fixture
     async def client(self):
         """Create async HTTP client"""
-        async with AsyncClient(app=app, base_url="http://test") as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             yield ac
 
     @pytest.mark.asyncio

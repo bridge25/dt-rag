@@ -361,7 +361,7 @@ async def classify_batch(
         # For large batches, process in background
         if len(request.items) > 50:
             batch_id = str(uuid.uuid4())
-            background_tasks.add_task(service.classify_batch, request)
+            background_tasks.add_task(service.classify_batch, request, db_session)
             return JSONResponse(
                 content={
                     "batch_id": batch_id,
