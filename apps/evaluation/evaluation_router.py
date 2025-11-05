@@ -91,7 +91,7 @@ async def get_experiment_tracker() -> ExperimentTracker:
 # Core evaluation endpoints
 
 
-@evaluation_router.post("/evaluate", response_model=EvaluationResult)  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/evaluate", response_model=EvaluationResult)  # Decorator lacks type stubs
 async def evaluate_rag_response(
     request: EvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
@@ -137,7 +137,7 @@ async def evaluate_rag_response(
         )
 
 
-@evaluation_router.post("/evaluate/batch")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/evaluate/batch")  # Decorator lacks type stubs
 async def evaluate_batch(
     request: EvaluationBatchRequest,
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
@@ -198,7 +198,7 @@ async def evaluate_batch(
 # Quality monitoring endpoints
 
 
-@evaluation_router.get("/quality/dashboard", response_model=QualityDashboard)  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.get("/quality/dashboard", response_model=QualityDashboard)  # Decorator lacks type stubs
 async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_monitor)) -> QualityDashboard:
     """
     Get comprehensive quality monitoring dashboard
@@ -230,7 +230,7 @@ async def get_quality_dashboard(monitor: QualityMonitor = Depends(get_quality_mo
         )
 
 
-@evaluation_router.get("/quality/trends")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.get("/quality/trends")  # Decorator lacks type stubs
 async def get_quality_trends(
     hours: int = Query(24, ge=1, le=168, description="Hours of trend data to retrieve"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
@@ -251,7 +251,7 @@ async def get_quality_trends(
         )
 
 
-@evaluation_router.get("/quality/alerts", response_model=List[QualityAlert])  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.get("/quality/alerts", response_model=List[QualityAlert])  # Decorator lacks type stubs
 async def get_quality_alerts(
     active_only: bool = Query(True, description="Only return active alerts"),
     monitor: QualityMonitor = Depends(get_quality_monitor),
@@ -272,7 +272,7 @@ async def get_quality_alerts(
         )
 
 
-@evaluation_router.put("/quality/thresholds")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.put("/quality/thresholds")  # Decorator lacks type stubs
 async def update_quality_thresholds(
     thresholds: QualityThresholds,
     monitor: QualityMonitor = Depends(get_quality_monitor),
@@ -301,7 +301,7 @@ async def update_quality_thresholds(
 # A/B testing and experiment endpoints
 
 
-@evaluation_router.post("/experiments")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/experiments")  # Decorator lacks type stubs
 async def create_experiment(
     config: ExperimentConfig,
     tracker: ExperimentTracker = Depends(get_experiment_tracker),
@@ -330,7 +330,7 @@ async def create_experiment(
         )
 
 
-@evaluation_router.post("/experiments/{experiment_id}/start")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/experiments/{experiment_id}/start")  # Decorator lacks type stubs
 async def start_experiment(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
 ) -> Dict[str, Any]:
@@ -365,7 +365,7 @@ async def start_experiment(
         )
 
 
-@evaluation_router.post("/experiments/{experiment_id}/stop")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/experiments/{experiment_id}/stop")  # Decorator lacks type stubs
 async def stop_experiment(
     experiment_id: str,
     reason: str = Query("manual_stop", description="Reason for stopping experiment"),
@@ -402,7 +402,7 @@ async def stop_experiment(
         )
 
 
-@evaluation_router.get("/experiments/{experiment_id}/status")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.get("/experiments/{experiment_id}/status")  # Decorator lacks type stubs
 async def get_experiment_status(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
 ) -> Any:
@@ -432,7 +432,7 @@ async def get_experiment_status(
 
 @evaluation_router.get(
     "/experiments/{experiment_id}/results", response_model=ExperimentResults
-)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+)  # FastAPI decorator lacks type stubs
 async def get_experiment_results(
     experiment_id: str, tracker: ExperimentTracker = Depends(get_experiment_tracker)
 ) -> ExperimentResults:
@@ -465,7 +465,7 @@ async def get_experiment_results(
 # Canary deployment endpoints
 
 
-@evaluation_router.post("/canary/deploy")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/canary/deploy")  # Decorator lacks type stubs
 async def deploy_canary(
     canary_config: Dict[str, Any],
     traffic_percentage: float = Query(
@@ -501,7 +501,7 @@ async def deploy_canary(
 # Golden dataset endpoints
 
 
-@evaluation_router.post("/dataset/validate")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/dataset/validate")  # Decorator lacks type stubs
 async def validate_dataset(entries: List[DatasetEntry]) -> DatasetValidationResult:
     """
     Validate golden dataset entries
@@ -573,7 +573,7 @@ async def validate_dataset(entries: List[DatasetEntry]) -> DatasetValidationResu
         )
 
 
-@evaluation_router.post("/dataset/benchmark")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.post("/dataset/benchmark")  # Decorator lacks type stubs
 async def run_dataset_benchmark(
     dataset_id: str = Query(..., description="Golden dataset ID to benchmark against"),
     evaluator: RAGASEvaluator = Depends(get_ragas_evaluator),
@@ -629,7 +629,7 @@ async def run_dataset_benchmark(
 # Analytics endpoints
 
 
-@evaluation_router.get("/analytics/summary")  # type: ignore[misc]  # Decorator lacks type stubs
+@evaluation_router.get("/analytics/summary")  # Decorator lacks type stubs
 async def get_evaluation_analytics(
     days: int = Query(7, ge=1, le=90, description="Days of analytics data")
 ) -> Dict[str, Any]:

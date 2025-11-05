@@ -273,7 +273,7 @@ async def get_db_session() -> Any:
 # API Endpoints
 
 
-@classification_router.post("/", response_model=ClassifyResponse)  # type: ignore[misc]  # Decorator lacks type stubs
+@classification_router.post("/", response_model=ClassifyResponse)  # Decorator lacks type stubs
 async def classify_document_chunk(
     request: ClassifyRequest,
     http_request: Request,
@@ -333,7 +333,7 @@ async def classify_document_chunk(
         )
 
 
-@classification_router.post("/batch", response_model=BatchClassifyResponse)  # type: ignore[misc]  # Decorator lacks type stubs
+@classification_router.post("/batch", response_model=BatchClassifyResponse)  # Decorator lacks type stubs
 async def classify_batch(
     request: BatchClassifyRequest,
     background_tasks: BackgroundTasks,
@@ -386,7 +386,7 @@ async def classify_batch(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/hitl/tasks", response_model=List[HITLTask])  # type: ignore[misc]  # Decorator lacks type stubs
+@classification_router.get("/hitl/tasks", response_model=List[HITLTask])  # Decorator lacks type stubs
 async def get_hitl_tasks(
     limit: int = Query(50, ge=1, le=100, description="Maximum tasks to return"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
@@ -419,7 +419,7 @@ async def get_hitl_tasks(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.post("/hitl/review")  # type: ignore[misc]  # Decorator lacks type stubs
+@classification_router.post("/hitl/review")  # Decorator lacks type stubs
 async def submit_hitl_review(
     review: HITLReviewRequest,
     service: ClassificationService = Depends(get_classification_service),
@@ -455,7 +455,7 @@ async def submit_hitl_review(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/analytics", response_model=ClassificationAnalytics)  # type: ignore[misc]  # Decorator lacks type stubs
+@classification_router.get("/analytics", response_model=ClassificationAnalytics)  # Decorator lacks type stubs
 async def get_classification_analytics(
     service: ClassificationService = Depends(get_classification_service),
     api_key: str = Depends(verify_api_key),
@@ -482,7 +482,7 @@ async def get_classification_analytics(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/confidence/{chunk_id}")  # type: ignore[misc]  # Decorator lacks type stubs
+@classification_router.get("/confidence/{chunk_id}")  # Decorator lacks type stubs
 async def get_classification_confidence(
     chunk_id: str,
     service: ClassificationService = Depends(get_classification_service),
@@ -528,7 +528,7 @@ async def get_classification_confidence(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@classification_router.get("/status")  # type: ignore[misc]  # Decorator lacks type stubs
+@classification_router.get("/status")  # Decorator lacks type stubs
 async def get_classification_status(api_key: str = Depends(verify_api_key)) -> Dict[str, Any]:
     """
     Get classification system status and health
