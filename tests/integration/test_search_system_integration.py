@@ -30,14 +30,14 @@ try:
 
     # Check for search modules
     try:
-        from apps.api.search.hybrid_search import HybridSearchEngine
+        from apps.search.hybrid_search_engine import HybridSearchEngine
 
         HYBRID_SEARCH_AVAILABLE = True
     except ImportError:
         HYBRID_SEARCH_AVAILABLE = False
 
     try:
-        from apps.api.search.embedding_service import EmbeddingService
+        from apps.api.embedding_service import EmbeddingService
 
         EMBEDDING_SERVICE_AVAILABLE = True
     except ImportError:
@@ -143,7 +143,7 @@ class TestSearchSystemIntegration:
 
                 # Test single document embedding
                 text = sample_documents[0]["content"]
-                embedding = await embedding_service.get_embedding(text)
+                embedding = await embedding_service.generate_embedding(text)
 
                 assert isinstance(embedding, list)
                 assert len(embedding) == 1536
@@ -304,7 +304,7 @@ class TestSearchSystemIntegration:
 
             # Test with real API call
             test_text = "This is a test document for embedding generation."
-            embedding = await embedding_service.get_embedding(test_text)
+            embedding = await embedding_service.generate_embedding(test_text)
 
             assert isinstance(embedding, list)
             assert len(embedding) == 1536  # OpenAI ada-002 dimension
@@ -354,7 +354,7 @@ class TestSearchSystemIntegration:
 
                 try:
                     embedding_service = EmbeddingService()
-                    embedding = await embedding_service.get_embedding("test")
+                    embedding = await embedding_service.generate_embedding("test")
                     # Should either return None or raise handled exception
                     assert embedding is None or isinstance(embedding, list)
                 except Exception:

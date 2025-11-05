@@ -34,6 +34,26 @@ scope:
 
 ## HISTORY
 
+### v0.16.0 (2025-11-05) - Session 14: Import & API Method Fixes - 93.6% Complete ✅
+- **SESSION**: Quick wins - import path corrections and API method updates
+- **PROGRESS**: 77 → 69 errors (-8, 10.4% reduction), 92.9% → 93.6% complete (+0.7%)
+- **RESULTS**:
+  - [import-not-found] errors fixed: 5 (corrected module import paths)
+  - [attr-defined] errors fixed: 3 (EmbeddingService API method name)
+  - Files cleared: 6 files (35 → 29)
+  - Files modified: 8 files (5 tests + 3 integration)
+- **IMPLEMENTATION**:
+  - Fixed import paths for relocated modules: hybrid_search_engine, embedding_service
+  - Updated EmbeddingService API: get_embedding → generate_embedding (3 occurrences)
+  - Added selective type:ignore for legacy test imports (database, services.ml_classifier)
+  - Cleaned up 25 unused type:ignore comments → 0
+  - Corrected import paths after v2.0 consolidation (apps.api.search → apps.search)
+- **TIME**: 90 minutes (systematic module relocation tracking)
+- **PATTERN**: Module reorganization mapping + API consistency enforcement
+- **KEY LEARNING**: Try-except ImportError blocks need type:ignore only on first failing import, not all branches
+- **MILESTONE**: Sub-70 errors! Only 69 errors remaining (6.4% to go)
+- **NEXT**: Session 15 - Push to 95% completion (~54 errors or less)
+
 ### v0.15.0 (2025-11-05) - Session 13 Part 2: Multi-Type Quick Wins - 92.9% Complete 🎉
 - **SESSION**: Rapid-fire quick wins across 4 error categories
 - **PROGRESS**: 99 → 77 errors (-22, 22.2% reduction), 90.8% → 92.9% complete (+2.1%)

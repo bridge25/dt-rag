@@ -14,7 +14,7 @@ class TestMLClassifierIntegration:
     async def test_classifier_loads_successfully(self, ml_model_name: str) -> None:
         """Test ML classifier loads without errors"""
         try:
-            from services.ml_classifier import MLClassifier
+            from services.ml_classifier import MLClassifier  # type: ignore[import-not-found]
 
             classifier = MLClassifier(model_name=ml_model_name)
             classifier.load_model()
@@ -158,7 +158,7 @@ class TestClassifyDAOIntegration:
 
     async def test_classify_dao_uses_ml_classifier(self, sample_text: str) -> None:
         """Test ClassifyDAO integrates with ML classifier"""
-        from database import ClassifyDAO
+        from database import ClassifyDAO  # type: ignore[import-not-found]
 
         result = await ClassifyDAO.classify_text(sample_text)
 

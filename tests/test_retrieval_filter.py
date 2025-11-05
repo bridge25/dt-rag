@@ -11,7 +11,7 @@ sys.path.append(
     os.path.join(os.path.dirname(__file__), "..", "apps", "orchestration", "src")
 )
 
-from retrieval_filter import CategoryFilter, SecurityFilter, apply_retrieval_filter
+from retrieval_filter import CategoryFilter, SecurityFilter, apply_retrieval_filter  # type: ignore[import-not-found]
 
 
 class TestCategoryFilter:

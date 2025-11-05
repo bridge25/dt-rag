@@ -13,7 +13,7 @@ import tracemalloc
 from typing import Any, Dict, List, Union
 
 import psutil
-from langgraph_pipeline import LangGraphPipeline, PipelineRequest
+from apps.orchestration.src.langgraph_pipeline import LangGraphPipeline, PipelineRequest
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

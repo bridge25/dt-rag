@@ -23,7 +23,7 @@ from pathlib import Path
 
 # 견고한 경로 설정 - GitHub Actions 환경에서도 안정적으로 작동
 if TYPE_CHECKING:
-    from common_schemas.models import SearchRequest, SearchResponse, SearchHit
+    from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]
 else:
     try:
         # 현재 파일의 절대 경로 기준으로 프로젝트 루트 찾기

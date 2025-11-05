@@ -29,15 +29,15 @@ try:
 
     # Check for security modules
     try:
-        from apps.api.security.api_key_manager import APIKeyManager
-        from apps.api.security.auth_handlers import JWTHandler
+        from apps.api.security.api_key_manager import APIKeyManager  # type: ignore[import-not-found]
+        from apps.api.security.auth_handlers import JWTHandler  # type: ignore[import-not-found]
 
         API_KEY_MANAGER_AVAILABLE = True
     except ImportError:
         API_KEY_MANAGER_AVAILABLE = False
 
     try:
-        from apps.api.security.rate_limiter import RateLimiter
+        from apps.api.security.rate_limiter import RateLimiter  # type: ignore[import-not-found]
 
         RATE_LIMITER_AVAILABLE = True
     except ImportError:

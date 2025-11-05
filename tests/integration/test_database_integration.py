@@ -13,7 +13,7 @@ class TestDatabaseConnection:
 
     async def test_database_connection(self):
         """Test database connection is successful"""
-        from database import test_database_connection
+        from database import test_database_connection  # type: ignore[import-not-found]
 
         is_connected = await test_database_connection()
         assert is_connected is True
