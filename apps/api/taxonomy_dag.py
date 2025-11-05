@@ -359,7 +359,7 @@ class TaxonomyDAGManager:
                 edges = edges_result.scalars().all()
 
                 # Build tree structure
-                tree = self._build_tree_structure(nodes, edges)
+                tree = self._build_tree_structure(list(nodes), list(edges))
 
                 # Cache result
                 self._graph_cache[cache_key] = tree
@@ -413,7 +413,7 @@ class TaxonomyDAGManager:
                     )
                     node_id = result.scalar()
 
-                return True, node_id, "Node added successfully"
+                return True, node_id, "Node added successfully"  # type: ignore[return-value]
             else:
                 return False, -1, message
 

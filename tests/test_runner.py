@@ -59,7 +59,7 @@ class TestRunner:
     def _check_database_available(self) -> bool:
         """Check if database is available"""
         try:
-            import psycopg2
+            import psycopg2  # type: ignore[import-untyped]
             from sqlalchemy import create_engine
 
             db_url = os.getenv("DATABASE_URL")
@@ -268,7 +268,7 @@ class TestRunner:
 
         # Check coverage plugin
         try:
-            import pytest_cov
+            import pytest_cov  # type: ignore[import-untyped]
 
             dependencies["pytest-cov"] = True
         except ImportError:

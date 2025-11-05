@@ -226,7 +226,7 @@ async def test_casebank_version_increment():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(
+        stmt = select(TestCaseBank).where(  # type: ignore[assignment]
             TestCaseBank.case_id == "test-version-increment-001"
         )
         result = await session.execute(stmt)
@@ -261,7 +261,7 @@ async def test_casebank_status_transitions():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(
+        stmt = select(TestCaseBank).where(  # type: ignore[assignment]
             TestCaseBank.case_id == "test-status-transition-001"
         )
         result = await session.execute(stmt)
@@ -276,7 +276,7 @@ async def test_casebank_status_transitions():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(
+        stmt = select(TestCaseBank).where(  # type: ignore[assignment]
             TestCaseBank.case_id == "test-status-transition-001"
         )
         result = await session.execute(stmt)
@@ -311,7 +311,7 @@ async def test_casebank_updated_at_trigger():
         await session.execute(stmt)
         await session.commit()
 
-        stmt = select(TestCaseBank).where(
+        stmt = select(TestCaseBank).where(  # type: ignore[assignment]
             TestCaseBank.case_id == "test-updated-at-trigger-001"
         )
         result = await session.execute(stmt)

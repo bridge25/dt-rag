@@ -126,7 +126,7 @@ class ConsolidationPolicy:
                     f"(success_rate={case.success_rate}%)"
                 )
 
-            removed_ids.append(case.case_id)
+            removed_ids.append(str(case.case_id))
 
         return removed_ids
 
@@ -261,7 +261,7 @@ class ConsolidationPolicy:
                     f"(last_used={case.last_used_at})"
                 )
 
-            archived_ids.append(case.case_id)
+            archived_ids.append(str(case.case_id))
 
         return archived_ids
 

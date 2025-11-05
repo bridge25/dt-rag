@@ -349,7 +349,7 @@ async def update_api_key(
 async def revoke_api_key(
     key_id: str,
     reason: str = Body(..., description="Reason for revocation"),
-    http_request: Request = None,
+    http_request: Request = None,  # type: ignore[assignment]
     db: AsyncSession = Depends(get_async_session),
     current_key: APIKeyInfo = Depends(require_admin_key),
 ) -> Dict[str, str]:

@@ -4,7 +4,7 @@ Tests all tables, indexes, constraints, and procedures
 """
 
 import pytest
-import psycopg2
+import psycopg2  # type: ignore[import-untyped]
 import os
 from typing import List, Dict, Any
 import uuid

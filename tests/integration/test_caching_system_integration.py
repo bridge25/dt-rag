@@ -301,7 +301,7 @@ class TestCachingSystemIntegration:
             # Test concurrent gets
             get_tasks = []
             for i in range(5):
-                task = redis_manager.get(f"concurrent:key:{i}")
+                task = redis_manager.get(f"concurrent:key:{i}")  # type: ignore[assignment]
                 get_tasks.append(task)
 
             get_results = await asyncio.gather(*get_tasks, return_exceptions=True)
