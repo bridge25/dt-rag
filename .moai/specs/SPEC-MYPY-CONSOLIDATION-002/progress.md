@@ -1,0 +1,275 @@
+# MyPy Type Safety Progress Tracker
+
+**SPEC**: SPEC-MYPY-CONSOLIDATION-002
+**Goal**: 589 errors → 0 errors (100% type coverage)
+**Start Date**: 2025-11-05
+**Target Completion**: 2025-11-20 (10-14 working days)
+
+---
+
+## 📊 Overall Progress
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| **Total Errors (Baseline)** | 1,079 | - |
+| **Errors Fixed (Previous)** | 490 | 45.4% |
+| **Current Errors** | 589 | 54.6% |
+| **Files with Errors** | 87 | - |
+| **Last Updated** | 2025-11-05 | - |
+
+### Progress Chart
+```
+[██████████░░░░░░░░░░] 45.4% Complete (490/1,079 errors)
+Remaining: 589 errors across 87 files
+```
+
+---
+
+## 🎯 Work Strategy
+
+### Phase 0: Quick Wins (Priority: HIGHEST, ~1-2 days)
+
+**Unused "type: ignore" comments**: 183 errors
+- **Strategy**: Remove all unused `# type: ignore` comments
+- **Difficulty**: ⭐ Very Easy
+- **Impact**: 183/589 errors (31% of remaining)
+- **Tool**: `ruff check --select PGH003 --fix` or manual removal
+
+**Action Items**:
+- [ ] Run automated removal: `find apps/ tests/ -name "*.py" -exec sed -i '/# type: ignore$/d' {} \;`
+- [ ] Verify with mypy
+- [ ] Commit: "fix(mypy): remove 183 unused type:ignore comments"
+
+---
+
+### Phase 1: Return Type Annotations (Priority: HIGH, ~2-3 days)
+
+**Missing return type annotations**: 91 errors
+- **Strategy**: Add `-> ReturnType` to all functions
+- **Difficulty**: ⭐⭐ Easy-Medium
+- **Impact**: 91/589 errors (15.4%)
+
+**Top Files** (sorted by errors):
+- [ ] tests/unit/test_search_router.py (est. 10 functions)
+- [ ] apps/evaluation/evaluation_router.py (est. 8 functions)
+- [ ] apps/orchestration/src/main.py (est. 7 functions)
+- [ ] apps/api/main.py (est. 6 functions)
+- [ ] apps/security/routers/security_router.py (est. 5 functions)
+
+**Action Items**:
+- [ ] Create template: `def func() -> None:` or `def func() -> Dict[str, Any]:`
+- [ ] Work through files systematically (10 files/session)
+- [ ] Test after each file: `mypy {file}.py`
+
+---
+
+### Phase 2: Python 3.10 Union Syntax (Priority: HIGH, ~1 day)
+
+**X | Y syntax for unions requires Python 3.10**: 24 errors
+- **Strategy**: Replace `X | Y` with `Union[X, Y]` or upgrade Python version check
+- **Difficulty**: ⭐ Very Easy
+- **Impact**: 24/589 errors (4.1%)
+
+**Files Affected** (estimated):
+- [ ] apps/api/routers/*.py (multiple files)
+- [ ] apps/orchestration/src/*.py
+
+**Action Items**:
+- [ ] Search: `grep -r "def.*-> .*|" apps/ tests/`
+- [ ] Replace: `str | None` → `Optional[str]`
+- [ ] Replace: `X | Y` → `Union[X, Y]`
+- [ ] Add imports: `from typing import Union, Optional`
+
+---
+
+### Phase 3: Optional/None Handling (Priority: MEDIUM, ~3-4 days)
+
+**Item "None" of "Optional" errors**: 40 errors
+- **Strategy**: Add explicit `is not None` checks before usage
+- **Difficulty**: ⭐⭐⭐ Medium
+- **Impact**: 40/589 errors (6.8%)
+
+**Top Files**:
+- [ ] tests/integration/test_caching_system_integration.py (est. 5 errors)
+- [ ] apps/api/routers/search.py (est. 4 errors)
+- [ ] apps/api/routers/agent_router.py (est. 3 errors)
+
+**Action Items**:
+- [ ] Add guards: `if value is not None:`
+- [ ] Use assert: `assert value is not None`
+- [ ] Refactor to avoid Optional where possible
+
+---
+
+### Phase 4: Object Indexing (Priority: MEDIUM, ~2-3 days)
+
+**Value of type "object" is not indexable**: 29 errors
+- **Strategy**: Add explicit type annotations or cast
+- **Difficulty**: ⭐⭐⭐⭐ Hard
+- **Impact**: 29/589 errors (4.9%)
+
+**Top Files**:
+- [ ] tests/unit/test_search_router.py (est. 4 errors)
+- [ ] apps/api/routers/search.py (est. 3 errors)
+
+**Action Items**:
+- [ ] Identify object types (SQLAlchemy models, JSON responses)
+- [ ] Add explicit casts: `cast(Dict[str, Any], obj)`
+- [ ] Improve type hints in function signatures
+
+---
+
+### Phase 5: SearchConfig Missing Arguments (Priority: HIGH, ~1 day)
+
+**Missing named arguments for "SearchConfig"**: 29 errors (8+8+7+7=30)
+- **Strategy**: Add default values to SearchConfig or provide arguments
+- **Difficulty**: ⭐⭐ Easy-Medium
+- **Impact**: 29/589 errors (4.9%)
+
+**Action Items**:
+- [ ] Check SearchConfig dataclass definition
+- [ ] Add defaults: `rerank_threshold: float = 0.5`
+- [ ] Or provide arguments at call sites
+
+---
+
+### Phase 6: Remaining Errors (Priority: LOW-MEDIUM, ~3-4 days)
+
+**Miscellaneous errors**: ~192 errors
+- Incompatible types in assignment (11)
+- CompletedProcess type issues (11)
+- Dict entry incompatible types (6)
+- Returning Any from Response (5)
+- Others (~159)
+
+**Strategy**: Tackle file-by-file, prioritize `apps/` over `tests/`
+
+---
+
+## 📂 File Priority List
+
+### Apps (Core Business Logic) - Priority: CRITICAL
+
+**apps/evaluation/** (30 errors):
+- [ ] evaluation_router.py (22 errors) ← START HERE
+- [ ] dashboard.py (8 errors)
+
+**apps/orchestration/src/** (26 errors):
+- [ ] main.py (20 errors)
+- [ ] consolidation_policy.py (6 errors)
+
+**apps/security/routers/** (25 errors):
+- [ ] security_router.py (18 errors)
+- [ ] security_middleware.py (7 errors)
+
+**apps/api/routers/** (84 errors):
+- [ ] agent_router.py (15 errors)
+- [ ] search.py (13 errors)
+- [ ] taxonomy.py (11 errors)
+- [ ] search_router.py (11 errors)
+- [ ] admin/api_keys.py (11 errors)
+- [ ] embedding_router.py (10 errors)
+- [ ] agent_factory_router.py (9 errors)
+- [ ] classification_router.py (8 errors)
+- [ ] orchestration_router.py (7 errors)
+- [ ] taxonomy_router.py (6 errors)
+- [ ] evaluation.py (6 errors)
+
+**apps/api/** (19 errors):
+- [ ] main.py (13 errors)
+- [ ] taxonomy_dag.py (6 errors)
+
+**apps/classification/** (4 errors):
+- [ ] hitl_queue.py (4 errors)
+
+### Tests - Priority: MEDIUM (can defer to later sessions)
+
+**tests/unit/** (52 errors):
+- [ ] test_search_router.py (31 errors)
+- [ ] test_casebank_metadata.py (13 errors)
+- [ ] test_consolidation_policy.py (9 errors)
+- [ ] test_config.py (8 errors)
+
+**tests/integration/** (119 errors):
+- [ ] test_agent_background_tasks_migration.py (22 errors)
+- [ ] test_caching_system_integration.py (20 errors)
+- [ ] test_agent_background_tasks.py (17 errors)
+- [ ] test_api_database_integration.py (16 errors)
+- [ ] test_security_system_integration.py (15 errors)
+- [ ] test_api_endpoints.py (14 errors)
+- [ ] test_hybrid_search.py (10 errors)
+- [ ] test_consolidation_workflow.py (9 errors)
+- [ ] test_casebank_crud.py (9 errors)
+
+**tests/e2e/** (24 errors):
+- [ ] test_complete_workflow.py (14 errors)
+- [ ] test_user_scenarios.py (10 errors)
+
+**tests/security/** (8 errors):
+- [ ] test_api_key_validation.py (8 errors)
+
+**tests/** (18 errors):
+- [ ] test_ingestion_metrics.py (18 errors)
+
+---
+
+## ✅ Completed Files
+
+_(Files will be marked here as sessions progress)_
+
+### Session 1 (2025-11-05) - Planning & Setup
+- [x] progress.md created
+- [x] mypy-progress.sh created
+- [x] Initial error analysis complete
+
+### Session 2 (TBD) - Quick Wins
+- [ ] Remove 183 unused type:ignore comments
+- [ ] Fix Python 3.10 union syntax (24 errors)
+- [ ] Total expected fixes: ~207 errors → **382 remaining**
+
+### Session 3 (TBD) - Return Types Part 1
+- [ ] apps/evaluation/evaluation_router.py (22 → 14 errors estimated)
+- [ ] apps/orchestration/src/main.py (20 → 13 errors estimated)
+- [ ] apps/security/routers/security_router.py (18 → 13 errors estimated)
+- [ ] Total expected fixes: ~20 errors → **362 remaining**
+
+---
+
+## 📝 Daily Session Log
+
+### 2025-11-05 (Session 1) - Setup & Planning
+- **Status**: Planning complete
+- **Errors Fixed**: 0
+- **Remaining**: 589
+- **Work Done**:
+  - Analyzed all 589 errors by file and type
+  - Created progress.md tracking document
+  - Created mypy-progress.sh automation script
+  - Identified Quick Wins (207 errors) for Session 2
+- **Next Session Goal**: Remove unused type:ignore comments (183 errors)
+- **Blockers**: None
+- **Notes**: Baseline established, ready to start implementation
+
+---
+
+## 🚀 Next Steps (Immediate)
+
+1. **Commit preparation files** to git
+2. **Start Session 2** (tomorrow or next session):
+   - Quick Win: Remove 183 unused `type: ignore` comments
+   - Quick Win: Fix 24 Python 3.10 union syntax errors
+   - Goal: 589 → 382 errors (~35% reduction in one session)
+
+---
+
+## 📚 References
+
+- **SPEC**: `.moai/specs/SPEC-MYPY-CONSOLIDATION-002/spec.md`
+- **Full MyPy Report**: `/tmp/mypy_full_report.txt` (regenerate each session)
+- **Progress Script**: `.moai/scripts/mypy-progress.sh`
+- **MyPy Docs**: https://mypy.readthedocs.io/en/stable/
+
+---
+
+**Last Updated**: 2025-11-05 by Claude (Alfred)
+**Next Update**: After Session 2 completion

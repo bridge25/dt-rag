@@ -95,3 +95,6 @@ uv.lock
 
 # MoAI backups
 .moai/config.json.backup-*
+.moai/specs/SPEC-MYPY-CONSOLIDATION-002/mypy-report.txt
+.moai/specs/SPEC-MYPY-CONSOLIDATION-002/mypy-count.txt
+.moai/specs/SPEC-MYPY-CONSOLIDATION-002/mypy-history.txt
