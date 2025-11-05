@@ -36,7 +36,7 @@ class TestHealthStatus:
     def test_health_status_comparison(self):
         """Test HealthStatus comparison and equality"""
         assert HealthStatus.HEALTHY == HealthStatus.HEALTHY
-        assert HealthStatus.HEALTHY != HealthStatus.UNHEALTHY
+        assert HealthStatus.HEALTHY != HealthStatus.UNHEALTHY  # type: ignore[comparison-overlap]
 
 
 class TestComponentHealth:
@@ -544,7 +544,7 @@ class TestHealthCheckerIntegration:
         checker = HealthChecker()
 
         # Perform health check
-        system_health = await checker.check_all_health()
+        system_health = await checker.check_all_health()  # type: ignore[attr-defined]
 
         # Verify results structure
         assert isinstance(system_health, SystemHealth)
@@ -577,7 +577,7 @@ class TestHealthCheckerIntegration:
         assert "custom" in checker.health_checks
 
         # Check specific component
-        result = await checker.check_component_health("custom")
+        result = await checker.check_component_health("custom")  # type: ignore[attr-defined]
 
         assert result is not None
         assert result.name == "custom"

@@ -113,7 +113,7 @@ async def get_taxonomy_service() -> TaxonomyService:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@taxonomy_router.get("/versions", response_model=Dict[str, Any])  # type: ignore[misc]
+@taxonomy_router.get("/versions", response_model=Dict[str, Any])
 async def list_taxonomy_versions(
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -164,7 +164,7 @@ async def list_taxonomy_versions(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@taxonomy_router.get("/{version}/tree", response_model=Dict[str, Any])  # type: ignore[misc]
+@taxonomy_router.get("/{version}/tree", response_model=Dict[str, Any])
 async def get_taxonomy_tree(
     version: str = Path(..., description="Taxonomy version"),
     expand_level: int = Query(
@@ -222,7 +222,7 @@ async def get_taxonomy_tree(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@taxonomy_router.get("/{version}/statistics", response_model=TaxonomyStatistics)  # type: ignore[misc]
+@taxonomy_router.get("/{version}/statistics", response_model=TaxonomyStatistics)
 async def get_taxonomy_statistics(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
@@ -253,7 +253,7 @@ async def get_taxonomy_statistics(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@taxonomy_router.get("/{version}/validate", response_model=ValidationResult)  # type: ignore[misc]
+@taxonomy_router.get("/{version}/validate", response_model=ValidationResult)
 async def validate_taxonomy(
     version: str = Path(..., description="Taxonomy version"),
     service: TaxonomyService = Depends(get_taxonomy_service),
@@ -286,7 +286,7 @@ async def validate_taxonomy(
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 @taxonomy_router.get(
     "/{base_version}/compare/{target_version}", response_model=VersionComparison
-)  # type: ignore[misc]
+)
 async def compare_taxonomy_versions(
     base_version: str = Path(..., description="Base version for comparison"),
     target_version: str = Path(..., description="Target version for comparison"),
@@ -333,7 +333,7 @@ async def compare_taxonomy_versions(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@taxonomy_router.get("/{version}/search", response_model=List[TaxonomyNode])  # type: ignore[misc]
+@taxonomy_router.get("/{version}/search", response_model=List[TaxonomyNode])
 async def search_taxonomy_nodes(
     version: str = Path(..., description="Taxonomy version"),
     q: str = Query(..., min_length=1, description="Search query"),

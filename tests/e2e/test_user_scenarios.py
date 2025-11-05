@@ -43,7 +43,7 @@ class TestUserScenarios:
         ) as client:
             yield client
 
-    async def test_new_user_discovery_scenario(self, client: AsyncClient):
+    async def test_new_user_discovery_scenario(self, client: AsyncClient) -> None:
         """
         Scenario: New user explores the API to understand capabilities
         """
@@ -100,7 +100,7 @@ class TestUserScenarios:
         except Exception as e:
             pytest.skip(f"New user discovery scenario failed: {e}")
 
-    async def test_researcher_workflow_scenario(self, client: AsyncClient):
+    async def test_researcher_workflow_scenario(self, client: AsyncClient) -> None:
         """
         Scenario: Researcher uploads documents and searches for related content
         """
@@ -221,7 +221,7 @@ class TestUserScenarios:
         except Exception as e:
             pytest.skip(f"Researcher workflow scenario failed: {e}")
 
-    async def test_content_manager_scenario(self, client: AsyncClient):
+    async def test_content_manager_scenario(self, client: AsyncClient) -> None:
         """
         Scenario: Content manager organizes and manages document collection
         """
@@ -349,7 +349,7 @@ class TestUserScenarios:
         except Exception as e:
             pytest.skip(f"Content manager scenario failed: {e}")
 
-    async def test_developer_integration_scenario(self, client: AsyncClient):
+    async def test_developer_integration_scenario(self, client: AsyncClient) -> None:
         """
         Scenario: Developer integrating with the API for application development
         """
@@ -384,7 +384,7 @@ class TestUserScenarios:
 
             # Step 4: Developer tests error handling
             print("Step 4: Testing error handling...")
-            error_test_cases = [
+            error_test_cases: List[Dict[str, Any]] = [
                 {"endpoint": "/search", "data": {"invalid_field": "value"}},
                 {"endpoint": "/classify", "data": {}},
                 {"endpoint": "/nonexistent", "data": None},
@@ -446,7 +446,7 @@ class TestUserScenarios:
         except Exception as e:
             pytest.skip(f"Developer integration scenario failed: {e}")
 
-    async def test_data_scientist_analysis_scenario(self, client: AsyncClient):
+    async def test_data_scientist_analysis_scenario(self, client: AsyncClient) -> None:
         """
         Scenario: Data scientist using the system for research and analysis
         """
@@ -576,7 +576,7 @@ class TestUserScenarios:
         not os.getenv("TEST_PERFORMANCE_SCENARIOS"),
         reason="Performance scenarios only run when TEST_PERFORMANCE_SCENARIOS is set",
     )
-    async def test_high_load_user_scenario(self, client: AsyncClient):
+    async def test_high_load_user_scenario(self, client: AsyncClient) -> None:
         """
         Scenario: Multiple concurrent users accessing the system
         """

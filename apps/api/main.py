@@ -309,7 +309,7 @@ app.add_middleware(RateLimitMiddleware)
 
 
 # Request logging and monitoring middleware
-@app.middleware("http")  # type: ignore[misc]  # Decorator lacks type stubs
+@app.middleware("http")  # Decorator lacks type stubs
 async def log_requests_and_track_metrics(request: Request, call_next: Any) -> Any:
     """Log all HTTP requests and track performance metrics"""
     start_time = time.time()
@@ -362,7 +362,7 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
 
 # Global exception handler
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.exception_handler(HTTPException)  # type: ignore[misc]  # Decorator lacks type stubs
+@app.exception_handler(HTTPException)  # Decorator lacks type stubs
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle HTTP exceptions with RFC 7807 Problem Details format"""
     return JSONResponse(
@@ -380,7 +380,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.exception_handler(Exception)  # type: ignore[misc]  # Decorator lacks type stubs
+@app.exception_handler(Exception)  # Decorator lacks type stubs
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle unexpected exceptions"""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
@@ -400,7 +400,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 # Health check endpoint
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/health", tags=["Health"])  # type: ignore[misc]  # Decorator lacks type stubs
+@app.get("/health", tags=["Health"])  # Decorator lacks type stubs
 async def health_check() -> Dict[str, Any]:
     """Basic health check endpoint with database and Redis status"""
     from apps.api.database import test_database_connection
@@ -445,7 +445,7 @@ async def health_check() -> Dict[str, Any]:
 def custom_openapi() -> Dict[str, Any]:
     """Generate custom OpenAPI schema"""
     if app.openapi_schema:
-        return cast(Dict[str, Any], app.openapi_schema)
+        return app.openapi_schema
 
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: call-arg resolution
     if OPENAPI_SPEC_AVAILABLE:
@@ -468,16 +468,16 @@ def custom_openapi() -> Dict[str, Any]:
     return cast(Dict[str, Any], app.openapi_schema)
 
 
-app.openapi = custom_openapi
+app.openapi = custom_openapi  # type: ignore[method-assign]  # FastAPI pattern for custom OpenAPI
 
 
 # Custom documentation endpoints
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/docs", include_in_schema=False)  # type: ignore[misc]  # Decorator lacks type stubs
+@app.get("/docs", include_in_schema=False)  # Decorator lacks type stubs
 async def custom_swagger_ui_html() -> Any:
     """Custom Swagger UI with enhanced styling"""
     return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
+        openapi_url=app.openapi_url,  # type: ignore[arg-type]  # FastAPI guarantees openapi_url is set
         title=f"{app.title} - Documentation",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
@@ -496,11 +496,11 @@ async def custom_swagger_ui_html() -> Any:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/redoc", include_in_schema=False)  # type: ignore[misc]  # Decorator lacks type stubs
+@app.get("/redoc", include_in_schema=False)  # Decorator lacks type stubs
 async def redoc_html() -> Any:
     """Custom ReDoc documentation"""
     return get_redoc_html(
-        openapi_url=app.openapi_url,
+        openapi_url=app.openapi_url,  # type: ignore[arg-type]  # FastAPI guarantees openapi_url is set
         title=f"{app.title} - ReDoc",
         redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@2.1.3/bundles/redoc.standalone.js",
     )
@@ -558,7 +558,7 @@ app.include_router(
 
 # API versioning support
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/api/versions", tags=["Versioning"])  # type: ignore[misc]  # Decorator lacks type stubs
+@app.get("/api/versions", tags=["Versioning"])  # Decorator lacks type stubs
 async def list_api_versions() -> Dict[str, Any]:
     """List available API versions"""
     return {
@@ -586,7 +586,7 @@ async def list_api_versions() -> Dict[str, Any]:
 
 # Rate limiting info endpoint
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/api/v1/rate-limits", tags=["Rate Limiting"])  # type: ignore[misc]  # Decorator lacks type stubs
+@app.get("/api/v1/rate-limits", tags=["Rate Limiting"])  # Decorator lacks type stubs
 async def get_rate_limit_info() -> Dict[str, Any]:
     """Get rate limiting information for current user"""
     # TODO: Implement actual rate limit checking based on user/API key
@@ -613,7 +613,7 @@ async def get_rate_limit_info() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@app.get("/", tags=["Root"])  # type: ignore[misc]  # Decorator lacks type stubs
+@app.get("/", tags=["Root"])  # Decorator lacks type stubs
 async def root() -> Dict[str, Any]:
     """API root endpoint with comprehensive system information"""
     # 데이터베이스 연결 상태 확인

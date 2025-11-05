@@ -31,7 +31,7 @@ router = APIRouter(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/health", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.get("/health", response_model=Dict[str, Any])
 async def get_embedding_health() -> Dict[str, Any]:
     """임베딩 서비스 헬스체크"""
     try:
@@ -47,7 +47,7 @@ async def get_embedding_health() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/info", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.get("/info", response_model=Dict[str, Any])
 async def get_embedding_info() -> Dict[str, Any]:
     """임베딩 서비스 정보 조회"""
     try:
@@ -63,7 +63,7 @@ async def get_embedding_info() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/status", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.get("/status", response_model=Dict[str, Any])
 async def get_embeddings_status() -> Dict[str, Any]:
     """임베딩 데이터베이스 상태 조회"""
     try:
@@ -79,7 +79,7 @@ async def get_embeddings_status() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/generate", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.post("/generate", response_model=Dict[str, Any])
 async def generate_text_embedding(
     text: str = Body(..., description="임베딩을 생성할 텍스트", embed=True),
     use_cache: bool = Body(True, description="캐시 사용 여부", embed=True),
@@ -106,7 +106,7 @@ async def generate_text_embedding(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/generate/batch", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.post("/generate/batch", response_model=Dict[str, Any])
 async def generate_batch_embeddings(
     texts: List[str] = Body(..., description="임베딩을 생성할 텍스트 목록"),
     batch_size: int = Body(32, description="배치 크기", ge=1, le=100),
@@ -144,7 +144,7 @@ async def generate_batch_embeddings(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/similarity", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.post("/similarity", response_model=Dict[str, Any])
 async def calculate_embedding_similarity(
     embedding1: List[float] = Body(..., description="첫 번째 임베딩 벡터"),
     embedding2: List[float] = Body(..., description="두 번째 임베딩 벡터"),
@@ -175,7 +175,7 @@ async def calculate_embedding_similarity(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/documents/update", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.post("/documents/update", response_model=Dict[str, Any])
 async def update_documents_embeddings(
     background_tasks: BackgroundTasks,
     document_ids: Optional[List[str]] = Body(
@@ -209,7 +209,7 @@ async def update_documents_embeddings(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.post("/cache/clear", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.post("/cache/clear", response_model=Dict[str, Any])
 async def clear_embedding_cache() -> Dict[str, Any]:
     """임베딩 캐시 클리어"""
     try:
@@ -227,7 +227,7 @@ async def clear_embedding_cache() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/models", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.get("/models", response_model=Dict[str, Any])
 async def get_supported_models() -> Dict[str, Any]:
     """지원하는 모델 목록 조회"""
     try:
@@ -244,7 +244,7 @@ async def get_supported_models() -> Dict[str, Any]:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@router.get("/analytics", response_model=Dict[str, Any])  # type: ignore[misc]
+@router.get("/analytics", response_model=Dict[str, Any])
 async def get_embedding_analytics() -> Dict[str, Any]:
     """임베딩 시스템 분석 정보"""
     try:

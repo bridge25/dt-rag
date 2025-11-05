@@ -140,7 +140,7 @@ class ScoreNormalizer:
             if std_score == 0:
                 return [0.0] * len(scores)
 
-            return [(score - mean_score) / std_score for score in scores]
+            return [float((score - mean_score) / std_score) for score in scores]
         except Exception as e:
             logger.error(f"Z-score normalization failed: {e}")
             if SENTRY_AVAILABLE:

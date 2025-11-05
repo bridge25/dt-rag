@@ -16,7 +16,7 @@ import os
 
 # @TEST:TEST-004-004:SCRIPT-TAG
 @pytest.mark.asyncio
-async def test_xss_script_tag_sanitized(async_client: AsyncClient):
+async def test_xss_script_tag_sanitized(async_client: AsyncClient) -> None:
     """
     <script> 태그는 sanitize됨
     REQ-10: WHEN XSS payload is submitted in text field
@@ -43,7 +43,7 @@ async def test_xss_script_tag_sanitized(async_client: AsyncClient):
 
 # @TEST:TEST-004-004:EVENT-HANDLER
 @pytest.mark.asyncio
-async def test_xss_event_handler_blocked(async_client: AsyncClient):
+async def test_xss_event_handler_blocked(async_client: AsyncClient) -> None:
     """
     이벤트 핸들러 기반 XSS 차단
     REQ-10
@@ -77,7 +77,7 @@ async def test_xss_event_handler_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-004:HTML-INJECTION
 @pytest.mark.asyncio
-async def test_html_injection_escaped(async_client: AsyncClient):
+async def test_html_injection_escaped(async_client: AsyncClient) -> None:
     """
     HTML 태그는 이스케이프됨
     REQ-10
@@ -104,7 +104,7 @@ async def test_html_injection_escaped(async_client: AsyncClient):
 
 # @TEST:TEST-004-004:JAVASCRIPT-PROTO
 @pytest.mark.asyncio
-async def test_javascript_protocol_blocked(async_client: AsyncClient):
+async def test_javascript_protocol_blocked(async_client: AsyncClient) -> None:
     """
     javascript: 프로토콜 차단
     REQ-10
@@ -131,7 +131,7 @@ async def test_javascript_protocol_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-004:DATA-URL
 @pytest.mark.asyncio
-async def test_data_url_xss_blocked(async_client: AsyncClient):
+async def test_data_url_xss_blocked(async_client: AsyncClient) -> None:
     """
     data: URL을 통한 XSS 차단
     REQ-10
@@ -157,7 +157,7 @@ async def test_data_url_xss_blocked(async_client: AsyncClient):
 
 # @TEST:TEST-004-004:NO-REFLECTION
 @pytest.mark.asyncio
-async def test_no_reflected_xss(async_client: AsyncClient):
+async def test_no_reflected_xss(async_client: AsyncClient) -> None:
     """
     Reflected XSS 방지 (입력이 그대로 출력되지 않음)
     REQ-10

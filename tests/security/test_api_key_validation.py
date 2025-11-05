@@ -30,7 +30,7 @@ try:
         _hash_api_key,
         _log_security_event,
     )
-    from apps.api.security import (
+    from apps.api.security import (  # type: ignore[attr-defined]
         SecureAPIKeyGenerator,
         APIKeyConfig,
         APIKeyManager,
@@ -345,7 +345,7 @@ class TestAPIKeyValidationIntegration:
             await verify_api_key(request, "short")
 
         assert exc_info.value.status_code == 403
-        assert "Invalid API key format" in exc_info.value.detail["error"]
+        assert "Invalid API key format" in exc_info.value.detail
 
     @patch("apps.api.deps.get_async_session", autospec=True)
     async def test_valid_api_key_flow(self, mock_get_session):
@@ -452,8 +452,8 @@ class TestProductionReadiness:
         import queue
 
         generated_key = generate_production_key()
-        results = queue.Queue()
-        errors = queue.Queue()
+        results: queue.Queue[bool] = queue.Queue()
+        errors: queue.Queue[Exception] = queue.Queue()
 
         def validate_key():
             try:

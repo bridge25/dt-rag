@@ -94,12 +94,14 @@ class TestAgentBackgroundTasksE2E:
 
                 async with async_session() as session:
                     task = await session.get(BackgroundTask, task_id)
+                    assert task is not None, f"Task {task_id} not found"
                     if task.status == "completed":
                         break
 
             # 4. Verify task completed
             async with async_session() as session:
                 task = await session.get(BackgroundTask, task_id)
+                assert task is not None, f"Task {task_id} not found"
                 assert (
                     task.status == "completed"
                 ), f"Expected 'completed', got '{task.status}'"
@@ -148,6 +150,7 @@ class TestAgentBackgroundTasksE2E:
         # 3. Update task status
         async with async_session() as session:
             task = await session.get(BackgroundTask, task_id)
+            assert task is not None, f"Task {task_id} not found"
             task.status = "cancelled"
             task.completed_at = datetime.utcnow()
             await session.commit()
@@ -155,6 +158,7 @@ class TestAgentBackgroundTasksE2E:
         # 4. Verify status
         async with async_session() as session:
             task = await session.get(BackgroundTask, task_id)
+            assert task is not None, f"Task {task_id} not found"
             assert task.status == "cancelled"
             assert task.completed_at is not None
 
@@ -201,9 +205,11 @@ class TestAgentBackgroundTasksE2E:
                 # 5. Verify task status
                 async with async_session() as session:
                     task = await session.get(BackgroundTask, task_id)
+                    assert task is not None, f"Task {task_id} not found"
                     assert (
                         task.status == "timeout"
                     ), f"Expected 'timeout', got '{task.status}'"
+                    assert task.error is not None, "Task error should not be None"
                     assert "timeout" in task.error.lower()
 
             finally:
@@ -252,12 +258,14 @@ class TestAgentBackgroundTasksE2E:
                     await asyncio.sleep(1)
                     async with async_session() as session:
                         task = await session.get(BackgroundTask, task_id)
+                        assert task is not None, f"Task {task_id} not found"
                         if task.status == "running":
                             break
 
                 # 5. Set cancellation_requested flag
                 async with async_session() as session:
                     task = await session.get(BackgroundTask, task_id)
+                    assert task is not None, f"Task {task_id} not found"
                     task.cancellation_requested = True
                     await session.commit()
 
@@ -324,6 +332,7 @@ class TestAgentBackgroundTasksE2E:
 
                     async with async_session() as session:
                         task = await session.get(BackgroundTask, task_id)
+                        assert task is not None, f"Task {task_id} not found"
                         if task.status == "completed":
                             break
 

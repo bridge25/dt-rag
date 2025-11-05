@@ -11,7 +11,7 @@ Run with: python -m alembic revision --autogenerate -m "Add API key security tab
 """
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
-from alembic import op  # type: ignore[attr-defined]  # op is provided by Alembic at runtime
+from alembic import op  # op is provided by Alembic at runtime
 import sqlalchemy as sa
 
 def upgrade() -> None:

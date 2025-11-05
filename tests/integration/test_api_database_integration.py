@@ -12,11 +12,12 @@ import os
 import asyncio
 from typing import Dict, Any, List
 from datetime import datetime, timezone
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 
 # Set testing environment
 os.environ["TESTING"] = "true"
@@ -25,7 +26,7 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test_integration.db"
 try:
     # Import application components
     from apps.api.main import app
-    from apps.api.database import (
+    from apps.api.database import (  # type: ignore[attr-defined]
         get_database_connection,
         init_database,
         test_database_connection,
@@ -74,7 +75,7 @@ class TestAPIDatabaseIntegration:
             test_database_engine, class_=AsyncSession, expire_on_commit=False
         )
 
-        async with async_session() as session:
+        async with async_session() as session:  # type: ignore[attr-defined]
             yield session
             await session.rollback()
 
@@ -84,7 +85,7 @@ class TestAPIDatabaseIntegration:
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Required components not available")
 
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             yield client
 
     @pytest.fixture
@@ -111,7 +112,7 @@ class TestAPIDatabaseIntegration:
             "metadata": {"test_category": True},
         }
 
-    async def test_database_connection_via_api(self, client: AsyncClient):
+    async def test_database_connection_via_api(self, client: AsyncClient) -> None:
         """Test that API can connect to database"""
         # Test health endpoint that checks database connection
         response = await client.get("/health")
@@ -126,7 +127,7 @@ class TestAPIDatabaseIntegration:
         client: AsyncClient,
         test_session: AsyncSession,
         sample_document: Dict[str, Any],
-    ):
+    ) -> None:
         """Test document CRUD operations through API with database persistence"""
         # Skip if ingestion router not available
         try:
@@ -145,6 +146,7 @@ class TestAPIDatabaseIntegration:
                 {"title": sample_document["title"]},
             )
             count = result.scalar()
+            assert count is not None, "Query should return a count"
             assert count > 0, "Document should be stored in database"
 
         except Exception as e:
@@ -152,7 +154,7 @@ class TestAPIDatabaseIntegration:
 
     async def test_search_integration(
         self, client: AsyncClient, test_session: AsyncSession
-    ):
+    ) -> None:
         """Test search functionality with database integration"""
         # First, add some test data
         test_query = {
@@ -180,7 +182,7 @@ class TestAPIDatabaseIntegration:
         client: AsyncClient,
         test_session: AsyncSession,
         sample_document: Dict[str, Any],
-    ):
+    ) -> None:
         """Test classification functionality with database integration"""
         classification_request = {
             "text": sample_document["content"],
@@ -204,7 +206,7 @@ class TestAPIDatabaseIntegration:
 
     async def test_taxonomy_database_integration(
         self, client: AsyncClient, test_session: AsyncSession
-    ):
+    ) -> None:
         """Test taxonomy operations with database persistence"""
         try:
             # Test getting taxonomy tree
@@ -239,7 +241,7 @@ class TestAPIDatabaseIntegration:
         except Exception as e:
             pytest.skip(f"PostgreSQL integration test failed: {e}")
 
-    async def test_error_handling_integration(self, client: AsyncClient):
+    async def test_error_handling_integration(self, client: AsyncClient) -> None:
         """Test error handling across API and database layers"""
         # Test invalid request data
         invalid_data = {"invalid_field": "invalid_value"}
@@ -255,7 +257,7 @@ class TestAPIDatabaseIntegration:
         except Exception as e:
             pytest.skip(f"Error handling test skipped: {e}")
 
-    async def test_transaction_rollback(self, test_session: AsyncSession):
+    async def test_transaction_rollback(self, test_session: AsyncSession) -> None:
         """Test database transaction rollback behavior"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Database components not available")

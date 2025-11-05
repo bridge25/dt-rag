@@ -242,7 +242,7 @@ async def get_agent_factory_service() -> AgentFactoryService:
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.post("/from-category", response_model=AgentCreateResponse)  # type: ignore[misc]
+@agent_factory_router.post("/from-category", response_model=AgentCreateResponse)
 async def create_agent_from_category(
     request: FromCategoryRequest,
     service: AgentFactoryService = Depends(get_agent_factory_service),
@@ -286,7 +286,7 @@ async def create_agent_from_category(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.get("/", response_model=AgentListResponse)  # type: ignore[misc]
+@agent_factory_router.get("/", response_model=AgentListResponse)
 async def list_agents(
     status_filter: Optional[str] = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=100, description="Maximum agents to return"),
@@ -319,7 +319,7 @@ async def list_agents(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.get("/{agent_id}", response_model=AgentStatus)  # type: ignore[misc]
+@agent_factory_router.get("/{agent_id}", response_model=AgentStatus)
 async def get_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
@@ -355,7 +355,7 @@ async def get_agent(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.put("/{agent_id}", response_model=AgentStatus)  # type: ignore[misc]
+@agent_factory_router.put("/{agent_id}", response_model=AgentStatus)
 async def update_agent(
     agent_id: str,
     update: AgentUpdateRequest,
@@ -393,7 +393,7 @@ async def update_agent(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.delete("/{agent_id}")  # type: ignore[misc]
+@agent_factory_router.delete("/{agent_id}")
 async def delete_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
@@ -427,7 +427,7 @@ async def delete_agent(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.get("/{agent_id}/metrics", response_model=AgentMetrics)  # type: ignore[misc]
+@agent_factory_router.get("/{agent_id}/metrics", response_model=AgentMetrics)
 async def get_agent_metrics(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
@@ -464,7 +464,7 @@ async def get_agent_metrics(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.post("/{agent_id}/activate")  # type: ignore[misc]
+@agent_factory_router.post("/{agent_id}/activate")
 async def activate_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
@@ -508,7 +508,7 @@ async def activate_agent(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.post("/{agent_id}/deactivate")  # type: ignore[misc]
+@agent_factory_router.post("/{agent_id}/deactivate")
 async def deactivate_agent(
     agent_id: str,
     service: AgentFactoryService = Depends(get_agent_factory_service),
@@ -552,7 +552,7 @@ async def deactivate_agent(
 
 
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-@agent_factory_router.get("/factory/status")  # type: ignore[misc]
+@agent_factory_router.get("/factory/status")
 async def get_factory_status(
     service: AgentFactoryService = Depends(get_agent_factory_service),
     api_key: str = Depends(verify_api_key),

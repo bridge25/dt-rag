@@ -8,7 +8,7 @@ Tests POST /refresh, GET /status, GET /history, DELETE /tasks endpoints.
 import pytest
 import uuid
 from datetime import datetime, timedelta
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from apps.api.main import app
 from apps.core.db_session import async_session
 from apps.api.agent_dao import AgentDAO
@@ -41,7 +41,7 @@ class TestAgentAPIPhase3:
     @pytest.fixture
     async def client(self):
         """Create async HTTP client"""
-        async with AsyncClient(app=app, base_url="http://test") as ac:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             yield ac
 
     @pytest.mark.asyncio
@@ -234,6 +234,7 @@ class TestAgentAPIPhase3:
         # Verify status updated
         async with async_session() as session:
             updated_task = await session.get(BackgroundTask, task_id)
+            assert updated_task is not None, f"Task {task_id} not found"
             assert updated_task.status == "cancelled"
             assert updated_task.completed_at is not None
 
@@ -268,6 +269,7 @@ class TestAgentAPIPhase3:
         # Verify cancellation_requested flag set
         async with async_session() as session:
             updated_task = await session.get(BackgroundTask, task_id)
+            assert updated_task is not None, f"Task {task_id} not found"
             assert updated_task.cancellation_requested is True
             assert updated_task.status == "running"  # Still running until worker checks
 

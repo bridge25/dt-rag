@@ -23,7 +23,7 @@ os.environ["TESTING"] = "true"
 try:
     # Import caching components
     from apps.api.cache.redis_manager import RedisManager, get_redis_manager
-    from apps.api.cache.search_cache import SearchCache
+    from apps.api.cache.search_cache import HybridSearchCache
 
     # Check for optional cache components
     try:
@@ -83,7 +83,7 @@ class TestCachingSystemIntegration:
         with patch(
             "apps.api.cache.redis_manager.get_redis_manager", return_value=redis_manager
         ):
-            cache = SearchCache()
+            cache = HybridSearchCache()
             yield cache
 
     @pytest.fixture
@@ -135,7 +135,7 @@ class TestCachingSystemIntegration:
                 await manager.initialize()
 
                 # Test connection
-                is_connected = await manager.is_connected()
+                is_connected = manager.is_connected
                 assert is_connected is True
 
                 await manager.close()
@@ -145,10 +145,10 @@ class TestCachingSystemIntegration:
 
     async def test_search_cache_integration(
         self,
-        search_cache: SearchCache,
+        search_cache: HybridSearchCache,
         sample_search_query: Dict[str, Any],
         sample_search_results: List[Dict[str, Any]],
-    ):
+    ) -> None:
         """Test search result caching integration"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")
@@ -156,23 +156,24 @@ class TestCachingSystemIntegration:
         try:
             # Test cache key generation
             cache_key = search_cache._generate_cache_key(
-                sample_search_query["query"], sample_search_query["filters"]
+                "search:",
+                query=sample_search_query["query"],
+                filters=sample_search_query["filters"],
             )
             assert isinstance(cache_key, str)
             assert len(cache_key) > 0
 
             # Test cache miss
-            cached_results = await search_cache.get_cached_results(
+            cached_results = await search_cache.get_search_results(
                 sample_search_query["query"], sample_search_query["filters"]
             )
             assert cached_results is None
 
             # Test cache set
-            await search_cache.cache_results(
+            await search_cache.set_search_results(
                 sample_search_query["query"],
-                sample_search_query["filters"],
                 sample_search_results,
-                ttl=300,
+                filters=sample_search_query["filters"],
             )
 
             # In a real scenario, this would retrieve from cache
@@ -182,7 +183,7 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Search cache integration test failed: {e}")
 
-    async def test_cache_key_consistency(self, search_cache: SearchCache):
+    async def test_cache_key_consistency(self, search_cache: HybridSearchCache) -> None:
         """Test cache key generation consistency"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")
@@ -192,15 +193,17 @@ class TestCachingSystemIntegration:
             filters = {"category": "test", "tags": ["tag1", "tag2"]}
 
             # Generate cache key multiple times
-            key1 = search_cache._generate_cache_key(query, filters)
-            key2 = search_cache._generate_cache_key(query, filters)
+            key1 = search_cache._generate_cache_key("search:", query=query, filters=filters)
+            key2 = search_cache._generate_cache_key("search:", query=query, filters=filters)
 
             # Should be identical
             assert key1 == key2
 
             # Different filters should produce different keys
             different_filters = {"category": "other"}
-            key3 = search_cache._generate_cache_key(query, different_filters)
+            key3 = search_cache._generate_cache_key(
+                "search:", query=query, filters=different_filters
+            )
 
             assert key1 != key3
 
@@ -211,8 +214,8 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache key consistency test failed: {e}")
 
     async def test_cache_expiration_handling(
-        self, redis_manager: RedisManager, mock_redis_client
-    ):
+        self, redis_manager: RedisManager, mock_redis_client: Any
+    ) -> None:
         """Test cache expiration and TTL handling"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -241,8 +244,8 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache expiration test failed: {e}")
 
     async def test_cache_invalidation_patterns(
-        self, redis_manager: RedisManager, mock_redis_client
-    ):
+        self, redis_manager: RedisManager, mock_redis_client: Any
+    ) -> None:
         """Test cache invalidation strategies"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -269,7 +272,7 @@ class TestCachingSystemIntegration:
 
             # Test bulk deletion
             if keys_to_delete:
-                deleted_count = await redis_manager.delete_many(keys_to_delete)
+                deleted_count = await redis_manager.delete_many(keys_to_delete)  # type: ignore[attr-defined]
                 # Mock returns number of deleted keys
                 mock_redis_client.delete = AsyncMock(return_value=len(keys_to_delete))
                 assert isinstance(deleted_count, int)
@@ -277,7 +280,7 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Cache invalidation test failed: {e}")
 
-    async def test_concurrent_cache_operations(self, redis_manager: RedisManager):
+    async def test_concurrent_cache_operations(self, redis_manager: RedisManager) -> None:
         """Test concurrent cache operations"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -298,7 +301,7 @@ class TestCachingSystemIntegration:
             # Test concurrent gets
             get_tasks = []
             for i in range(5):
-                task = redis_manager.get(f"concurrent:key:{i}")
+                task = redis_manager.get(f"concurrent:key:{i}")  # type: ignore[assignment]
                 get_tasks.append(task)
 
             get_results = await asyncio.gather(*get_tasks, return_exceptions=True)
@@ -307,14 +310,14 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Concurrent cache operations test failed: {e}")
 
-    async def test_cache_serialization(self, redis_manager: RedisManager):
+    async def test_cache_serialization(self, redis_manager: RedisManager) -> None:
         """Test cache value serialization and deserialization"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
 
         try:
             # Test different data types
-            test_data = [
+            test_data: List[Dict[str, Any]] = [
                 {"type": "dict", "value": {"key": "value", "number": 42}},
                 {"type": "list", "value": [1, 2, 3, "string", True]},
                 {"type": "string", "value": "simple string"},
@@ -358,9 +361,10 @@ class TestCachingSystemIntegration:
 
         try:
             # Use a test Redis database (e.g., db=15)
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/15")
+            from apps.api.cache.redis_manager import RedisConfig
 
-            manager = RedisManager(redis_url=redis_url)
+            config = RedisConfig(host="localhost", port=6379, db=15)
+            manager = RedisManager(config=config)
             await manager.initialize()
 
             # Test basic operations
@@ -381,8 +385,8 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Real Redis integration test failed: {e}")
 
     async def test_cache_error_handling(
-        self, redis_manager: RedisManager, mock_redis_client
-    ):
+        self, redis_manager: RedisManager, mock_redis_client: Any
+    ) -> None:
         """Test error handling in cache operations"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Redis manager not available")
@@ -394,7 +398,7 @@ class TestCachingSystemIntegration:
             )
 
             # Test connection check with error
-            is_connected = await redis_manager.is_connected()
+            is_connected = redis_manager.is_connected
             assert is_connected is False
 
             # Mock Redis operation error
@@ -412,8 +416,8 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache error handling test failed: {e}")
 
     async def test_cache_performance_metrics(
-        self, search_cache: SearchCache, sample_search_query: Dict[str, Any]
-    ):
+        self, search_cache: HybridSearchCache, sample_search_query: Dict[str, Any]
+    ) -> None:
         """Test cache performance tracking"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")
@@ -424,7 +428,7 @@ class TestCachingSystemIntegration:
             # Test cache operation timing
             start_time = time.time()
 
-            await search_cache.get_cached_results(
+            await search_cache.get_search_results(
                 sample_search_query["query"], sample_search_query["filters"]
             )
 
@@ -443,7 +447,7 @@ class TestCachingSystemIntegration:
             }
 
             assert metrics["operation_type"] == "get"
-            assert metrics["cache_key_size"] > 0
+            assert metrics["cache_key_size"] > 0  # type: ignore
 
         except Exception as e:
             pytest.skip(f"Cache performance metrics test failed: {e}")

@@ -13,7 +13,7 @@ class TestDatabaseConnection:
 
     async def test_database_connection(self):
         """Test database connection is successful"""
-        from database import test_database_connection
+        from database import test_database_connection  # type: ignore[import-not-found]
 
         is_connected = await test_database_connection()
         assert is_connected is True
@@ -117,7 +117,7 @@ class TestSearchDAO:
 class TestClassifyDAO:
     """ClassifyDAO integration tests"""
 
-    async def test_classify_text_executes(self, sample_text: str):
+    async def test_classify_text_executes(self, sample_text: str) -> None:
         """Test classify_text executes without errors"""
         from database import ClassifyDAO
 
@@ -193,7 +193,7 @@ class TestDatabasePerformance:
         assert duration < 5.0  # Should complete in under 5 seconds
         assert len(tree) > 0
 
-    async def test_classification_performance(self, sample_text: str):
+    async def test_classification_performance(self, sample_text: str) -> None:
         """Test classification completes in reasonable time"""
         import time
         from database import ClassifyDAO

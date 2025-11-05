@@ -258,7 +258,7 @@ async def get_batch_search_service() -> BatchSearchService:
     return BatchSearchService()
 
 
-@router.post("/", response_model=BatchSearchResponse)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+@router.post("/", response_model=BatchSearchResponse)  # FastAPI decorator lacks type stubs
 # @limiter.limit(RATE_LIMIT_WRITE)  # Disabled: replaced with custom Redis middleware
 async def batch_search(
     request: BatchSearchRequest,
@@ -303,7 +303,7 @@ async def batch_search(
         )
 
 
-@router.get("/performance")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+@router.get("/performance")  # FastAPI decorator lacks type stubs
 # @limiter.limit(RATE_LIMIT_READ)  # Disabled: replaced with custom Redis middleware
 async def get_batch_performance(
     request: Request, api_key: APIKeyInfo = Depends(verify_api_key)

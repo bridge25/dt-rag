@@ -67,7 +67,8 @@ async def validate_taxonomy_nodes(
         raise ValueError(f"Invalid taxonomy node IDs: {', '.join(invalid_ids)}")
 
 
-@router.post(  # type: ignore[misc]
+@router.post(
+
     "/from-taxonomy",
     response_model=AgentResponse,
     status_code=status.HTTP_201_CREATED,
@@ -107,7 +108,8 @@ async def create_agent_from_taxonomy(
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
+
     "/search",
     response_model=AgentListResponse,
     status_code=status.HTTP_200_OK,
@@ -145,7 +147,8 @@ async def search_agents(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
+
     "/{agent_id}",
     response_model=AgentResponse,
     status_code=status.HTTP_200_OK,
@@ -174,7 +177,8 @@ async def get_agent(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
+
     "/",
     response_model=AgentListResponse,
     status_code=status.HTTP_200_OK,
@@ -222,7 +226,8 @@ async def list_agents(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
+
     "/{agent_id}/coverage",
     response_model=CoverageResponse,
     status_code=status.HTTP_200_OK,
@@ -291,7 +296,8 @@ async def get_agent_coverage(
         raise HTTPException(status_code=503, detail="Service temporarily unavailable")
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
+
     "/{agent_id}/gaps",
     response_model=GapListResponse,
     status_code=status.HTTP_200_OK,
@@ -352,7 +358,8 @@ async def detect_coverage_gaps(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post(  # type: ignore[misc]
+@router.post(
+
     "/{agent_id}/query",
     response_model=QueryResponse,
     status_code=status.HTTP_200_OK,
@@ -469,7 +476,8 @@ async def _calculate_xp_background(
         )
 
 
-@router.patch(  # type: ignore[misc]
+@router.patch(
+
     "/{agent_id}",
     response_model=AgentResponse,
     status_code=status.HTTP_200_OK,
@@ -509,7 +517,8 @@ async def update_agent(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.delete(  # type: ignore[misc]
+@router.delete(
+
     "/{agent_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete agent",
@@ -540,7 +549,8 @@ async def delete_agent(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post(  # type: ignore[misc]
+@router.post(
+
     "/{agent_id}/coverage/refresh",
     response_model=BackgroundTaskResponse,
     status_code=status.HTTP_202_ACCEPTED,
@@ -629,7 +639,8 @@ async def refresh_agent_coverage_background(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
+
     "/{agent_id}/coverage/status/{task_id}",
     response_model=TaskStatusResponse,
     status_code=status.HTTP_200_OK,
@@ -685,7 +696,8 @@ async def get_coverage_task_status(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get(  # type: ignore[misc]
+@router.get(
+
     "/{agent_id}/coverage/history",
     response_model=CoverageHistoryResponse,
     status_code=status.HTTP_200_OK,
@@ -741,7 +753,8 @@ async def get_coverage_history(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.delete(  # type: ignore[misc]
+@router.delete(
+
     "/tasks/{task_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Cancel background task",
@@ -792,7 +805,8 @@ async def cancel_background_task(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post(  # type: ignore[misc]
+@router.post(
+
     "/{agent_id}/query/stream",
     status_code=status.HTTP_200_OK,
     summary="Query agent with streaming response",

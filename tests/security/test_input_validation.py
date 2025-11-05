@@ -16,7 +16,7 @@ import os
 
 # @TEST:TEST-004-002:MISSING-FIELD
 @pytest.mark.asyncio
-async def test_missing_required_field_rejected(async_client: AsyncClient):
+async def test_missing_required_field_rejected(async_client: AsyncClient) -> None:
     """
     필수 필드 누락 시 422 반환
     REQ-2: The system shall validate all input data
@@ -47,7 +47,7 @@ async def test_missing_required_field_rejected(async_client: AsyncClient):
 
 # @TEST:TEST-004-002:INVALID-TYPE
 @pytest.mark.asyncio
-async def test_invalid_type_rejected(async_client: AsyncClient):
+async def test_invalid_type_rejected(async_client: AsyncClient) -> None:
     """
     잘못된 타입은 422 반환
     REQ-2
@@ -71,7 +71,7 @@ async def test_invalid_type_rejected(async_client: AsyncClient):
 
 # @TEST:TEST-004-002:OVERSIZED-INPUT
 @pytest.mark.asyncio
-async def test_oversized_input_rejected(async_client: AsyncClient):
+async def test_oversized_input_rejected(async_client: AsyncClient) -> None:
     """
     초과 크기 입력은 거부됨
     REQ-2
@@ -101,7 +101,7 @@ async def test_oversized_input_rejected(async_client: AsyncClient):
 
 # @TEST:TEST-004-002:BATCH-VALIDATION
 @pytest.mark.asyncio
-async def test_batch_request_validation(async_client: AsyncClient):
+async def test_batch_request_validation(async_client: AsyncClient) -> None:
     """
     배치 요청도 입력 검증 적용
     REQ-2
@@ -126,7 +126,7 @@ async def test_batch_request_validation(async_client: AsyncClient):
 
 # @TEST:TEST-004-002:LIMIT-VALIDATION
 @pytest.mark.asyncio
-async def test_limit_parameter_validation(async_client: AsyncClient):
+async def test_limit_parameter_validation(async_client: AsyncClient) -> None:
     """
     limit 파라미터 범위 검증
     REQ-2
@@ -160,7 +160,7 @@ async def test_limit_parameter_validation(async_client: AsyncClient):
 
 # @TEST:TEST-004-002:VALID-INPUT
 @pytest.mark.asyncio
-async def test_valid_input_accepted(async_client: AsyncClient):
+async def test_valid_input_accepted(async_client: AsyncClient) -> None:
     """
     올바른 입력은 허용됨 (검증 통과)
     REQ-2 (positive case)

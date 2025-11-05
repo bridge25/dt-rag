@@ -49,7 +49,7 @@ class MockSearchResult:
         self.title = f"Title for {chunk_id}"
         self.source_url = f"https://example.com/{chunk_id}"
         self.taxonomy_path = ["AI", "General"]
-        self.metadata = {}
+        self.metadata: dict[str, Any] = {}
 
 
 @pytest.fixture

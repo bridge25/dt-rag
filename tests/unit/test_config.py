@@ -323,7 +323,7 @@ class TestSecretValidation:
     def test_validate_secret_strength_none(self):
         """Test validation of None value"""
         with pytest.raises((AttributeError, TypeError)):
-            _validate_secret_strength(None)
+            _validate_secret_strength(None)  # type: ignore[arg-type]  # Intentionally testing invalid input
 
     @pytest.mark.unit
     def test_validate_secret_strength_weak_patterns(self):
@@ -375,7 +375,7 @@ class TestConfigurationIntegration:
             "security": SecurityConfig(jwt_expiration_minutes=120),
         }
 
-        serialized = {name: asdict(config) for name, config in configs.items()}
+        serialized = {name: asdict(config) for name, config in configs.items()}  # type: ignore[call-overload]
 
         # Verify structure is maintained
         assert "database" in serialized
@@ -465,6 +465,7 @@ class TestSecurityRequirements:
         # This test verifies that security considerations are documented
         # In the actual SecurityConfig docstring
         security_config_doc = SecurityConfig.__doc__
+        assert security_config_doc is not None, "SecurityConfig must have a docstring"
 
         assert "SECURITY REQUIREMENTS" in security_config_doc
         assert (

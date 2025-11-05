@@ -5,14 +5,16 @@ name: "dt-rag GitFlow Automation"
 
 on:
   push:
-    branches: [develop, "feature/**"]
+    branches: [master, develop, "feature/**"]
   pull_request:
-    types: [opened, ready_for_review, converted_to_draft]
+    # No branch restriction - run CI/CD for ALL pull requests
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
 
 jobs:
   moai-pipeline:
     name: "dt-rag Pipeline"
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,13 +88,11 @@ jobs:
           distribution: "temurin"
           java-version: "21"
 
-      # TRUST 5 Principles — automated validation (if enabled)
-      {% if ENABLE_TRUST_5 -%}
+      # TRUST 5 Principles — automated validation
       - name: 🧭 Quality Principles Check
         run: |
           echo "✅ Quality validation is performed"
           echo "   - Automated quality checks enabled"
-      {% endif -%}
 
       # Ignore test failures on Draft PRs; fail CI on Ready PRs
       - name: Run language-aware tests
@@ -104,17 +104,30 @@ jobs:
           # Python tests
           if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
             echo "➡️  Python tests"
-            pip install -q pytest pytest-cov 2>/dev/null || true
+            # Install project dependencies first
+            if [ -f "requirements.txt" ]; then
+              pip install -q -r requirements.txt 2>/dev/null || true
+            elif [ -f "pyproject.toml" ]; then
+              pip install -q -e . 2>/dev/null || true
+            elif [ -f "setup.py" ]; then
+              pip install -q -e . 2>/dev/null || true
+            fi
+            # Install test dependencies with parallel execution support
+            pip install -q pytest pytest-cov pytest-xdist 2>/dev/null || true
             if [ "$ALLOW_FAILURE" = "true" ]; then
-              pytest --cov --cov-report=term-missing || true
+              pytest -n auto --cov --cov-report=term-missing || true
             else
-              pytest --cov --cov-report=term-missing
+              pytest -n auto --cov --cov-report=term-missing
             fi
           fi
 
           # Node.js/Bun tests
-          if [ -f "package.json" ]; then
+          if [ -f "package.json" ] || [ -f "frontend/package.json" ]; then
             echo "➡️  Node.js/Bun tests"
+            # Check if frontend directory exists
+            if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+              cd frontend
+            fi
             if [ -f "bun.lockb" ]; then
               bun install --frozen-lockfile || bun install
               if [ "$ALLOW_FAILURE" = "true" ]; then
@@ -129,6 +142,10 @@ jobs:
               else
                 npm test --if-present -- --coverage
               fi
+            fi
+            # Return to root if we changed directory
+            if [ -d "../.git" ]; then
+              cd ..
             fi
           fi
 
@@ -221,14 +238,11 @@ jobs:
             fi
           fi
 
-      # TAG system validation (if enabled)
-      {% if ENABLE_TAG_SYSTEM -%}
+      # TAG system validation
       - name: 🏷️ Traceability Validation
         run: |
           echo "✅ Traceability validation is handled automatically"
-      {% endif -%}
 
-      {% if ENABLE_ALFRED_COMMANDS -%}
       # Run per-branch stages
       - name: 📝 SPEC Stage (feature branch)
         if: startsWith(github.ref, 'refs/heads/feature/')
@@ -242,9 +256,7 @@ jobs:
         run: |
           echo "📝 Draft PR: TDD implementation stage"
           echo "- code-builder agent runs RED-GREEN-REFACTOR"
-          {% if ENABLE_TRUST_5 -%}
           echo "- Validate Quality Principles compliance"
-          {% endif -%}
 
       - name: 📚 SYNC Stage (Ready PR)
         if: github.event.pull_request.draft == false && github.event.action == 'ready_for_review'
@@ -252,7 +264,6 @@ jobs:
           echo "✅ Ready PR: documentation sync stage"
           echo "- doc-syncer agent synchronizes Living Documents"
           echo "- PR is ready for review"
-      {% endif -%}
 
       # Final result report
       - name: "🎯 dt-rag Pipeline Complete"

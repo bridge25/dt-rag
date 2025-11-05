@@ -244,7 +244,7 @@ class AgentTaskWorker:
         # Calculate coverage - Fixed method signature
         result = await CoverageMeterService().calculate_coverage(
             taxonomy_version=agent.taxonomy_version,
-            node_ids=agent.taxonomy_node_ids,
+            node_ids=[str(nid) for nid in agent.taxonomy_node_ids],
         )
 
         # Update progress

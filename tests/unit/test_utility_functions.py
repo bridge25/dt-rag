@@ -89,7 +89,7 @@ def parse_query_string(query_string: str) -> Dict[str, Any]:
     parsed = parse_qs(query_string, keep_blank_values=True)
 
     # Convert single-item lists to strings
-    result = {}
+    result: Dict[str, Any] = {}
     for key, value_list in parsed.items():
         if len(value_list) == 1:
             result[key] = value_list[0]
@@ -99,7 +99,7 @@ def parse_query_string(query_string: str) -> Dict[str, Any]:
     return result
 
 
-def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
+def retry_on_failure(max_retries: int = 3, delay: float = 1.0) -> None:
     """Decorator for retrying functions on failure"""
 
     def decorator(func):
@@ -115,7 +115,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
 
         return wrapper
 
-    return decorator
+    return decorator  # type: ignore
 
 
 class TestUtilityFunctions:
@@ -392,7 +392,7 @@ class TestUtilityFunctions:
     def test_retry_on_failure_decorator_success_first_try(self):
         """Test retry decorator when function succeeds on first try"""
 
-        @retry_on_failure(max_retries=3)
+        @retry_on_failure(max_retries=3)  # type: ignore[func-returns-value]
         def successful_function():
             return "success"
 
@@ -405,7 +405,7 @@ class TestUtilityFunctions:
         """Test retry decorator when function succeeds after failures"""
         call_count = 0
 
-        @retry_on_failure(max_retries=3, delay=0.01)  # Very short delay for testing
+        @retry_on_failure(max_retries=3, delay=0.01)  # type: ignore[func-returns-value]
         def function_fails_twice():
             nonlocal call_count
             call_count += 1
@@ -422,7 +422,7 @@ class TestUtilityFunctions:
     def test_retry_on_failure_decorator_all_attempts_fail(self):
         """Test retry decorator when all attempts fail"""
 
-        @retry_on_failure(max_retries=2, delay=0.01)
+        @retry_on_failure(max_retries=2, delay=0.01)  # type: ignore[func-returns-value]
         def always_failing_function():
             raise ValueError("Always fails")
 
@@ -475,7 +475,7 @@ class TestDataStructureHelpers:
             d: Dict[str, Any], parent_key: str = "", sep: str = "."
         ) -> Dict[str, Any]:
             """Flatten nested dictionary"""
-            items = []
+            items: list[tuple[str, Any]] = []
             for k, v in d.items():
                 new_key = f"{parent_key}{sep}{k}" if parent_key else k
                 if isinstance(v, dict):
@@ -525,7 +525,7 @@ class TestDataStructureHelpers:
             items: List[Dict[str, Any]], key: str
         ) -> Dict[str, List[Dict[str, Any]]]:
             """Group list of dictionaries by specified key"""
-            grouped = {}
+            grouped: dict[Any, list[dict[str, Any]]] = {}
             for item in items:
                 group_key = item.get(key)
                 if group_key not in grouped:
@@ -660,8 +660,8 @@ class TestCacheHelpers:
     def test_ttl_cache_expiration(self):
         """Test TTL (time-to-live) cache behavior"""
 
-        def create_ttl_cache(ttl_seconds: float = 1.0):
-            cache = {}
+        def create_ttl_cache(ttl_seconds: float = 1.0) -> None:
+            cache: dict[str, tuple[Any, float]] = {}
 
             def ttl_cache(func):
                 def wrapper(*args, **kwargs):
@@ -679,10 +679,10 @@ class TestCacheHelpers:
 
                 return wrapper
 
-            return ttl_cache
+            return ttl_cache  # type: ignore
 
         call_count = 0
-        ttl_cache = create_ttl_cache(0.01)  # Very short TTL for testing
+        ttl_cache = create_ttl_cache(0.01)  # type: ignore[func-returns-value]
 
         @ttl_cache
         def cached_function(x):

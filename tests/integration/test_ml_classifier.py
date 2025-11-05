@@ -11,10 +11,10 @@ import asyncio
 class TestMLClassifierIntegration:
     """ML Classifier integration tests"""
 
-    async def test_classifier_loads_successfully(self, ml_model_name: str):
+    async def test_classifier_loads_successfully(self, ml_model_name: str) -> None:
         """Test ML classifier loads without errors"""
         try:
-            from services.ml_classifier import MLClassifier
+            from services.ml_classifier import MLClassifier  # type: ignore[import-not-found]
 
             classifier = MLClassifier(model_name=ml_model_name)
             classifier.load_model()
@@ -24,7 +24,7 @@ class TestMLClassifierIntegration:
         except ImportError:
             pytest.skip("ML classifier not available (expected in development)")
 
-    async def test_classify_rag_text(self, sample_text: str):
+    async def test_classify_rag_text(self, sample_text: str) -> None:
         """Test classification of RAG-related text"""
         try:
             from services.ml_classifier import get_ml_classifier
@@ -156,9 +156,9 @@ class TestMLClassifierIntegration:
 class TestClassifyDAOIntegration:
     """ClassifyDAO integration tests"""
 
-    async def test_classify_dao_uses_ml_classifier(self, sample_text: str):
+    async def test_classify_dao_uses_ml_classifier(self, sample_text: str) -> None:
         """Test ClassifyDAO integrates with ML classifier"""
-        from database import ClassifyDAO
+        from database import ClassifyDAO  # type: ignore[import-not-found]
 
         result = await ClassifyDAO.classify_text(sample_text)
 

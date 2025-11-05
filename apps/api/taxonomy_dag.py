@@ -102,7 +102,7 @@ class TaxonomyDAGManager:
                 latest_version = result.scalar()
 
                 if latest_version:
-                    self.current_version = latest_version
+                    self.current_version = int(latest_version)
                 else:
                     # Create root taxonomy if none exists
                     await self._create_default_taxonomy(session)
@@ -359,7 +359,7 @@ class TaxonomyDAGManager:
                 edges = edges_result.scalars().all()
 
                 # Build tree structure
-                tree = self._build_tree_structure(nodes, edges)
+                tree = self._build_tree_structure(list(nodes), list(edges))
 
                 # Cache result
                 self._graph_cache[cache_key] = tree
@@ -413,7 +413,7 @@ class TaxonomyDAGManager:
                     )
                     node_id = result.scalar()
 
-                return True, node_id, "Node added successfully"
+                return True, node_id, "Node added successfully"  # type: ignore[return-value]
             else:
                 return False, -1, message
 
@@ -936,7 +936,10 @@ class TaxonomyDAGManager:
             select(TaxonomyNode.node_id).order_by(TaxonomyNode.node_id.desc()).limit(1)
         )
         max_id = result.scalar()
-        return (max_id or 0) + 1
+        # Ensure max_id is int (node_id should be int type)
+        if max_id is None:
+            return 1
+        return int(max_id) + 1
 
     def _build_tree_structure(
         self, nodes: List[TaxonomyNode], edges: List[TaxonomyEdge]

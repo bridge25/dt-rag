@@ -126,7 +126,7 @@ class ConsolidationPolicy:
                     f"(success_rate={case.success_rate}%)"
                 )
 
-            removed_ids.append(case.case_id)
+            removed_ids.append(str(case.case_id))
 
         return removed_ids
 
@@ -188,9 +188,10 @@ class ConsolidationPolicy:
 
                     if not self.dry_run:
                         keeper.usage_count += remover.usage_count
-                        keeper.success_rate = (
-                            keeper.success_rate + remover.success_rate
-                        ) / 2
+                        # Handle Optional success_rate
+                        keeper_rate = keeper.success_rate or 0.0
+                        remover_rate = remover.success_rate or 0.0
+                        keeper.success_rate = (keeper_rate + remover_rate) / 2
                         remover.status = "archived"
                         await self.db.commit()
                         logger.info(
@@ -260,7 +261,7 @@ class ConsolidationPolicy:
                     f"(last_used={case.last_used_at})"
                 )
 
-            archived_ids.append(case.case_id)
+            archived_ids.append(str(case.case_id))
 
         return archived_ids
 

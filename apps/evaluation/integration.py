@@ -173,7 +173,8 @@ class RAGEvaluationMiddleware(BaseHTTPMiddleware):
         user_id = request.headers.get("X-User-ID")
         if not user_id:
             # Could extract from session or JWT
-            user_id = f"anon_{hash(request.client.host) % 10000}"
+            client_host = request.client.host if request.client is not None else "unknown"
+            user_id = f"anon_{hash(client_host) % 10000}"
 
         return cast(Optional[str], user_id)
 

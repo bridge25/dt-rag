@@ -17,7 +17,7 @@ import asyncio
 
 # @TEST:TEST-004-005:BASIC-LIMIT
 @pytest.mark.asyncio
-async def test_rate_limit_concept(async_client: AsyncClient):
+async def test_rate_limit_concept(async_client: AsyncClient) -> None:
     """
     Rate limiting 개념 테스트
     REQ-4: The system shall implement rate limiting
@@ -47,7 +47,7 @@ async def test_rate_limit_concept(async_client: AsyncClient):
 
 # @TEST:TEST-004-005:AUTH-REQUIRED
 @pytest.mark.asyncio
-async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient):
+async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient) -> None:
     """
     인증된 엔드포인트에서 rate limiting 적용 확인
     REQ-4
@@ -89,7 +89,7 @@ async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient):
 
 # @TEST:TEST-004-005:DIFFERENT-KEYS
 @pytest.mark.asyncio
-async def test_rate_limit_per_api_key(async_client: AsyncClient):
+async def test_rate_limit_per_api_key(async_client: AsyncClient) -> None:
     """
     API 키별로 독립적인 rate limit 적용
     REQ-4
@@ -128,7 +128,7 @@ async def test_rate_limit_per_api_key(async_client: AsyncClient):
 
 # @TEST:TEST-004-005:HEADERS
 @pytest.mark.asyncio
-async def test_rate_limit_headers(async_client: AsyncClient):
+async def test_rate_limit_headers(async_client: AsyncClient) -> None:
     """
     Rate limit 정보가 헤더에 포함되는지 확인
     REQ-4
@@ -157,7 +157,7 @@ async def test_rate_limit_headers(async_client: AsyncClient):
 
 # @TEST:TEST-004-005:429-RESPONSE
 @pytest.mark.asyncio
-async def test_429_response_format(async_client: AsyncClient):
+async def test_429_response_format(async_client: AsyncClient) -> None:
     """
     429 응답 형식 검증
     REQ-9: WHEN rate limit is exceeded
@@ -179,7 +179,7 @@ async def test_429_response_format(async_client: AsyncClient):
 
 # @TEST:TEST-004-005:NO-LIMIT-HEALTH
 @pytest.mark.asyncio
-async def test_health_endpoint_not_rate_limited(async_client: AsyncClient):
+async def test_health_endpoint_not_rate_limited(async_client: AsyncClient) -> None:
     """
     Health check 엔드포인트는 rate limit 제외
     REQ-4 (exception)

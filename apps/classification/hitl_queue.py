@@ -245,11 +245,21 @@ class HITLQueue:
                 result = await session.execute(query)
                 row = result.fetchone()
 
+                if row is not None:
+                    return {
+                        "total_pending": int(row[0]) if row[0] else 0,
+                        "avg_confidence": float(row[1]) if row[1] else 0.0,
+                        "min_confidence": float(row[2]) if row[2] else 0.0,
+                        "max_confidence": float(row[3]) if row[3] else 0.0,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+
+                # Fallback if row is None
                 return {
-                    "total_pending": int(row[0]) if row[0] else 0,
-                    "avg_confidence": float(row[1]) if row[1] else 0.0,
-                    "min_confidence": float(row[2]) if row[2] else 0.0,
-                    "max_confidence": float(row[3]) if row[3] else 0.0,
+                    "total_pending": 0,
+                    "avg_confidence": 0.0,
+                    "min_confidence": 0.0,
+                    "max_confidence": 0.0,
                     "timestamp": datetime.utcnow().isoformat(),
                 }
 

@@ -44,7 +44,7 @@ except ImportError:
     try:
         # Try with direct packages path
         sys.path.insert(0, str(project_root / "packages"))
-        from common_schemas.common_schemas.models import (
+        from common_schemas.common_schemas.models import (  # type: ignore[import-not-found]
             SearchRequest,
             SearchResponse,
             SearchHit,

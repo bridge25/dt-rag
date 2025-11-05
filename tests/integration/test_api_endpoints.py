@@ -10,14 +10,14 @@ from fastapi.testclient import TestClient
 class TestHealthEndpoint:
     """Health check endpoint tests"""
 
-    def test_health_check_returns_200(self, api_client: TestClient):
+    def test_health_check_returns_200(self, api_client: TestClient) -> None:
         """Test health endpoint returns 200 OK"""
         response = api_client.get(
             "/healthz", headers={"X-API-Key": "test_api_key_for_testing"}
         )
         assert response.status_code == 200
 
-    def test_health_check_returns_json(self, api_client: TestClient):
+    def test_health_check_returns_json(self, api_client: TestClient) -> None:
         """Test health endpoint returns valid JSON"""
         response = api_client.get(
             "/healthz", headers={"X-API-Key": "test_api_key_for_testing"}
@@ -32,7 +32,7 @@ class TestHealthEndpoint:
 class TestClassifyEndpoint:
     """Classification endpoint tests"""
 
-    def test_classify_endpoint_exists(self, api_client: TestClient, sample_text: str):
+    def test_classify_endpoint_exists(self, api_client: TestClient, sample_text: str) -> None:
         """Test classify endpoint is accessible"""
         response = api_client.post(
             "/classify",
@@ -41,7 +41,7 @@ class TestClassifyEndpoint:
         )
         assert response.status_code in [200, 422]  # 200 OK or 422 Validation Error
 
-    def test_classify_rag_text(self, api_client: TestClient):
+    def test_classify_rag_text(self, api_client: TestClient) -> None:
         """Test classification of RAG-related text"""
         response = api_client.post(
             "/classify",
@@ -59,7 +59,7 @@ class TestClassifyEndpoint:
             assert data["confidence"] >= 0.0
             assert data["confidence"] <= 1.0
 
-    def test_classify_ml_text(self, api_client: TestClient):
+    def test_classify_ml_text(self, api_client: TestClient) -> None:
         """Test classification of ML-related text"""
         response = api_client.post(
             "/classify",
@@ -74,7 +74,7 @@ class TestClassifyEndpoint:
             assert "canonical" in data
             assert "AI" in data["canonical"] or "ML" in data["canonical"]
 
-    def test_classify_with_hint_paths(self, api_client: TestClient):
+    def test_classify_with_hint_paths(self, api_client: TestClient) -> None:
         """Test classification with hint paths"""
         response = api_client.post(
             "/classify",
@@ -93,7 +93,7 @@ class TestClassifyEndpoint:
 class TestSearchEndpoint:
     """Search endpoint tests"""
 
-    def test_search_endpoint_exists(self, api_client: TestClient):
+    def test_search_endpoint_exists(self, api_client: TestClient) -> None:
         """Test search endpoint is accessible"""
         response = api_client.post(
             "/search",
@@ -102,7 +102,7 @@ class TestSearchEndpoint:
         )
         assert response.status_code in [200, 422]
 
-    def test_search_returns_hits(self, api_client: TestClient):
+    def test_search_returns_hits(self, api_client: TestClient) -> None:
         """Test search returns hits array"""
         response = api_client.post("/search", json={"q": "RAG system", "final_topk": 3})
 
@@ -111,7 +111,7 @@ class TestSearchEndpoint:
             assert "hits" in data
             assert isinstance(data["hits"], list)
 
-    def test_search_with_filters(self, api_client: TestClient):
+    def test_search_with_filters(self, api_client: TestClient) -> None:
         """Test search with taxonomy filters"""
         response = api_client.post(
             "/search",
@@ -130,7 +130,7 @@ class TestSearchEndpoint:
 class TestTaxonomyEndpoint:
     """Taxonomy endpoint tests"""
 
-    def test_get_taxonomy_tree(self, api_client: TestClient):
+    def test_get_taxonomy_tree(self, api_client: TestClient) -> None:
         """Test taxonomy tree retrieval"""
         response = api_client.get("/taxonomy/v1.8.1/tree")
 
@@ -138,7 +138,7 @@ class TestTaxonomyEndpoint:
             data = response.json()
             assert isinstance(data, (list, dict))
 
-    def test_taxonomy_version_format(self, api_client: TestClient):
+    def test_taxonomy_version_format(self, api_client: TestClient) -> None:
         """Test taxonomy endpoint accepts version parameter"""
         versions = ["v1.8.1", "v1.0.0", "latest"]
 
@@ -153,7 +153,7 @@ class TestTaxonomyEndpoint:
 class TestErrorHandling:
     """Error handling tests"""
 
-    def test_classify_missing_text(self, api_client: TestClient):
+    def test_classify_missing_text(self, api_client: TestClient) -> None:
         """Test classify endpoint with missing text field"""
         response = api_client.post(
             "/classify",
@@ -165,7 +165,7 @@ class TestErrorHandling:
         )
         assert response.status_code == 422  # Validation Error
 
-    def test_search_missing_query(self, api_client: TestClient):
+    def test_search_missing_query(self, api_client: TestClient) -> None:
         """Test search endpoint with missing query"""
         response = api_client.post(
             "/search",
@@ -177,7 +177,7 @@ class TestErrorHandling:
         )
         assert response.status_code == 422
 
-    def test_invalid_endpoint(self, api_client: TestClient):
+    def test_invalid_endpoint(self, api_client: TestClient) -> None:
         """Test non-existent endpoint returns 404"""
         response = api_client.get("/nonexistent")
         assert response.status_code == 404

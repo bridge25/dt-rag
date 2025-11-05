@@ -28,8 +28,9 @@ try:
     from langfuse.decorators import observe
 
     _langfuse_available = True
-except ImportError:
-    logger.warning("langfuse package not installed. Run: pip install langfuse>=3.6.0")
+except (ImportError, Exception) as e:
+    # Catch all exceptions including Pydantic v1 type inference errors in Python 3.14+
+    logger.warning(f"langfuse not available: {type(e).__name__}: {e}")
 
     # Fallback: no-op decorator
     def observe(name: str = "", as_type: str = "span", **kwargs: Any) -> Any:
@@ -77,10 +78,9 @@ def get_langfuse_client() -> Optional[Any]:
             public_key=public_key,
             secret_key=secret_key,
             host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
-            enabled=True,
         )
 
-        logger.info(f"Langfuse client initialized: {_langfuse_client.base_url}")
+        logger.info(f"Langfuse client initialized: {_langfuse_client._base_url}")
         return _langfuse_client
 
     except Exception as e:
@@ -110,7 +110,7 @@ def get_langfuse_status() -> Dict[str, Any]:
     if _langfuse_client:
         try:
             # Test client health
-            status["host"] = _langfuse_client.base_url
+            status["host"] = _langfuse_client._base_url
             status["health"] = "healthy"
         except Exception as e:
             status["health"] = f"unhealthy: {e}"

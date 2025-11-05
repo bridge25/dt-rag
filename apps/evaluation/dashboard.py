@@ -402,14 +402,14 @@ DASHBOARD_HTML = """
 """
 
 
-@dashboard_router.get("/", response_class=HTMLResponse)  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+@dashboard_router.get("/", response_class=HTMLResponse)  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def get_dashboard(request: Request) -> HTMLResponse:
     """Get the evaluation dashboard HTML page"""
     return HTMLResponse(content=DASHBOARD_HTML)
 
 
-@dashboard_router.websocket("/ws")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+@dashboard_router.websocket("/ws")  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def websocket_endpoint(websocket: WebSocket) -> None:
     """WebSocket endpoint for real-time dashboard updates"""
@@ -491,13 +491,22 @@ async def get_system_statistics() -> Dict[str, Any]:
             result = await session.execute(query)
             stats = result.fetchone()
 
+            if stats is not None:
+                return {
+                    "evaluations_24h": int(stats[0]) if stats[0] else 0,
+                    "high_quality_rate": (
+                        float(stats[1]) / max(1, stats[0]) if stats[0] else 0
+                    ),
+                    "avg_response_time": float(stats[2]) if stats[2] else 0,
+                    "error_rate": float(stats[3]) / max(1, stats[0]) if stats[0] else 0,
+                }
+
+            # Fallback if stats is None
             return {
-                "evaluations_24h": int(stats[0]) if stats[0] else 0,
-                "high_quality_rate": (
-                    float(stats[1]) / max(1, stats[0]) if stats[0] else 0
-                ),
-                "avg_response_time": float(stats[2]) if stats[2] else 0,
-                "error_rate": float(stats[3]) / max(1, stats[0]) if stats[0] else 0,
+                "evaluations_24h": 0,
+                "high_quality_rate": 0,
+                "avg_response_time": 0,
+                "error_rate": 0,
             }
 
     except Exception as e:
@@ -510,14 +519,14 @@ async def get_system_statistics() -> Dict[str, Any]:
         }
 
 
-@dashboard_router.get("/api/metrics")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+@dashboard_router.get("/api/metrics")  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def get_dashboard_metrics() -> Dict[str, Any]:
     """API endpoint to get current dashboard metrics"""
     return await get_dashboard_data()
 
 
-@dashboard_router.post("/api/simulate-evaluation")  # type: ignore[misc]  # FastAPI decorator lacks type stubs
+@dashboard_router.post("/api/simulate-evaluation")  # FastAPI decorator lacks type stubs
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 async def simulate_evaluation() -> Dict[str, Any]:
     """Simulate an evaluation for dashboard testing"""

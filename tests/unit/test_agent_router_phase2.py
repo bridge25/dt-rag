@@ -191,10 +191,7 @@ def test_refresh_coverage_background_false(test_client, mock_agent):
         total_chunks=500,
         coverage_percent=85.5,
         node_coverage={
-            str(mock_agent.taxonomy_node_ids[0]): {
-                "document_count": 50,
-                "chunk_count": 250,
-            }
+            str(mock_agent.taxonomy_node_ids[0]): 50  # document count for this node
         },
     )
 

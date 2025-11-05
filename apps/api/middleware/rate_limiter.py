@@ -150,7 +150,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Apply rate limiting based on HTTP method"""
         # Skip rate limiting for health check
         if request.url.path == "/health":
-            return await call_next(request)
+            return await call_next(request)  # type: ignore[no-any-return]
 
         # Get client identifier
         identifier = get_client_identifier(request)
@@ -190,7 +190,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             (int(time.time()) // RATE_LIMIT_WINDOW + 1) * RATE_LIMIT_WINDOW
         )
 
-        return response
+        return response  # type: ignore[no-any-return]
 
 
 __all__ = [

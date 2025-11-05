@@ -103,7 +103,7 @@ class EmbeddingService:
     def _load_sentence_transformer(self) -> Optional[SentenceTransformer]:
         """Sentence Transformer 폴백 모델 로드"""
         if self._sentence_transformer is not None:
-            return self._sentence_transformer
+            return self._sentence_transformer  # type: ignore[no-any-return]
 
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             logger.error("sentence-transformers 패키지가 설치되지 않음")
@@ -114,7 +114,7 @@ class EmbeddingService:
 
         try:
             logger.info(f"폴백 모델 로딩 중: {self.model_config['name']}")
-            self._sentence_transformer = SentenceTransformer(self.model_config["name"])
+            self._sentence_transformer = SentenceTransformer(self.model_config["name"])  # type: ignore[arg-type]
             self._model_loaded = True
             logger.info(f"폴백 모델 로딩 완료: {self.model_name}")
             return self._sentence_transformer

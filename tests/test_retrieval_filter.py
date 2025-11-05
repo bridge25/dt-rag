@@ -11,7 +11,7 @@ sys.path.append(
     os.path.join(os.path.dirname(__file__), "..", "apps", "orchestration", "src")
 )
 
-from retrieval_filter import CategoryFilter, SecurityFilter, apply_retrieval_filter
+from retrieval_filter import CategoryFilter, SecurityFilter, apply_retrieval_filter  # type: ignore[import-not-found]
 
 
 class TestCategoryFilter:
@@ -99,7 +99,7 @@ class TestCategoryFilter:
 
     def test_empty_allowed_paths(self):
         """빈 허용 경로 테스트"""
-        allowed_paths = []
+        allowed_paths: list[str] = []
         category_filter = CategoryFilter(allowed_paths)
 
         search_results = [{"chunk_id": "chunk_001", "taxonomy_path": ["AI", "RAG"]}]

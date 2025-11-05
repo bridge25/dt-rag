@@ -6,7 +6,7 @@ Database Integration Tests for Dynamic Taxonomy RAG v1.8.1
 # @TEST:CLASS-001 | SPEC: .moai/specs/SPEC-CLASS-001/spec.md
 
 import pytest
-import psycopg2
+import psycopg2  # type: ignore[import-untyped]
 import os
 from typing import List, Dict, Any
 import uuid

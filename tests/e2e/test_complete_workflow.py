@@ -161,7 +161,7 @@ class TestCompleteWorkflow:
         client: AsyncClient,
         sample_documents: List[Dict[str, Any]],
         search_queries: List[Dict[str, Any]],
-    ):
+    ) -> None:
         """
         Test complete workflow: Document upload → Processing → Indexing → Search
         """
@@ -231,7 +231,7 @@ class TestCompleteWorkflow:
 
     async def test_document_classification_workflow(
         self, client: AsyncClient, sample_documents: List[Dict[str, Any]]
-    ):
+    ) -> None:
         """
         Test document classification workflow
         """
@@ -281,7 +281,7 @@ class TestCompleteWorkflow:
         except Exception as e:
             pytest.skip(f"Classification workflow test failed: {e}")
 
-    async def test_taxonomy_integration_workflow(self, client: AsyncClient):
+    async def test_taxonomy_integration_workflow(self, client: AsyncClient) -> None:
         """
         Test taxonomy management and integration workflow
         """
@@ -310,7 +310,7 @@ class TestCompleteWorkflow:
         except Exception as e:
             pytest.skip(f"Taxonomy workflow test failed: {e}")
 
-    async def test_monitoring_and_health_workflow(self, client: AsyncClient):
+    async def test_monitoring_and_health_workflow(self, client: AsyncClient) -> None:
         """
         Test system monitoring and health check workflow
         """
@@ -347,13 +347,13 @@ class TestCompleteWorkflow:
         except Exception as e:
             pytest.skip(f"Monitoring workflow test failed: {e}")
 
-    async def test_error_handling_workflow(self, client: AsyncClient):
+    async def test_error_handling_workflow(self, client: AsyncClient) -> None:
         """
         Test error handling across the complete system
         """
         try:
             # Test various error scenarios
-            error_scenarios = [
+            error_scenarios: List[Dict[str, Any]] = [
                 # Invalid endpoints
                 {"method": "GET", "url": "/nonexistent/endpoint", "expected": [404]},
                 # Invalid request data
@@ -407,7 +407,7 @@ class TestCompleteWorkflow:
     )
     async def test_performance_workflow(
         self, client: AsyncClient, sample_documents: List[Dict[str, Any]]
-    ):
+    ) -> None:
         """
         Test system performance under load
         """
@@ -451,7 +451,7 @@ class TestCompleteWorkflow:
         except Exception as e:
             pytest.skip(f"Performance workflow test failed: {e}")
 
-    async def test_data_consistency_workflow(self, client: AsyncClient):
+    async def test_data_consistency_workflow(self, client: AsyncClient) -> None:
         """
         Test data consistency across multiple operations
         """
@@ -488,7 +488,7 @@ class TestCompleteWorkflow:
         except Exception as e:
             pytest.skip(f"Data consistency workflow test failed: {e}")
 
-    async def test_api_documentation_workflow(self, client: AsyncClient):
+    async def test_api_documentation_workflow(self, client: AsyncClient) -> None:
         """
         Test API documentation endpoints
         """

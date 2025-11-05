@@ -1,5 +1,6 @@
 import time
 import json
+from typing import Dict, Any, List
 from apps.ingestion.parsers import ParserFactory
 from apps.ingestion.chunking import IntelligentChunker
 from apps.ingestion.pii import PIIDetector, PIIType
@@ -42,7 +43,7 @@ Final sentence number fourteen for completion."""
 
     processing_time = (time.time() - start_time) * 1000
 
-    metrics = {
+    metrics: Dict[str, Any] = {
         "parsing": {
             "input_size_bytes": len(file_content),
             "output_size_chars": len(parsed_text),
@@ -102,7 +103,7 @@ def test_chunking_boundary_preservation_detailed():
 
     chunker = IntelligentChunker(chunk_size=500, overlap_size=128)
 
-    test_cases = [
+    test_cases: List[Dict[str, Any]] = [
         {
             "name": "Short text (single chunk)",
             "text": "This is a short text. It has only two sentences.",
@@ -130,7 +131,7 @@ def test_chunking_boundary_preservation_detailed():
         chunks = chunker.chunk_text(test_case["text"])
         boundary_rate = chunker.calculate_sentence_boundary_preservation_rate(chunks)
 
-        result = {
+        result: Dict[str, Any] = {
             "test_case": test_case["name"],
             "total_chunks": len(chunks),
             "boundary_preservation_rate": boundary_rate,
@@ -161,7 +162,7 @@ def test_pii_detection_accuracy():
 
     detector = PIIDetector()
 
-    test_cases = [
+    test_cases: List[Dict[str, Any]] = [
         {
             "name": "Phone number (Korean format)",
             "text": "Contact: 010-1234-5678",
@@ -196,7 +197,7 @@ def test_pii_detection_accuracy():
 
         detected_types = [m.pii_type for m in matches]
 
-        result = {
+        result: Dict[str, Any] = {
             "test_case": test_case["name"],
             "original_text": test_case["text"],
             "pii_found": len(matches),

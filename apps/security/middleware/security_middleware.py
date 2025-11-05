@@ -425,15 +425,15 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
             # Take the first IP in the chain
-            return cast(str, forwarded_for.split(",")[0].strip())
+            return forwarded_for.split(",")[0].strip()
 
         real_ip = request.headers.get("x-real-ip")
         if real_ip:
-            return cast(str, real_ip)
+            return real_ip
 
         # Fall back to direct connection
-        if hasattr(request.client, "host"):
-            return cast(str, request.client.host)
+        if request.client is not None and hasattr(request.client, "host"):
+            return request.client.host
 
         return "unknown"
 
@@ -672,7 +672,7 @@ class CSRFProtection:
 
         # Skip CSRF for GET, HEAD, OPTIONS
         if request.method in ["GET", "HEAD", "OPTIONS"]:
-            return await call_next(request)
+            return await call_next(request)  # type: ignore[no-any-return]
 
         # Check CSRF token for state-changing operations
         csrf_token = request.headers.get("X-CSRF-Token")
@@ -689,7 +689,7 @@ class CSRFProtection:
                 content={"error": "Invalid CSRF token"},
             )
 
-        return await call_next(request)
+        return await call_next(request)  # type: ignore[no-any-return]
 
     def _validate_csrf_token(self, token: str) -> bool:
         """Validate CSRF token"""
@@ -739,14 +739,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             }
         )
 
-        return response
+        return response  # type: ignore[no-any-return]
 
     def _get_client_ip(self, request: Request) -> str:
         """Get client IP address"""
         forwarded_for = request.headers.get("x-forwarded-for")
         if forwarded_for:
-            return cast(str, forwarded_for.split(",")[0].strip())
-        return cast(str, getattr(request.client, "host", "unknown"))
+            return forwarded_for.split(",")[0].strip()
+        return str(getattr(request.client, "host", "unknown"))
 
 
 class SecurityMiddlewareError(Exception):

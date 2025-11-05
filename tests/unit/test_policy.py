@@ -50,12 +50,12 @@ def test_overflow_prevention():
     """Q=100, Q=-100 극단값 처리"""
     policy = SoftQPolicy()
 
-    q_values_overflow = [100, 0, 0, 0, 0, 0]
+    q_values_overflow = [100.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     probs = policy._softmax(q_values_overflow, temperature=0.5)
     assert all(0 <= p <= 1 for p in probs)
     assert abs(sum(probs) - 1.0) < 0.01
 
-    q_values_underflow = [-100, 0, 0, 0, 0, 0]
+    q_values_underflow = [-100.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     probs = policy._softmax(q_values_underflow, temperature=0.5)
     assert all(0 <= p <= 1 for p in probs)
     assert abs(sum(probs) - 1.0) < 0.01

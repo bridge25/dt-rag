@@ -1,3 +1,4 @@
+from typing import Optional
 # @TEST:CONSOLIDATION-001:integration
 # @SPEC:CONSOLIDATION-001
 
@@ -13,7 +14,7 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///test_consolidation_integration
 TestBase = declarative_base()
 
 
-class TestCaseBank(TestBase):
+class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
     __tablename__ = "case_bank"
 
     case_id: Mapped[str] = mapped_column(Text, primary_key=True)
@@ -21,18 +22,18 @@ class TestCaseBank(TestBase):
     response_text: Mapped[str] = mapped_column(Text, nullable=False)
     category_path: Mapped[str] = mapped_column(Text, nullable=False)
     query_vector: Mapped[str] = mapped_column(Text, nullable=False)
-    quality_score: Mapped[float | None] = mapped_column(Float)
-    usage_count: Mapped[int | None] = mapped_column(Integer, default=0)
-    success_rate: Mapped[float | None] = mapped_column(Float, default=100.0)
-    created_at: Mapped[datetime | None] = mapped_column(
+    quality_score: Mapped[Optional[float]] = mapped_column(Float)
+    usage_count: Mapped[Optional[int]] = mapped_column(Integer, default=0)
+    success_rate: Mapped[Optional[float]] = mapped_column(Float, default=100.0)
+    created_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now()
     )
-    last_used_at: Mapped[datetime | None] = mapped_column(
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now()
     )
 
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
-    updated_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    updated_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
