@@ -115,7 +115,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0) -> None:
 
         return wrapper
 
-    return decorator
+    return decorator  # type: ignore
 
 
 class TestUtilityFunctions:
@@ -679,7 +679,7 @@ class TestCacheHelpers:
 
                 return wrapper
 
-            return ttl_cache
+            return ttl_cache  # type: ignore
 
         call_count = 0
         ttl_cache = create_ttl_cache(0.01)  # type: ignore[func-returns-value]

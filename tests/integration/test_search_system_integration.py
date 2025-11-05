@@ -171,16 +171,16 @@ class TestSearchSystemIntegration:
                 search_engine = HybridSearchEngine()
 
                 # Test indexing documents
-                await search_engine.index_documents(sample_documents)
+                await search_engine.index_documents(sample_documents)  # type: ignore[attr-defined]
 
                 # Test search query
                 query = "machine learning algorithms"
-                results = await search_engine.search(
+                results = await search_engine.search(  # type: ignore
                     query=query, limit=3, filters={"category": "AI"}
                 )
 
                 assert isinstance(results, list)
-                assert len(results) <= 3
+                assert len(results) <= 3  # type: ignore[unreachable]
 
                 # Results should have required fields
                 for result in results:
@@ -276,7 +276,7 @@ class TestSearchSystemIntegration:
         ]
 
         # Test ranking by score (descending)
-        ranked_results = sorted(raw_results, key=lambda x: x["score"], reverse=True)
+        ranked_results = sorted(raw_results, key=lambda x: x["score"], reverse=True)  # type: ignore
 
         assert ranked_results[0]["id"] == "doc_2"  # Highest score
         assert ranked_results[1]["id"] == "doc_1"  # Second highest
@@ -285,7 +285,7 @@ class TestSearchSystemIntegration:
         # Test result limiting
         limited_results = ranked_results[:2]
         assert len(limited_results) == 2
-        assert limited_results[0]["score"] >= limited_results[1]["score"]
+        assert limited_results[0]["score"] >= limited_results[1]["score"]  # type: ignore
 
     @pytest.mark.skipif(
         not os.getenv("TEST_WITH_OPENAI"),

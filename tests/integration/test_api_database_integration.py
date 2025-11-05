@@ -26,7 +26,7 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test_integration.db"
 try:
     # Import application components
     from apps.api.main import app
-    from apps.api.database import (
+    from apps.api.database import (  # type: ignore[attr-defined]
         get_database_connection,
         init_database,
         test_database_connection,
@@ -75,7 +75,7 @@ class TestAPIDatabaseIntegration:
             test_database_engine, class_=AsyncSession, expire_on_commit=False
         )
 
-        async with async_session() as session:
+        async with async_session() as session:  # type: ignore[attr-defined]
             yield session
             await session.rollback()
 

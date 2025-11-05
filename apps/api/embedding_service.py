@@ -114,7 +114,7 @@ class EmbeddingService:
 
         try:
             logger.info(f"폴백 모델 로딩 중: {self.model_config['name']}")
-            self._sentence_transformer = SentenceTransformer(self.model_config["name"])
+            self._sentence_transformer = SentenceTransformer(self.model_config["name"])  # type: ignore[arg-type]
             self._model_loaded = True
             logger.info(f"폴백 모델 로딩 완료: {self.model_name}")
             return self._sentence_transformer

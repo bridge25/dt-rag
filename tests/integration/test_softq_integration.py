@@ -30,7 +30,7 @@ async def test_full_softq_cycle():
     state_hash = encoder.get_state_hash(state)
     q_values = q_learner.get_q_values(state_hash)
 
-    action = policy.select_action(q_values)
+    action = policy.select_action(q_values)  # type: ignore[arg-type]  # Test data guaranteed non-None
 
     assert action is not None
     assert "retrieval" in action
@@ -39,7 +39,7 @@ async def test_full_softq_cycle():
     reward = q_learner.calculate_reward(confidence=0.8, latency=0.5)
     q_learner.update_q_value(state_hash, 0, reward, "next_state_hash")
 
-    await dao.save_q_table(state_hash, q_learner.get_q_values(state_hash))
+    await dao.save_q_table(state_hash, q_learner.get_q_values(state_hash))  # type: ignore[arg-type]
 
     loaded_q_values = await dao.load_q_table(state_hash)
     assert loaded_q_values is not None
@@ -64,7 +64,7 @@ async def test_multiple_iterations():
 
     for i in range(10):
         q_values = q_learner.get_q_values(state_hash)
-        action_idx = policy._sample_action(policy._softmax(q_values, 0.5))
+        action_idx = policy._sample_action(policy._softmax(q_values, 0.5))  # type: ignore[arg-type]
 
         reward = 0.9
         q_learner.update_q_value(state_hash, action_idx, reward, "next_state")

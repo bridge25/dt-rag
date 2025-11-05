@@ -237,7 +237,7 @@ class GracefulDegradationHelper:
 
         def decorator(func: Callable) -> Callable:
             if not has_service_available(service):
-                return pytest.mark.skip(reason=f"Service '{service}' not available")(
+                return pytest.mark.skip(reason=f"Service '{service}' not available")(  # type: ignore[no-any-return]
                     func
                 )
             return func

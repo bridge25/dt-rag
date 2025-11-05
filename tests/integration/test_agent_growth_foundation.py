@@ -249,7 +249,7 @@ async def test_detect_gaps_with_real_data(sample_taxonomy_data, sample_documents
 
     if root_node_id in metrics.node_coverage:
         root_coverage = metrics.node_coverage[root_node_id]
-        assert "document_count" in root_coverage or "chunk_count" in root_coverage
+        assert "document_count" in root_coverage or "chunk_count" in root_coverage  # type: ignore
 
 
 @pytest.mark.integration

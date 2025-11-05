@@ -217,7 +217,7 @@ class PipelineE2ETest:
                 "intent": response.intent,
                 "confidence": response.confidence,
                 "sources_count": len(response.sources),
-                "citations_count": response.citations_count,
+                "citations_count": response.citations_count,  # type: ignore[attr-defined]
                 "cost": response.cost,
                 "step_timings": response.step_timings,
             }

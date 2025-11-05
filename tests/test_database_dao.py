@@ -167,7 +167,7 @@ class TestClassifyDAO:
         """Should classify RAG-related text correctly (fallback)"""
         text = "retrieval augmented generation with vector embeddings"
 
-        result = ClassifyDAO._fallback_classification(text, hint_paths=None)
+        result = ClassifyDAO._fallback_classification(text, hint_paths=None)  # type: ignore[attr-defined]
 
         assert isinstance(result, dict)
         assert "RAG" in result["canonical"] or "GENERAL" in result["canonical"]
@@ -178,7 +178,7 @@ class TestClassifyDAO:
         """Should classify ML-related text correctly (fallback)"""
         text = "machine learning model training and neural networks"
 
-        result = ClassifyDAO._fallback_classification(text, hint_paths=None)
+        result = ClassifyDAO._fallback_classification(text, hint_paths=None)  # type: ignore[attr-defined]
 
         assert isinstance(result, dict)
         assert "ML" in result["canonical"] or "GENERAL" in result["canonical"]
@@ -189,7 +189,7 @@ class TestClassifyDAO:
         """Should classify taxonomy-related text correctly (fallback)"""
         text = "taxonomy classification hierarchy and ontology"
 
-        result = ClassifyDAO._fallback_classification(text, hint_paths=None)
+        result = ClassifyDAO._fallback_classification(text, hint_paths=None)  # type: ignore[attr-defined]
 
         assert isinstance(result, dict)
         assert "TAXONOMY" in result["canonical"] or "GENERAL" in result["canonical"]
@@ -200,7 +200,7 @@ class TestClassifyDAO:
         """Should handle generic text without clear category"""
         text = "this is just some random text without specific keywords"
 
-        result = ClassifyDAO._fallback_classification(text, hint_paths=None)
+        result = ClassifyDAO._fallback_classification(text, hint_paths=None)  # type: ignore[attr-defined]
 
         assert isinstance(result, dict)
         assert "canonical" in result

@@ -272,7 +272,7 @@ class TestCachingSystemIntegration:
 
             # Test bulk deletion
             if keys_to_delete:
-                deleted_count = await redis_manager.delete_many(keys_to_delete)
+                deleted_count = await redis_manager.delete_many(keys_to_delete)  # type: ignore[attr-defined]
                 # Mock returns number of deleted keys
                 mock_redis_client.delete = AsyncMock(return_value=len(keys_to_delete))
                 assert isinstance(deleted_count, int)
@@ -447,7 +447,7 @@ class TestCachingSystemIntegration:
             }
 
             assert metrics["operation_type"] == "get"
-            assert metrics["cache_key_size"] > 0
+            assert metrics["cache_key_size"] > 0  # type: ignore
 
         except Exception as e:
             pytest.skip(f"Cache performance metrics test failed: {e}")

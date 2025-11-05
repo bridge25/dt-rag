@@ -89,7 +89,7 @@ def sample_search_query() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def sample_api_key_data() -> Dict[str, str]:
+def sample_api_key_data() -> Dict[str, Any]:
     """Sample API key data for testing."""
     return {
         "name": "test-api-key",

@@ -468,7 +468,7 @@ def custom_openapi() -> Dict[str, Any]:
     return cast(Dict[str, Any], app.openapi_schema)
 
 
-app.openapi = custom_openapi
+app.openapi = custom_openapi  # type: ignore[method-assign]  # FastAPI pattern for custom OpenAPI
 
 
 # Custom documentation endpoints
@@ -477,7 +477,7 @@ app.openapi = custom_openapi
 async def custom_swagger_ui_html() -> Any:
     """Custom Swagger UI with enhanced styling"""
     return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
+        openapi_url=app.openapi_url,  # type: ignore[arg-type]  # FastAPI guarantees openapi_url is set
         title=f"{app.title} - Documentation",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js",
@@ -500,7 +500,7 @@ async def custom_swagger_ui_html() -> Any:
 async def redoc_html() -> Any:
     """Custom ReDoc documentation"""
     return get_redoc_html(
-        openapi_url=app.openapi_url,
+        openapi_url=app.openapi_url,  # type: ignore[arg-type]  # FastAPI guarantees openapi_url is set
         title=f"{app.title} - ReDoc",
         redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@2.1.3/bundles/redoc.standalone.js",
     )

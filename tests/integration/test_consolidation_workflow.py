@@ -14,7 +14,7 @@ os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///test_consolidation_integration
 TestBase = declarative_base()
 
 
-class TestCaseBank(TestBase):
+class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
     __tablename__ = "case_bank"
 
     case_id: Mapped[str] = mapped_column(Text, primary_key=True)

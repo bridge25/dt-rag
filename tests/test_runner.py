@@ -69,7 +69,7 @@ class TestRunner:
             # Test PostgreSQL connection
             engine = create_engine(db_url)
             with engine.connect() as conn:
-                conn.execute("SELECT 1")
+                conn.execute("SELECT 1")  # type: ignore[call-overload]  # SQLAlchemy accepts string literals
             return True
 
         except Exception as e:

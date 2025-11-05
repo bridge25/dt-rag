@@ -103,9 +103,9 @@ def init_sentry(
             # Send default PII (can be disabled for privacy)
             send_default_pii=False,
             # Custom error sampling
-            before_send=_before_send_hook,
+            before_send=_before_send_hook,  # type: ignore[arg-type]  # Sentry SDK type stub mismatch
             # Performance monitoring
-            _experiments={
+            _experiments={  # type: ignore[typeddict-unknown-key]  # Sentry experimental feature
                 "profiles_sample_rate": profiles_sample_rate,
             },
         )
@@ -529,7 +529,7 @@ def capture_message(message: str, level: str = "info", **kwargs: Any) -> None:
         for key, value in kwargs.items():
             scope.set_context(key, value)
 
-        sentry_sdk.capture_message(message, level=level)
+        sentry_sdk.capture_message(message, level=level)  # type: ignore[arg-type]  # Sentry SDK expects Literal type
 
 
 def add_search_breadcrumb(

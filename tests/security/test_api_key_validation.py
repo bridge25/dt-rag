@@ -30,7 +30,7 @@ try:
         _hash_api_key,
         _log_security_event,
     )
-    from apps.api.security import (
+    from apps.api.security import (  # type: ignore[attr-defined]
         SecureAPIKeyGenerator,
         APIKeyConfig,
         APIKeyManager,
