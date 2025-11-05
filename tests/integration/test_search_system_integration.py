@@ -120,7 +120,7 @@ class TestSearchSystemIntegration:
         with patch(
             "apps.api.cache.redis_manager.redis.Redis", return_value=mock_redis_cache
         ):
-            cache = SearchCache()
+            cache = HybridSearchCache()
             yield cache
 
     async def test_embedding_service_integration(self, sample_documents):
@@ -207,14 +207,14 @@ class TestSearchSystemIntegration:
             ]
 
             # Test cache miss -> cache set
-            cached_results = await search_cache.get_cached_results(query, filters)
+            cached_results = await search_cache.get_search_results(query, filters)
             assert cached_results is None
 
             # Cache the results
-            await search_cache.cache_results(query, filters, mock_results)
+            await search_cache.set_search_results(query, filters, mock_results)
 
             # Test cache hit (mocked to return None, but we test the call)
-            cached_results = await search_cache.get_cached_results(query, filters)
+            cached_results = await search_cache.get_search_results(query, filters)
             # In real scenario, this would return mock_results
 
         except Exception as e:
@@ -369,8 +369,8 @@ class TestSearchSystemIntegration:
                         side_effect=Exception("Redis Error")
                     )
 
-                    search_cache = SearchCache()
-                    result = await search_cache.get_cached_results("test", {})
+                    search_cache = HybridSearchCache()
+                    result = await search_cache.get_search_results("test", {})
                     # Should handle Redis errors gracefully
                     assert result is None
             except Exception:

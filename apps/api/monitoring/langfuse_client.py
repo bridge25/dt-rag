@@ -80,7 +80,7 @@ def get_langfuse_client() -> Optional[Any]:
             host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
         )
 
-        logger.info(f"Langfuse client initialized: {_langfuse_client.base_url}")
+        logger.info(f"Langfuse client initialized: {_langfuse_client._base_url}")
         return _langfuse_client
 
     except Exception as e:

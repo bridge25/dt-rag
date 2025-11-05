@@ -83,7 +83,7 @@ class TestCachingSystemIntegration:
         with patch(
             "apps.api.cache.redis_manager.get_redis_manager", return_value=redis_manager
         ):
-            cache = SearchCache()
+            cache = HybridSearchCache()
             yield cache
 
     @pytest.fixture
@@ -145,7 +145,7 @@ class TestCachingSystemIntegration:
 
     async def test_search_cache_integration(
         self,
-        search_cache: SearchCache,
+        search_cache: HybridSearchCache,
         sample_search_query: Dict[str, Any],
         sample_search_results: List[Dict[str, Any]],
     ) -> None:
@@ -162,13 +162,13 @@ class TestCachingSystemIntegration:
             assert len(cache_key) > 0
 
             # Test cache miss
-            cached_results = await search_cache.get_cached_results(
+            cached_results = await search_cache.get_search_results(
                 sample_search_query["query"], sample_search_query["filters"]
             )
             assert cached_results is None
 
             # Test cache set
-            await search_cache.cache_results(
+            await search_cache.set_search_results(
                 sample_search_query["query"],
                 sample_search_query["filters"],
                 sample_search_results,
@@ -182,7 +182,7 @@ class TestCachingSystemIntegration:
         except Exception as e:
             pytest.skip(f"Search cache integration test failed: {e}")
 
-    async def test_cache_key_consistency(self, search_cache: SearchCache) -> None:
+    async def test_cache_key_consistency(self, search_cache: HybridSearchCache) -> None:
         """Test cache key generation consistency"""
         if not COMPONENTS_AVAILABLE:
             pytest.skip("Search cache not available")
@@ -413,7 +413,7 @@ class TestCachingSystemIntegration:
             pytest.skip(f"Cache error handling test failed: {e}")
 
     async def test_cache_performance_metrics(
-        self, search_cache: SearchCache, sample_search_query: Dict[str, Any]
+        self, search_cache: HybridSearchCache, sample_search_query: Dict[str, Any]
     ) -> None:
         """Test cache performance tracking"""
         if not COMPONENTS_AVAILABLE:
@@ -425,7 +425,7 @@ class TestCachingSystemIntegration:
             # Test cache operation timing
             start_time = time.time()
 
-            await search_cache.get_cached_results(
+            await search_cache.get_search_results(
                 sample_search_query["query"], sample_search_query["filters"]
             )
 

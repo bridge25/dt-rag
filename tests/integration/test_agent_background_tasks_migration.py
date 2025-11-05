@@ -38,7 +38,7 @@ class TestAgentBackgroundTasksMigration:
             capture_output=True,
             text=True,
         )
-        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_migration_result.stderr}"
+        assert migration_result.returncode == 0, f"Alembic upgrade failed: {migration_result.stderr}"
 
         async with async_session() as session:
             # Verify table exists
@@ -467,7 +467,7 @@ class TestAgentBackgroundTasksMigration:
             """
             )
             query_result = await session.execute(table_check)
-            tables = [row[0] for row in result.fetchall()]
+            tables = [row[0] for row in query_result.fetchall()]
             assert (
                 "background_tasks" in tables
             ), "background_tasks should exist after upgrade"
@@ -487,7 +487,7 @@ class TestAgentBackgroundTasksMigration:
         async with async_session() as session:
             # Verify tables removed
             query_result = await session.execute(table_check)
-            tables_after_downgrade = [row[0] for row in result.fetchall()]
+            tables_after_downgrade = [row[0] for row in query_result.fetchall()]
             assert (
                 "background_tasks" not in tables_after_downgrade
             ), "background_tasks should be removed after downgrade"
@@ -507,7 +507,7 @@ class TestAgentBackgroundTasksMigration:
         async with async_session() as session:
             # Verify tables recreated
             query_result = await session.execute(table_check)
-            tables_after_reupgrade = [row[0] for row in result.fetchall()]
+            tables_after_reupgrade = [row[0] for row in query_result.fetchall()]
             assert (
                 "background_tasks" in tables_after_reupgrade
             ), "background_tasks should be recreated after re-upgrade"
