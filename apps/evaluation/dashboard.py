@@ -491,13 +491,22 @@ async def get_system_statistics() -> Dict[str, Any]:
             result = await session.execute(query)
             stats = result.fetchone()
 
+            if stats is not None:
+                return {
+                    "evaluations_24h": int(stats[0]) if stats[0] else 0,
+                    "high_quality_rate": (
+                        float(stats[1]) / max(1, stats[0]) if stats[0] else 0
+                    ),
+                    "avg_response_time": float(stats[2]) if stats[2] else 0,
+                    "error_rate": float(stats[3]) / max(1, stats[0]) if stats[0] else 0,
+                }
+
+            # Fallback if stats is None
             return {
-                "evaluations_24h": int(stats[0]) if stats[0] else 0,
-                "high_quality_rate": (
-                    float(stats[1]) / max(1, stats[0]) if stats[0] else 0
-                ),
-                "avg_response_time": float(stats[2]) if stats[2] else 0,
-                "error_rate": float(stats[3]) / max(1, stats[0]) if stats[0] else 0,
+                "evaluations_24h": 0,
+                "high_quality_rate": 0,
+                "avg_response_time": 0,
+                "error_rate": 0,
             }
 
     except Exception as e:

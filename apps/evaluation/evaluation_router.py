@@ -663,28 +663,49 @@ async def get_evaluation_analytics(
             result = await session.execute(query, {"cutoff_date": cutoff_date})
             stats = result.fetchone()
 
-            analytics = {
+            if stats is not None:
+                analytics = {
+                    "period_days": days,
+                    "summary_statistics": {
+                        "total_evaluations": int(stats[0]) if stats[0] else 0,
+                        "avg_faithfulness": float(stats[1]) if stats[1] else None,
+                        "avg_context_precision": float(stats[2]) if stats[2] else None,
+                        "avg_context_recall": float(stats[3]) if stats[3] else None,
+                        "avg_answer_relevancy": float(stats[4]) if stats[4] else None,
+                        "avg_response_time": float(stats[5]) if stats[5] else None,
+                        "high_quality_rate": (
+                            float(stats[6]) / max(1, stats[0]) if stats[0] else 0
+                        ),
+                    },
+                    "quality_insights": {
+                        "strengths": _identify_system_strengths(stats),
+                        "improvement_areas": _identify_improvement_areas(stats),
+                        "trends": "stable",  # TODO: Calculate actual trends
+                    },
+                    "generated_at": datetime.utcnow().isoformat(),
+                }
+
+                return analytics
+
+            # Fallback if stats is None
+            return {
                 "period_days": days,
                 "summary_statistics": {
-                    "total_evaluations": int(stats[0]) if stats[0] else 0,
-                    "avg_faithfulness": float(stats[1]) if stats[1] else None,
-                    "avg_context_precision": float(stats[2]) if stats[2] else None,
-                    "avg_context_recall": float(stats[3]) if stats[3] else None,
-                    "avg_answer_relevancy": float(stats[4]) if stats[4] else None,
-                    "avg_response_time": float(stats[5]) if stats[5] else None,
-                    "high_quality_rate": (
-                        float(stats[6]) / max(1, stats[0]) if stats[0] else 0
-                    ),
+                    "total_evaluations": 0,
+                    "avg_faithfulness": None,
+                    "avg_context_precision": None,
+                    "avg_context_recall": None,
+                    "avg_answer_relevancy": None,
+                    "avg_response_time": None,
+                    "high_quality_rate": 0,
                 },
                 "quality_insights": {
-                    "strengths": _identify_system_strengths(stats),
-                    "improvement_areas": _identify_improvement_areas(stats),
-                    "trends": "stable",  # TODO: Calculate actual trends
+                    "strengths": [],
+                    "improvement_areas": [],
+                    "trends": "no_data",
                 },
                 "generated_at": datetime.utcnow().isoformat(),
             }
-
-            return analytics
 
     except Exception as e:
         logger.error(f"Failed to get evaluation analytics: {e}")

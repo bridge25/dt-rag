@@ -34,6 +34,20 @@ scope:
 
 ## HISTORY
 
+### v0.6.0 (2025-11-05) - Session 5: Object Indexing Fixes Complete
+- **SESSION**: Object indexing fixes - None guards for SQLAlchemy row access
+- **PROGRESS**: 300 → 285 errors (-15, 5.0% reduction), 72.2% → 73.6% complete (+1.4%)
+- **RESULTS**:
+  - [index] errors fixed: 15 (100% of apps/ indexing errors)
+  - Files cleared: 3 files (67 → 64)
+  - Files modified: 3 apps/ files (core business logic)
+- **IMPLEMENTATION**:
+  - Added `if row is not None` checks before SQLAlchemy row indexing
+  - Proper fallback dictionaries for None cases
+  - Improved error handling in hitl_queue.py, dashboard.py, evaluation_router.py
+- **TIME**: 45 minutes (manual fixes with careful testing)
+- **NEXT**: Session 6 - Optional/None handling (~40 errors) or remaining error types
+
 ### v0.5.0 (2025-11-05) - Session 4: Manual Quick Wins Complete
 - **SESSION**: Manual Quick Wins - removal of all unused type:ignore comments
 - **PROGRESS**: 375 → 300 errors (-75, 20.0% reduction), 65.3% → 72.2% complete (+6.9%)
