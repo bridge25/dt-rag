@@ -1,6 +1,6 @@
 """
 API Key Authentication Tests
-@TEST:TEST-004-001 | SPEC: SPEC-TEST-004.md
+@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for API key authentication security:
 - Missing API key rejection
@@ -13,7 +13,7 @@ import pytest
 from httpx import AsyncClient
 
 
-# @TEST:TEST-004-001:MISSING
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_api_requires_authentication(async_client: AsyncClient) -> None:
     """
@@ -45,7 +45,7 @@ async def test_api_requires_authentication(async_client: AsyncClient) -> None:
         ), f"Error message should mention API key, got: {detail}"
 
 
-# @TEST:TEST-004-001:INVALID
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_invalid_api_key_rejected(async_client: AsyncClient) -> None:
     """
@@ -70,7 +70,7 @@ async def test_invalid_api_key_rejected(async_client: AsyncClient) -> None:
     ), f"Error message should mention invalid key, got: {detail}"
 
 
-# @TEST:TEST-004-001:EXPIRED
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_expired_api_key_rejected(async_client: AsyncClient) -> None:
     """
@@ -94,7 +94,7 @@ async def test_expired_api_key_rejected(async_client: AsyncClient) -> None:
     ], f"Expired API key should be rejected, got {response.status_code}"
 
 
-# @TEST:TEST-004-001:HEALTH-CHECK
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_health_check_no_auth_required(async_client: AsyncClient) -> None:
     """
@@ -121,7 +121,7 @@ async def test_health_check_no_auth_required(async_client: AsyncClient) -> None:
             ), f"Health check should not require API key, but got: {detail}"
 
 
-# @TEST:TEST-004-001:VALID-KEY
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_valid_api_key_accepted(async_client: AsyncClient) -> None:
     """

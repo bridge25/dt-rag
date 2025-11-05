@@ -1,6 +1,6 @@
 """
 SQL Injection Prevention Tests
-@TEST:TEST-004-003 | SPEC: SPEC-TEST-004.md
+@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for SQL injection attack prevention:
 - SQL injection in case_id blocked
@@ -14,7 +14,7 @@ from httpx import AsyncClient
 import os
 
 
-# @TEST:TEST-004-003:CASE-ID-INJECTION
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_sql_injection_in_case_id_blocked(async_client: AsyncClient) -> None:
     """
@@ -60,7 +60,7 @@ async def test_sql_injection_in_case_id_blocked(async_client: AsyncClient) -> No
             ), f"Should not expose table names, got: {detail}"
 
 
-# @TEST:TEST-004-003:SEARCH-QUERY-INJECTION
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_sql_injection_in_search_query_blocked(async_client: AsyncClient) -> None:
     """
@@ -96,7 +96,7 @@ async def test_sql_injection_in_search_query_blocked(async_client: AsyncClient) 
         assert "api_key" not in response_str.lower(), "Should not leak API keys"
 
 
-# @TEST:TEST-004-003:UNION-ATTACK
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_union_based_sql_injection_blocked(async_client: AsyncClient) -> None:
     """
@@ -126,7 +126,7 @@ async def test_union_based_sql_injection_blocked(async_client: AsyncClient) -> N
         ], f"UNION injection should be handled safely, got {response.status_code}"
 
 
-# @TEST:TEST-004-003:BOOLEAN-ATTACK
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_boolean_based_sql_injection_blocked(async_client: AsyncClient) -> None:
     """
@@ -157,7 +157,7 @@ async def test_boolean_based_sql_injection_blocked(async_client: AsyncClient) ->
         ], f"Boolean injection should be handled safely, got {response.status_code}"
 
 
-# @TEST:TEST-004-003:TIME-BASED-ATTACK
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_time_based_sql_injection_blocked(async_client: AsyncClient) -> None:
     """
@@ -199,7 +199,7 @@ async def test_time_based_sql_injection_blocked(async_client: AsyncClient) -> No
         ], f"Time-based injection should be handled safely, got {response.status_code}"
 
 
-# @TEST:TEST-004-003:NO-DATA-LEAK
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_no_data_leakage_on_injection(async_client: AsyncClient) -> None:
     """

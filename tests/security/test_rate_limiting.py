@@ -1,6 +1,6 @@
 """
 Rate Limiting Tests
-@TEST:TEST-004-005 | SPEC: SPEC-TEST-004.md
+@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for rate limiting functionality:
 - Rate limit enforcement (100 req/min default)
@@ -15,7 +15,7 @@ import os
 import asyncio
 
 
-# @TEST:TEST-004-005:BASIC-LIMIT
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_rate_limit_concept(async_client: AsyncClient) -> None:
     """
@@ -45,7 +45,7 @@ async def test_rate_limit_concept(async_client: AsyncClient) -> None:
     ), "Health endpoint should not be rate limited"
 
 
-# @TEST:TEST-004-005:AUTH-REQUIRED
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient) -> None:
     """
@@ -87,7 +87,7 @@ async def test_rate_limit_on_authenticated_endpoints(async_client: AsyncClient) 
             ), "Rate limited response should include Retry-After header"
 
 
-# @TEST:TEST-004-005:DIFFERENT-KEYS
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_rate_limit_per_api_key(async_client: AsyncClient) -> None:
     """
@@ -126,7 +126,7 @@ async def test_rate_limit_per_api_key(async_client: AsyncClient) -> None:
     assert response_key2.status_code in [401, 403], "Invalid key should fail auth"
 
 
-# @TEST:TEST-004-005:HEADERS
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_rate_limit_headers(async_client: AsyncClient) -> None:
     """
@@ -155,7 +155,7 @@ async def test_rate_limit_headers(async_client: AsyncClient) -> None:
     ], "Valid API key should pass authentication"
 
 
-# @TEST:TEST-004-005:429-RESPONSE
+# @TEST:TEST-004429-RESPONSE
 @pytest.mark.asyncio
 async def test_429_response_format(async_client: AsyncClient) -> None:
     """
@@ -177,7 +177,7 @@ async def test_429_response_format(async_client: AsyncClient) -> None:
     assert True, "429 response format specification documented"
 
 
-# @TEST:TEST-004-005:NO-LIMIT-HEALTH
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_health_endpoint_not_rate_limited(async_client: AsyncClient) -> None:
     """

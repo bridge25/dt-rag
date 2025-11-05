@@ -1,6 +1,6 @@
 """
 XSS (Cross-Site Scripting) Prevention Tests
-@TEST:TEST-004-004 | SPEC: SPEC-TEST-004.md
+@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for XSS attack prevention:
 - Script tag injection blocked
@@ -14,7 +14,7 @@ from httpx import AsyncClient
 import os
 
 
-# @TEST:TEST-004-004:SCRIPT-TAG
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_xss_script_tag_sanitized(async_client: AsyncClient) -> None:
     """
@@ -41,7 +41,7 @@ async def test_xss_script_tag_sanitized(async_client: AsyncClient) -> None:
     ), "Response should not contain XSS payload"
 
 
-# @TEST:TEST-004-004:EVENT-HANDLER
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_xss_event_handler_blocked(async_client: AsyncClient) -> None:
     """
@@ -75,7 +75,7 @@ async def test_xss_event_handler_blocked(async_client: AsyncClient) -> None:
         ), f"Response should not contain onfocus handler for payload: {payload}"
 
 
-# @TEST:TEST-004-004:HTML-INJECTION
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_html_injection_escaped(async_client: AsyncClient) -> None:
     """
@@ -102,7 +102,7 @@ async def test_html_injection_escaped(async_client: AsyncClient) -> None:
     ), "Response should not contain unescaped <iframe> tags"
 
 
-# @TEST:TEST-004-004:JAVASCRIPT-PROTO
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_javascript_protocol_blocked(async_client: AsyncClient) -> None:
     """
@@ -129,7 +129,7 @@ async def test_javascript_protocol_blocked(async_client: AsyncClient) -> None:
         ), f"Response should not contain javascript: protocol for payload: {payload}"
 
 
-# @TEST:TEST-004-004:DATA-URL
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_data_url_xss_blocked(async_client: AsyncClient) -> None:
     """
@@ -155,7 +155,7 @@ async def test_data_url_xss_blocked(async_client: AsyncClient) -> None:
         ), "Data URL should not contain executable scripts"
 
 
-# @TEST:TEST-004-004:NO-REFLECTION
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_no_reflected_xss(async_client: AsyncClient) -> None:
     """

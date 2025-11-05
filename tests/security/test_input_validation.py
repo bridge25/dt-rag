@@ -1,6 +1,6 @@
 """
 Input Validation Security Tests
-@TEST:TEST-004-002 | SPEC: SPEC-TEST-004.md
+@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for input validation security:
 - Missing required field rejection
@@ -14,7 +14,7 @@ from httpx import AsyncClient
 import os
 
 
-# @TEST:TEST-004-002:MISSING-FIELD
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_missing_required_field_rejected(async_client: AsyncClient) -> None:
     """
@@ -45,7 +45,7 @@ async def test_missing_required_field_rejected(async_client: AsyncClient) -> Non
     ), f"Error should mention missing case_id, got: {error_fields}"
 
 
-# @TEST:TEST-004-002:INVALID-TYPE
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_invalid_type_rejected(async_client: AsyncClient) -> None:
     """
@@ -69,7 +69,7 @@ async def test_invalid_type_rejected(async_client: AsyncClient) -> None:
     assert isinstance(detail, list), "Validation errors should be a list"
 
 
-# @TEST:TEST-004-002:OVERSIZED-INPUT
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_oversized_input_rejected(async_client: AsyncClient) -> None:
     """
@@ -99,7 +99,7 @@ async def test_oversized_input_rejected(async_client: AsyncClient) -> None:
     ], f"Oversized input should be rejected or endpoint not found, got {response.status_code}"
 
 
-# @TEST:TEST-004-002:BATCH-VALIDATION
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_batch_request_validation(async_client: AsyncClient) -> None:
     """
@@ -124,7 +124,7 @@ async def test_batch_request_validation(async_client: AsyncClient) -> None:
     ], f"Batch endpoint should accept valid API key, got {response.status_code}"
 
 
-# @TEST:TEST-004-002:LIMIT-VALIDATION
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_limit_parameter_validation(async_client: AsyncClient) -> None:
     """
@@ -158,7 +158,7 @@ async def test_limit_parameter_validation(async_client: AsyncClient) -> None:
     ), f"Limit > 1000 should return 422, got {response.status_code}"
 
 
-# @TEST:TEST-004-002:VALID-INPUT
+# @TEST:TEST-004
 @pytest.mark.asyncio
 async def test_valid_input_accepted(async_client: AsyncClient) -> None:
     """
