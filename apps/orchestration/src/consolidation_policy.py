@@ -188,9 +188,10 @@ class ConsolidationPolicy:
 
                     if not self.dry_run:
                         keeper.usage_count += remover.usage_count
-                        keeper.success_rate = (
-                            keeper.success_rate + remover.success_rate
-                        ) / 2
+                        # Handle Optional success_rate
+                        keeper_rate = keeper.success_rate or 0.0
+                        remover_rate = remover.success_rate or 0.0
+                        keeper.success_rate = (keeper_rate + remover_rate) / 2
                         remover.status = "archived"
                         await self.db.commit()
                         logger.info(

@@ -465,6 +465,7 @@ class TestSecurityRequirements:
         # This test verifies that security considerations are documented
         # In the actual SecurityConfig docstring
         security_config_doc = SecurityConfig.__doc__
+        assert security_config_doc is not None, "SecurityConfig must have a docstring"
 
         assert "SECURITY REQUIREMENTS" in security_config_doc
         assert (

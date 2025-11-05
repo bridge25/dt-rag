@@ -135,7 +135,7 @@ class TestCachingSystemIntegration:
                 await manager.initialize()
 
                 # Test connection
-                is_connected = await manager.is_connected()
+                is_connected = manager.is_connected
                 assert is_connected is True
 
                 await manager.close()
@@ -395,7 +395,7 @@ class TestCachingSystemIntegration:
             )
 
             # Test connection check with error
-            is_connected = await redis_manager.is_connected()
+            is_connected = redis_manager.is_connected
             assert is_connected is False
 
             # Mock Redis operation error

@@ -23,7 +23,7 @@ from sqlalchemy import (
     func,
     desc,
 )
-from sqlalchemy.engine import Result
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from dataclasses import dataclass
@@ -753,7 +753,7 @@ class APIKeyManager:
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
 
         stmt = delete(APIKeyUsage).where(APIKeyUsage.timestamp < cutoff_date)
-        result: Result[Any] = await self.db.execute(stmt)
+        result: CursorResult[Any] = await self.db.execute(stmt)
         await self.db.commit()
 
         row_count = result.rowcount or 0
