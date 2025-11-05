@@ -181,10 +181,7 @@ def test_get_agent_coverage_success(test_client, mock_agent):
         total_chunks=500,
         coverage_percent=75.0,
         node_coverage={
-            str(mock_agent.taxonomy_node_ids[0]): {
-                "document_count": 50,
-                "chunk_count": 250,
-            }
+            str(mock_agent.taxonomy_node_ids[0]): 50  # document count for this node
         },
     )
 
@@ -218,10 +215,7 @@ def test_detect_coverage_gaps_success(test_client, mock_agent):
         total_chunks=500,
         coverage_percent=30.0,
         node_coverage={
-            str(mock_agent.taxonomy_node_ids[0]): {
-                "document_count": 30,
-                "chunk_count": 150,
-            }
+            str(mock_agent.taxonomy_node_ids[0]): 30  # document count for this node
         },
     )
 

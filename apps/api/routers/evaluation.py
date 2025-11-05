@@ -137,7 +137,7 @@ async def evaluate_batch(
     request: BatchEvaluationRequest,
     evaluator: RAGASEvaluator = Depends(get_evaluator),
     api_key: str = Depends(verify_api_key),
-) -> JSONResponse:
+) -> BatchEvaluationResponse:
     """
     Evaluate multiple RAG responses in batch
 

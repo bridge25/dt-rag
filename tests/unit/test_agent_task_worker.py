@@ -41,7 +41,7 @@ class TestAgentTaskWorker:
 
             assert worker.running is False, "Worker should stop after stop()"
 
-            with pytest.raises((asyncio.CancelledError, Exception)):
+            with pytest.raises((asyncio.CancelledError, Exception)):  # type: ignore[unreachable]
                 await worker_task
 
     @pytest.mark.asyncio

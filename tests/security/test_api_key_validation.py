@@ -345,7 +345,7 @@ class TestAPIKeyValidationIntegration:
             await verify_api_key(request, "short")
 
         assert exc_info.value.status_code == 403
-        assert "Invalid API key format" in exc_info.value.detail["error"]
+        assert "Invalid API key format" in exc_info.value.detail
 
     @patch("apps.api.deps.get_async_session", autospec=True)
     async def test_valid_api_key_flow(self, mock_get_session):

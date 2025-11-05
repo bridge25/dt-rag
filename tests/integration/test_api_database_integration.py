@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import text
 
 # Set testing environment
 os.environ["TESTING"] = "true"
@@ -145,6 +146,7 @@ class TestAPIDatabaseIntegration:
                 {"title": sample_document["title"]},
             )
             count = result.scalar()
+            assert count is not None, "Query should return a count"
             assert count > 0, "Document should be stored in database"
 
         except Exception as e:

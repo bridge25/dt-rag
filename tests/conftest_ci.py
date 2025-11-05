@@ -46,7 +46,7 @@ def has_service_available(service: str) -> bool:
     }
 
     checker = service_checks.get(service.lower())
-    return checker() if checker else False
+    return bool(checker()) if checker else False
 
 
 # pytest configuration for CI
@@ -228,8 +228,12 @@ class GracefulDegradationHelper:
     """Helper class for graceful test degradation"""
 
     @staticmethod
-    def skip_if_service_unavailable(service: str) -> None:
-        """Decorator to skip tests if service is unavailable"""
+    def skip_if_service_unavailable(service: str):
+        """Decorator to skip tests if service is unavailable
+
+        Returns:
+            Decorator function
+        """
 
         def decorator(func):
             if not has_service_available(service):
@@ -241,8 +245,12 @@ class GracefulDegradationHelper:
         return decorator
 
     @staticmethod
-    def mock_if_service_unavailable(service: str, mock_fixture: str) -> None:
-        """Use mock fixture if service is unavailable"""
+    def mock_if_service_unavailable(service: str, mock_fixture: str):
+        """Use mock fixture if service is unavailable
+
+        Returns:
+            Decorator function
+        """
 
         def decorator(func):
             if not has_service_available(service):

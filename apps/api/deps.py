@@ -228,7 +228,7 @@ def _log_security_event(event_type: str, api_key: str, client_ip: str, details: 
 async def verify_api_key(
     request: Request,
     x_api_key: Optional[str] = Header(None),
-    db: AsyncSession = Depends(lambda: None),  # Will be injected by FastAPI
+    db: Optional[AsyncSession] = Depends(lambda: None),  # Will be injected by FastAPI
 ) -> APIKeyInfo:
     """
     Production-ready API key validation with comprehensive security checks
