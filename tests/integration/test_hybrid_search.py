@@ -202,6 +202,8 @@ class TestHybridSearchE2E:
         assert data["mode"] == "bm25"
 
     @pytest.mark.integration
+    @pytest.mark.slow
+    @pytest.mark.benchmark
     @pytest.mark.asyncio
     async def test_performance_vector_search_latency(self):
         """

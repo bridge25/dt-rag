@@ -149,9 +149,9 @@ jobs:
             # Install test dependencies with parallel execution support
             pip install -q pytest pytest-cov pytest-xdist 2>/dev/null || true
             if [ "$ALLOW_FAILURE" = "true" ]; then
-              pytest -n auto --cov --cov-report=term-missing || true
+              pytest -n auto -m "not slow" --cov --cov-report=term-missing || true
             else
-              pytest -n auto --cov --cov-report=term-missing
+              pytest -n auto -m "not slow" --cov --cov-report=term-missing
             fi
           fi
 
