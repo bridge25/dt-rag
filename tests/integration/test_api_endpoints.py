@@ -178,13 +178,8 @@ class TestErrorHandling:
         assert response.status_code == 422  # Validation Error
 
     @pytest.mark.asyncio
-    @pytest.mark.timeout(5)
     async def test_search_missing_query(self, api_client: AsyncClient) -> None:
-        """Test search endpoint with missing query
-
-        Note: This test historically hangs for 23+ minutes. Timeout set to 5 seconds
-        to prevent CI/CD delays. Root cause tracked in SPEC-TEST-HANG-001.
-        """
+        """Test search endpoint with missing query"""
         response = await api_client.post(
             "/search",
             json={

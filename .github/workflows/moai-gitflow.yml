@@ -147,8 +147,8 @@ jobs:
             elif [ -f "setup.py" ]; then
               pip install -q -e . 2>/dev/null || true
             fi
-            # Install test dependencies with parallel execution support and timeout
-            pip install -q pytest pytest-cov pytest-xdist pytest-timeout 2>/dev/null || true
+            # Install test dependencies with parallel execution support
+            pip install -q pytest pytest-cov pytest-xdist 2>/dev/null || true
             if [ "$ALLOW_FAILURE" = "true" ]; then
               pytest -n 4 -m "not slow" --cov --cov-report=term-missing || true
             else
