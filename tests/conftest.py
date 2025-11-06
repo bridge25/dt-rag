@@ -119,17 +119,20 @@ def mock_httpx_client():
 
 
 @pytest.fixture
-def api_client():
+async def api_client() -> AsyncGenerator:
     """
-    FastAPI TestClient for integration tests
+    Async HTTP client for integration tests
 
-    Provides a TestClient configured with the FastAPI app
-    for testing API endpoints without running a real server.
+    Provides an httpx AsyncClient configured with the FastAPI app
+    for testing async API endpoints without running a real server.
     """
-    from fastapi.testclient import TestClient
+    from httpx import AsyncClient, ASGITransport
     from apps.api.main import app
 
-    with TestClient(app) as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test"
+    ) as client:
         yield client
 
 
