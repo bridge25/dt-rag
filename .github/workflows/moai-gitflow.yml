@@ -59,6 +59,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+          cache: 'pip'
 
       - name: Setup Node.js
         if: ${{ hashFiles('package.json') != '' }}
@@ -149,9 +150,9 @@ jobs:
             # Install test dependencies with parallel execution support
             pip install -q pytest pytest-cov pytest-xdist 2>/dev/null || true
             if [ "$ALLOW_FAILURE" = "true" ]; then
-              pytest -n auto -m "not slow" --cov --cov-report=term-missing || true
+              pytest -n 4 -m "not slow" --cov --cov-report=term-missing || true
             else
-              pytest -n auto -m "not slow" --cov --cov-report=term-missing
+              pytest -n 4 -m "not slow" --cov --cov-report=term-missing
             fi
           fi
 
