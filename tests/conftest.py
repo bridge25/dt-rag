@@ -118,6 +118,27 @@ def mock_httpx_client():
     return mock_client
 
 
+@pytest.fixture
+def api_client():
+    """
+    FastAPI TestClient for integration tests
+
+    Provides a TestClient configured with the FastAPI app
+    for testing API endpoints without running a real server.
+    """
+    from fastapi.testclient import TestClient
+    from apps.api.main import app
+
+    with TestClient(app) as client:
+        yield client
+
+
+@pytest.fixture
+def sample_text() -> str:
+    """Sample text for classification and search tests."""
+    return "Machine learning is a subset of artificial intelligence that focuses on training algorithms."
+
+
 class AsyncContextManager:
     """Helper class for async context manager mocking."""
 
