@@ -45,21 +45,32 @@ class RedisRateLimiter:
         self.enabled = REDIS_RATE_LIMIT_ENABLED
 
     async def initialize(self) -> None:
-        """Initialize Redis connection"""
+        """Initialize Redis connection with timeout"""
         if not self.enabled:
             logger.info("Rate limiting disabled (REDIS_RATE_LIMIT_ENABLED=false)")
             return
 
         try:
-            self.redis_client = await aioredis.from_url(
-                f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
-                encoding="utf-8",
-                decode_responses=True,
+            import asyncio
+
+            # Add timeout to prevent hang during Redis connection
+            self.redis_client = await asyncio.wait_for(
+                aioredis.from_url(
+                    f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+                    encoding="utf-8",
+                    decode_responses=True,
+                    socket_connect_timeout=2.0,  # 2 second connection timeout
+                    socket_timeout=2.0,  # 2 second socket timeout
+                ),
+                timeout=5.0  # 5 second overall timeout
             )
-            await self.redis_client.ping()
+            await asyncio.wait_for(self.redis_client.ping(), timeout=2.0)
             logger.info(
                 f"Rate limiter initialized with Redis at {REDIS_HOST}:{REDIS_PORT}"
             )
+        except asyncio.TimeoutError:
+            logger.warning(f"Redis connection timeout - rate limiting disabled")
+            self.enabled = False
         except Exception as e:
             logger.error(f"Failed to connect to Redis for rate limiting: {e}")
             self.enabled = False
