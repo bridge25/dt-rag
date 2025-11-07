@@ -1,4 +1,4 @@
-# SPEC-JOB-OPTIMIZE-001: JobOrchestrator Dispatcher 패턴 리팩토링
+# @SPEC:JOB-OPTIMIZE-001 JobOrchestrator Dispatcher 패턴 리팩토링
 
 ## 배경 및 목적
 현재 JobOrchestrator는 최대 100개의 워커를 생성하여 Redis 연결을 과도하게 소비합니다. 이를 개선하여 최적의 리소스 활용과 성능을 달성하고자 합니다.

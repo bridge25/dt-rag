@@ -1,0 +1,22 @@
+{
+  "total_tags": 576,
+  "spec_tags": 48,
+  "code_tags": 375,
+  "test_tags": 153,
+  "doc_tags": 0,
+  "orphan_tags": [],
+  "scope_breakdown": {
+    "production": {
+      "total": 576,
+      "orphans": 0
+    },
+    "documentation": {
+      "total": 0,
+      "orphans": 0
+    },
+    "other": {
+      "total": 0,
+      "orphans": 0
+    }
+  }
+}

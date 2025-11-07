@@ -337,39 +337,47 @@ async def verify_api_key(
             detail="Too many API key validation attempts. Please try again later.",
         )
 
-    # Get database session
-    if db is None:
-        from .database import async_session
-
-        async with async_session() as session:
-            db = session
-
-    # Database validation
+    # Database validation with proper session management
     from .security.api_key_storage import APIKeyManager, APIKeyInfo
+    from .database import async_session
 
     try:
-        key_manager = APIKeyManager(db)
+        # Use async with to ensure session is properly managed
+        async with async_session() as session:
+            key_manager = APIKeyManager(session)
 
-        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (type annotation)
-        # Verify API key against database
-        key_info: Optional[APIKeyInfo] = await key_manager.verify_api_key(
-            plaintext_key=x_api_key,
-            client_ip=client_ip,
-            endpoint=request.url.path,
-            method=request.method,
-        )
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: Fix attr-defined (type annotation)
+            # Verify API key against database with timeout
+            try:
+                key_info: Optional[APIKeyInfo] = await asyncio.wait_for(
+                    key_manager.verify_api_key(
+                        plaintext_key=x_api_key,
+                        client_ip=client_ip,
+                        endpoint=request.url.path,
+                        method=request.method,
+                    ),
+                    timeout=5.0  # 5 second timeout to prevent hang
+                )
+            except asyncio.TimeoutError:
+                _log_security_event(
+                    "DB_TIMEOUT", x_api_key, client_ip, "Database verification timeout"
+                )
+                raise HTTPException(
+                    status_code=503,
+                    detail="API key validation timeout. Please try again later.",
+                )
 
-        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (type narrowing)
-        if key_info:
-            # MyPy type narrowing: key_info is APIKeyInfo here, not dict
-            assert isinstance(key_info, APIKeyInfo), "Type narrowing for MyPy"
-            _log_security_event(
-                "VALID_API_KEY",
-                x_api_key,
-                client_ip,
-                f"Database verification successful: {key_info.name}",
-            )
-            return key_info
+            # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution (type narrowing)
+            if key_info:
+                # MyPy type narrowing: key_info is APIKeyInfo here, not dict
+                assert isinstance(key_info, APIKeyInfo), "Type narrowing for MyPy"
+                _log_security_event(
+                    "VALID_API_KEY",
+                    x_api_key,
+                    client_ip,
+                    f"Database verification successful: {key_info.name}",
+                )
+                return key_info
 
         # If not found in database, perform comprehensive format validation for better error message
         is_valid, errors = APIKeyValidator.comprehensive_validate(x_api_key)
@@ -402,6 +410,8 @@ async def verify_api_key(
         )
 
     except HTTPException:
+        raise
+    except asyncio.TimeoutError:
         raise
     except Exception as e:
         _log_security_event(

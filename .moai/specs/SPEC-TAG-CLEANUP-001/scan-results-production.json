@@ -1,0 +1,310 @@
+{
+  "total_tags": 576,
+  "spec_tags": 48,
+  "code_tags": 375,
+  "test_tags": 153,
+  "doc_tags": 0,
+  "orphan_tags": [
+    {
+      "tag_type": "CODE",
+      "tag_id": "JOB-OPTIMIZE-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/apps/ingestion/batch/job_orchestrator.py",
+      "line_number": "32",
+      "scope": "production"
+    },
+    {
+      "tag_type": "CODE",
+      "tag_id": "JOB-OPTIMIZE-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/apps/ingestion/batch/job_orchestrator.py",
+      "line_number": "86",
+      "scope": "production"
+    },
+    {
+      "tag_type": "CODE",
+      "tag_id": "JOB-OPTIMIZE-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/apps/ingestion/batch/job_orchestrator.py",
+      "line_number": "128",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-004",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_xss_prevention.py",
+      "line_number": "3",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-004",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_xss_prevention.py",
+      "line_number": "17",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-004",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_xss_prevention.py",
+      "line_number": "44",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-004",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_xss_prevention.py",
+      "line_number": "78",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-004",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_xss_prevention.py",
+      "line_number": "105",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-004",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_xss_prevention.py",
+      "line_number": "132",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-004",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_xss_prevention.py",
+      "line_number": "158",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-005",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_rate_limiting.py",
+      "line_number": "3",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-005",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_rate_limiting.py",
+      "line_number": "18",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-005",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_rate_limiting.py",
+      "line_number": "48",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-005",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_rate_limiting.py",
+      "line_number": "90",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-005",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_rate_limiting.py",
+      "line_number": "129",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-005",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_rate_limiting.py",
+      "line_number": "158",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-005",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_rate_limiting.py",
+      "line_number": "180",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-002",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_input_validation.py",
+      "line_number": "3",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-002",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_input_validation.py",
+      "line_number": "17",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-002",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_input_validation.py",
+      "line_number": "48",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-002",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_input_validation.py",
+      "line_number": "72",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-002",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_input_validation.py",
+      "line_number": "102",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-002",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_input_validation.py",
+      "line_number": "127",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-002",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_input_validation.py",
+      "line_number": "161",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_authentication.py",
+      "line_number": "3",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_authentication.py",
+      "line_number": "16",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_authentication.py",
+      "line_number": "48",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_authentication.py",
+      "line_number": "73",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_authentication.py",
+      "line_number": "97",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_authentication.py",
+      "line_number": "124",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-003",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_sql_injection_prevention.py",
+      "line_number": "3",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-003",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_sql_injection_prevention.py",
+      "line_number": "17",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-003",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_sql_injection_prevention.py",
+      "line_number": "63",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-003",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_sql_injection_prevention.py",
+      "line_number": "99",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-003",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_sql_injection_prevention.py",
+      "line_number": "129",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-003",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_sql_injection_prevention.py",
+      "line_number": "160",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "TEST-004-003",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/security/test_sql_injection_prevention.py",
+      "line_number": "202",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "JOB-OPTIMIZE-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/integration/test_job_orchestrator_dispatcher.py",
+      "line_number": "1",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "JOB-OPTIMIZE-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/integration/test_job_orchestrator_dispatcher.py",
+      "line_number": "24",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "JOB-OPTIMIZE-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/integration/test_job_orchestrator_dispatcher.py",
+      "line_number": "54",
+      "scope": "production"
+    },
+    {
+      "tag_type": "TEST",
+      "tag_id": "JOB-OPTIMIZE-001",
+      "file_path": "/home/a/projects/dt-rag-standalone/tests/integration/test_job_orchestrator_dispatcher.py",
+      "line_number": "86",
+      "scope": "production"
+    }
+  ],
+  "scope_breakdown": {
+    "production": {
+      "total": 576,
+      "orphans": 41
+    },
+    "documentation": {
+      "total": 0,
+      "orphans": 0
+    },
+    "other": {
+      "total": 0,
+      "orphans": 0
+    }
+  }
+}

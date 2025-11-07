@@ -29,7 +29,7 @@ from .job_queue import JobQueue
 logger = logging.getLogger(__name__)
 
 
-# @CODE:JOB-OPTIMIZE-001:INIT
+# @CODE:JOB-OPTIMIZE-001
 class JobOrchestrator:
     def __init__(
         self,
@@ -83,7 +83,7 @@ class JobOrchestrator:
         self.dispatcher_task = None
         logger.info("Job Orchestrator stopped")
 
-    # @CODE:JOB-OPTIMIZE-001:DISPATCHER
+    # @CODE:JOB-OPTIMIZE-001
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _dispatcher(self) -> None:
         """Single Redis connection for job reception and internal queue distribution"""
@@ -125,7 +125,7 @@ class JobOrchestrator:
 
         logger.info("Dispatcher stopped")
 
-    # @CODE:JOB-OPTIMIZE-001:WORKER
+    # @CODE:JOB-OPTIMIZE-001
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
     async def _worker(self, worker_id: int) -> None:
         logger.info(f"Worker {worker_id} started")

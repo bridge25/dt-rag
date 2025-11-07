@@ -118,6 +118,61 @@ def mock_httpx_client():
     return mock_client
 
 
+@pytest.fixture
+async def api_client() -> AsyncGenerator:
+    """
+    Async HTTP client for integration tests
+
+    Provides an httpx AsyncClient configured with the FastAPI app
+    for testing async API endpoints without running a real server.
+
+    Overrides verify_api_key dependency to avoid DB/Redis hang in CI/CD.
+    """
+    from httpx import AsyncClient, ASGITransport
+    from apps.api.main import app
+    from apps.api.deps import verify_api_key
+    from apps.api.security.api_key_storage import APIKeyInfo
+    from datetime import timezone
+
+    # Mock verify_api_key to bypass DB/Redis connection in tests
+    async def mock_verify_api_key() -> APIKeyInfo:
+        """Mock API key verification for tests"""
+        return APIKeyInfo(
+            key_id="test_key_001",
+            name="Test API Key",
+            description="Mock API key for integration tests",
+            scope="write",
+            permissions=["*"],
+            allowed_ips=None,
+            rate_limit=1000,
+            is_active=True,
+            expires_at=None,
+            created_at=datetime.now(timezone.utc),
+            last_used_at=None,
+            total_requests=0,
+            failed_requests=0,
+        )
+
+    # Override dependency
+    app.dependency_overrides[verify_api_key] = mock_verify_api_key
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        timeout=10.0,  # Add timeout to prevent hang
+    ) as client:
+        yield client
+
+    # Clean up override
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def sample_text() -> str:
+    """Sample text for classification and search tests."""
+    return "Machine learning is a subset of artificial intelligence that focuses on training algorithms."
+
+
 class AsyncContextManager:
     """Helper class for async context manager mocking."""
 
