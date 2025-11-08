@@ -14,14 +14,7 @@ interface AgentCardProps {
   className?: string
 }
 
-const rarityBorderStyles = {
-  Common: 'border-gray-300',
-  Rare: 'border-blue-400',
-  Epic: 'border-purple-500',
-  Legendary: 'border-accent-gold',
-}
-
-// @CODE:FRONTEND-INTEGRATION-001:MEMO-CARDS
+// @CODE:FRONTEND-INTEGRATION-001-MEMO-CARDS
 const arePropsEqual = (prevProps: AgentCardProps, nextProps: AgentCardProps) => {
   return (
     prevProps.agent.agent_id === nextProps.agent.agent_id &&
@@ -38,8 +31,12 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({ agent, onView
       role="article"
       aria-label={`${agent.name} - Level ${agent.level} ${agent.rarity} agent`}
       className={cn(
-        'w-[280px] p-4 bg-white rounded-lg border-2 shadow-md hover:shadow-lg transition-shadow',
-        rarityBorderStyles[agent.rarity],
+        'w-full p-4 bg-white rounded-lg border-2 shadow-md hover:shadow-lg transition-shadow',
+        // Tailwind v4 JIT requires explicit class names
+        agent.rarity.toLowerCase() === 'common' && 'border-gray-300',
+        agent.rarity.toLowerCase() === 'rare' && 'border-blue-400',
+        agent.rarity.toLowerCase() === 'epic' && 'border-purple-500',
+        agent.rarity.toLowerCase() === 'legendary' && 'border-accent-gold-500',
         className
       )}
     >

@@ -71,7 +71,7 @@ frontend/src/components/taxonomy/
 <!-- @DOC:AGENT-CARD-001-ROOT-README -->
 ## 🎮 Frontend: Pokemon-Style Agent Growth System (v2.1.0)
 
-**프로덕션 준비 완료!** 에이전트 성장을 Pokemon 카드 스타일로 시각화하는 게임화 UI/UX 시스템입니다.
+**🟡 부분 완료 (이미지 기능 미구현)** 에이전트 성장을 Pokemon 카드 스타일로 시각화하는 게임화 UI/UX 시스템입니다.
 
 ### 핵심 기능
 - **XP/레벨 시스템** (1-10+ levels): 대화, 피드백, RAGAS 평가를 통한 경험치 획득 및 레벨업
@@ -142,6 +142,10 @@ function App() {
 - **유틸리티 가이드**: [frontend/docs/UTILITIES.md](./frontend/docs/UTILITIES.md)
 - **테스트 가이드**: [frontend/docs/TESTING.md](./frontend/docs/TESTING.md)
 - **Frontend README**: [frontend/README.md](./frontend/README.md)
+
+### 알려진 제한사항
+- ⚠️ **캐릭터 이미지**: 백엔드-프론트엔드 전체 스택 미구현 ([세부사항](.moai/issues/POKEMON_CARD_IMAGE_MISSING.md))
+- ⚠️ **Tailwind CSS**: v4 부분 마이그레이션 완료, 전체 검증 필요 ([세부사항](.moai/issues/TAILWIND_V4_MIGRATION_ISSUE.md))
 
 ### TAG 체인
 - **@SPEC:SPEC-AGENT-CARD-001** (23 locations)
@@ -839,6 +843,18 @@ DEBUG=false
 - [ ] API 문서화 확인
 - [ ] 모니터링 시스템 활성화
 - [ ] 백업 및 복구 계획 수립
+
+## ⚠️ Known Issues
+
+### 캐릭터 이미지 기능 미구현
+- **상태**: 백엔드(DB 스키마, API) + 프론트엔드 모두 미구현
+- **영향**: Pokemon 카드에 placeholder 이미지만 표시
+- **세부사항**: [POKEMON_CARD_IMAGE_MISSING.md](.moai/issues/POKEMON_CARD_IMAGE_MISSING.md)
+
+### Tailwind CSS v4 부분 마이그레이션
+- **상태**: JIT 호환 수정 완료, 실제 API 연동 환경 미검증
+- **영향**: Production 배포 시 스타일 깨질 가능성
+- **세부사항**: [TAILWIND_V4_MIGRATION_ISSUE.md](.moai/issues/TAILWIND_V4_MIGRATION_ISSUE.md)
 
 ## 🔗 관련 링크
 

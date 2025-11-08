@@ -1,5 +1,5 @@
 // @CODE:AGENT-CARD-001-PAGE-001
-// @CODE:FRONTEND-INTEGRATION-001:HOME-PAGE-UPDATE
+// @CODE:FRONTEND-INTEGRATION-001-HOME-PAGE-UPDATE
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -40,7 +40,19 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <main className="p-8">
-        <h1 className="text-3xl font-bold mb-8">Agents</h1>
+        <header className="flex items-center gap-6 mb-8">
+          <img
+            src="/company-logo.jpg"
+            alt="Company Logo"
+            className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
+          />
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Agents</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Dynamic Taxonomy RAG System
+            </p>
+          </div>
+        </header>
         <LoadingSpinner />
       </main>
     )
@@ -49,7 +61,19 @@ export default function HomePage() {
   if (error) {
     return (
       <main className="p-8">
-        <h1 className="text-3xl font-bold mb-8">Agents</h1>
+        <header className="flex items-center gap-6 mb-8">
+          <img
+            src="/company-logo.jpg"
+            alt="Company Logo"
+            className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
+          />
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Agents</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Dynamic Taxonomy RAG System
+            </p>
+          </div>
+        </header>
         <div className="text-center py-12">
           <p className="text-red-600 text-lg mb-4">
             Error: {error.message}
@@ -71,7 +95,19 @@ export default function HomePage() {
   if (agents.length === 0) {
     return (
       <main className="p-8">
-        <h1 className="text-3xl font-bold mb-8">Agents</h1>
+        <header className="flex items-center gap-6 mb-8">
+          <img
+            src="/company-logo.jpg"
+            alt="Company Logo"
+            className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
+          />
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Agents</h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Dynamic Taxonomy RAG System
+            </p>
+          </div>
+        </header>
         <div className="text-center py-12">
           <p className="text-gray-600 text-lg">
             No agents found. Create your first agent to get started.
@@ -88,9 +124,22 @@ export default function HomePage() {
 
   return (
     <main className="p-8">
-      <h1 className="text-3xl font-bold mb-8">
-        Agents {agents.length > 0 && `(${agents.length})`}
-      </h1>
+      {/* Header with Logo */}
+      <header className="flex items-center gap-6 mb-8">
+        <img
+          src="/company-logo.jpg"
+          alt="Company Logo"
+          className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
+        />
+        <div className="flex-1">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+            Agents {agents.length > 0 && `(${agents.length})`}
+          </h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1">
+            Dynamic Taxonomy RAG System
+          </p>
+        </div>
+      </header>
 
       {useVirtualScroll ? (
         <div className="flex justify-center">
