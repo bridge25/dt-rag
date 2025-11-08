@@ -1,4 +1,5 @@
 // @CODE:AGENT-CARD-001-UI-005
+// @CODE:POKEMON-IMAGE-COMPLETE-001-CARD-001
 import { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { AgentCardData } from '@/lib/api/types'
@@ -6,6 +7,7 @@ import { RarityBadge } from './RarityBadge'
 import { ProgressBar } from './ProgressBar'
 import { StatDisplay } from './StatDisplay'
 import { ActionButtons } from './ActionButtons'
+import { AgentCardAvatar } from './AgentCardAvatar'
 
 interface AgentCardProps {
   agent: AgentCardData
@@ -47,6 +49,16 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({ agent, onView
           <p className="text-sm text-gray-600">Level {agent.level}</p>
         </div>
         <RarityBadge rarity={agent.rarity} />
+      </div>
+
+      {/* CHARACTER IMAGE SECTION (Pokemon Style) */}
+      <div className="mb-4">
+        <AgentCardAvatar
+          agentId={agent.agent_id}
+          agentName={agent.name}
+          rarity={agent.rarity}
+          avatarUrl={agent.avatar_url}
+        />
       </div>
 
       {/* XP Progress */}

@@ -415,6 +415,7 @@ export type HITLReviewResponse = z.infer<typeof HITLReviewResponseSchema>
 
 // ============================================================================
 // Agent Card Models (Frontend-specific)
+// @CODE:POKEMON-IMAGE-COMPLETE-001-TYPES-001
 // ============================================================================
 
 export const RaritySchema = z.enum(['Common', 'Rare', 'Epic', 'Legendary'])
@@ -433,6 +434,10 @@ export const AgentCardDataSchema = z.object({
   status: z.string().min(1, 'Status cannot be empty'),
   created_at: z.string().datetime('Invalid datetime format'),
   last_used: z.string().datetime('Invalid datetime format').optional(),
+
+  // Pokemon Avatar System Fields (SPEC-POKEMON-IMAGE-COMPLETE-001)
+  avatar_url: z.string().max(500, 'Avatar URL too long').optional().nullable(),
+  character_description: z.string().max(500, 'Character description too long').optional().nullable(),
 }).refine(
   (data) => data.next_level_xp === null || data.next_level_xp > data.current_xp,
   {
@@ -442,6 +447,22 @@ export const AgentCardDataSchema = z.object({
 )
 
 export type AgentCardData = z.infer<typeof AgentCardDataSchema>
+
+// Helper function to get default avatar based on rarity and agent_id (deterministic)
+export function getDefaultAvatarIcon(rarity: Rarity, agentId: string): string {
+  // Deterministic icon selection based on agent_id hash
+  const hash = agentId.split('-')[0] || '0'
+  const index = (parseInt(hash, 16) % 3)  // 0, 1, or 2
+
+  const RARITY_ICONS: Record<Rarity, string[]> = {
+    'Common': ['User', 'UserCircle', 'UserSquare'],
+    'Rare': ['Star', 'Sparkles', 'Award'],
+    'Epic': ['Crown', 'Shield', 'Gem'],
+    'Legendary': ['Flame', 'Zap', 'Trophy']
+  }
+
+  return RARITY_ICONS[rarity][index]
+}
 
 // ============================================================================
 // @CODE:FRONTEND-INTEGRATION-001:TYPES-UPDATE

@@ -1,8 +1,12 @@
 # @CODE:AGENT-GROWTH-002:SCHEMA
 # @CODE:AGENT-GROWTH-003:SCHEMA
+# @CODE:POKEMON-IMAGE-COMPLETE-001-SCHEMA-001
 from pydantic import BaseModel, Field, UUID4, ConfigDict
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from datetime import datetime
+
+# Pokemon Avatar System Types
+Rarity = Literal["Common", "Rare", "Epic", "Legendary"]
 
 
 class AgentCreateRequest(BaseModel):
@@ -75,6 +79,22 @@ class AgentResponse(BaseModel):
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     last_query_at: Optional[datetime] = Field(None, description="Last query timestamp")
+
+    # Pokemon Avatar System Fields (SPEC-POKEMON-IMAGE-COMPLETE-001)
+    avatar_url: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="URL to agent's Pokemon-style avatar image"
+    )
+    rarity: Rarity = Field(
+        default="Common",
+        description="Agent rarity tier (Pokemon card style)"
+    )
+    character_description: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Character description for AI-generated avatars (future feature)"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -268,6 +288,22 @@ class AgentUpdateRequest(BaseModel):
         None, description="Updated features configuration"
     )
 
+    # Pokemon Avatar System Fields (SPEC-POKEMON-IMAGE-COMPLETE-001)
+    avatar_url: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Updated avatar URL"
+    )
+    rarity: Optional[Rarity] = Field(
+        None,
+        description="Updated rarity tier"
+    )
+    character_description: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Updated character description"
+    )
+
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
@@ -276,6 +312,9 @@ class AgentUpdateRequest(BaseModel):
                     "scope_description": "Enhanced agent for cancer research with expanded scope",
                     "retrieval_config": {"top_k": 15, "strategy": "hybrid"},
                     "features_config": {"enable_cache": True},
+                    "avatar_url": "/avatars/epic/default-1.png",
+                    "rarity": "Epic",
+                    "character_description": "An Epic-tier research specialist",
                 }
             ]
         }
