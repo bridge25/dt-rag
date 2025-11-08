@@ -3,8 +3,9 @@
 # Pokemon 카드 캐릭터 이미지 완성 - 구현 계획
 
 **SPEC ID**: POKEMON-IMAGE-COMPLETE-001
-**버전**: v0.0.1
+**버전**: v0.1.0
 **작성일**: 2025-11-08
+**업데이트**: 2025-11-08
 **우선순위**: CRITICAL
 
 ---
@@ -25,12 +26,18 @@ Pokemon 스타일 Agent 카드에 **캐릭터 이미지 기능 추가** (Full-st
 - ❌ AgentCard 컴포넌트에 이미지 렌더링 로직 없음
 - ❌ 기본 아바타 에셋 없음
 
-### 완성 후 상태
+### 완성 후 상태 (v0.0.2 기준)
 
 - ✅ Backend: `avatar_url`, `rarity`, `character_description` 컬럼 추가
-- ✅ Frontend: AgentAvatar 컴포넌트, Fallback 아이콘 시스템
-- ✅ Assets: 12개 기본 아바타 이미지 준비 완료
-- ✅ Tests: API 통합 테스트, 컴포넌트 단위 테스트 통과
+- ✅ Frontend: AgentCardAvatar 컴포넌트, Lucide Icons 기반 Fallback 시스템
+- ⚠️ Assets: PNG 이미지 대신 Lucide Icons 사용 (설계 변경)
+- ✅ Tests: Backend migration tests (6개), Pydantic schema tests (9개)
+
+### 목표 상태 (v0.1.0)
+
+- 🎯 Backend: Avatar Service 구현 + Agent DAO 자동 할당 로직
+- 🎯 Frontend: 기존 컴포넌트 활용 (추가 수정 불필요)
+- 🎯 Tests: E2E 통합 테스트 추가, 커버리지 85% 달성
 
 ---
 
@@ -173,46 +180,267 @@ Pokemon 스타일 Agent 카드에 **캐릭터 이미지 기능 추가** (Full-st
 
 ---
 
-### Phase 4: Testing & Validation (FINAL GOAL)
+### Phase 4: Backend Avatar Service (v0.1.0 NEW)
 
-**목표**: 품질 보증 및 회귀 방지
+**목표**: Backend avatar 자동 할당 로직 완성
 
-#### 4.1 Backend Integration Tests
-- **파일**: `tests/integration/test_agent_avatar_api.py`
-- **테스트 케이스**:
-  1. **Agent 생성 시 기본 아바타 할당 테스트**
-     - POST `/agents/from-taxonomy` → 응답에 `avatar_url`, `rarity` 포함 확인
-  2. **Avatar URL Deterministic 테스트**
-     - 같은 `agent_id` → 항상 같은 아바타 URL
-  3. **Rarity 계산 로직 테스트**
-     - 노드 수에 따른 Rarity 할당 검증
+#### 4.1 Avatar Service 구현
+- **파일**: `apps/api/services/avatar_service.py` (새 파일 생성)
+- **작업**:
+  - `AvatarService` 클래스 생성
+  - `get_default_avatar_icon(rarity, agent_id)` 메서드 구현
+    - Frontend `getDefaultAvatarIcon()`와 동일한 알고리즘
+    - 결정론적 Lucide Icon 선택 (agent_id 해시 기반)
+  - `calculate_initial_rarity(taxonomy_node_count)` 메서드 구현
+    - 노드 수 기반 Rarity 계산 (1→Common, 2-4→Rare, 5-9→Epic, 10+→Legendary)
+  - `RARITY_ICONS` 상수 정의 (Frontend와 동일한 매핑)
 - **완료 기준**:
-  - 모든 테스트 통과 (pytest)
-  - Coverage 85% 이상
+  - Unit tests 통과 (deterministic icon selection, rarity calculation)
+  - Frontend icon 매핑과 100% 일치
+  - 타입 힌트 에러 없음
 
-#### 4.2 Frontend Component Tests
-- **파일**: `frontend/src/components/agent-card/__tests__/AgentCard.test.tsx`
+**코드 예시**:
+```python
+# apps/api/services/avatar_service.py
+from typing import Literal
+
+Rarity = Literal["Common", "Rare", "Epic", "Legendary"]
+
+RARITY_ICONS = {
+    "Legendary": ["Crown", "Trophy", "Sparkles"],
+    "Epic": ["Zap", "Star", "Flame"],
+    "Rare": ["Gem", "Award", "Target"],
+    "Common": ["User", "Circle", "Square"]
+}
+
+class AvatarService:
+    @staticmethod
+    def get_default_avatar_icon(rarity: Rarity, agent_id: str) -> str:
+        """Get deterministic Lucide Icon name"""
+        hash_value = int(str(agent_id).split('-')[0], 16)
+        icon_index = hash_value % 3
+        icons = RARITY_ICONS.get(rarity, RARITY_ICONS["Common"])
+        return icons[icon_index]
+
+    @staticmethod
+    def calculate_initial_rarity(taxonomy_node_count: int) -> Rarity:
+        """Calculate rarity based on taxonomy scope"""
+        if taxonomy_node_count >= 10:
+            return "Legendary"
+        elif taxonomy_node_count >= 5:
+            return "Epic"
+        elif taxonomy_node_count >= 2:
+            return "Rare"
+        else:
+            return "Common"
+```
+
+#### 4.2 Agent DAO 통합
+- **파일**: `apps/api/agent_dao.py` (기존 파일 수정)
+- **작업**:
+  - `create_agent()` 함수 시그니처 확장:
+    - `avatar_url: Optional[str] = None` 파라미터 추가
+    - `rarity: Optional[str] = None` 파라미터 추가
+  - Auto-assignment 로직 추가:
+    ```python
+    # Generate agent_id first
+    agent_id = uuid4()
+
+    # Calculate rarity if not provided
+    if not rarity:
+        rarity = AvatarService.calculate_initial_rarity(len(taxonomy_node_ids))
+
+    # Assign Lucide Icon if avatar_url not provided
+    if not avatar_url:
+        avatar_url = AvatarService.get_default_avatar_icon(rarity, str(agent_id))
+    ```
+  - Agent 모델에 avatar_url, rarity 값 설정
+- **완료 기준**:
+  - Agent 생성 시 자동으로 avatar_url, rarity 할당
+  - 기존 API 엔드포인트 호환성 유지 (Breaking change 없음)
+  - Integration tests 통과
+
+**코드 예시**:
+```python
+# apps/api/agent_dao.py (수정 부분)
+from apps.api.services.avatar_service import AvatarService
+
+async def create_agent(
+    session: AsyncSession,
+    name: str,
+    taxonomy_node_ids: List[UUID],
+    # ... existing params ...
+    avatar_url: Optional[str] = None,
+    rarity: Optional[str] = None,
+) -> Agent:
+    agent_id = uuid4()
+
+    # Auto-calculate rarity
+    if not rarity:
+        rarity = AvatarService.calculate_initial_rarity(len(taxonomy_node_ids))
+
+    # Auto-assign Lucide Icon
+    if not avatar_url:
+        avatar_url = AvatarService.get_default_avatar_icon(rarity, str(agent_id))
+
+    agent = Agent(
+        agent_id=agent_id,
+        name=name,
+        avatar_url=avatar_url,
+        rarity=rarity,
+        # ... existing fields ...
+    )
+    session.add(agent)
+    await session.commit()
+    return agent
+```
+
+#### 4.3 Backend Integration Tests
+- **파일**: `tests/integration/test_agent_avatar_api.py` (새 파일 생성)
 - **테스트 케이스**:
-  1. **캐릭터 이미지 렌더링 테스트**
-     - `<img>` 태그 존재 확인, `src` 속성 검증
-  2. **Fallback 아이콘 표시 테스트**
-     - 이미지 로드 실패 시 (`fireEvent.error`) Fallback 아이콘 표시
-  3. **Rarity별 Fallback 아이콘 테스트**
-     - Legendary → 👑, Epic → ⚡, Rare → 💎, Common → 🤖
+  1. **Agent 생성 시 avatar 자동 할당 테스트**
+     - POST `/agents/from-taxonomy` → avatar_url, rarity 포함 확인
+     - avatar_url이 유효한 Lucide Icon 이름인지 검증
+  2. **Rarity 계산 로직 테스트**
+     - 노드 수 1, 2, 5, 10에 대해 각각 Common, Rare, Epic, Legendary 확인
+  3. **Deterministic icon 선택 테스트**
+     - 같은 agent_id → 항상 같은 avatar_url
+- **완료 기준**:
+  - 모든 테스트 통과
+  - Coverage 90% 이상 (avatar_service.py, agent_dao.py avatar 로직)
+
+**테스트 코드 예시**:
+```python
+# tests/integration/test_agent_avatar_api.py
+@pytest.mark.asyncio
+async def test_agent_creation_auto_assigns_avatar(async_client: AsyncClient):
+    response = await async_client.post("/agents/from-taxonomy", json={
+        "name": "Test Agent",
+        "taxonomy_node_ids": ["550e8400-e29b-41d4-a716-446655440000"],
+    })
+
+    assert response.status_code == 201
+    data = response.json()
+    assert "avatar_url" in data
+    assert data["avatar_url"] in ["User", "Circle", "Square"]  # Common icons
+    assert data["rarity"] == "Common"
+
+@pytest.mark.asyncio
+async def test_agent_creation_rarity_calculation(async_client: AsyncClient):
+    test_cases = [(1, "Common"), (2, "Rare"), (5, "Epic"), (10, "Legendary")]
+    for node_count, expected_rarity in test_cases:
+        taxonomy_ids = [str(uuid4()) for _ in range(node_count)]
+        response = await async_client.post("/agents/from-taxonomy", json={
+            "name": f"Test Agent {node_count}",
+            "taxonomy_node_ids": taxonomy_ids,
+        })
+        assert response.json()["rarity"] == expected_rarity
+```
+
+---
+
+### Phase 5: E2E Testing & Coverage (v0.1.0 NEW)
+
+**목표**: 85% 테스트 커버리지 달성 및 E2E 통합 검증
+
+#### 5.1 Frontend Component Tests
+- **파일**: `frontend/src/components/agent-card/__tests__/AgentCard.test.tsx` (확장)
+- **테스트 케이스 추가**:
+  1. **Lucide Icon avatar 렌더링 테스트**
+     - avatar_url이 Lucide Icon 이름일 때 (e.g., "Sparkles") 정상 렌더링 확인
+  2. **Null avatar_url fallback 테스트**
+     - avatar_url이 null일 때 기본 User icon 표시 확인
+  3. **Deterministic icon 선택 테스트**
+     - 같은 agent_id → 같은 icon 렌더링 (Frontend getDefaultAvatarIcon 검증)
 - **완료 기준**:
   - 모든 테스트 통과 (Jest/Vitest)
-  - Accessibility 검증 (alt text, aria-label)
+  - Accessibility 검증 (role="img", aria-label)
+  - Component coverage 85% 이상
 
-#### 4.3 End-to-End Test
-- **파일**: `tests/e2e/test_agent_card_avatar.spec.ts` (Playwright/Cypress)
-- **시나리오**:
-  1. Agent 생성 → Agent 목록 페이지 이동 → 캐릭터 이미지 표시 확인
-  2. 이미지 로드 실패 시나리오 (네트워크 차단) → Fallback 아이콘 표시 확인
+**테스트 코드 예시**:
+```typescript
+// frontend/src/components/agent-card/__tests__/AgentCard.test.tsx
+describe('AgentCard - Avatar Integration (v0.1.0)', () => {
+  it('renders Lucide Icon avatar when avatar_url is icon name', () => {
+    const mockAgent: AgentCardData = {
+      agent_id: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test Agent',
+      avatar_url: 'Sparkles',  // Lucide Icon name
+      rarity: 'Legendary',
+      level: 10,
+      current_xp: 9500,
+      next_level_xp: 10000,
+      total_documents: 500,
+      total_queries: 1500,
+      quality_score: 95,
+      status: 'active',
+      created_at: '2025-11-08T00:00:00Z',
+    }
+
+    render(<AgentCard agent={mockAgent} onView={() => {}} onDelete={() => {}} />)
+
+    const avatarSection = screen.getByTestId('agent-card-avatar')
+    expect(avatarSection).toBeInTheDocument()
+
+    const icon = screen.getByRole('img', { name: /sparkles/i })
+    expect(icon).toBeInTheDocument()
+  })
+
+  it('falls back to User icon when avatar_url is null', () => {
+    const mockAgent: AgentCardData = {
+      ...mockAgentBase,
+      avatar_url: null,
+      rarity: 'Common',
+    }
+
+    render(<AgentCard agent={mockAgent} onView={() => {}} onDelete={() => {}} />)
+
+    const icon = screen.getByRole('img', { name: /user/i })
+    expect(icon).toBeInTheDocument()
+  })
+})
+```
+
+#### 5.2 Test Coverage Verification
+- **목표**: 85% 이상 테스트 커버리지
+- **실행 명령**:
+  ```bash
+  # Backend unit + integration tests
+  pytest tests/unit/test_avatar_service.py tests/integration/test_agent_avatar_api.py \
+    --cov=apps.api.services.avatar_service \
+    --cov=apps.api.agent_dao \
+    --cov-report=term \
+    --cov-report=html
+
+  # Frontend component tests
+  npm test -- AgentCard.test.tsx AgentCardAvatar.test.tsx --coverage
+
+  # Expected Coverage:
+  # - apps/api/services/avatar_service.py: 90%+
+  # - apps/api/agent_dao.py (avatar logic): 85%+
+  # - frontend/src/components/agent-card/: 85%+
+  ```
 - **완료 기준**:
-  - E2E 테스트 통과
-  - Visual regression 없음 (스크린샷 비교)
+  - Backend coverage ≥ 85%
+  - Frontend coverage ≥ 85%
+  - Coverage report 생성 (HTML)
 
-#### 4.4 Visual Regression Test
+#### 5.3 Integration Smoke Test
+- **목표**: End-to-end 통합 검증 (Backend ↔ Frontend)
+- **시나리오**:
+  1. Backend에서 Agent 생성 (POST `/agents/from-taxonomy`)
+  2. API 응답에서 avatar_url, rarity 확인
+  3. Frontend에서 동일한 Agent 조회 (GET `/agents/{id}`)
+  4. AgentCard 컴포넌트에서 avatar 렌더링 확인
+- **완료 기준**:
+  - Backend와 Frontend icon 매핑 100% 일치
+  - Deterministic icon 선택 동작 확인 (같은 agent_id → 같은 icon)
+
+---
+
+### Phase 6: Testing & Validation (FINAL GOAL)
+
+**목표**: 품질 보증 및 회귀 방지 (기존 Phase 4를 Phase 6으로 이동)
 - **도구**: Percy, Chromatic, 또는 Playwright screenshots
 - **작업**:
   - Pokemon 카드 스크린샷 촬영 (Rarity별 4종)

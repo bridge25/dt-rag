@@ -1,6 +1,6 @@
 ---
 id: POKEMON-IMAGE-COMPLETE-001
-version: 0.0.2
+version: 0.1.0
 status: in-progress
 created: 2025-11-08
 updated: 2025-11-08
@@ -12,10 +12,10 @@ labels:
   - agent-avatar
   - fullstack
   - ui-enhancement
-  - partial-implementation
+  - backend-integration
 related_specs:
   - AGENT-CARD-001
-completion_rate: 50%
+completion_rate: 75%
 scope:
   packages:
     - apps/api/schemas
@@ -33,6 +33,21 @@ scope:
 # Pokemon 스타일 Agent 카드 캐릭터 이미지 완성 (Full-stack)
 
 ## HISTORY
+
+### v0.1.0 - PHASE 4-5 PLANNING (2025-11-08)
+- 🎯 **목표**: Backend Avatar Service 구현 + E2E 테스트 완료
+- 📋 **추가 요구사항**:
+  - **Phase 4**: Backend Avatar Service (`apps/api/services/avatar_service.py`) 구현
+    - `get_default_avatar_icon()` 함수 (결정론적 Lucide Icon 선택)
+    - Agent DAO 자동 할당 로직 통합
+  - **Phase 5**: E2E 테스트 및 통합 검증
+    - Backend API integration tests (avatar auto-assignment)
+    - Frontend component tests (AgentCard + AgentCardAvatar)
+    - Test coverage 목표: 85% 이상
+- 🔗 **통합 포인트**:
+  - `apps/api/agent_dao.py`: `create_agent()` 함수에 avatar 할당 로직 추가
+  - `apps/api/routes/agents.py`: API 응답에 avatar_url, rarity 포함 확인
+  - Frontend: 기존 AgentCardAvatar 컴포넌트 활용 (수정 불필요)
 
 ### v0.0.2 - IMPLEMENTATION PHASE 1-2 COMPLETE (2025-11-08)
 - ✅ Database migration 완료 (`alembic/versions/0013_add_pokemon_avatar_fields.py`)
@@ -242,6 +257,34 @@ scope:
 - **When**: 프론트엔드가 Rarity 값을 받을 때
 - **Then**: 시스템은 백엔드에서 제공한 Rarity 값을 사용해야 하며, 클라이언트에서 임의로 생성하지 않아야 함
 - **Current Issue**: 기존 코드에서 프론트엔드가 독자적으로 Rarity 추가 (백엔드와 불일치)
+- **Priority**: HIGH
+
+### Phase 4-5 Requirements (v0.1.0 신규)
+
+**@REQ:POKEMON-IMAGE-EB-004** - Backend Avatar Service 구현
+- **Given**: Agent가 생성될 때
+- **When**: Avatar 할당 로직이 필요할 때
+- **Then**: `AvatarService.get_default_avatar_icon()` 함수가 Lucide Icon 이름을 반환해야 함
+- **Algorithm**: Frontend `getDefaultAvatarIcon()`와 동일한 결정론적 로직
+- **Priority**: CRITICAL
+
+**@REQ:POKEMON-IMAGE-EB-005** - Agent DAO 자동 할당 통합
+- **Given**: `create_agent()` 함수가 호출될 때
+- **When**: `avatar_url`, `rarity` 값이 제공되지 않았을 때
+- **Then**: 시스템은 자동으로 다음을 계산해야 함:
+  - `rarity`: `calculate_initial_rarity(taxonomy_node_ids)` 호출
+  - `avatar_url`: `AvatarService.get_default_avatar_icon(rarity, agent_id)` 호출
+- **Priority**: CRITICAL
+
+**@REQ:POKEMON-IMAGE-EB-006** - E2E 테스트 커버리지
+- **Given**: 모든 구현이 완료되었을 때
+- **When**: 테스트 스위트를 실행할 때
+- **Then**: 다음 테스트가 통과해야 함:
+  - Backend: Agent 생성 시 avatar 자동 할당 테스트
+  - Backend: Rarity 계산 로직 테스트
+  - Frontend: AgentCard 렌더링 테스트
+  - Frontend: AgentCardAvatar fallback 테스트
+- **Test Coverage**: 85% 이상
 - **Priority**: HIGH
 
 ---
@@ -582,6 +625,313 @@ frontend/public/avatars/
 1. **AI 생성**: DALL-E/Midjourney로 Pokemon 스타일 캐릭터 생성
 2. **아이콘 라이브러리**: Heroicons, Lucide Icons 조합
 3. **수동 디자인**: Figma/Canva로 직접 제작
+
+### Phase 4: Backend Avatar Service (v0.1.0 신규)
+
+#### 8a. Avatar Service Implementation
+
+**파일**: `apps/api/services/avatar_service.py` (새 파일)
+
+**구현** (Lucide Icons 기반):
+```python
+"""Avatar Service - Lucide Icons 기반 결정론적 아바타 할당"""
+from typing import Literal
+
+Rarity = Literal["Common", "Rare", "Epic", "Legendary"]
+
+# Frontend와 동일한 아이콘 매핑 (frontend/src/lib/api/types.ts 참조)
+RARITY_ICONS = {
+    "Legendary": ["Crown", "Trophy", "Sparkles"],
+    "Epic": ["Zap", "Star", "Flame"],
+    "Rare": ["Gem", "Award", "Target"],
+    "Common": ["User", "Circle", "Square"]
+}
+
+class AvatarService:
+    """Manages agent avatar assignment using Lucide Icons"""
+
+    @staticmethod
+    def get_default_avatar_icon(rarity: Rarity, agent_id: str) -> str:
+        """Get deterministic Lucide Icon name based on rarity and agent_id
+
+        Args:
+            rarity: Agent rarity tier (Common/Rare/Epic/Legendary)
+            agent_id: UUID string
+
+        Returns:
+            Lucide Icon name (e.g., "Sparkles", "User")
+
+        Example:
+            >>> get_default_avatar_icon("Epic", "550e8400-e29b-41d4-a716-446655440000")
+            "Zap"
+        """
+        # Use agent_id hash to deterministically select icon (0-2)
+        hash_value = int(str(agent_id).split('-')[0], 16)
+        icon_index = hash_value % 3
+
+        icons = RARITY_ICONS.get(rarity, RARITY_ICONS["Common"])
+        return icons[icon_index]
+
+    @staticmethod
+    def calculate_initial_rarity(taxonomy_node_count: int) -> Rarity:
+        """Calculate initial rarity based on taxonomy scope
+
+        Args:
+            taxonomy_node_count: Number of taxonomy nodes
+
+        Returns:
+            Rarity tier (Common/Rare/Epic/Legendary)
+        """
+        if taxonomy_node_count >= 10:
+            return "Legendary"
+        elif taxonomy_node_count >= 5:
+            return "Epic"
+        elif taxonomy_node_count >= 2:
+            return "Rare"
+        else:
+            return "Common"
+```
+
+**테스트**:
+```python
+# tests/unit/test_avatar_service.py
+from apps.api.services.avatar_service import AvatarService
+
+def test_get_default_avatar_icon_deterministic():
+    """Test same agent_id produces same icon"""
+    agent_id = "550e8400-e29b-41d4-a716-446655440000"
+    icon1 = AvatarService.get_default_avatar_icon("Epic", agent_id)
+    icon2 = AvatarService.get_default_avatar_icon("Epic", agent_id)
+    assert icon1 == icon2  # Deterministic
+
+def test_get_default_avatar_icon_valid():
+    """Test returned icon is valid Lucide Icon name"""
+    from apps.api.services.avatar_service import RARITY_ICONS
+    agent_id = "123e4567-e89b-12d3-a456-426614174000"
+
+    for rarity in ["Common", "Rare", "Epic", "Legendary"]:
+        icon = AvatarService.get_default_avatar_icon(rarity, agent_id)
+        assert icon in RARITY_ICONS[rarity]
+
+def test_calculate_initial_rarity():
+    """Test rarity calculation logic"""
+    assert AvatarService.calculate_initial_rarity(1) == "Common"
+    assert AvatarService.calculate_initial_rarity(2) == "Rare"
+    assert AvatarService.calculate_initial_rarity(5) == "Epic"
+    assert AvatarService.calculate_initial_rarity(10) == "Legendary"
+```
+
+#### 8b. Agent DAO Integration
+
+**파일**: `apps/api/agent_dao.py` (수정)
+
+**변경사항**:
+```python
+from uuid import UUID, uuid4
+from typing import List, Optional
+from apps.api.services.avatar_service import AvatarService
+
+async def create_agent(
+    session: AsyncSession,
+    name: str,
+    taxonomy_node_ids: List[UUID],
+    # ... existing params ...
+    avatar_url: Optional[str] = None,
+    rarity: Optional[str] = None,
+) -> Agent:
+    """Create new agent with auto-assigned avatar and rarity
+
+    Auto-assignment logic (v0.1.0):
+    - If rarity not provided, calculate based on taxonomy_node_ids
+    - If avatar_url not provided, assign Lucide Icon based on rarity + agent_id
+    """
+    # Generate agent_id first (needed for deterministic avatar assignment)
+    agent_id = uuid4()
+
+    # Calculate initial rarity if not provided
+    if not rarity:
+        rarity = AvatarService.calculate_initial_rarity(len(taxonomy_node_ids))
+
+    # Assign default Lucide Icon if avatar_url not provided
+    if not avatar_url:
+        icon_name = AvatarService.get_default_avatar_icon(rarity, str(agent_id))
+        # Frontend expects Lucide Icon name, not URL
+        avatar_url = icon_name  # e.g., "Sparkles", "User"
+
+    agent = Agent(
+        agent_id=agent_id,
+        name=name,
+        avatar_url=avatar_url,
+        rarity=rarity,
+        # ... existing fields ...
+    )
+
+    session.add(agent)
+    await session.commit()
+    await session.refresh(agent)
+    return agent
+```
+
+**Integration Test**:
+```python
+# tests/integration/test_agent_avatar_api.py
+import pytest
+from httpx import AsyncClient
+
+@pytest.mark.asyncio
+async def test_agent_creation_auto_assigns_avatar(async_client: AsyncClient):
+    """Test agent creation assigns default avatar and rarity"""
+    response = await async_client.post("/agents/from-taxonomy", json={
+        "name": "Test Agent",
+        "taxonomy_node_ids": ["550e8400-e29b-41d4-a716-446655440000"],
+    })
+
+    assert response.status_code == 201
+    data = response.json()
+
+    # Verify avatar_url is Lucide Icon name
+    assert "avatar_url" in data
+    assert data["avatar_url"] in ["User", "Circle", "Square"]  # Common rarity icons
+
+    # Verify rarity is calculated
+    assert "rarity" in data
+    assert data["rarity"] == "Common"  # 1 taxonomy node → Common
+
+@pytest.mark.asyncio
+async def test_agent_creation_rarity_calculation(async_client: AsyncClient):
+    """Test rarity calculation based on taxonomy node count"""
+    test_cases = [
+        (1, "Common"),
+        (2, "Rare"),
+        (5, "Epic"),
+        (10, "Legendary"),
+    ]
+
+    for node_count, expected_rarity in test_cases:
+        taxonomy_ids = [str(uuid4()) for _ in range(node_count)]
+        response = await async_client.post("/agents/from-taxonomy", json={
+            "name": f"Test Agent {node_count}",
+            "taxonomy_node_ids": taxonomy_ids,
+        })
+
+        assert response.status_code == 201
+        data = response.json()
+        assert data["rarity"] == expected_rarity
+```
+
+### Phase 5: E2E Testing (v0.1.0 신규)
+
+#### 8c. Frontend Component Tests
+
+**파일**: `frontend/src/components/agent-card/__tests__/AgentCard.test.tsx` (확장)
+
+**테스트 케이스 추가**:
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react'
+import { AgentCard } from '../AgentCard'
+import type { AgentCardData } from '@/lib/api/types'
+
+describe('AgentCard - Avatar Integration (v0.1.0)', () => {
+  it('renders Lucide Icon avatar when avatar_url is icon name', () => {
+    const mockAgent: AgentCardData = {
+      agent_id: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test Agent',
+      avatar_url: 'Sparkles',  // Lucide Icon name
+      rarity: 'Legendary',
+      level: 10,
+      current_xp: 9500,
+      next_level_xp: 10000,
+      total_documents: 500,
+      total_queries: 1500,
+      quality_score: 95,
+      status: 'active',
+      created_at: '2025-11-08T00:00:00Z',
+    }
+
+    render(<AgentCard agent={mockAgent} onView={() => {}} onDelete={() => {}} />)
+
+    // AgentCardAvatar should render Lucide Icon
+    const avatarSection = screen.getByTestId('agent-card-avatar')
+    expect(avatarSection).toBeInTheDocument()
+
+    // Icon should be visible (Sparkles icon for Legendary rarity)
+    const icon = screen.getByRole('img', { name: /sparkles/i })
+    expect(icon).toBeInTheDocument()
+  })
+
+  it('falls back to User icon when avatar_url is null', () => {
+    const mockAgent: AgentCardData = {
+      agent_id: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test Agent',
+      avatar_url: null,
+      rarity: 'Common',
+      level: 1,
+      current_xp: 100,
+      next_level_xp: 1000,
+      total_documents: 0,
+      total_queries: 0,
+      quality_score: 50,
+      status: 'active',
+      created_at: '2025-11-08T00:00:00Z',
+    }
+
+    render(<AgentCard agent={mockAgent} onView={() => {}} onDelete={() => {}} />)
+
+    // Should render fallback User icon (default for Common rarity)
+    const icon = screen.getByRole('img', { name: /user/i })
+    expect(icon).toBeInTheDocument()
+  })
+
+  it('uses deterministic icon selection for same agent_id', () => {
+    const agent_id = '550e8400-e29b-41d4-a716-446655440000'
+
+    // Render twice with same agent_id
+    const { unmount } = render(
+      <AgentCard
+        agent={{ ...mockAgentBase, agent_id, avatar_url: null, rarity: 'Epic' }}
+        onView={() => {}}
+        onDelete={() => {}}
+      />
+    )
+    const firstIcon = screen.getByRole('img').getAttribute('data-icon')
+    unmount()
+
+    render(
+      <AgentCard
+        agent={{ ...mockAgentBase, agent_id, avatar_url: null, rarity: 'Epic' }}
+        onView={() => {}}
+        onDelete={() => {}}
+      />
+    )
+    const secondIcon = screen.getByRole('img').getAttribute('data-icon')
+
+    // Same agent_id → same icon
+    expect(firstIcon).toBe(secondIcon)
+  })
+})
+```
+
+#### 8d. Test Coverage Verification
+
+**목표**: 85% 이상 테스트 커버리지
+
+**실행 명령**:
+```bash
+# Backend unit + integration tests
+pytest tests/unit/test_avatar_service.py tests/integration/test_agent_avatar_api.py \
+  --cov=apps.api.services.avatar_service \
+  --cov=apps.api.agent_dao \
+  --cov-report=term \
+  --cov-report=html
+
+# Frontend component tests
+npm test -- AgentCard.test.tsx AgentCardAvatar.test.tsx --coverage
+
+# Expected Coverage:
+# - apps/api/services/avatar_service.py: 90%+
+# - apps/api/agent_dao.py (avatar logic): 85%+
+# - frontend/src/components/agent-card/: 85%+
+```
 
 ### Testing Requirements
 

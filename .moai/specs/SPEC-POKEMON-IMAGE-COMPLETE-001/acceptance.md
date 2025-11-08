@@ -3,8 +3,9 @@
 # Pokemon 카드 캐릭터 이미지 완성 - 인수 기준
 
 **SPEC ID**: POKEMON-IMAGE-COMPLETE-001
-**버전**: v0.0.1
+**버전**: v0.1.0
 **작성일**: 2025-11-08
+**업데이트**: 2025-11-08
 
 ---
 
@@ -437,20 +438,202 @@ test('pokemon card visual regression', async ({ page }) => {
 
 ---
 
+## 🆕 Phase 4-5 Acceptance Criteria (v0.1.0 추가)
+
+### AC-11: Backend Avatar Service 구현
+
+**Priority**: CRITICAL
+
+**Given**: `AvatarService` 클래스가 구현되어 있을 때
+**When**: `get_default_avatar_icon(rarity, agent_id)` 함수가 호출될 때
+**Then**:
+- Lucide Icon 이름을 반환해야 함 (e.g., "Sparkles", "User")
+- Frontend `getDefaultAvatarIcon()`와 동일한 알고리즘 사용
+- 같은 agent_id → 항상 같은 icon 이름 (deterministic)
+- `RARITY_ICONS` 매핑이 Frontend와 100% 일치
+
+**Verification**:
+```python
+# Unit test
+def test_get_default_avatar_icon_deterministic():
+    agent_id = "550e8400-e29b-41d4-a716-446655440000"
+    icon1 = AvatarService.get_default_avatar_icon("Epic", agent_id)
+    icon2 = AvatarService.get_default_avatar_icon("Epic", agent_id)
+    assert icon1 == icon2  # Deterministic
+
+def test_get_default_avatar_icon_valid():
+    from apps.api.services.avatar_service import RARITY_ICONS
+    agent_id = "123e4567-e89b-12d3-a456-426614174000"
+    for rarity in ["Common", "Rare", "Epic", "Legendary"]:
+        icon = AvatarService.get_default_avatar_icon(rarity, agent_id)
+        assert icon in RARITY_ICONS[rarity]
+```
+
+---
+
+### AC-12: Agent DAO 자동 할당 통합
+
+**Priority**: CRITICAL
+
+**Given**: `create_agent()` 함수가 호출될 때
+**When**: `avatar_url`, `rarity` 파라미터가 제공되지 않았을 때
+**Then**:
+- 시스템은 자동으로 다음을 계산해야 함:
+  - `rarity`: `AvatarService.calculate_initial_rarity(len(taxonomy_node_ids))` 호출
+  - `avatar_url`: `AvatarService.get_default_avatar_icon(rarity, str(agent_id))` 호출
+- 생성된 Agent 객체에 avatar_url, rarity 값이 설정되어야 함
+- 기존 API 엔드포인트 호환성 유지 (Breaking change 없음)
+
+**Verification**:
+```python
+# Integration test
+@pytest.mark.asyncio
+async def test_agent_creation_auto_assigns_avatar(async_client: AsyncClient):
+    response = await async_client.post("/agents/from-taxonomy", json={
+        "name": "Test Agent",
+        "taxonomy_node_ids": ["550e8400-e29b-41d4-a716-446655440000"],
+    })
+
+    assert response.status_code == 201
+    data = response.json()
+
+    # Verify avatar_url is Lucide Icon name
+    assert "avatar_url" in data
+    assert data["avatar_url"] in ["User", "Circle", "Square"]  # Common icons
+
+    # Verify rarity is calculated
+    assert "rarity" in data
+    assert data["rarity"] == "Common"  # 1 taxonomy node → Common
+```
+
+---
+
+### AC-13: Backend-Frontend Icon 매핑 일치성
+
+**Priority**: HIGH
+
+**Given**: Backend `RARITY_ICONS`와 Frontend `RARITY_ICONS`가 정의되어 있을 때
+**When**: 동일한 agent_id와 rarity로 icon을 선택할 때
+**Then**:
+- Backend와 Frontend가 동일한 icon 이름을 반환해야 함
+- 매핑 구조가 100% 일치해야 함:
+  - Legendary: ["Crown", "Trophy", "Sparkles"]
+  - Epic: ["Zap", "Star", "Flame"]
+  - Rare: ["Gem", "Award", "Target"]
+  - Common: ["User", "Circle", "Square"]
+
+**Verification**:
+```python
+# Cross-validation test (pseudo-code)
+def test_backend_frontend_icon_mapping_consistency():
+    # Load Frontend RARITY_ICONS from types.ts
+    frontend_icons = parse_typescript_rarity_icons()
+
+    # Load Backend RARITY_ICONS from avatar_service.py
+    from apps.api.services.avatar_service import RARITY_ICONS as backend_icons
+
+    # Verify structure match
+    assert frontend_icons == backend_icons
+```
+
+---
+
+### AC-14: Test Coverage 85% 달성
+
+**Priority**: HIGH
+
+**Given**: 모든 구현이 완료되었을 때
+**When**: 테스트 스위트를 실행할 때
+**Then**:
+- Backend coverage ≥ 85%:
+  - `apps/api/services/avatar_service.py`: 90%+
+  - `apps/api/agent_dao.py` (avatar logic): 85%+
+- Frontend coverage ≥ 85%:
+  - `frontend/src/components/agent-card/`: 85%+
+  - `frontend/src/lib/api/types.ts` (getDefaultAvatarIcon): 90%+
+- Coverage report 생성 (HTML)
+
+**Verification**:
+```bash
+# Backend coverage check
+pytest tests/unit/test_avatar_service.py tests/integration/test_agent_avatar_api.py \
+  --cov=apps.api.services.avatar_service \
+  --cov=apps.api.agent_dao \
+  --cov-report=term \
+  --cov-fail-under=85
+
+# Frontend coverage check
+npm test -- AgentCard.test.tsx AgentCardAvatar.test.tsx --coverage --coverageThreshold='{"global":{"lines":85}}'
+```
+
+---
+
+### AC-15: Frontend Component Lucide Icon 렌더링
+
+**Priority**: HIGH
+
+**Given**: avatar_url이 Lucide Icon 이름일 때 (e.g., "Sparkles")
+**When**: AgentCard 컴포넌트가 렌더링될 때
+**Then**:
+- AgentCardAvatar 컴포넌트가 해당 Lucide Icon을 표시해야 함
+- Icon에 적절한 accessibility 속성이 있어야 함 (role="img", aria-label)
+- Rarity 기반 gradient 배경이 적용되어야 함
+
+**Verification**:
+```typescript
+// Component test
+describe('AgentCard - Avatar Integration (v0.1.0)', () => {
+  it('renders Lucide Icon avatar when avatar_url is icon name', () => {
+    const mockAgent: AgentCardData = {
+      agent_id: '123e4567-e89b-12d3-a456-426614174000',
+      name: 'Test Agent',
+      avatar_url: 'Sparkles',  // Lucide Icon name
+      rarity: 'Legendary',
+      level: 10,
+      current_xp: 9500,
+      next_level_xp: 10000,
+      total_documents: 500,
+      total_queries: 1500,
+      quality_score: 95,
+      status: 'active',
+      created_at: '2025-11-08T00:00:00Z',
+    }
+
+    render(<AgentCard agent={mockAgent} onView={() => {}} onDelete={() => {}} />)
+
+    const avatarSection = screen.getByTestId('agent-card-avatar')
+    expect(avatarSection).toBeInTheDocument()
+
+    const icon = screen.getByRole('img', { name: /sparkles/i })
+    expect(icon).toBeInTheDocument()
+  })
+})
+```
+
+---
+
 ## 🏁 Definition of Done (DoD)
 
-### 필수 조건 (All MUST Pass)
+### v0.0.2 완료 조건 (Phase 1-3)
 
-- ✅ **AC-1**: Agent 생성 시 기본 아바타 자동 할당
-- ✅ **AC-2**: Rarity 자동 계산 로직
+- ✅ **AC-1**: Agent 생성 시 기본 아바타 자동 할당 (부분 완료 - Frontend만)
+- ✅ **AC-2**: Rarity 자동 계산 로직 (Frontend만, Backend 미구현)
 - ✅ **AC-3**: Database Migration 성공
 - ✅ **AC-4**: AgentCard 컴포넌트에 캐릭터 이미지 표시
 - ✅ **AC-5**: 이미지 로드 실패 시 Fallback 아이콘 표시
-- ✅ **AC-6**: 기본 아바타 에셋 존재 검증
+- ⚠️ **AC-6**: 기본 아바타 에셋 존재 검증 (Lucide Icons로 대체)
 - ✅ **AC-7**: Backend-Frontend 타입 일치성
-- ✅ **AC-8**: Avatar URL 결정론적 분포 검증
-- ✅ **AC-9**: E2E User Flow (Agent 생성 → 카드 표시)
-- ✅ **AC-10**: Visual Regression (UI 완성도 검증)
+- ⚠️ **AC-8**: Avatar URL 결정론적 분포 검증 (Frontend만)
+- ❌ **AC-9**: E2E User Flow (Agent 생성 → 카드 표시) - 미구현
+- ❌ **AC-10**: Visual Regression (UI 완성도 검증) - 미구현
+
+### v0.1.0 완료 조건 (Phase 4-5) - NEW
+
+- 🎯 **AC-11**: Backend Avatar Service 구현
+- 🎯 **AC-12**: Agent DAO 자동 할당 통합
+- 🎯 **AC-13**: Backend-Frontend Icon 매핑 일치성
+- 🎯 **AC-14**: Test Coverage 85% 달성
+- 🎯 **AC-15**: Frontend Component Lucide Icon 렌더링
 
 ### 추가 품질 기준
 
