@@ -8,9 +8,11 @@
 // Focus indicators: Blue ring (focus:ring-2) on close button
 
 import { useEffect, useRef, useCallback } from 'react'
-import FocusTrap from 'focus-trap-react'
+import * as FocusTrapReact from 'focus-trap-react'
 import { type TaxonomyNode } from '../../lib/api/types'
 import { useFocusManagement } from '../../hooks/useFocusManagement'
+
+const FocusTrap = FocusTrapReact.default
 
 interface TaxonomyDetailPanelProps {
   node: TaxonomyNode | null
@@ -21,7 +23,7 @@ export default function TaxonomyDetailPanel({
   node,
   onClose,
 }: TaxonomyDetailPanelProps) {
-  const { saveFocus, restoreFocus } = useFocusManagement()
+  const { restoreFocus } = useFocusManagement()
   const panelRef = useRef<HTMLDivElement>(null)
 
   // Close handler that restores focus
@@ -29,13 +31,6 @@ export default function TaxonomyDetailPanel({
     restoreFocus()
     onClose()
   }, [restoreFocus, onClose])
-
-  // Save focus when panel opens
-  useEffect(() => {
-    if (node) {
-      saveFocus()
-    }
-  }, [node, saveFocus])
 
   // Handle Escape key
   useEffect(() => {

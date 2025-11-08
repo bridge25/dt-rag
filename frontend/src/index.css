@@ -1,3 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Pokemon card colors in OKLCH */
+  --color-accent-gold-500: oklch(0.760 0.411 65.45);
+  --color-accent-purple-500: oklch(0.695 0.198 286.10);
+  --color-accent-pink-500: oklch(0.698 0.287 19.55);
+  --color-accent-green-500: oklch(0.792 0.315 187.70);
+  --color-accent-yellow-500: oklch(0.879 0.313 75.14);
+  --color-accent-orange-500: oklch(0.745 0.341 52.83);
+}

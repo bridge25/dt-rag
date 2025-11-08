@@ -8,19 +8,16 @@ interface RarityBadgeProps {
   className?: string
 }
 
-const rarityStyles: Record<Rarity, string> = {
-  Common: 'bg-gray-500 text-white',
-  Rare: 'bg-blue-500 text-white',
-  Epic: 'bg-purple-600 text-white',
-  Legendary: 'bg-accent-gold text-black',
-}
-
 export const RarityBadge = memo<RarityBadgeProps>(function RarityBadge({ rarity, className }) {
   return (
     <span
       className={cn(
         'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide',
-        rarityStyles[rarity],
+        // Tailwind v4 JIT requires explicit class names
+        rarity.toLowerCase() === 'common' && 'bg-gray-500 text-white',
+        rarity.toLowerCase() === 'rare' && 'bg-blue-500 text-white',
+        rarity.toLowerCase() === 'epic' && 'bg-purple-600 text-white',
+        rarity.toLowerCase() === 'legendary' && 'bg-accent-gold-500 text-black',
         className
       )}
       aria-label={`Rarity: ${rarity}`}

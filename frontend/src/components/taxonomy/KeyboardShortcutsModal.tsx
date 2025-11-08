@@ -3,7 +3,9 @@
 // WCAG 2.1 AA compliant with focus trap and proper ARIA attributes
 
 import { useEffect } from 'react'
-import FocusTrap from 'focus-trap-react'
+import * as FocusTrapReact from 'focus-trap-react'
+
+const FocusTrap = FocusTrapReact.default
 
 interface KeyboardShortcutsModalProps {
   isOpen: boolean

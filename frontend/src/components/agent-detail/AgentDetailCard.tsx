@@ -1,10 +1,12 @@
 // @CODE:FRONTEND-INTEGRATION-001:DETAIL-CARD
+// @CODE:TAILWIND-V4-COMPLETE-001-JIT-FIX-DETAIL-CARD
 import { useQuery } from '@tanstack/react-query'
 import { calculateCoverage, type CoverageResponse } from '@/lib/api/agents'
 import type { AgentCardData } from '@/lib/api/types'
 import { RarityBadge } from '@/components/agent-card/RarityBadge'
 import { ProgressBar } from '@/components/agent-card/ProgressBar'
 import { StatDisplay } from '@/components/agent-card/StatDisplay'
+import { cn } from '@/lib/utils'
 
 interface AgentDetailCardProps {
   agent: AgentCardData
@@ -17,15 +19,14 @@ export function AgentDetailCard({ agent }: AgentDetailCardProps) {
     staleTime: 30000,
   })
 
-  const rarityBorderStyles = {
-    Common: 'border-gray-300',
-    Rare: 'border-blue-400',
-    Epic: 'border-purple-500',
-    Legendary: 'border-accent-gold',
-  }
-
   return (
-    <div className={`bg-white rounded-lg shadow-lg border-4 p-8 ${rarityBorderStyles[agent.rarity]}`}>
+    <div className={cn(
+      'bg-white rounded-lg shadow-lg border-4 p-8',
+      agent.rarity === 'Common' && 'border-gray-300',
+      agent.rarity === 'Rare' && 'border-blue-400',
+      agent.rarity === 'Epic' && 'border-purple-500',
+      agent.rarity === 'Legendary' && 'border-accent-gold-500'
+    )}>
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">{agent.name}</h1>

@@ -1,8 +1,10 @@
 // @CODE:AGENT-CARD-001-ANIM-001
+// @CODE:TAILWIND-V4-COMPLETE-001-JIT-FIX-MODAL
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Confetti from 'react-confetti'
 import type { Rarity } from '@/lib/api/types'
+import { cn } from '@/lib/utils'
 
 interface LevelUpModalProps {
   isOpen: boolean
@@ -36,13 +38,6 @@ const modalVariants = {
       duration: 0.2,
     }
   },
-}
-
-const rarityColors: Record<Rarity, string> = {
-  Common: 'text-gray-600',
-  Rare: 'text-blue-600',
-  Epic: 'text-purple-600',
-  Legendary: 'text-accent-gold',
 }
 
 export function LevelUpModal({
@@ -132,11 +127,23 @@ export function LevelUpModal({
                     Rarity Upgrade!
                   </p>
                   <div className="flex items-center justify-center gap-3">
-                    <span className={`font-bold ${rarityColors[rarity]}`}>
+                    <span className={cn(
+                      'font-bold',
+                      rarity === 'Common' && 'text-gray-600',
+                      rarity === 'Rare' && 'text-blue-600',
+                      rarity === 'Epic' && 'text-purple-600',
+                      rarity === 'Legendary' && 'text-accent-gold-500'
+                    )}>
                       {rarity}
                     </span>
                     <span className="text-gray-400">→</span>
-                    <span className={`font-bold ${rarityColors[upgradeRarity]}`}>
+                    <span className={cn(
+                      'font-bold',
+                      upgradeRarity === 'Common' && 'text-gray-600',
+                      upgradeRarity === 'Rare' && 'text-blue-600',
+                      upgradeRarity === 'Epic' && 'text-purple-600',
+                      upgradeRarity === 'Legendary' && 'text-accent-gold-500'
+                    )}>
                       {upgradeRarity}
                     </span>
                   </div>
@@ -147,7 +154,13 @@ export function LevelUpModal({
               {!upgradeRarity && (
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-1">Rarity</p>
-                  <p className={`text-xl font-bold ${rarityColors[rarity]}`}>
+                  <p className={cn(
+                    'text-xl font-bold',
+                    rarity === 'Common' && 'text-gray-600',
+                    rarity === 'Rare' && 'text-blue-600',
+                    rarity === 'Epic' && 'text-purple-600',
+                    rarity === 'Legendary' && 'text-accent-gold-500'
+                  )}>
                     {rarity}
                   </p>
                 </div>
