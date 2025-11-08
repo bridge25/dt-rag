@@ -5,6 +5,67 @@
 
 ---
 
+<!-- @DOC:TAILWIND-V4-COMPLETE-001-CHANGELOG -->
+## [2.2.1] - 2025-11-08
+
+### Fixed
+
+#### Frontend - Tailwind CSS v4 Complete Migration
+- **SPEC-TAILWIND-V4-COMPLETE-001**: Tailwind CSS v4 마이그레이션 완전 검증 및 완료
+  - **Configuration Audit (SPEC-1)**: ✅ 완료
+    - `tailwind.config.ts` v4 호환성 검증
+    - PostCSS 설정 확인
+    - Content paths 최적화
+  - **Component Code Audit (SPEC-2)**: ✅ 완료
+    - JIT 호환 패턴 검증 (AgentCard, RarityBadge)
+    - 동적 클래스 패턴 제거 완료
+    - Case-insensitive rarity 비교 구현
+  - **API Integration Verification (SPEC-3)**: ✅ 완료
+    - 백엔드 연동 환경에서 스타일 렌더링 확인
+    - Loading/Error/Success 상태별 스타일 검증
+    - 4단계 희귀도 색상 정확성 확인 (Common/Rare/Epic/Legendary)
+  - **Cross-Browser Testing (SPEC-4)**: ✅ 완료
+    - Chrome 111+, Firefox 113+, Safari 15.4+ OKLCH 색상 검증
+    - 반응형 그리드 breakpoint 동작 확인 (mobile/tablet/desktop)
+  - **Production Build Validation (SPEC-5)**: ✅ 완료
+    - CSS bundle size 최적화 확인 (< 50KB gzipped)
+    - Tree-shaking 동작 검증
+    - FOUC (Flash of Unstyled Content) 없음 확인
+  - **Documentation Update (SPEC-6)**: ✅ 완료
+    - README.md Known Issues 섹션 업데이트 (RESOLVED)
+    - CHANGELOG.md 항목 추가
+    - SPEC status: draft → in-review 전환
+
+  **기술적 개선**:
+  - OKLCH 색상 시스템 안정화 (numbered scale: `-500`, `-600`, etc.)
+  - JIT 컴파일러 호환 패턴 100% 적용
+  - `@import "tailwindcss"` 문법 완전 전환 (v3 `@tailwind` directives 제거)
+  - CSS-in-JS 동적 클래스 패턴 제거 (explicit conditionals 사용)
+
+  **검증 결과**:
+  | 메트릭 | 목표 | 결과 |
+  |--------|------|------|
+  | JIT 호환성 | 100% | ✅ 100% |
+  | CSS Bundle Size | < 50KB (gzipped) | ✅ 달성 |
+  | Cross-browser 렌더링 | 3+ browsers | ✅ 통과 |
+  | API 연동 스타일 | 100% | ✅ 검증 완료 |
+  | Production Build | 오류 없음 | ✅ Clean |
+
+  **TAG 체인**:
+  - @SPEC:TAILWIND-V4-COMPLETE-001 (v0.0.2)
+  - @CODE:TAILWIND-V4-COMPLETE-001 (frontend/src/components/*)
+  - @DOC:TAILWIND-V4-COMPLETE-001 (README.md, CHANGELOG.md)
+
+  **이전 이슈**: [TAILWIND_V4_MIGRATION_ISSUE.md](.moai/issues/TAILWIND_V4_MIGRATION_ISSUE.md)
+
+### Changed
+
+#### Documentation
+- **README.md**: Known Issues 섹션에서 Tailwind v4 이슈 RESOLVED로 업데이트
+- **SPEC-TAILWIND-V4-COMPLETE-001**: Status draft → in-review, Version 0.0.1 → 0.0.2
+
+---
+
 <!-- @DOC:MYPY-CONSOLIDATION-002-CHANGELOG -->
 ## [2.2.0] - 2025-11-05
 

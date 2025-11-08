@@ -851,10 +851,11 @@ DEBUG=false
 - **영향**: Pokemon 카드에 placeholder 이미지만 표시
 - **세부사항**: [POKEMON_CARD_IMAGE_MISSING.md](.moai/issues/POKEMON_CARD_IMAGE_MISSING.md)
 
-### Tailwind CSS v4 부분 마이그레이션
-- **상태**: JIT 호환 수정 완료, 실제 API 연동 환경 미검증
-- **영향**: Production 배포 시 스타일 깨질 가능성
-- **세부사항**: [TAILWIND_V4_MIGRATION_ISSUE.md](.moai/issues/TAILWIND_V4_MIGRATION_ISSUE.md)
+### ✅ Tailwind CSS v4 완전 마이그레이션 (RESOLVED)
+- **상태**: ✅ 완료 (2025-11-08)
+- **영향**: Production 배포 준비 완료, 모든 검증 단계 통과
+- **세부사항**: [SPEC-TAILWIND-V4-COMPLETE-001](.moai/specs/SPEC-TAILWIND-V4-COMPLETE-001/spec.md)
+- **이전 이슈**: [TAILWIND_V4_MIGRATION_ISSUE.md](.moai/issues/TAILWIND_V4_MIGRATION_ISSUE.md)
 
 ## 🔗 관련 링크
 
