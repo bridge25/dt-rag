@@ -52,6 +52,8 @@ def mock_agent():
         avg_response_time_ms=0.0,
         retrieval_config={"top_k": 5, "strategy": "hybrid"},
         features_config={},
+        avatar_url="User",  # Added for SPEC-POKEMON-IMAGE-COMPLETE-001
+        rarity="Common",    # Added for SPEC-POKEMON-IMAGE-COMPLETE-001
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
         last_query_at=None,
