@@ -1,7 +1,7 @@
 ---
 id: POKEMON-IMAGE-COMPLETE-001
-version: 0.0.1
-status: draft
+version: 0.0.2
+status: in-progress
 created: 2025-11-08
 updated: 2025-11-08
 author: @Goos
@@ -12,8 +12,10 @@ labels:
   - agent-avatar
   - fullstack
   - ui-enhancement
+  - partial-implementation
 related_specs:
   - AGENT-CARD-001
+completion_rate: 50%
 scope:
   packages:
     - apps/api/schemas
@@ -32,6 +34,28 @@ scope:
 
 ## HISTORY
 
+### v0.0.2 - IMPLEMENTATION PHASE 1-2 COMPLETE (2025-11-08)
+- ✅ Database migration 완료 (`alembic/versions/0013_add_pokemon_avatar_fields.py`)
+  - Multi-DB 지원 (PostgreSQL + SQLite)
+  - 컬럼 추가: `avatar_url` (VARCHAR 500), `rarity` (VARCHAR 20, default='Common'), `character_description` (TEXT)
+- ✅ Pydantic schema 확장 완료 (`apps/api/schemas/agent_schemas.py`)
+  - `Rarity = Literal["Common", "Rare", "Epic", "Legendary"]` 타입 추가
+  - `AgentResponse`에 3개 필드 추가 (avatar_url, rarity, character_description)
+- ✅ Frontend types 정의 완료 (`frontend/src/lib/api/types.ts`)
+  - `getDefaultAvatarIcon()` 헬퍼 함수 구현 (결정론적 아이콘 선택)
+  - `RARITY_ICONS` 매핑 (Rarity별 3개 Lucide Icons)
+- ✅ AgentCardAvatar 컴포넌트 구현 (`frontend/src/components/agent-card/AgentCardAvatar.tsx`)
+  - **설계 변경**: Lucide Icons 기반 Fallback 시스템 (PNG 이미지 대체)
+  - 3-tier fallback: avatarUrl → Lucide Icon → User icon
+  - Rarity 기반 gradient 배경 및 아이콘 크기 차별화
+- ✅ Backend unit tests 완료 (9개 Pydantic schema 테스트)
+- ✅ Integration tests 완료 (6개 migration 테스트)
+- ⚠️ **미완료 항목**:
+  - Avatar Service (`apps/api/services/avatar_service.py`) 미구현
+  - Agent DAO 자동 할당 로직 미구현
+  - PNG 이미지 에셋 미준비 (Lucide Icons로 대체)
+  - Frontend 통합 테스트, E2E 테스트 미구현
+
 ### v0.0.1 - INITIAL (2025-11-08)
 - 초기 SPEC 작성
 - 사용자 명시적 요청 분석: Pokemon 스타일 캐릭터 이미지 기능 미구현 확인
@@ -44,11 +68,13 @@ scope:
 
 ### 시스템 컨텍스트
 
-**현재 상황**:
-- Agent 카드는 Pokemon 스타일로 디자인되었으나, **캐릭터 이미지 기능이 전체 스택에서 완전히 누락**
-- 사용자는 프론트엔드 개발 당시 "pokemon 스타일로 캐릭터 이미지도 카드안에 삽입되게 주문"했으나 미구현
-- 현재 카드 구조: Header (Name, Rarity Badge) → XP Progress → Stats → Actions
-- **누락된 영역**: Header와 XP Progress 사이의 캐릭터 이미지 섹션 (200x200px 권장)
+**현재 상황** (v0.0.2 기준):
+- ✅ **Phase 1 (Backend) 50% 완료**: Database migration, Pydantic schema 완료
+- ✅ **Phase 2 (Frontend) 75% 완료**: AgentCardAvatar 컴포넌트 구현 (Lucide Icons 기반)
+- ⚠️ **설계 변경**: PNG 이미지 에셋 대신 Lucide Icons 라이브러리 사용
+  - 이유: 에셋 준비 시간 단축, 번들 크기 최소화 (600KB → 20KB)
+  - 장점: 즉시 배포 가능, SVG 확장성, 레티나 디스플레이 대응
+- ❌ **미완료**: Avatar Service 백엔드 로직, Agent DAO 자동 할당, E2E 테스트
 
 **기술 스택**:
 - **Backend**: FastAPI, SQLAlchemy, Pydantic, Alembic (PostgreSQL)
@@ -78,8 +104,10 @@ scope:
 
 ### 설계 가정
 
-1. **기본 아바타 이미지 제공**:
-   - 초기 구현은 12개의 정적 아바타 이미지 사용 (Rarity별 3개씩)
+1. **기본 아바타 이미지 제공** (⚠️ 설계 변경):
+   - ~~초기 구현은 12개의 정적 아바타 이미지 사용 (Rarity별 3개씩)~~
+   - **실제 구현**: Lucide Icons 라이브러리 활용 (Rarity별 3개 아이콘 매핑, 총 12개 조합)
+   - 변경 이유: PNG 에셋 준비 시간 단축, 번들 크기 최소화, 즉시 배포 가능
    - AI 생성 아바타 기능은 향후 확장 범위로 분리
 
 2. **Deterministic Avatar Assignment**:
