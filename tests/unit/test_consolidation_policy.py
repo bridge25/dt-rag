@@ -19,7 +19,7 @@ class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
 
     case_id: Mapped[str] = mapped_column(Text, primary_key=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
-    response_text: Mapped[str] = mapped_column(Text, nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
     category_path: Mapped[str] = mapped_column(Text, nullable=False)
     query_vector: Mapped[str] = mapped_column(Text, nullable=False)
     quality_score: Mapped[Optional[float]] = mapped_column(Float)
