@@ -64,7 +64,7 @@ async def test_analyze_case_performance():
         case = CaseBank(
             case_id="test-case-perf-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -99,7 +99,7 @@ async def test_error_pattern_analysis():
         case = CaseBank(
             case_id="test-case-error-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -138,7 +138,7 @@ async def test_avg_execution_time():
         case = CaseBank(
             case_id="test-case-time-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -168,7 +168,7 @@ async def test_success_rate_zero_logs():
         case = CaseBank(
             case_id="test-case-nologs-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -194,7 +194,7 @@ async def test_generate_improvement_suggestions_low_performance():
         case = CaseBank(
             case_id="test-case-low-perf-001",
             query="test query for low performance",
-            response_text="test response with issues",
+            answer="test response with issues",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -240,7 +240,7 @@ async def test_generate_improvement_suggestions_high_performance():
         case = CaseBank(
             case_id="test-case-high-perf-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -284,7 +284,7 @@ async def test_run_reflection_batch():
             case = CaseBank(
                 case_id=f"test-case-batch-{case_num:03d}",
                 query=f"test query {case_num}",
-                response_text=f"test response {case_num}",
+                answer=f"test response {case_num}",
                 category_path=["AI", "Test"],
                 query_vector=[0.1, 0.2, 0.3],
                 status="active",
@@ -317,7 +317,7 @@ async def test_update_case_success_rate():
         case = CaseBank(
             case_id="test-case-update-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",

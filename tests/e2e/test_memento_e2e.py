@@ -44,7 +44,7 @@ async def test_memento_full_lifecycle():
         case_high = CaseBank(
             case_id="memento-test-high",
             query="What is RAG?",
-            response_text="RAG is Retrieval-Augmented Generation",
+            answer="RAG is Retrieval-Augmented Generation",
             category_path=["AI", "RAG"],
             query_vector=[0.1] * 1536,
             usage_count=50,
@@ -56,7 +56,7 @@ async def test_memento_full_lifecycle():
         case_low = CaseBank(
             case_id="memento-test-low",
             query="What is ML?",
-            response_text="ML is Machine Learning",
+            answer="ML is Machine Learning",
             category_path=["AI", "ML"],
             query_vector=[0.2] * 1536,
             usage_count=20,
@@ -68,7 +68,7 @@ async def test_memento_full_lifecycle():
         case_duplicate = CaseBank(
             case_id="memento-test-dup",
             query="What is RAG system?",  # Similar to case_high
-            response_text="RAG system is Retrieval-Augmented Generation",
+            answer="RAG system is Retrieval-Augmented Generation",
             category_path=["AI", "RAG"],
             query_vector=[0.11] * 1536,  # Similar vector (will have >95% similarity)
             usage_count=10,
@@ -197,7 +197,7 @@ async def test_memento_metadata_tracking():
         case = CaseBank(
             case_id="memento-metadata-test",
             query="Test query",
-            response_text="Test response",
+            answer="Test response",
             category_path=["AI", "Test"],
             query_vector=[0.5] * 1536,
             status="active",

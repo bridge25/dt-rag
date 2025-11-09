@@ -88,7 +88,7 @@ async def test_full_consolidation_workflow():
             TestCaseBank(
                 case_id="workflow-low-perf-001",
                 query="low performance query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=15.0,
@@ -97,7 +97,7 @@ async def test_full_consolidation_workflow():
             TestCaseBank(
                 case_id="workflow-inactive-001",
                 query="inactive query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=50,
@@ -106,7 +106,7 @@ async def test_full_consolidation_workflow():
             TestCaseBank(
                 case_id="workflow-active-001",
                 query="active query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.3, 0.4, 0.5]",
                 usage_count=200,
@@ -152,7 +152,7 @@ async def test_dry_run_no_changes():
             TestCaseBank(
                 case_id="dryrun-low-perf-001",
                 query="low performance query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=15.0,
@@ -161,7 +161,7 @@ async def test_dry_run_no_changes():
             TestCaseBank(
                 case_id="dryrun-inactive-001",
                 query="inactive query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=50,
@@ -193,7 +193,7 @@ async def test_restore_archived_case():
         case = TestCaseBank(
             case_id="restore-test-001",
             query="test query",
-            response_text="response",
+            answer="response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
@@ -236,7 +236,7 @@ async def test_consolidation_with_real_vectors():
             TestCaseBank(
                 case_id="real-vec-1",
                 query="similar query",
-                response_text="response 1",
+                answer="response 1",
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=100,
@@ -245,7 +245,7 @@ async def test_consolidation_with_real_vectors():
             TestCaseBank(
                 case_id="real-vec-2",
                 query="similar query",
-                response_text="response 2",
+                answer="response 2",
                 category_path='["AI", "Test"]',
                 query_vector=similar_vec,
                 usage_count=50,
@@ -254,7 +254,7 @@ async def test_consolidation_with_real_vectors():
             TestCaseBank(
                 case_id="real-vec-3",
                 query="different query",
-                response_text="response 3",
+                answer="response 3",
                 category_path='["AI", "Test"]',
                 query_vector=different_vec,
                 usage_count=75,
@@ -289,7 +289,7 @@ async def test_safety_constraints():
             TestCaseBank(
                 case_id="safety-high-usage-low-perf",
                 query="important query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=10.0,
@@ -298,7 +298,7 @@ async def test_safety_constraints():
             TestCaseBank(
                 case_id="safety-high-usage-inactive",
                 query="important inactive query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=150,

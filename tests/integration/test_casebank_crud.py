@@ -85,7 +85,7 @@ async def test_create_case_with_metadata():
         case = TestCaseBank(
             case_id="test-create-001",
             query="integration test query",
-            response_text="integration test response",
+            answer="integration test response",
             category_path='["AI", "Integration"]',
             query_vector="[0.1, 0.2, 0.3]",
             quality_score=0.95,
@@ -113,7 +113,7 @@ async def test_update_case_increments_version():
         case = TestCaseBank(
             case_id="test-version-002",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )
@@ -139,7 +139,7 @@ async def test_case_status_lifecycle():
         case = TestCaseBank(
             case_id="test-lifecycle-003",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             status="active",
@@ -169,7 +169,7 @@ async def test_query_by_status():
             TestCaseBank(
                 case_id=f"test-status-{i}",
                 query="test query",
-                response_text="test response",
+                answer="test response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 status="active" if i % 2 == 0 else "archived",
@@ -196,7 +196,7 @@ async def test_updated_at_timestamp():
         case = TestCaseBank(
             case_id="test-timestamp-005",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )

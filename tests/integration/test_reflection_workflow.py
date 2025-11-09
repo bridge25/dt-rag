@@ -65,7 +65,7 @@ async def test_full_reflection_workflow():
         case = CaseBank(
             case_id="test-workflow-001",
             query="How does RAG work?",
-            response_text="RAG combines retrieval with generation",
+            answer="RAG combines retrieval with generation",
             category_path=["AI", "RAG"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -136,7 +136,7 @@ async def test_batch_reflection_with_multiple_cases():
             case = CaseBank(
                 case_id=case_id,
                 query=f"Query for {case_id}",
-                response_text=f"Response for {case_id}",
+                answer=f"Response for {case_id}",
                 category_path=["AI", "Test"],
                 query_vector=[0.1, 0.2, 0.3],
                 status="active",

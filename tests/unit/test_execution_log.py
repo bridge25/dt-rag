@@ -59,7 +59,7 @@ async def test_execution_log_creation():
         case = CaseBank(
             case_id="test-case-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -87,7 +87,7 @@ async def test_execution_log_failure():
         case = CaseBank(
             case_id="test-case-002",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -120,7 +120,7 @@ async def test_execution_log_foreign_key():
         case = CaseBank(
             case_id="test-case-003",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -149,7 +149,7 @@ async def test_execution_log_nullable_fields():
         case = CaseBank(
             case_id="test-case-004",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",
@@ -175,7 +175,7 @@ async def test_execution_log_timestamp():
         case = CaseBank(
             case_id="test-case-005",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path=["AI", "Test"],
             query_vector=[0.1, 0.2, 0.3],
             status="active",

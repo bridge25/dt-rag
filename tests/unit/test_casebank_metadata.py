@@ -91,7 +91,7 @@ async def test_casebank_version_field():
         case = TestCaseBank(
             case_id="test-version-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )
@@ -110,7 +110,7 @@ async def test_casebank_updated_by_field():
         case = TestCaseBank(
             case_id="test-updated-by-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             updated_by="user@example.com",
@@ -130,7 +130,7 @@ async def test_casebank_updated_by_nullable():
         case = TestCaseBank(
             case_id="test-updated-by-null-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )
@@ -149,7 +149,7 @@ async def test_casebank_status_field():
         case = TestCaseBank(
             case_id="test-status-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )
@@ -168,7 +168,7 @@ async def test_casebank_status_custom_value():
         case = TestCaseBank(
             case_id="test-status-custom-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             status="archived",
@@ -187,7 +187,7 @@ async def test_casebank_updated_at_field():
         case = TestCaseBank(
             case_id="test-updated-at-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )
@@ -207,7 +207,7 @@ async def test_casebank_version_increment():
         case = TestCaseBank(
             case_id="test-version-increment-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )
@@ -242,7 +242,7 @@ async def test_casebank_status_transitions():
         case = TestCaseBank(
             case_id="test-status-transition-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             status="active",
@@ -291,7 +291,7 @@ async def test_casebank_updated_at_trigger():
         case = TestCaseBank(
             case_id="test-updated-at-trigger-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )

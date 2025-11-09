@@ -37,7 +37,7 @@ class TestHybridSearchE2E:
                 CaseBank(
                     case_id=f"test_case_{i}",
                     query=f"Test query {i}",
-                    response_text=f"Test response {i}",
+                    answer=f"Test response {i}",  # Fixed: response_text → answer
                     category_path=["AI", "Test"],
                     query_vector=[0.1 * i] * 1536,
                     quality_score=0.8,

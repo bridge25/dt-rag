@@ -86,7 +86,7 @@ async def test_remove_low_performance_cases():
             TestCaseBank(
                 case_id=f"low-perf-{i}",
                 query=f"query {i}",
-                response_text=f"response {i}",
+                answer=f"response {i}",
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=25.0,
@@ -115,7 +115,7 @@ async def test_remove_low_performance_skip_high_usage():
         high_usage_case = TestCaseBank(
             case_id="high-usage-001",
             query="important query",
-            response_text="important response",
+            answer="important response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
@@ -143,7 +143,7 @@ async def test_merge_duplicate_cases():
             TestCaseBank(
                 case_id="dup-case-1",
                 query="duplicate query",
-                response_text="response 1",
+                answer="response 1",
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=50,
@@ -152,7 +152,7 @@ async def test_merge_duplicate_cases():
             TestCaseBank(
                 case_id="dup-case-2",
                 query="duplicate query",
-                response_text="response 2",
+                answer="response 2",
                 category_path='["AI", "Test"]',
                 query_vector=similar_vec,
                 usage_count=30,
@@ -184,7 +184,7 @@ async def test_merge_keep_higher_usage():
             TestCaseBank(
                 case_id="keep-this",
                 query="test query",
-                response_text="response 1",
+                answer="response 1",
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=100,
@@ -193,7 +193,7 @@ async def test_merge_keep_higher_usage():
             TestCaseBank(
                 case_id="remove-this",
                 query="test query",
-                response_text="response 2",
+                answer="response 2",
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=10,
@@ -228,7 +228,7 @@ async def test_archive_inactive_cases():
         inactive_case = TestCaseBank(
             case_id="inactive-001",
             query="old query",
-            response_text="old response",
+            answer="old response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             usage_count=50,
@@ -255,7 +255,7 @@ async def test_archive_skip_high_usage():
         high_usage_inactive = TestCaseBank(
             case_id="high-usage-inactive-001",
             query="important old query",
-            response_text="important old response",
+            answer="important old response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             usage_count=150,
@@ -280,7 +280,7 @@ async def test_dry_run_mode():
         low_perf_case = TestCaseBank(
             case_id="dry-run-001",
             query="test query",
-            response_text="test response",
+            answer="test response",
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
@@ -338,7 +338,7 @@ async def test_run_consolidation_batch():
             TestCaseBank(
                 case_id="full-low-perf",
                 query="low perf query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=15.0,
@@ -347,7 +347,7 @@ async def test_run_consolidation_batch():
             TestCaseBank(
                 case_id="full-inactive",
                 query="inactive query",
-                response_text="response",
+                answer="response",
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=50,
