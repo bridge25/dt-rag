@@ -40,7 +40,8 @@ from packages.common_schemas.common_schemas.models import (
 logger = logging.getLogger(__name__)
 
 # Create router
-agent_factory_router = APIRouter(prefix="/agents", tags=["Agent Factory"])
+# @CODE:ROUTER-CONFLICT-001 | Change prefix from /agents to /factory/agents to resolve endpoint conflict
+agent_factory_router = APIRouter(prefix="/factory/agents", tags=["Agent Factory"])
 
 # Additional models for agent operations
 
