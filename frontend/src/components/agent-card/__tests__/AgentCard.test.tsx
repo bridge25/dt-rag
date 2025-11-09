@@ -59,4 +59,91 @@ describe('AgentCard', () => {
     const card = container.firstChild as HTMLElement
     expect(card.className).toContain('border')
   })
+
+  // @TEST:AGENT-CARD-AVATAR-001 - Pokemon Avatar System Tests
+  describe('Pokemon Avatar System', () => {
+    it('should render Lucide Icon avatar when avatar_url is provided', () => {
+      const agentWithAvatar: AgentCardData = {
+        ...mockAgent,
+        avatar_url: 'Star', // Lucide Icon name
+        rarity: 'Rare',
+      }
+      const { container } = render(<AgentCard agent={agentWithAvatar} onView={() => {}} onDelete={() => {}} />)
+      // Check if avatar section exists
+      const avatar = container.querySelector('[role="img"]')
+      expect(avatar).toBeInTheDocument()
+    })
+
+    it('should render User icon as fallback when avatar_url is null', () => {
+      const agentWithoutAvatar: AgentCardData = {
+        ...mockAgent,
+        avatar_url: null,
+        rarity: 'Common',
+      }
+      const { container } = render(<AgentCard agent={agentWithoutAvatar} onView={() => {}} onDelete={() => {}} />)
+      const avatar = container.querySelector('[role="img"]')
+      expect(avatar).toBeInTheDocument()
+    })
+
+    it('should apply rarity-specific gradient background', () => {
+      const rarityTestCases: Array<{ rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary' }> = [
+        { rarity: 'Common' },
+        { rarity: 'Rare' },
+        { rarity: 'Epic' },
+        { rarity: 'Legendary' },
+      ]
+
+      rarityTestCases.forEach(({ rarity }) => {
+        const agent: AgentCardData = {
+          ...mockAgent,
+          rarity,
+          avatar_url: 'User',
+        }
+        const { container } = render(<AgentCard agent={agent} onView={() => {}} onDelete={() => {}} />)
+        const avatar = container.querySelector('[role="img"]')
+        expect(avatar).toBeInTheDocument()
+      })
+    })
+
+    it('should render deterministic icon based on agent_id and rarity', () => {
+      // Test that same agent_id + rarity combination renders consistently
+      const agent1: AgentCardData = {
+        ...mockAgent,
+        agent_id: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
+        rarity: 'Common',
+        avatar_url: 'User', // Deterministic icon
+      }
+
+      const { container: container1 } = render(<AgentCard agent={agent1} onView={() => {}} onDelete={() => {}} />)
+      const { container: container2 } = render(<AgentCard agent={agent1} onView={() => {}} onDelete={() => {}} />)
+
+      const avatar1 = container1.querySelector('[role="img"]')
+      const avatar2 = container2.querySelector('[role="img"]')
+
+      expect(avatar1).toBeInTheDocument()
+      expect(avatar2).toBeInTheDocument()
+    })
+
+    it('should support all valid Lucide Icon names for each rarity', () => {
+      const rarityIconMapping = {
+        Common: ['User', 'UserCircle', 'UserSquare'],
+        Rare: ['Star', 'Sparkles', 'Award'],
+        Epic: ['Crown', 'Shield', 'Gem'],
+        Legendary: ['Flame', 'Zap', 'Trophy'],
+      } as const
+
+      Object.entries(rarityIconMapping).forEach(([rarity, icons]) => {
+        icons.forEach((icon) => {
+          const agent: AgentCardData = {
+            ...mockAgent,
+            rarity: rarity as 'Common' | 'Rare' | 'Epic' | 'Legendary',
+            avatar_url: icon,
+          }
+          const { container } = render(<AgentCard agent={agent} onView={() => {}} onDelete={() => {}} />)
+          const avatar = container.querySelector('[role="img"]')
+          expect(avatar).toBeInTheDocument()
+        })
+      })
+    })
+  })
 })

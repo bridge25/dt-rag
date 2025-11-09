@@ -397,6 +397,10 @@ class Agent(Base):
     features_config: Mapped[Dict[str, Any]] = mapped_column(
         get_json_type(), default=dict
     )
+    # @CODE:POKEMON-IMAGE-COMPLETE-001-DB-001 - Pokemon Avatar System
+    avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    rarity: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    character_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     last_query_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
