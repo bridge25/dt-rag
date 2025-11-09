@@ -1,7 +1,7 @@
 ---
 id: ROUTER-CONFLICT-001
-version: 0.0.1
-status: draft
+version: 0.1.0
+status: completed
 created: 2025-11-10
 updated: 2025-11-10
 author: @bridge25
@@ -14,6 +14,15 @@ scope: backend
 # SPEC-ROUTER-CONFLICT-001: API 라우터 엔드포인트 충돌 해결
 
 ## HISTORY
+
+### v0.1.0 - 2025-11-10 - COMPLETED
+- **작성자**: @bridge25
+- **변경 사항**:
+  - agent_factory_router 접두사 변경 (`/agents` → `/factory/agents`)
+  - 테스트 통과 확인 완료
+  - 문서 동기화 완료
+- **상태**: completed → 프로덕션 준비 완료
+- **Breaking Change**: Yes - agent_factory_router API 경로 변경 (`/api/v1/agents/{agent_id}` → `/api/v1/factory/agents/{agent_id}`)
 
 ### v0.0.1 - 2025-11-10 - INITIAL
 - **작성자**: @bridge25

@@ -494,6 +494,25 @@ python -m apps.api.main           # 포트 8000 (Main API)
 
 ## 📚 API 엔드포인트
 
+<!-- @DOC:ROUTER-CONFLICT-001 -->
+### ⚠️ API 경로 변경 사항 (v2.2.0)
+
+**Agent Factory Router 경로 변경** (2025-11-10):
+- **이전**: `GET /api/v1/agents/{agent_id}` (agent_factory_router)
+- **변경**: `GET /api/v1/factory/agents/{agent_id}` (agent_factory_router)
+- **영향**: agent_factory_router를 사용하는 클라이언트는 API 경로를 업데이트해야 합니다.
+- **하위 호환성**: `agent_router`는 기존 경로(`/api/v1/agents/{agent_id}`)를 유지합니다.
+
+**두 라우터의 역할 구분**:
+| 라우터 | 경로 | 용도 |
+|--------|------|------|
+| `agent_router` | `/api/v1/agents/{agent_id}` | AgentDAO 기반 CRUD 작업 (기존 경로 유지) |
+| `agent_factory_router` | `/api/v1/factory/agents/{agent_id}` | AgentFactoryService 기반 에이전트 생성/관리 |
+
+**세부사항**: [SPEC-ROUTER-CONFLICT-001](.moai/specs/SPEC-ROUTER-CONFLICT-001/spec.md)
+
+---
+
 ### 🔍 검색 API (실제 DB 쿼리)
 ```bash
 POST /api/v1/search
