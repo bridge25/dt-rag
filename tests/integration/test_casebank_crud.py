@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 # @TEST:CASEBANK-002:integration
 # @SPEC:CASEBANK-002
+# @TEST:CASEBANK-UNIFY-INTEGRATION-001
 
 import pytest
 import asyncio
@@ -9,6 +10,7 @@ from datetime import datetime
 from sqlalchemy import select, Integer, String, Float, DateTime, Text, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
+from sqlalchemy.types import JSON
 
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///test_casebank_integration.db"
 
@@ -16,14 +18,19 @@ TestBase = declarative_base()
 
 
 class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
+    """
+    @TEST:CASEBANK-UNIFY-INTEGRATION-001 - Test model synchronized with production schema
+    Updated to match apps/api/database.py CaseBank model
+    """
     __tablename__ = "case_bank"
 
     case_id: Mapped[str] = mapped_column(Text, primary_key=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
+    sources: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)  # Added
     category_path: Mapped[str] = mapped_column(Text, nullable=False)
+    quality: Mapped[Optional[float]] = mapped_column(Float)  # Renamed from quality_score
     query_vector: Mapped[str] = mapped_column(Text, nullable=False)
-    quality_score: Mapped[Optional[float]] = mapped_column(Float)
     usage_count: Mapped[Optional[int]] = mapped_column(Integer)
     success_rate: Mapped[Optional[float]] = mapped_column(Float)
     created_at: Mapped[Optional[datetime]] = mapped_column(
@@ -86,9 +93,10 @@ async def test_create_case_with_metadata():
             case_id="test-create-001",
             query="integration test query",
             answer="integration test response",
+            sources={"doc_id": "doc123"},  # Added
             category_path='["AI", "Integration"]',
             query_vector="[0.1, 0.2, 0.3]",
-            quality_score=0.95,
+            quality=0.95,  # Renamed from quality_score
             usage_count=10,
             success_rate=0.90,
             updated_by="integration_tester@example.com",
@@ -114,6 +122,7 @@ async def test_update_case_increments_version():
             case_id="test-version-002",
             query="test query",
             answer="test response",
+            sources={},
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )
@@ -140,6 +149,7 @@ async def test_case_status_lifecycle():
             case_id="test-lifecycle-003",
             query="test query",
             answer="test response",
+            sources={},
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             status="active",
@@ -170,6 +180,7 @@ async def test_query_by_status():
                 case_id=f"test-status-{i}",
                 query="test query",
                 answer="test response",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 status="active" if i % 2 == 0 else "archived",
@@ -197,6 +208,7 @@ async def test_updated_at_timestamp():
             case_id="test-timestamp-005",
             query="test query",
             answer="test response",
+            sources={},
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
         )

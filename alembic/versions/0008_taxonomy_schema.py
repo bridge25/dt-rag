@@ -121,6 +121,7 @@ def upgrade() -> None:
             END IF;
 
             -- 5. case_bank table
+            -- @CODE:CASEBANK-UNIFY-MIGRATION-001 - Updated field names to match production model
             IF NOT EXISTS (
                 SELECT 1 FROM information_schema.tables
                 WHERE table_name = 'case_bank'
@@ -128,11 +129,12 @@ def upgrade() -> None:
                 CREATE TABLE case_bank (
                     case_id TEXT PRIMARY KEY,
                     query TEXT NOT NULL,
-                    response_text TEXT NOT NULL,
+                    answer TEXT NOT NULL,  -- Changed from response_text
+                    sources JSONB NOT NULL DEFAULT '{}'::jsonb,  -- Added
                     category_path TEXT[] NOT NULL,
-                    query_vector FLOAT[] NOT NULL,
-                    quality_score FLOAT,
-                    usage_count INTEGER,
+                    query_vector FLOAT[],  -- Changed to nullable
+                    quality FLOAT,  -- Changed from quality_score
+                    usage_count INTEGER DEFAULT 0,  -- Added default
                     success_rate FLOAT,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
                     last_used_at TIMESTAMP WITH TIME ZONE
