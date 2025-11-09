@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 # @TEST:CONSOLIDATION-001:unit
 # @SPEC:CONSOLIDATION-001
+# @TEST:CASEBANK-UNIFY-UNIT-001
 
 import pytest
 import os
@@ -8,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import Integer, String, Float, DateTime, Text, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base
+from sqlalchemy.types import JSON
 
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///test_consolidation.db"
 
@@ -15,14 +17,19 @@ TestBase = declarative_base()
 
 
 class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
+    """
+    @TEST:CASEBANK-UNIFY-UNIT-001 - Test model synchronized with production schema
+    Updated to match apps/api/database.py CaseBank model
+    """
     __tablename__ = "case_bank"
 
     case_id: Mapped[str] = mapped_column(Text, primary_key=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
+    sources: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)  # Added
     category_path: Mapped[str] = mapped_column(Text, nullable=False)
+    quality: Mapped[Optional[float]] = mapped_column(Float)  # Renamed from quality_score
     query_vector: Mapped[str] = mapped_column(Text, nullable=False)
-    quality_score: Mapped[Optional[float]] = mapped_column(Float)
     usage_count: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     success_rate: Mapped[Optional[float]] = mapped_column(Float, default=100.0)
     created_at: Mapped[Optional[datetime]] = mapped_column(
@@ -87,6 +94,7 @@ async def test_remove_low_performance_cases():
                 case_id=f"low-perf-{i}",
                 query=f"query {i}",
                 answer=f"response {i}",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=25.0,
@@ -116,6 +124,7 @@ async def test_remove_low_performance_skip_high_usage():
             case_id="high-usage-001",
             query="important query",
             answer="important response",
+            sources={},
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
@@ -144,6 +153,7 @@ async def test_merge_duplicate_cases():
                 case_id="dup-case-1",
                 query="duplicate query",
                 answer="response 1",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=50,
@@ -153,6 +163,7 @@ async def test_merge_duplicate_cases():
                 case_id="dup-case-2",
                 query="duplicate query",
                 answer="response 2",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector=similar_vec,
                 usage_count=30,
@@ -185,6 +196,7 @@ async def test_merge_keep_higher_usage():
                 case_id="keep-this",
                 query="test query",
                 answer="response 1",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=100,
@@ -194,6 +206,7 @@ async def test_merge_keep_higher_usage():
                 case_id="remove-this",
                 query="test query",
                 answer="response 2",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector=vec,
                 usage_count=10,
@@ -229,6 +242,7 @@ async def test_archive_inactive_cases():
             case_id="inactive-001",
             query="old query",
             answer="old response",
+            sources={},
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             usage_count=50,
@@ -256,6 +270,7 @@ async def test_archive_skip_high_usage():
             case_id="high-usage-inactive-001",
             query="important old query",
             answer="important old response",
+            sources={},
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             usage_count=150,
@@ -281,6 +296,7 @@ async def test_dry_run_mode():
             case_id="dry-run-001",
             query="test query",
             answer="test response",
+            sources={},
             category_path='["AI", "Test"]',
             query_vector="[0.1, 0.2, 0.3]",
             success_rate=20.0,
@@ -339,6 +355,7 @@ async def test_run_consolidation_batch():
                 case_id="full-low-perf",
                 query="low perf query",
                 answer="response",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector="[0.1, 0.2, 0.3]",
                 success_rate=15.0,
@@ -348,6 +365,7 @@ async def test_run_consolidation_batch():
                 case_id="full-inactive",
                 query="inactive query",
                 answer="response",
+                sources={},
                 category_path='["AI", "Test"]',
                 query_vector="[0.2, 0.3, 0.4]",
                 usage_count=50,
