@@ -36,6 +36,7 @@ from fastapi.openapi.utils import get_openapi
 from apps.api.routers.health import router as health_router
 from apps.api.routers.search import router as search_legacy_router
 from apps.api.routers.taxonomy import router as taxonomy_legacy_router
+from apps.api.routers.classify import router as classify_legacy_router
 from apps.api.routers.ingestion import router as ingestion_router
 from apps.api.routers.taxonomy_router import taxonomy_router
 from apps.api.routers.search_router import search_router
@@ -510,6 +511,7 @@ async def redoc_html() -> Any:
 app.include_router(health_router, tags=["Health"])
 app.include_router(search_legacy_router, tags=["Search"])
 app.include_router(taxonomy_legacy_router, tags=["Taxonomy"])
+app.include_router(classify_legacy_router, tags=["Classification"])
 app.include_router(ingestion_router, tags=["Document Ingestion"])
 
 # Include new comprehensive API routers
