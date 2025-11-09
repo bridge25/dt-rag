@@ -193,7 +193,7 @@ class ReflectionEngine:
 
 Case ID: {case_id}
 Query: {case.query}
-Response: {case.response_text[:500]}...
+Response: {case.answer[:500]}...
 Success Rate: {performance['success_rate']}%
 Common Errors: {performance['common_errors']}
 Avg Execution Time: {performance['avg_execution_time_ms']}ms
