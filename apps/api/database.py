@@ -312,6 +312,19 @@ class CaseBank(Base):
     # @IMPL:REFLECTION-001:0.2 - Performance metrics
     success_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
+    # @CODE:CASEBANK-UNIFY-PROD-MODEL-001 - Additional fields for consolidation & reflection
+    query_vector: Mapped[Optional[List[float]]] = mapped_column(
+        ARRAY(Float), nullable=True, comment="Query embedding vector for similarity search"
+    )
+    usage_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, insert_default=0, server_default=text("0"),
+        comment="Number of times this case was matched"
+    )
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+        comment="Last time this case was used in a query"
+    )
+
 
 # @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.1
 class ExecutionLog(Base):
