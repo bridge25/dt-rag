@@ -128,9 +128,8 @@ async def search_agents(
         if max_results > 100:
             raise HTTPException(status_code=422, detail="max_results must be <= 100")
 
-        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
-        # TODO: AgentDAO.search_agents() method not implemented - should support name search
-        agents = await AgentDAO.search_agents(  # type: ignore[attr-defined]
+        # @CODE:AGENT-ROUTER-BUGFIX-001-C04 | Bug #4-5: search_agents method now implemented
+        agents = await AgentDAO.search_agents(
             session=session, query=q, max_results=max_results
         )
 
@@ -261,16 +260,15 @@ async def get_agent_coverage(
             last_coverage_update=datetime.utcnow(),
         )
 
+        # @CODE:AGENT-ROUTER-BUGFIX-001-C01 | Bug #1: Fix coverage_data type handling
+        # CoverageMetrics.node_coverage is Dict[str, int] (document count only)
+        # We need to provide proper structure with both document and chunk counts
         node_coverage = {}
         document_counts = {}
         target_counts = {}
+        coverage_data = {}
 
-        # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
-        # TODO: Schema mismatch - CoverageMetrics.node_coverage is Dict[str, int]
-        # but implementation uses Dict[str, Dict[str, int]]
-        for node_id, coverage_data in coverage_result.node_coverage.items():
-            doc_count = coverage_data.get("document_count", 0)  # type: ignore[attr-defined]
-            chunk_count = coverage_data.get("chunk_count", 0)  # type: ignore[attr-defined]
+        for node_id, doc_count in coverage_result.node_coverage.items():
             target_count = max(doc_count, 10)
 
             node_coverage[node_id] = (
@@ -278,6 +276,12 @@ async def get_agent_coverage(
             )
             document_counts[node_id] = doc_count
             target_counts[node_id] = target_count
+
+            # Populate coverage_data with structured information
+            coverage_data[node_id] = {
+                "document_count": doc_count,
+                "chunk_count": 0,  # CoverageMetrics doesn't provide per-node chunk count
+            }
 
         return CoverageResponse(
             agent_id=agent_id,
@@ -287,6 +291,7 @@ async def get_agent_coverage(
             target_counts=target_counts,
             version=agent.taxonomy_version,
             calculated_at=datetime.utcnow(),
+            coverage_data=coverage_data,
         )
 
     except HTTPException:
@@ -499,6 +504,11 @@ async def update_agent(
             raise HTTPException(status_code=404, detail=f"Agent not found: {agent_id}")
 
         update_fields = request.model_dump(exclude_unset=True)
+
+        # @CODE:AGENT-ROUTER-BUGFIX-001-C03 | Bug #3: Normalize rarity field to title case
+        if "rarity" in update_fields and update_fields["rarity"] is not None:
+            # Normalize rarity to title case (e.g., "common" -> "Common")
+            update_fields["rarity"] = update_fields["rarity"].capitalize()
 
         if update_fields:
             await AgentDAO.update_agent(

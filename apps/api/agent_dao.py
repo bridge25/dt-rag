@@ -194,3 +194,38 @@ class AgentDAO:
             )
 
         return updated_agent
+
+    # @CODE:AGENT-ROUTER-BUGFIX-001-C04 | Bug #4-5: Implement search_agents method
+    @staticmethod
+    async def search_agents(
+        session: AsyncSession,
+        query: Optional[str] = None,
+        max_results: int = 50,
+    ) -> List[Agent]:
+        """
+        Search agents by name using case-insensitive pattern matching.
+
+        Args:
+            session: Database session
+            query: Optional search query string (case-insensitive name search)
+            max_results: Maximum number of results to return (default: 50)
+
+        Returns:
+            List of Agent objects matching the search criteria
+        """
+        stmt = select(Agent).order_by(Agent.created_at.desc())
+
+        if query:
+            # Case-insensitive search using ilike
+            stmt = stmt.where(Agent.name.ilike(f"%{query}%"))
+
+        stmt = stmt.limit(max_results)
+
+        result = await session.execute(stmt)
+        agents = result.scalars().all()
+
+        logger.info(
+            f"Agent search: query='{query}', results={len(agents)}, max_results={max_results}"
+        )
+
+        return list(agents)

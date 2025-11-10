@@ -14,9 +14,17 @@ from apps.api.routers.agent_router import get_session
 async def mock_verify_api_key():
     return "test_key"
 
-
 async def mock_get_session():
-    return MagicMock()
+    mock_session = AsyncMock()
+    # Configure async methods for SQLAlchemy AsyncSession
+    mock_session.commit = AsyncMock()
+    mock_session.get = AsyncMock()
+    mock_session.execute = AsyncMock()
+    mock_session.refresh = AsyncMock()
+    mock_session.add = MagicMock()  # add is synchronous
+    return mock_session
+
+
 
 
 @pytest.fixture
@@ -52,12 +60,15 @@ def mock_agent():
         avg_response_time_ms=0.0,
         retrieval_config={"top_k": 5, "strategy": "hybrid"},
         features_config={},
+        avatar_url="/avatars/common/default-1.png",  # Added for SPEC-POKEMON-IMAGE-COMPLETE-001
+        rarity="Common",    # Added for SPEC-POKEMON-IMAGE-COMPLETE-001
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
         last_query_at=None,
     )
 
 
+# @TEST:AGENT-ROUTER-BUGFIX-001-T02
 def test_update_agent_success(test_client, mock_agent):
     with patch(
         "apps.api.routers.agent_router.AgentDAO.get_agent",
@@ -94,6 +105,7 @@ def test_update_agent_not_found(test_client):
         assert response.status_code == 404
 
 
+# @TEST:AGENT-ROUTER-BUGFIX-001-T03
 def test_update_agent_empty_update(test_client, mock_agent):
     with patch(
         "apps.api.routers.agent_router.AgentDAO.get_agent",
@@ -132,6 +144,7 @@ def test_delete_agent_not_found(test_client):
         assert response.status_code == 404
 
 
+# @TEST:AGENT-ROUTER-BUGFIX-001-T04
 def test_search_agents_with_query(test_client, mock_agent):
     with patch(
         "apps.api.routers.agent_router.AgentDAO.search_agents",
@@ -146,6 +159,7 @@ def test_search_agents_with_query(test_client, mock_agent):
         assert data["filters_applied"]["query"] == "test"
 
 
+# @TEST:AGENT-ROUTER-BUGFIX-001-T05
 def test_search_agents_no_query(test_client, mock_agent):
     with patch(
         "apps.api.routers.agent_router.AgentDAO.search_agents",
@@ -220,19 +234,52 @@ def test_refresh_coverage_background_false(test_client, mock_agent):
 
 
 def test_get_coverage_task_status(test_client, mock_agent):
-    with patch(
-        "apps.api.routers.agent_router.AgentDAO.get_agent",
-        new_callable=AsyncMock,
-        return_value=mock_agent,
-    ):
-        response = test_client.get(
-            f"/api/v1/agents/{mock_agent.agent_id}/coverage/status/task-123"
-        )
+    from apps.api.database import BackgroundTask
+    from unittest.mock import MagicMock
+    
+    mock_task = MagicMock(spec=BackgroundTask)
+    mock_task.task_id = "task-123"
+    mock_task.agent_id = mock_agent.agent_id
+    mock_task.task_type = "coverage_refresh"
+    mock_task.status = "completed"
+    mock_task.created_at = datetime.utcnow()
+    mock_task.started_at = None
+    mock_task.completed_at = None
+    mock_task.result = None
+    mock_task.error = None
+    
+    # Create a custom session override for this test
+    async def custom_session():
+        session = AsyncMock()
+        session.get = AsyncMock(return_value=mock_task)
+        session.commit = AsyncMock()
+        session.add = MagicMock()
+        return session
+    
+    from apps.api.main import app
+    from apps.api.routers.agent_router import get_session
+    
+    app.dependency_overrides[get_session] = custom_session
+    
+    try:
+        with patch(
+            "apps.api.routers.agent_router.AgentDAO.get_agent",
+            new_callable=AsyncMock,
+            return_value=mock_agent,
+        ):
+            response = test_client.get(
+                f"/api/v1/agents/{mock_agent.agent_id}/coverage/status/task-123"
+            )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "completed"
-        assert data["task_id"] == "task-123"
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "completed"
+            assert data["task_id"] == "task-123"
+    finally:
+        # Restore original override
+        from apps.api.deps import verify_api_key
+        app.dependency_overrides[verify_api_key] = mock_verify_api_key
+        app.dependency_overrides[get_session] = mock_get_session
 
 
 def test_get_coverage_history(test_client, mock_agent):
@@ -241,14 +288,19 @@ def test_get_coverage_history(test_client, mock_agent):
         new_callable=AsyncMock,
         return_value=mock_agent,
     ):
-        response = test_client.get(
-            f"/api/v1/agents/{mock_agent.agent_id}/coverage/history"
-        )
+        with patch(
+            "apps.api.routers.agent_router.CoverageHistoryDAO.query_history",
+            new_callable=AsyncMock,
+            return_value=[],  # Empty history
+        ):
+            response = test_client.get(
+                f"/api/v1/agents/{mock_agent.agent_id}/coverage/history"
+            )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert "history" in data
-        assert data["total_entries"] >= 0
+            assert response.status_code == 200
+            data = response.json()
+            assert "history" in data
+            assert data["total_entries"] >= 0
 
 
 def test_get_coverage_history_with_date_filters(test_client, mock_agent):
@@ -257,15 +309,20 @@ def test_get_coverage_history_with_date_filters(test_client, mock_agent):
         new_callable=AsyncMock,
         return_value=mock_agent,
     ):
-        response = test_client.get(
-            f"/api/v1/agents/{mock_agent.agent_id}/coverage/history"
-            "?start_date=2025-10-01T00:00:00Z&end_date=2025-10-12T23:59:59Z"
-        )
+        with patch(
+            "apps.api.routers.agent_router.CoverageHistoryDAO.query_history",
+            new_callable=AsyncMock,
+            return_value=[],  # Empty history
+        ):
+            response = test_client.get(
+                f"/api/v1/agents/{mock_agent.agent_id}/coverage/history"
+                "?start_date=2025-10-01T00:00:00Z&end_date=2025-10-12T23:59:59Z"
+            )
 
-        assert response.status_code == 200
-        data = response.json()
-        assert data["start_date"] is not None
-        assert data["end_date"] is not None
+            assert response.status_code == 200
+            data = response.json()
+            assert data["start_date"] is not None
+            assert data["end_date"] is not None
 
 
 def test_query_agent_stream_endpoint_exists(test_client, mock_agent):
