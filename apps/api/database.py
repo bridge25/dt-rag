@@ -313,8 +313,9 @@ class CaseBank(Base):
     success_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # @CODE:CASEBANK-UNIFY-PROD-MODEL-001 - Additional fields for consolidation & reflection
+    # @CODE:TAG-CASEBANK-VECTOR-TYPE-001 - Optimized Vector type for HNSW indexing
     query_vector: Mapped[Optional[List[float]]] = mapped_column(
-        ARRAY(Float), nullable=True, comment="Query embedding vector for similarity search"
+        Vector(1536), nullable=True, comment="Query embedding vector for similarity search"
     )
     usage_count: Mapped[int] = mapped_column(
         Integer, nullable=False, insert_default=0, server_default=text("0"),
