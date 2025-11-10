@@ -22,16 +22,23 @@ class ConsolidationPolicy:
     - Dry-run mode
     """
 
-    def __init__(self, db_session: AsyncSession, dry_run: bool = False):
+    def __init__(
+        self,
+        db_session: AsyncSession,
+        dry_run: bool = False,
+        model_class: Optional[Any] = None
+    ):
         """
         Initialize Consolidation Policy.
 
         Args:
             db_session: Async database session
             dry_run: If True, simulate without actual changes
+            model_class: Optional model class for testing (defaults to production CaseBank)
         """
         self.db = db_session
         self.dry_run = dry_run
+        self.model_class = model_class  # @CODE:TAG-CASEBANK-TEST-MODEL-002
         self.removed_cases: list[str] = []
         self.merged_cases: list[str] = []
         self.archived_cases: list[str] = []
@@ -98,14 +105,19 @@ class ConsolidationPolicy:
         Returns:
             List of archived case IDs
         """
-        from apps.api.database import CaseBank
+        # @CODE:TAG-CASEBANK-TEST-MODEL-002 - Support model class injection for testing
+        if self.model_class is None:
+            from apps.api.database import CaseBank
+            model_cls = CaseBank
+        else:
+            model_cls = self.model_class
 
-        stmt = select(CaseBank).where(
+        stmt = select(model_cls).where(
             and_(
-                CaseBank.status == "active",
-                CaseBank.success_rate < threshold,
-                CaseBank.usage_count > 10,
-                CaseBank.usage_count < 500,
+                model_cls.status == "active",
+                model_cls.success_rate < threshold,
+                model_cls.usage_count > 10,
+                model_cls.usage_count < 500,
             )
         )
         result = await self.db.execute(stmt)
@@ -147,12 +159,17 @@ class ConsolidationPolicy:
         Returns:
             List of merge result dicts
         """
-        from apps.api.database import CaseBank
+        # @CODE:TAG-CASEBANK-TEST-MODEL-002 - Support model class injection for testing
+        if self.model_class is None:
+            from apps.api.database import CaseBank
+            model_cls = CaseBank
+        else:
+            model_cls = self.model_class
 
-        stmt = select(CaseBank).where(
+        stmt = select(model_cls).where(
             and_(
-                CaseBank.status == "active",
-                CaseBank.query_vector.isnot(None),
+                model_cls.status == "active",
+                model_cls.query_vector.isnot(None),
             )
         )
         result = await self.db.execute(stmt)
@@ -231,16 +248,21 @@ class ConsolidationPolicy:
         Returns:
             List of archived case IDs
         """
-        from apps.api.database import CaseBank
+        # @CODE:TAG-CASEBANK-TEST-MODEL-002 - Support model class injection for testing
+        if self.model_class is None:
+            from apps.api.database import CaseBank
+            model_cls = CaseBank
+        else:
+            model_cls = self.model_class
 
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
 
-        stmt = select(CaseBank).where(
+        stmt = select(model_cls).where(
             and_(
-                CaseBank.status == "active",
-                CaseBank.last_used_at.isnot(None),
-                CaseBank.last_used_at < cutoff_date,
-                CaseBank.usage_count < 100,
+                model_cls.status == "active",
+                model_cls.last_used_at.isnot(None),
+                model_cls.last_used_at < cutoff_date,
+                model_cls.usage_count < 100,
             )
         )
         result = await self.db.execute(stmt)
