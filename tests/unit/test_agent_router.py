@@ -112,6 +112,7 @@ def test_create_agent_missing_api_key(test_client_no_auth):
     assert response.status_code == 403
 
 
+# @TEST:ROUTER-CONFLICT-001
 def test_get_agent_success(test_client, mock_agent):
     with patch(
         "apps.api.routers.agent_router.AgentDAO.get_agent",
