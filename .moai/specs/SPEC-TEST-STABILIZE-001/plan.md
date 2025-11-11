@@ -166,7 +166,23 @@ pytest tests/path/to/affected_test.py -v
 
 ## PHASE 2: Hybrid Search Authentication Fix
 
-### 목표
+### 구현 결과 (v0.1.0)
+
+- ✅ **3개 테스트에 인증 우회 적용** (계획: 2개, 실제: 3개)
+  - `test_vector_search_timeout_fallback` (Line 110-151)
+  - `test_embedding_generation_failure_fallback` (Line 174-214)
+  - `test_feature_flag_off_bm25_only` (Line 237-277)
+- ✅ **의존성 오버라이드 패턴 사용** (Option A)
+  - `app.dependency_overrides[verify_api_key] = mock_verify_api_key`
+  - 일관된 FastAPI 표준 패턴 적용
+- ✅ **모든 테스트에서 200 OK 응답 수신**
+  - 403 Forbidden 오류 완전히 제거
+  - JSON 응답 검증 성공
+- ✅ **try-finally로 안전한 오버라이드 정리**
+  - 테스트 실패 시에도 의존성 오버라이드 정리 보장
+  - 테스트 격리 유지
+
+### 목표 (계획)
 
 `tests/integration/test_hybrid_search.py`의 Hybrid Search 테스트 2개에 인증 우회를 적용하여 403 오류를 해결합니다.
 
@@ -533,7 +549,24 @@ print(f"Response body: {response.text}")
 
 ## DELIVERABLES
 
-### 수정 파일 목록
+### 실제 수정 파일 목록 (v0.1.0)
+
+1. **`tests/conftest.py`** (+16 lines, -1 line)
+   - Line 122-133: `async_client` 픽스처로 이름 변경
+   - Line 174-181: `api_client` 별칭 추가 (하위 호환성 보장)
+   - @CODE:FIXTURE-RENAME TAG 추가
+
+2. **`tests/integration/test_hybrid_search.py`** (+72 lines)
+   - Line 110-151: `test_vector_search_timeout_fallback` 인증 우회
+   - Line 174-214: `test_embedding_generation_failure_fallback` 인증 우회
+   - Line 237-277: `test_feature_flag_off_bm25_only` 인증 우회
+   - @CODE:AUTH-BYPASS TAG 추가
+   - `app.dependency_overrides` 패턴 적용
+   - try-finally 블록으로 안전한 정리
+
+**총 변경량**: 2 files changed, 88 insertions(+), 1 deletion(-)
+
+### 계획된 수정 파일 목록
 
 1. `tests/conftest.py` - 픽스처 이름 변경
 2. `tests/integration/test_hybrid_search.py` - 인증 우회 적용

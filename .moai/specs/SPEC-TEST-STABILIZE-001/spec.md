@@ -2,8 +2,8 @@
 
 ---
 id: TEST-STABILIZE-001
-version: 0.0.1
-status: draft
+version: 0.1.0
+status: completed
 created: 2025-11-11
 updated: 2025-11-11
 author: Alfred (MoAI-ADK)
@@ -26,6 +26,34 @@ related_specs: [SPEC-AGENT-ROUTER-BUGFIX-001]
 ---
 
 ## HISTORY
+
+### v0.1.0 (2025-11-11)
+- ✅ **Reflection API 픽스처 수정 완료** (4개 테스트 통과)
+  - `tests/conftest.py` Line 122: `api_client` → `async_client` 픽스처 이름 변경
+  - Line 174: `api_client` 별칭 추가 (하위 호환성 보장)
+  - @CODE:FIXTURE-RENAME TAG 추가 (Line 131, 178)
+
+- ✅ **Hybrid Search 인증 우회 적용 완료** (3개 테스트 통과)
+  - `tests/integration/test_hybrid_search.py` 3개 테스트 수정:
+    - Line 110-151: `test_vector_search_timeout_fallback` (neural case selector enabled)
+    - Line 174-214: `test_embedding_generation_failure_fallback` (BM25 fallback)
+    - Line 237-277: `test_feature_flag_off_bm25_only` (neural feature flag OFF)
+  - @CODE:AUTH-BYPASS TAG 추가 (Line 110, 174, 237)
+  - `app.dependency_overrides` 패턴 적용
+  - try-finally로 안전한 오버라이드 정리
+
+- ✅ **TAG 체인 완료**
+  - @SPEC:TEST-STABILIZE-001 → @CODE:FIXTURE-RENAME
+  - @SPEC:TEST-STABILIZE-001 → @CODE:AUTH-BYPASS
+  - tag-agent 검증 완료 (체인 무결성 확인)
+
+- ✅ **총 7개 테스트 안정화 완료** (계획: 6개, 실제: 7개)
+  - Reflection API: 4개 테스트 PASSED
+  - Hybrid Search: 3개 테스트 PASSED
+  - 회귀 없음 (기존 통과 테스트 유지)
+
+- 📝 **Git 커밋**: 04f1391 "test(stabilize): Fix fixture mismatch and auth bypass for 6 failing tests"
+  - 2 files changed, 88 insertions(+), 1 deletion(-)
 
 ### v0.0.1 (2025-11-11)
 - Initial SPEC 작성
@@ -186,14 +214,15 @@ Hybrid Search 테스트는 403 인증 오류 없이 200 응답을 받아야 합�
 - ERROR 상태에서 PASSED 상태로 전환
 - 테스트 실행 시간 정상화
 
-### Problem 2: Hybrid Search Authentication Bypass (2 test failures)
+### Problem 2: Hybrid Search Authentication Bypass (3 test failures)
 
 **위치**: `tests/integration/test_hybrid_search.py`
 **근본 원인**: TestClient가 의존성 오버라이드 없이 생성되어 403 인증 오류 발생
 
 **영향받는 테스트**:
-1. Line 189-202: Hybrid search without neural reranking
-2. Line 204-217: Hybrid search with neural reranking
+1. Line 110-151: `test_vector_search_timeout_fallback` - Vector search timeout with case selector
+2. Line 174-214: `test_embedding_generation_failure_fallback` - Embedding failure with BM25 fallback
+3. Line 237-277: `test_feature_flag_off_bm25_only` - Neural feature flag OFF, BM25 only mode
 
 **수정 전략 (옵션 A - 권장)**:
 - `conftest.py`의 `verify_api_key` 의존성 오버라이드 픽스처 적용
@@ -206,9 +235,15 @@ Hybrid Search 테스트는 403 인증 오류 없이 200 응답을 받아야 합�
 - 헤더 기반 인증 우회
 
 **기대 결과**:
-- 2개 테스트 모두 200 OK 응답 수신
+- 3개 테스트 모두 200 OK 응답 수신
 - 403 Forbidden 에러 제거
 - 검색 결과 JSON 응답 검증 성공
+
+**실제 구현 결과 (v0.1.0)**:
+- ✅ 3개 테스트 모두 인증 우회 적용 완료
+- ✅ `app.dependency_overrides[verify_api_key] = mock_verify_api_key` 패턴 사용
+- ✅ try-finally 블록으로 안전한 정리 보장
+- ✅ 모든 테스트에서 200 OK 응답 확인
 
 ---
 
@@ -306,17 +341,26 @@ Hybrid Search 테스트는 403 인증 오류 없이 200 응답을 받아야 합�
 
 ### 핵심 기준
 
-1. ✅ Reflection API 4개 테스트가 픽스처 오류 없이 통과
-2. ✅ Hybrid Search 2개 테스트가 403 오류 없이 200 응답 수신
-3. ✅ 기존 68개 통과 테스트 유지 (회귀 없음)
-4. ✅ CI 파이프라인에서 74개 테스트 통과 (68 + 6)
-5. ✅ 프로덕션 코드 무변경 (테스트 파일만 수정)
+1. ✅ Reflection API 4개 테스트가 픽스처 오류 없이 통과 (v0.1.0 완료)
+2. ✅ Hybrid Search 3개 테스트가 403 오류 없이 200 응답 수신 (v0.1.0 완료)
+3. ✅ 기존 68개 통과 테스트 유지 (회귀 없음, v0.1.0 검증 완료)
+4. ✅ CI 파이프라인에서 75개 테스트 통과 (68 + 7, v0.1.0 달성)
+5. ✅ 프로덕션 코드 무변경 (테스트 파일만 수정, v0.1.0 준수)
 
 ---
 
 ## NOTES (참고 사항)
 
-### 개발 노트
+### 구현 노트 (v0.1.0)
+
+- **실제 소요 시간**: 약 15분 (계획: 5-10분, 초과 원인: 3개 테스트 발견)
+- **수정 범위 확장**: 계획 6개 → 실제 7개 테스트 (Hybrid Search 2개 → 3개)
+- **하위 호환성**: `api_client` 별칭 추가로 기존 테스트 영향 최소화
+- **TAG 체인 완료**: @SPEC → @CODE 연결 완료 (tag-agent 검증)
+- **패턴 적용**: 의존성 오버라이드 패턴 (Option A) 일관되게 적용
+- **회귀 없음**: 기존 통과 테스트 전부 유지 확인
+
+### 개발 노트 (계획)
 
 - Phase 1은 빠른 수정에 집중 (5-10분 내 완료 가능)
 - 나머지 14개 실패는 Phase 2에서 더 복잡한 수정 필요
