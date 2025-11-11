@@ -119,7 +119,7 @@ def mock_httpx_client():
 
 
 @pytest.fixture
-async def api_client() -> AsyncGenerator:
+async def async_client() -> AsyncGenerator:
     """
     Async HTTP client for integration tests
 
@@ -127,6 +127,9 @@ async def api_client() -> AsyncGenerator:
     for testing async API endpoints without running a real server.
 
     Overrides verify_api_key dependency to avoid DB/Redis hang in CI/CD.
+
+    @CODE:FIXTURE-RENAME | SPEC-TEST-STABILIZE-001: Renamed from api_client to async_client
+    to match standard naming convention. Backward compatibility maintained via api_client alias.
     """
     from httpx import AsyncClient, ASGITransport
     from apps.api.main import app
@@ -165,6 +168,17 @@ async def api_client() -> AsyncGenerator:
 
     # Clean up override
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def api_client(async_client) -> AsyncGenerator:
+    """
+    Backward compatibility alias for async_client fixture.
+
+    @CODE:FIXTURE-RENAME | SPEC-TEST-STABILIZE-001: Alias to maintain compatibility
+    with existing tests that use api_client parameter name.
+    """
+    yield async_client
 
 
 @pytest.fixture
