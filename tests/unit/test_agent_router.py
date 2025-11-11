@@ -177,6 +177,7 @@ def test_list_agents_exceeding_max_results(test_client):
     assert response.status_code == 422
 
 
+# @TEST:AGENT-ROUTER-BUGFIX-001-T01
 def test_get_agent_coverage_success(test_client, mock_agent):
     coverage_metrics = CoverageMetrics(
         total_nodes=10,
@@ -209,6 +210,9 @@ def test_get_agent_coverage_success(test_client, mock_agent):
                 assert response.status_code == 200
                 data = response.json()
                 assert data["overall_coverage"] == 75.0
+                # @TEST:AGENT-ROUTER-BUGFIX-001-T01 | Bug #1: Verify coverage_data field exists
+                assert "coverage_data" in data
+                assert isinstance(data["coverage_data"], dict)
 
 
 def test_detect_coverage_gaps_success(test_client, mock_agent):

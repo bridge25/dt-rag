@@ -20,6 +20,7 @@ TestBase = declarative_base()
 class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
     """
     @TEST:CASEBANK-UNIFY-INTEGRATION-001 - Test model synchronized with production schema
+    @TEST:TAG-CASEBANK-TEST-MODEL-002 - Fixed query_vector type for SQLite compatibility
     Updated to match apps/api/database.py CaseBank model
     """
     __tablename__ = "case_bank"
@@ -30,7 +31,11 @@ class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
     sources: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)  # Added
     category_path: Mapped[str] = mapped_column(Text, nullable=False)
     quality: Mapped[Optional[float]] = mapped_column(Float)  # Renamed from quality_score
-    query_vector: Mapped[str] = mapped_column(Text, nullable=False)
+    # @CODE:TAG-CASEBANK-TEST-MODEL-002 - JSON-serialized vector for SQLite compatibility
+    query_vector: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True,
+        comment="JSON-serialized List[float] for SQLite test compatibility"
+    )
     usage_count: Mapped[Optional[int]] = mapped_column(Integer)
     success_rate: Mapped[Optional[float]] = mapped_column(Float)
     created_at: Mapped[Optional[datetime]] = mapped_column(

@@ -5,8 +5,9 @@ from pydantic import BaseModel, Field, UUID4, ConfigDict
 from typing import List, Optional, Dict, Any, Literal
 from datetime import datetime
 
+# @CODE:AGENT-ROUTER-BUGFIX-001-C02 | Bug #2: Update Rarity type to support lowercase
 # Pokemon Avatar System Types
-Rarity = Literal["Common", "Rare", "Epic", "Legendary"]
+Rarity = Literal["Common", "Rare", "Epic", "Legendary", "common", "rare", "epic", "legendary"]
 
 
 class AgentCreateRequest(BaseModel):
@@ -119,6 +120,7 @@ class AgentListResponse(BaseModel):
     )
 
 
+# @CODE:AGENT-ROUTER-BUGFIX-001-C01
 class CoverageResponse(BaseModel):
     agent_id: UUID4 = Field(..., description="Agent ID")
     overall_coverage: float = Field(
@@ -131,6 +133,9 @@ class CoverageResponse(BaseModel):
     target_counts: Dict[str, int] = Field(..., description="Per-node target count")
     version: str = Field(..., description="Taxonomy version")
     calculated_at: datetime = Field(..., description="Calculation timestamp")
+    coverage_data: Dict[str, Any] = Field(
+        ..., description="Raw coverage data with document and chunk counts per node"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -143,6 +148,12 @@ class CoverageResponse(BaseModel):
                     "target_counts": {"550e8400-e29b-41d4-a716-446655440000": 125},
                     "version": "1.0.0",
                     "calculated_at": "2025-10-12T10:30:00Z",
+                    "coverage_data": {
+                        "550e8400-e29b-41d4-a716-446655440000": {
+                            "document_count": 100,
+                            "chunk_count": 500
+                        }
+                    },
                 }
             ]
         }

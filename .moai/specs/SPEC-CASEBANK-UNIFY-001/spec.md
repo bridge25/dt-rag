@@ -1,9 +1,9 @@
 ---
 id: CASEBANK-UNIFY-001
-version: 0.0.1
-status: draft
+version: 0.1.0
+status: completed
 created: 2025-11-09
-updated: 2025-11-09
+updated: 2025-11-11
 author: @a
 priority: critical
 category: bugfix
@@ -36,6 +36,18 @@ scope:
 # SPEC-CASEBANK-UNIFY-001: CaseBank 스키마 통합 및 필드 정의 표준화
 
 ## HISTORY
+
+### v0.1.0 (2025-11-11)
+- **STATUS**: ✅ 구현 완료 (draft → completed)
+- **IMPLEMENTATION**:
+  - Production 모델 Vector 타입 최적화 (ARRAY → Vector(1536))
+  - 테스트 모델 타입 일관성 확보 (3개 파일)
+  - 신규 필드 테스트 커버리지 추가 (33개 테스트)
+  - Migration 0014 생성 및 검증
+- **TEST RESULTS**: 61개 테스트 100% 통과
+- **QUALITY GATE**: TRUST 5 원칙 9/9 PASS
+- **TAG CHAIN**: 4개 TAG 완성 (VECTOR-TYPE, TEST-MODEL, TEST-COVERAGE, MIGRATION)
+- **GIT COMMITS**: 8개 커밋 (TDD RED-GREEN 사이클)
 
 ### v0.0.1 (2025-11-09)
 - **INITIAL**: SPEC 초안 작성

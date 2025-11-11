@@ -1,6 +1,9 @@
 """
 실제 PostgreSQL 데이터베이스 연결 및 스키마 관리
 시뮬레이션 제거, 실제 DB 연결 구현
+
+@CODE:CASEBANK-UNIFY-PROD-MODEL-001
+CaseBankEntry 모델 필드 정의 (query_vector, usage_count, last_used_at)
 """
 
 import os
@@ -313,8 +316,9 @@ class CaseBank(Base):
     success_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # @CODE:CASEBANK-UNIFY-PROD-MODEL-001 - Additional fields for consolidation & reflection
+    # @CODE:TAG-CASEBANK-VECTOR-TYPE-001 - Optimized Vector type for HNSW indexing
     query_vector: Mapped[Optional[List[float]]] = mapped_column(
-        ARRAY(Float), nullable=True, comment="Query embedding vector for similarity search"
+        Vector(1536), nullable=True, comment="Query embedding vector for similarity search"
     )
     usage_count: Mapped[int] = mapped_column(
         Integer, nullable=False, insert_default=0, server_default=text("0"),

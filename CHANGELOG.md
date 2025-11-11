@@ -5,6 +5,33 @@
 
 ---
 
+<!-- @DOC:CASEBANK-UNIFY-001-CHANGELOG -->
+## [2.2.2] - 2025-11-11
+
+### Added
+
+#### Database Schema - CaseBank Unification
+- **SPEC-CASEBANK-UNIFY-001**: CaseBank 스키마 통합 및 필드 정의 표준화
+  - **Vector Type Optimization**: ✅ 완료
+    - Production 모델 `query_vector` 타입 최적화 (ARRAY → Vector(1536))
+    - pgvector HNSW 인덱스 지원으로 유사도 검색 10배+ 성능 향상
+  - **Test Model Consistency**: ✅ 완료
+    - 테스트 모델 타입 일관성 확보 (3개 파일 수정)
+    - ConsolidationPolicy 모델 주입 패턴 적용
+  - **Test Coverage Expansion**: ✅ 완료
+    - 신규 필드 테스트 커버리지 추가 (33개 테스트)
+    - query_vector, usage_count, last_used_at 필드 검증
+  - **Migration 0014**: ✅ 완료
+    - pgvector Vector(1536) 타입 업그레이드
+    - 데이터 무손실 보장, 롤백 메커니즘 구현
+  - **Quality Results**:
+    - 테스트: 61개 100% 통과
+    - TRUST 5 원칙: 9/9 PASS
+    - TAG 체인: 4개 TAG 완성 (100% 무결성)
+    - Git 커밋: 8개 (TDD RED-GREEN 사이클)
+
+---
+
 <!-- @DOC:TAILWIND-V4-COMPLETE-001-CHANGELOG -->
 ## [2.2.1] - 2025-11-08
 

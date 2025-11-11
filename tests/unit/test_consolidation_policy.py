@@ -19,6 +19,7 @@ TestBase = declarative_base()
 class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
     """
     @TEST:CASEBANK-UNIFY-UNIT-001 - Test model synchronized with production schema
+    @TEST:TAG-CASEBANK-TEST-MODEL-002 - Fixed query_vector type for SQLite compatibility
     Updated to match apps/api/database.py CaseBank model
     """
     __tablename__ = "case_bank"
@@ -29,7 +30,11 @@ class TestCaseBank(TestBase):  # type: ignore[misc,valid-type]
     sources: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)  # Added
     category_path: Mapped[str] = mapped_column(Text, nullable=False)
     quality: Mapped[Optional[float]] = mapped_column(Float)  # Renamed from quality_score
-    query_vector: Mapped[str] = mapped_column(Text, nullable=False)
+    # @CODE:TAG-CASEBANK-TEST-MODEL-002 - JSON-serialized vector for SQLite compatibility
+    query_vector: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True,
+        comment="JSON-serialized List[float] for SQLite test compatibility"
+    )
     usage_count: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     success_rate: Mapped[Optional[float]] = mapped_column(Float, default=100.0)
     created_at: Mapped[Optional[datetime]] = mapped_column(
@@ -106,7 +111,8 @@ async def test_remove_low_performance_cases():
             session.add(case)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=False)
+        # @CODE:TAG-CASEBANK-TEST-MODEL-002 - Pass test model class
+        policy = ConsolidationPolicy(session, dry_run=False, model_class=TestCaseBank)
         removed_ids = await policy.remove_low_performance_cases(threshold=30.0)
 
         assert len(removed_ids) == 3
@@ -133,7 +139,7 @@ async def test_remove_low_performance_skip_high_usage():
         session.add(high_usage_case)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=False)
+        policy = ConsolidationPolicy(session, dry_run=False, model_class=TestCaseBank)
         removed_ids = await policy.remove_low_performance_cases(threshold=30.0)
 
         assert len(removed_ids) == 0
@@ -174,7 +180,7 @@ async def test_merge_duplicate_cases():
             session.add(case)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=False)
+        policy = ConsolidationPolicy(session, dry_run=False, model_class=TestCaseBank)
         merged_pairs = await policy.merge_duplicate_cases(similarity_threshold=0.95)
 
         assert len(merged_pairs) >= 1
@@ -217,7 +223,7 @@ async def test_merge_keep_higher_usage():
             session.add(case)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=False)
+        policy = ConsolidationPolicy(session, dry_run=False, model_class=TestCaseBank)
         merged_pairs = await policy.merge_duplicate_cases(similarity_threshold=0.95)
 
         assert len(merged_pairs) >= 1
@@ -251,7 +257,7 @@ async def test_archive_inactive_cases():
         session.add(inactive_case)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=False)
+        policy = ConsolidationPolicy(session, dry_run=False, model_class=TestCaseBank)
         archived_ids = await policy.archive_inactive_cases(days=90)
 
         assert len(archived_ids) == 1
@@ -279,7 +285,7 @@ async def test_archive_skip_high_usage():
         session.add(high_usage_inactive)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=False)
+        policy = ConsolidationPolicy(session, dry_run=False, model_class=TestCaseBank)
         archived_ids = await policy.archive_inactive_cases(days=90)
 
         assert len(archived_ids) == 0
@@ -306,7 +312,7 @@ async def test_dry_run_mode():
         session.add(low_perf_case)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=True)
+        policy = ConsolidationPolicy(session, dry_run=True, model_class=TestCaseBank)
         removed_ids = await policy.remove_low_performance_cases(threshold=30.0)
 
         assert len(removed_ids) == 1
@@ -324,7 +330,7 @@ async def test_calculate_similarity():
     from apps.orchestration.src.consolidation_policy import ConsolidationPolicy
 
     async with test_async_session() as session:
-        policy = ConsolidationPolicy(session, dry_run=True)
+        policy = ConsolidationPolicy(session, dry_run=True, model_class=TestCaseBank)
 
         vec1 = [1.0, 0.0, 0.0]
         vec2 = [1.0, 0.0, 0.0]
@@ -376,7 +382,7 @@ async def test_run_consolidation_batch():
             session.add(case)
         await session.commit()
 
-        policy = ConsolidationPolicy(session, dry_run=False)
+        policy = ConsolidationPolicy(session, dry_run=False, model_class=TestCaseBank)
         results = await policy.run_consolidation(
             low_perf_threshold=30.0, similarity_threshold=0.95, inactive_days=90
         )
