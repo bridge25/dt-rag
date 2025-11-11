@@ -1,4 +1,6 @@
 # @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.2
+# @CODE:CASEBANK-UNIFY-REFLECTION-FIX-001
+# response_text → answer 필드명 수정
 
 import logging
 from typing import List, Dict, Any, Optional, cast

@@ -1,4 +1,6 @@
 # @SPEC:CONSOLIDATION-001 @IMPL:CONSOLIDATION-001:0.1
+# @CODE:CASEBANK-UNIFY-CONSOLIDATION-FIX-001
+# Consolidation 엔진 필드 안전 접근 구현
 
 import logging
 from typing import List, Dict, Any, Optional, Union

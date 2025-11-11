@@ -1,6 +1,9 @@
 """
 실제 PostgreSQL 데이터베이스 연결 및 스키마 관리
 시뮬레이션 제거, 실제 DB 연결 구현
+
+@CODE:CASEBANK-UNIFY-PROD-MODEL-001
+CaseBankEntry 모델 필드 정의 (query_vector, usage_count, last_used_at)
 """
 
 import os
