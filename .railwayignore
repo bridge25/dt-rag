@@ -1,0 +1,64 @@
+# Railway Ignore File - Exclude unnecessary files from deployment
+
+# Frontend files (deployed separately on Vercel)
+frontend/
+node_modules/
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+
+# Tests
+tests/
+test_failures.log
+final_test_run.log
+*.test.py
+*_test.py
+test_*.py
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# MoAI-ADK project files
+.moai/
+.claude/
+CLAUDE*.md
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+
+# Cache
+.cache/
+*.log
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db

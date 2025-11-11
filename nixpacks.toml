@@ -1,0 +1,20 @@
+# Nixpacks configuration for Railway deployment
+# Learn more: https://nixpacks.com/docs/configuration/file
+
+[phases.setup]
+nixPkgs = ["python311", "postgresql", "gcc"]
+aptPkgs = ["build-essential", "libpq-dev"]
+
+[phases.install]
+cmds = [
+  "pip install --upgrade pip",
+  "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+  "echo 'Build phase complete'"
+]
+
+[start]
+cmd = "alembic upgrade head && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT --workers 2"

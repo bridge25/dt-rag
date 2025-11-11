@@ -1,0 +1,24 @@
+# Railway Configuration for dt-rag Backend
+# This file configures the backend API service deployment on Railway
+
+[build]
+builder = "nixpacks"
+buildCommand = "pip install --upgrade pip && pip install -r requirements.txt"
+
+[deploy]
+startCommand = "alembic upgrade head && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 3
+
+[env]
+# Python environment
+PYTHON_VERSION = "3.11"
+PYTHONUNBUFFERED = "1"
+PYTHONDONTWRITEBYTECODE = "1"
+
+# Application environment
+ENVIRONMENT = "production"
+API_V1_STR = "/api/v1"
+PROJECT_NAME = "DT-RAG"
