@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# @CODE:HOOKS-CLARITY-001 | SPEC: Individual hook files for better UX
+# @CODE:HOOKS-CLARITY-LOG | SPEC: Individual hook files for better UX
 """PostToolUse Hook: Log Tool Usage and Changes
 
 Claude Code Event: PostToolUse
@@ -11,7 +11,6 @@ Output: Continue execution (currently a stub for future enhancements)
 """
 
 import json
-import signal
 import sys
 from pathlib import Path
 from typing import Any
@@ -22,17 +21,9 @@ SHARED_DIR = HOOKS_DIR / "shared"
 if str(SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(SHARED_DIR))
 
-from handlers import handle_post_tool_use
-
-
-class HookTimeoutError(Exception):
-    """Hook execution timeout exception"""
-    pass
-
-
-def _timeout_handler(signum, frame):
-    """Signal handler for 5-second timeout"""
-    raise HookTimeoutError("Hook execution exceeded 5-second timeout")
+from handlers import handle_post_tool_use  # noqa: E402
+from utils.timeout import CrossPlatformTimeout  # noqa: E402
+from utils.timeout import TimeoutError as PlatformTimeoutError  # noqa: E402
 
 
 def main() -> None:
@@ -48,8 +39,8 @@ def main() -> None:
         1: Error (timeout, JSON parse failure, handler exception)
     """
     # Set 5-second timeout
-    signal.signal(signal.SIGALRM, _timeout_handler)
-    signal.alarm(5)
+    timeout = CrossPlatformTimeout(5)
+    timeout.start()
 
     try:
         # Read JSON payload from stdin
@@ -63,11 +54,11 @@ def main() -> None:
         print(json.dumps(result.to_dict()))
         sys.exit(0)
 
-    except HookTimeoutError:
+    except PlatformTimeoutError:
         # Timeout - return minimal valid response
         timeout_response: dict[str, Any] = {
             "continue": True,
-            "systemMessage": "⚠️ PostToolUse timeout - continuing"
+            "systemMessage": "⚠️ PostToolUse timeout - continuing",
         }
         print(json.dumps(timeout_response))
         print("PostToolUse hook timeout after 5 seconds", file=sys.stderr)
@@ -77,7 +68,7 @@ def main() -> None:
         # JSON parse error
         error_response: dict[str, Any] = {
             "continue": True,
-            "hookSpecificOutput": {"error": f"JSON parse error: {e}"}
+            "hookSpecificOutput": {"error": f"JSON parse error: {e}"},
         }
         print(json.dumps(error_response))
         print(f"PostToolUse JSON parse error: {e}", file=sys.stderr)
@@ -87,7 +78,7 @@ def main() -> None:
         # Unexpected error
         error_response: dict[str, Any] = {
             "continue": True,
-            "hookSpecificOutput": {"error": f"PostToolUse error: {e}"}
+            "hookSpecificOutput": {"error": f"PostToolUse error: {e}"},
         }
         print(json.dumps(error_response))
         print(f"PostToolUse unexpected error: {e}", file=sys.stderr)
@@ -95,7 +86,7 @@ def main() -> None:
 
     finally:
         # Always cancel alarm
-        signal.alarm(0)
+        timeout.cancel()
 
 
 if __name__ == "__main__":
