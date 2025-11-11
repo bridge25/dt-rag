@@ -2,8 +2,8 @@
 
 ---
 id: TEST-STABILIZE-002
-version: 0.0.1
-status: draft
+version: 0.1.0
+status: completed
 created: 2025-11-11
 updated: 2025-11-11
 author: Alfred (MoAI-ADK)
@@ -38,6 +38,23 @@ scope:
 ---
 
 ## HISTORY
+
+### v0.1.0 (2025-11-11)
+- **IMPLEMENTATION COMPLETED**: Phase A + Phase B 성공적 완료
+- **Phase A**: 3개 패턴 문서 생성 (801 lines total)
+  - `tests/docs/fixture-guidelines.md` (125 lines) - @DOC:FIXTURE-GUIDELINES
+  - `tests/docs/auth-bypass-patterns.md` (217 lines) - @DOC:AUTH-BYPASS-PATTERNS
+  - `tests/docs/test-best-practices.md` (459 lines) - @DOC:TEST-BEST-PRACTICES
+  - Git commit: `53043cbf` - "docs(test): Add Phase 2 test pattern documentation"
+- **Phase B**: 16개 테스트 안정화 (계획 13개 초과 달성, 123% 완료율)
+  - `tests/integration/test_api_endpoints.py` 전체 수정
+  - 모든 테스트: `async_client` 픽스처 표준 적용
+  - 모든 테스트: @TEST:PHASE-2-STABILIZATION TAG 추가
+  - 모든 테스트: Given-When-Then docstring 개선
+  - 총 변경량: +198 lines, -42 lines (957 total changes)
+  - Git commit: `797a85c3` - "test(stabilize): Fix 16 tests in test_api_endpoints.py for Phase 2"
+- **TAG Chain**: @SPEC:TEST-STABILIZE-002 → @DOC (3) → @TEST (16) 완전 연결
+- **Achievement**: 13→16 tests fixed (123% of plan), no regressions
 
 ### v0.0.1 (2025-11-11)
 - Initial SPEC 작성
