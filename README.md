@@ -621,6 +621,26 @@ files: [file1.txt, file2.json]
 
 ## 🔧 개발자 도구
 
+### 🚂 Railway CLI 로컬 테스트 (권장)
+
+**빠른 피드백**: Railway 환경변수로 로컬 테스트 실행 (환경변수 복사 불필요)
+
+```bash
+# 1회성 설정
+npm install -g @railway/cli
+railway login
+railway link
+
+# 테스트 실행 (Railway 환경변수 자동 주입)
+railway run pytest -v
+railway run pytest --cov=apps --cov-report=term-missing
+
+# 로컬 서버 실행 (실제 DB/Redis 연결)
+railway run uvicorn apps.api.main:app --reload
+```
+
+📚 **상세 가이드**: [Railway CLI Testing Guide](docs/development/railway-cli-testing.md)
+
 ### 🧪 시스템 테스트
 ```bash
 # 전체 시스템 검증 (6개 테스트 모듈)

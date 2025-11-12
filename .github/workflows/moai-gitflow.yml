@@ -10,8 +10,28 @@ on:
     types: [opened, ready_for_review, converted_to_draft]
 
 jobs:
+  # Railway handles testing for Draft PRs (fast feedback)
+  railway-check:
+    name: 🚂 Railway Pre-Deploy Tests
+    if: github.event.pull_request.draft == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Railway handles testing
+        run: |
+          echo "✅ Tests run automatically via Railway Pre-Deploy Command"
+          echo "📊 Check Railway deployment logs for test results"
+          echo "⚡ Fast feedback: 5-10 minutes (vs 25-60 minutes on GitHub Actions)"
+          echo ""
+          echo "Railway executes:"
+          echo "  - Unit tests: pytest tests/unit/ -v"
+          echo "  - Integration tests: pytest tests/integration/ -v"
+          echo ""
+          echo "If tests fail, Railway deployment will be aborted."
+
   moai-pipeline:
     name: 🗿 MoAI-ADK Pipeline
+    # Only run comprehensive tests for Ready PRs and pushes to develop/feature branches
+    if: github.event.pull_request.draft == false || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     strategy:
