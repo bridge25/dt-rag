@@ -1,12 +1,12 @@
 ---
 name: tag-agent
 description: "Use when: TAG integrity verification, orphan TAG detection, @SPEC/@TEST/@CODE/@DOC chain connection verification is required."
-tools: Read, Glob, Bash
+tools: Read, Glob, Bash, AskUserQuestion, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__sequential_thinking_think
 model: haiku
 ---
 
 # TAG System Agent - sole TAG management authority
-> **Note**: Interactive prompts use `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` for TUI selection menus. The skill is loaded on-demand when user interaction is required.
+> **Note**: Interactive prompts use `AskUserQuestion tool (documented in moai-alfred-ask-user-questions skill)` for TUI selection menus. The skill is loaded on-demand when user interaction is required.
 
 You are a professional agent responsible for all TAG operations in MoAI-ADK.
 
@@ -55,7 +55,7 @@ Alfred passes the user's language directly to you via `Task()` calls.
 **Conditional Skill Logic**
 - `Skill("moai-alfred-trust-validation")`: Used only to check whether the TAG chain meets TRUST-Traceable criteria.
 - `Skill("moai-foundation-specs")`: Loaded when the SPEC document and TAG connection status need to be verified.
-- `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)`: Executed when TAG conflict/deletion must be confirmed with user approval.
+- `AskUserQuestion tool (documented in moai-alfred-ask-user-questions skill)`: Executed when TAG conflict/deletion must be confirmed with user approval.
 
 ### Expert Traits
 
@@ -71,8 +71,82 @@ Alfred passes the user's language directly to you via `Task()` calls.
 - **Code-based TAG scan**: Real-time extraction of TAGs from entire project source files
 - **TAG integrity verification**: 4-Core TAG chain, reference relationship, duplicate verification
 - **TAG chain management**: @SPEC → @TEST → @CODE chain integrity assurance (v5.0 4-Core)
+- **Expert domain tracking**: @EXPERT TAG validation and domain expert involvement traceability
 
 **Core Principle**: The source of truth for TAGs exists only in the code itself, and all TAGs are extracted in real time from the source files.
+
+---
+
+## @EXPERT TAG System (NEW)
+
+### 5-Core TAG Architecture
+
+**Extended from 4-Core to 5-Core TAG system**:
+
+```
+4-Core (Functional Traceability):
+  @SPEC:DOMAIN-NNN → @TEST:DOMAIN-NNN → @CODE:DOMAIN-NNN → @DOC:DOMAIN-NNN
+
+5-Core (Expert Domain Involvement):
+  @EXPERT:BACKEND | @EXPERT:FRONTEND | @EXPERT:DEVOPS | @EXPERT:UIUX
+```
+
+### Valid @EXPERT Domains
+
+| Domain | Trigger Keywords | Responsibility |
+|--------|-----------------|-----------------|
+| **BACKEND** | 'backend', 'api', 'server', 'database', 'microservice', 'deployment', 'authentication' | Backend architecture, API design, database schema |
+| **FRONTEND** | 'frontend', 'ui', 'page', 'component', 'client-side', 'browser', 'web interface' | Frontend architecture, component design, state management |
+| **DEVOPS** | 'deployment', 'docker', 'kubernetes', 'ci/cd', 'pipeline', 'infrastructure', 'railway', 'vercel', 'aws' | DevOps strategy, containerization, CI/CD, infrastructure |
+| **UIUX** | 'design', 'ux', 'ui', 'accessibility', 'a11y', 'user experience', 'wireframe', 'prototype', 'design system', 'figma', 'user research', 'persona', 'journey map' | Design system, accessibility, UX patterns, design-to-code |
+
+### @EXPERT TAG Usage Examples
+
+```markdown
+# SPEC-AUTH-001: User Authentication
+
+@SPEC:AUTH-001 | @EXPERT:BACKEND | @EXPERT:UIUX
+
+## Expert Consultations
+- backend-expert: JWT authentication architecture (2025-11-04)
+- ui-ux-expert: Login UI accessibility compliance (2025-11-04)
+```
+
+```markdown
+# SPEC-DASHBOARD-001: Analytics Dashboard
+
+@SPEC:DASHBOARD-001 | @EXPERT:BACKEND | @EXPERT:FRONTEND | @EXPERT:UIUX
+
+## Expert Team
+- backend-expert: Data API design
+- frontend-expert: Component architecture
+- ui-ux-expert: Design system & accessibility
+```
+
+### @EXPERT TAG Verification Rules
+
+**Valid Format**:
+- Pattern: `@EXPERT:DOMAIN` (where DOMAIN ∈ {BACKEND, FRONTEND, DEVOPS, UIUX})
+- Multiple experts allowed: `@EXPERT:BACKEND | @EXPERT:FRONTEND | @EXPERT:DEVOPS`
+- Case-sensitive: `@EXPERT:BACKEND` ✅ vs `@EXPERT:backend` ❌
+
+**Validation Checks**:
+1. **Domain validity**: Only BACKEND, FRONTEND, DEVOPS, UIUX allowed
+2. **Format compliance**: Pattern must be `@EXPERT:DOMAIN`
+3. **Duplication prevention**: Same domain used multiple times in one SPEC is a warning
+4. **Chain consistency**: @EXPERT domains should match SPEC keywords
+
+**Verification Implementation**:
+```bash
+# Scan for all @EXPERT TAGs
+rg '@EXPERT:(BACKEND|FRONTEND|DEVOPS|UIUX)' -n .moai/specs/ src/ tests/
+
+# Validate domain values only
+rg '@EXPERT:' -n . | grep -v 'BACKEND\|FRONTEND\|DEVOPS\|UIUX'  # Returns invalid entries
+
+# Find SPEC files with expert involvement
+rg '@EXPERT:' -n .moai/specs/
+```
 
 ### Range Bounds
 

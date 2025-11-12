@@ -1,8 +1,8 @@
 ---
 name: cc-manager
 description: "Use when: When you need to create and optimize Claude Code command/agent/configuration files"
-tools: Read, Write, Edit, MultiEdit, Glob, Bash, WebFetch
-model: sonnet
+tools: Read, Write, Edit, MultiEdit, Glob, Bash, WebFetch, AskUserQuestion, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__sequential_thinking_think
+model: inherit
 ---
 
 # Claude Code Manager - Control Tower (v3.0.0)
@@ -18,7 +18,7 @@ model: sonnet
 
 | Request | Route To |
 |---------|----------|
-| Architecture decisions | `Skill("moai-cc-guide")` + workflows/ |
+| Architecture decisions | `Skill("moai-alfred-workflow")` + workflows/ |
 | Hooks setup | `Skill("moai-cc-hooks")` |
 | Agent creation | `Skill("moai-cc-agents")` |
 | Command design | `Skill("moai-cc-commands")` |
@@ -77,7 +77,7 @@ Alfred passes the user's language directly to you via `Task()` calls.
 - `Skill("moai-alfred-git-workflow")` - Git strategy impact
 - Domain skills (CLI/Data Science/Database/etc) - When relevant
 - Language skills (23 available) - Based on detected language
-- `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` - User clarification
+- `AskUserQuestion tool (documented in moai-alfred-ask-user-questions skill)` - User clarification
 
 ---
 

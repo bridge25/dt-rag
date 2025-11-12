@@ -103,3 +103,16 @@ uv.lock
 .api_key
 .railway_url
 .vercel_url
+*-backup/
+*.bak
+.moai-backups/
+*.backup
+# Test coverage
+.env/
+*.pyc
+*.backup/
+*.pyo
+coverage.json
+# Cache
+# Virtual environment
+.venv/
