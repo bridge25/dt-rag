@@ -7,7 +7,8 @@ builder = "nixpacks"
 
 [deploy]
 # Single command: migrate then start server
-startCommand = "alembic upgrade head && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
+# Using 'heads' (plural) to handle multiple head revisions from branch merges
+startCommand = "alembic upgrade heads && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
