@@ -1,6 +1,6 @@
 ---
 name: alfred:9-feedback
-description: "Interactive GitHub Issue creation - Step-by-step dialog to create issues without command arguments"
+description: "Create GitHub issues interactively"
 allowed-tools:
 - Bash(gh:*)
 - Task
@@ -36,6 +36,10 @@ Alfred responds and proceeds to Step 2.
 ---
 
 ### Step 2: Select Issue Type (AskUserQuestion)
+
+First, invoke `Skill("moai-alfred-ask-user-questions")` to get the latest best practices for interactive prompts.
+
+Then use AskUserQuestion with:
 
 **Question**: "What type of issue do you want to create?"
 

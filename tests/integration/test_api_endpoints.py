@@ -1,6 +1,8 @@
 """
 API Endpoints Integration Tests
 Tests all FastAPI endpoints with real database
+
+@TEST:PHASE-2-STABILIZATION | SPEC-TEST-STABILIZE-002
 """
 
 import pytest
@@ -11,17 +13,33 @@ class TestHealthEndpoint:
     """Health check endpoint tests"""
 
     @pytest.mark.asyncio
-    async def test_health_check_returns_200(self, api_client: AsyncClient) -> None:
-        """Test health endpoint returns 200 OK"""
-        response = await api_client.get(
+    async def test_health_check_returns_200(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test health endpoint returns 200 OK
+
+        Given: Health check endpoint is available
+        When: GET request to /healthz
+        Then: Response status is 200 OK
+        """
+        response = await async_client.get(
             "/healthz", headers={"X-API-Key": "test_api_key_for_testing"}
         )
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_health_check_returns_json(self, api_client: AsyncClient) -> None:
-        """Test health endpoint returns valid JSON"""
-        response = await api_client.get(
+    async def test_health_check_returns_json(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test health endpoint returns valid JSON
+
+        Given: Health check endpoint is available
+        When: GET request to /healthz
+        Then: Response contains status and timestamp fields
+        """
+        response = await async_client.get(
             "/healthz", headers={"X-API-Key": "test_api_key_for_testing"}
         )
         data = response.json()
@@ -35,9 +53,17 @@ class TestClassifyEndpoint:
     """Classification endpoint tests"""
 
     @pytest.mark.asyncio
-    async def test_classify_endpoint_exists(self, api_client: AsyncClient, sample_text: str) -> None:
-        """Test classify endpoint is accessible"""
-        response = await api_client.post(
+    async def test_classify_endpoint_exists(self, async_client: AsyncClient, sample_text: str) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test classify endpoint is accessible
+
+        Given: Classify endpoint is available
+        When: POST request with sample text
+        Then: Response status is 200 or 422
+        """
+        response = await async_client.post(
             "/classify",
             json={"chunk_id": "test-001", "text": sample_text},
             headers={"X-API-Key": "test_api_key_for_testing"},
@@ -45,9 +71,17 @@ class TestClassifyEndpoint:
         assert response.status_code in [200, 422]  # 200 OK or 422 Validation Error
 
     @pytest.mark.asyncio
-    async def test_classify_rag_text(self, api_client: AsyncClient) -> None:
-        """Test classification of RAG-related text"""
-        response = await api_client.post(
+    async def test_classify_rag_text(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test classification of RAG-related text
+
+        Given: RAG-related text is provided
+        When: POST request to /classify
+        Then: Returns canonical paths and confidence score
+        """
+        response = await async_client.post(
             "/classify",
             json={
                 "chunk_id": "rag-001",
@@ -64,9 +98,17 @@ class TestClassifyEndpoint:
             assert data["confidence"] <= 1.0
 
     @pytest.mark.asyncio
-    async def test_classify_ml_text(self, api_client: AsyncClient) -> None:
-        """Test classification of ML-related text"""
-        response = await api_client.post(
+    async def test_classify_ml_text(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test classification of ML-related text
+
+        Given: ML-related text is provided
+        When: POST request to /classify
+        Then: Returns canonical path containing AI or ML
+        """
+        response = await async_client.post(
             "/classify",
             json={
                 "chunk_id": "ml-001",
@@ -80,9 +122,17 @@ class TestClassifyEndpoint:
             assert "AI" in data["canonical"] or "ML" in data["canonical"]
 
     @pytest.mark.asyncio
-    async def test_classify_with_hint_paths(self, api_client: AsyncClient) -> None:
-        """Test classification with hint paths"""
-        response = await api_client.post(
+    async def test_classify_with_hint_paths(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test classification with hint paths
+
+        Given: Text with hint paths is provided
+        When: POST request to /classify with hint_paths parameter
+        Then: Returns classification with confidence
+        """
+        response = await async_client.post(
             "/classify",
             json={
                 "chunk_id": "hint-001",
@@ -100,9 +150,17 @@ class TestSearchEndpoint:
     """Search endpoint tests"""
 
     @pytest.mark.asyncio
-    async def test_search_endpoint_exists(self, api_client: AsyncClient) -> None:
-        """Test search endpoint is accessible"""
-        response = await api_client.post(
+    async def test_search_endpoint_exists(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test search endpoint is accessible
+
+        Given: Search endpoint is available
+        When: POST request to /search
+        Then: Response status is 200 or 422
+        """
+        response = await async_client.post(
             "/search",
             json={"q": "machine learning", "final_topk": 5},
             headers={"X-API-Key": "test_api_key_for_testing"},
@@ -110,9 +168,17 @@ class TestSearchEndpoint:
         assert response.status_code in [200, 422]
 
     @pytest.mark.asyncio
-    async def test_search_returns_hits(self, api_client: AsyncClient) -> None:
-        """Test search returns hits array"""
-        response = await api_client.post("/search", json={"q": "RAG system", "final_topk": 3})
+    async def test_search_returns_hits(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test search returns hits array
+
+        Given: Search query is provided
+        When: POST request to /search
+        Then: Response contains hits array
+        """
+        response = await async_client.post("/search", json={"q": "RAG system", "final_topk": 3})
 
         if response.status_code == 200:
             data = response.json()
@@ -120,9 +186,17 @@ class TestSearchEndpoint:
             assert isinstance(data["hits"], list)
 
     @pytest.mark.asyncio
-    async def test_search_with_filters(self, api_client: AsyncClient) -> None:
-        """Test search with taxonomy filters"""
-        response = await api_client.post(
+    async def test_search_with_filters(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test search with taxonomy filters
+
+        Given: Search query with taxonomy filters
+        When: POST request to /search with filters
+        Then: Response contains filtered hits
+        """
+        response = await async_client.post(
             "/search",
             json={
                 "q": "neural networks",
@@ -140,21 +214,37 @@ class TestTaxonomyEndpoint:
     """Taxonomy endpoint tests"""
 
     @pytest.mark.asyncio
-    async def test_get_taxonomy_tree(self, api_client: AsyncClient) -> None:
-        """Test taxonomy tree retrieval"""
-        response = await api_client.get("/taxonomy/v1.8.1/tree")
+    async def test_get_taxonomy_tree(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test taxonomy tree retrieval
+
+        Given: Taxonomy endpoint is available
+        When: GET request to /taxonomy/version/tree
+        Then: Response contains tree structure
+        """
+        response = await async_client.get("/taxonomy/v1.8.1/tree")
 
         if response.status_code == 200:
             data = response.json()
             assert isinstance(data, (list, dict))
 
     @pytest.mark.asyncio
-    async def test_taxonomy_version_format(self, api_client: AsyncClient) -> None:
-        """Test taxonomy endpoint accepts version parameter"""
+    async def test_taxonomy_version_format(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test taxonomy endpoint accepts version parameter
+
+        Given: Multiple taxonomy versions exist
+        When: GET requests with different version parameters
+        Then: Each returns 200 OK or 404 Not Found
+        """
         versions = ["v1.8.1", "v1.0.0", "latest"]
 
         for version in versions:
-            response = await api_client.get(
+            response = await async_client.get(
                 f"/taxonomy/{version}/tree",
                 headers={"X-API-Key": "test_api_key_for_testing"},
             )
@@ -165,9 +255,17 @@ class TestErrorHandling:
     """Error handling tests"""
 
     @pytest.mark.asyncio
-    async def test_classify_missing_text(self, api_client: AsyncClient) -> None:
-        """Test classify endpoint with missing text field"""
-        response = await api_client.post(
+    async def test_classify_missing_text(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test classify endpoint with missing text field
+
+        Given: Request without required text field
+        When: POST request to /classify
+        Then: Response status is 422 Validation Error
+        """
+        response = await async_client.post(
             "/classify",
             json={
                 "chunk_id": "missing-001"
@@ -178,9 +276,17 @@ class TestErrorHandling:
         assert response.status_code == 422  # Validation Error
 
     @pytest.mark.asyncio
-    async def test_search_missing_query(self, api_client: AsyncClient) -> None:
-        """Test search endpoint with missing query"""
-        response = await api_client.post(
+    async def test_search_missing_query(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test search endpoint with missing query
+
+        Given: Request without required q field
+        When: POST request to /search
+        Then: Response status is 422 Validation Error
+        """
+        response = await async_client.post(
             "/search",
             json={
                 "final_topk": 5
@@ -191,7 +297,15 @@ class TestErrorHandling:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_invalid_endpoint(self, api_client: AsyncClient) -> None:
-        """Test non-existent endpoint returns 404"""
-        response = await api_client.get("/nonexistent")
+    async def test_invalid_endpoint(self, async_client: AsyncClient) -> None:
+        """
+        @TEST:PHASE-2-STABILIZATION
+
+        Test non-existent endpoint returns 404
+
+        Given: Invalid endpoint path
+        When: GET request to non-existent endpoint
+        Then: Response status is 404 Not Found
+        """
+        response = await async_client.get("/nonexistent")
         assert response.status_code == 404

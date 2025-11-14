@@ -9,8 +9,12 @@ import os
 import asyncio
 import logging
 import hashlib
-from typing import List, Optional, Dict, Any, cast
+from typing import List, Optional, Dict, Any, cast, TYPE_CHECKING
 import numpy as np
+
+# Import for type hints only (not at runtime)
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 # Langfuse integration for LLM cost tracking
 try:
@@ -100,7 +104,7 @@ class EmbeddingService:
             self.model_name = "all-mpnet-base-v2"
             self.model_config = self.SUPPORTED_MODELS[self.model_name]
 
-    def _load_sentence_transformer(self) -> Optional[SentenceTransformer]:
+    def _load_sentence_transformer(self) -> Optional['SentenceTransformer']:
         """Sentence Transformer 폴백 모델 로드"""
         if self._sentence_transformer is not None:
             return self._sentence_transformer  # type: ignore[no-any-return]

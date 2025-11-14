@@ -106,6 +106,30 @@ class TestHybridSearchE2E:
 
         app = FastAPI()
         app.include_router(search_router)
+
+        # @CODE:AUTH-BYPASS | SPEC-TEST-STABILIZE-001: Apply authentication bypass for test environment
+        from apps.api.deps import verify_api_key
+        from apps.api.security.api_key_storage import APIKeyInfo
+        from datetime import datetime, timezone
+
+        async def mock_verify_api_key() -> APIKeyInfo:
+            return APIKeyInfo(
+                key_id="test_key_001",
+                name="Test API Key",
+                description="Mock API key for integration tests",
+                scope="write",
+                permissions=["*"],
+                allowed_ips=None,
+                rate_limit=1000,
+                is_active=True,
+                expires_at=None,
+                created_at=datetime.now(timezone.utc),
+                last_used_at=None,
+                total_requests=0,
+                failed_requests=0,
+            )
+
+        app.dependency_overrides[verify_api_key] = mock_verify_api_key
         client = TestClient(app)
 
         # Mock vector search to timeout
@@ -146,6 +170,30 @@ class TestHybridSearchE2E:
 
         app = FastAPI()
         app.include_router(search_router)
+
+        # @CODE:AUTH-BYPASS | SPEC-TEST-STABILIZE-001: Apply authentication bypass for test environment
+        from apps.api.deps import verify_api_key
+        from apps.api.security.api_key_storage import APIKeyInfo
+        from datetime import datetime, timezone
+
+        async def mock_verify_api_key() -> APIKeyInfo:
+            return APIKeyInfo(
+                key_id="test_key_001",
+                name="Test API Key",
+                description="Mock API key for integration tests",
+                scope="write",
+                permissions=["*"],
+                allowed_ips=None,
+                rate_limit=1000,
+                is_active=True,
+                expires_at=None,
+                created_at=datetime.now(timezone.utc),
+                last_used_at=None,
+                total_requests=0,
+                failed_requests=0,
+            )
+
+        app.dependency_overrides[verify_api_key] = mock_verify_api_key
         client = TestClient(app)
 
         # Mock embedding generation to fail
@@ -185,6 +233,30 @@ class TestHybridSearchE2E:
 
         app = FastAPI()
         app.include_router(search_router)
+
+        # @CODE:AUTH-BYPASS | SPEC-TEST-STABILIZE-001: Apply authentication bypass for test environment
+        from apps.api.deps import verify_api_key
+        from apps.api.security.api_key_storage import APIKeyInfo
+        from datetime import datetime, timezone
+
+        async def mock_verify_api_key() -> APIKeyInfo:
+            return APIKeyInfo(
+                key_id="test_key_001",
+                name="Test API Key",
+                description="Mock API key for integration tests",
+                scope="write",
+                permissions=["*"],
+                allowed_ips=None,
+                rate_limit=1000,
+                is_active=True,
+                expires_at=None,
+                created_at=datetime.now(timezone.utc),
+                last_used_at=None,
+                total_requests=0,
+                failed_requests=0,
+            )
+
+        app.dependency_overrides[verify_api_key] = mock_verify_api_key
         client = TestClient(app)
 
         response = client.post(

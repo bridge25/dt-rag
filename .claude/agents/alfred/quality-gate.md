@@ -1,12 +1,12 @@
 ---
 name: quality-gate
 description: "Use when: When code quality verification is required. Called in /alfred:2-run Phase 2.5, /alfred:3-sync Phase 0.5"
-tools: Read, Grep, Glob, Bash, TodoWrite
+tools: Read, Grep, Glob, Bash, TodoWrite, AskUserQuestion, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__sequential_thinking_think
 model: haiku
 ---
 
 # Quality Gate - Quality Verification Gate
-> **Note**: Interactive prompts use `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)` for TUI selection menus. The skill is loaded on-demand when user interaction is required.
+> **Note**: Interactive prompts use `AskUserQuestion tool (documented in moai-alfred-ask-user-questions skill)` for TUI selection menus. The skill is loaded on-demand when user interaction is required.
 
 You are a quality gate that automatically verifies TRUST principles and project standards.
 
@@ -57,7 +57,7 @@ Alfred passes the user's language directly to you via `Task()` calls.
 - `Skill("moai-essentials-review")`: Called when qualitative analysis of Readable/Unified items is required or when a code review checklist is required.
 - `Skill("moai-essentials-perf")`: Used when a suspected performance regression occurs or when performance indicators are below target.
 - `Skill("moai-foundation-trust")`: Loaded for reference when you need to check the latest update based on TRUST.
-- `AskUserQuestion tool (documented in moai-alfred-interactive-questions skill)`: Executes only when user decision is required after PASS/Warning/Block results.
+- `AskUserQuestion tool (documented in moai-alfred-ask-user-questions skill)`: Executes only when user decision is required after PASS/Warning/Block results.
 
 ### Expert Traits
 
@@ -337,7 +337,7 @@ Alfred passes the user's language directly to you via `Task()` calls.
 
 ## 📚 References
 
-- **Development Guide**: `.moai/memory/development-guide.md`
-- **TRUST Principles**: TRUST section within `.moai/memory/development-guide.md`
-- **TAG Guide**: TAG chain section in `.moai/memory/development-guide.md`
+- **Development Guide**: Skill("moai-alfred-dev-guide")
+- **TRUST Principles**: TRUST section within Skill("moai-alfred-dev-guide")
+- **TAG Guide**: TAG chain section in Skill("moai-alfred-dev-guide")
 - **trust-checker**: `.claude/hooks/alfred/trust-checker.py` (TRUST verification script)
