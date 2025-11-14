@@ -1,9 +1,9 @@
-# Railway Configuration - CPU-optimized Build
-# Uses CPU-only PyTorch to reduce image size from ~5GB to ~500MB
+# Railway Configuration - Lightweight API-only Build
+# Removed ML libraries (torch, transformers, sentence-transformers)
+# Using external embedding APIs (OpenAI, Gemini) for optimal build performance
 
 [build]
 builder = "nixpacks"
-buildCommand = "pip install --upgrade pip && pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt"
 
 [deploy]
 # Single command: migrate then start server
