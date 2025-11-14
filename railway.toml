@@ -6,9 +6,9 @@
 builder = "nixpacks"
 
 [deploy]
-# Single command: migrate then start server
+# Install pgvector extension, run migrations, then start server
 # Using 'heads' (plural) to handle multiple head revisions from branch merges
-startCommand = "alembic upgrade heads && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "python3 install_pgvector.py && alembic upgrade heads && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
