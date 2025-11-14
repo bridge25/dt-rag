@@ -1,8 +1,9 @@
-# Railway Configuration - Minimal Setup
-# Start simple, add features incrementally
+# Railway Configuration - CPU-optimized Build
+# Uses CPU-only PyTorch to reduce image size from ~5GB to ~500MB
 
 [build]
 builder = "nixpacks"
+buildCommand = "pip install --upgrade pip && pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu && pip install -r requirements.txt"
 
 [deploy]
 # Single command: migrate then start server
