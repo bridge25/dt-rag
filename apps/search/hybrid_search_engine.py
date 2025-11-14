@@ -265,70 +265,40 @@ class HybridScoreFusion:
         return hybrid_scores
 
 
-class CrossEncoderReranker:
-    """Cross-encoder reranking for result quality improvement"""
+class HybridScoreReranker:
+    """Heuristic-based reranking using hybrid scores and quality signals"""
 
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2") -> None:
-        self.model_name = model_name
-        self.model: Optional[Any] = None
-        self._load_model()
-
-    # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
-    def _load_model(self) -> None:
-        """Load cross-encoder model"""
-        try:
-            from sentence_transformers import CrossEncoder
-
-            self.model = CrossEncoder(self.model_name)
-            logger.info(f"Cross-encoder model {self.model_name} loaded successfully")
-        except Exception as e:
-            logger.warning(f"Failed to load cross-encoder model: {e}")
-            self.model = None
+    def __init__(self) -> None:
+        """Initialize reranker (no model loading required)"""
+        logger.info("HybridScoreReranker initialized with heuristic scoring")
 
     def rerank(
         self, query: str, search_results: List[SearchResult], top_k: int = 5
     ) -> List[SearchResult]:
-        """Rerank search results using cross-encoder"""
+        """Rerank search results using enhanced heuristics"""
         if not search_results:
             return []
 
         start_time = time.time()
 
         try:
-            # Use actual cross-encoder model if available
-            if self.model:
-                # Prepare query-document pairs for cross-encoder
-                pairs = [[query, result.text] for result in search_results]
+            # Apply heuristic reranking
+            reranked_results = self._heuristic_rerank(query, search_results)
 
-                # Get cross-encoder scores
-                cross_scores = self.model.predict(pairs)
+            # Apply rerank scores
+            for result in reranked_results:
+                result.rerank_score = (
+                    result.hybrid_score
+                    * self._calculate_quality_boost(query, result.text)
+                )
 
-                # Apply cross-encoder scores
-                for result, score in zip(search_results, cross_scores):
-                    result.rerank_score = float(score)
-
-                # Sort by rerank score and return top-k
-                final_results = sorted(
-                    search_results, key=lambda x: x.rerank_score, reverse=True
-                )[:top_k]
-            else:
-                # Fallback to heuristic reranking
-                reranked_results = self._heuristic_rerank(query, search_results)
-
-                # Apply rerank scores
-                for result in reranked_results:
-                    result.rerank_score = (
-                        result.hybrid_score
-                        * self._calculate_quality_boost(query, result.text)
-                    )
-
-                # Sort by rerank score and return top-k
-                final_results = sorted(
-                    reranked_results, key=lambda x: x.rerank_score, reverse=True
-                )[:top_k]
+            # Sort by rerank score and return top-k
+            final_results = sorted(
+                reranked_results, key=lambda x: x.rerank_score, reverse=True
+            )[:top_k]
 
             rerank_time = time.time() - start_time
-            logger.info(f"Cross-encoder reranking completed in {rerank_time:.3f}s")
+            logger.info(f"Heuristic reranking completed in {rerank_time:.3f}s")
 
             return final_results
 
@@ -341,7 +311,7 @@ class CrossEncoderReranker:
                     error=e,
                     query=query,
                     results_count=len(search_results),
-                    rerank_config={"model_name": self.model_name, "top_k": top_k},
+                    rerank_config={"reranker_type": "heuristic", "top_k": top_k},
                 )
 
             # Fallback: return top results by hybrid score
@@ -515,7 +485,7 @@ class HybridSearchEngine:
             normalization=normalization,
         )
 
-        self.reranker = CrossEncoderReranker() if enable_reranking else None
+        self.reranker = HybridScoreReranker() if enable_reranking else None
         self.cache = ResultCache() if enable_caching else None
 
         self.config = {

@@ -5,7 +5,7 @@ High-performance hybrid search engine combining:
 - BM25 keyword search using PostgreSQL Full-text Search
 - Vector similarity search using pgvector
 - Advanced score normalization and fusion algorithms
-- Cross-encoder reranking for result quality improvement
+- Heuristic reranking for result quality improvement
 - Intelligent caching and performance optimization
 
 Performance targets:
@@ -24,7 +24,7 @@ try:
         SearchMetrics,
         ScoreNormalizer,
         HybridScoreFusion,
-        CrossEncoderReranker,
+        HybridScoreReranker,
         ResultCache,
         hybrid_search,
         keyword_search,
@@ -41,7 +41,7 @@ try:
         "SearchMetrics",
         "ScoreNormalizer",
         "HybridScoreFusion",
-        "CrossEncoderReranker",
+        "HybridScoreReranker",
         "ResultCache",
         "hybrid_search",
         "keyword_search",
