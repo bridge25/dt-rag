@@ -1,20 +1,13 @@
-# Nixpacks configuration for Railway deployment
-# Learn more: https://nixpacks.com/docs/configuration/file
-
+# Nixpacks configuration for Python project
 [phases.setup]
-nixPkgs = ["python311", "postgresql", "gcc"]
-aptPkgs = ["build-essential", "libpq-dev"]
+nixPkgs = ["python311", "postgresql"]
 
 [phases.install]
 cmds = [
-  "pip install --upgrade pip",
-  "pip install -r requirements.txt"
-]
-
-[phases.build]
-cmds = [
-  "echo 'Build phase complete'"
+  "python -m venv /opt/venv",
+  ". /opt/venv/bin/activate && pip install --upgrade pip",
+  ". /opt/venv/bin/activate && pip install -r requirements.txt"
 ]
 
 [start]
-cmd = "alembic upgrade head && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT --workers 2"
+cmd = ". /opt/venv/bin/activate && alembic upgrade head && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
