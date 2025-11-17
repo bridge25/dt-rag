@@ -43,27 +43,36 @@ def upgrade() -> None:
                 IF EXISTS (
                     SELECT 1 FROM pg_extension WHERE extname = 'vector'
                 ) THEN
-                    -- Step 1: Drop existing vector indexes
-                    DROP INDEX IF EXISTS idx_embeddings_vec_hnsw;
-                    DROP INDEX IF EXISTS idx_embeddings_vec_cosine;
-                    DROP INDEX IF EXISTS idx_embeddings_vec_ivf;
-                    DROP INDEX IF EXISTS idx_embeddings_vec_ivfflat;
+                    -- Check if embeddings table exists
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = 'embeddings'
+                    ) THEN
+                        -- Step 1: Drop existing vector indexes
+                        DROP INDEX IF EXISTS idx_embeddings_vec_hnsw;
+                        DROP INDEX IF EXISTS idx_embeddings_vec_cosine;
+                        DROP INDEX IF EXISTS idx_embeddings_vec_ivf;
+                        DROP INDEX IF EXISTS idx_embeddings_vec_ivfflat;
 
-                    -- Step 2: Change vector dimension
-                    ALTER TABLE embeddings ALTER COLUMN vec TYPE vector(1536);
+                        -- Step 2: Change vector dimension
+                        ALTER TABLE embeddings ALTER COLUMN vec TYPE vector(1536);
 
-                    -- Step 3: Truncate table (existing 768-dim data is invalid)
-                    TRUNCATE TABLE embeddings CASCADE;
+                        -- Step 3: Truncate table (existing 768-dim data is invalid)
+                        TRUNCATE TABLE embeddings CASCADE;
 
-                    RAISE NOTICE 'Vector dimension changed to 1536. Existing data truncated.';
+                        RAISE NOTICE 'Vector dimension changed to 1536. Existing data truncated.';
 
-                    -- Step 4: Create optimized HNSW index for 1536-dim vectors
-                    CREATE INDEX idx_embeddings_vec_hnsw
-                    ON embeddings
-                    USING hnsw (vec vector_cosine_ops)
-                    WITH (m = 16, ef_construction = 64);
+                        -- Step 4: Create optimized HNSW index for 1536-dim vectors
+                        CREATE INDEX idx_embeddings_vec_hnsw
+                        ON embeddings
+                        USING hnsw (vec vector_cosine_ops)
+                        WITH (m = 16, ef_construction = 64);
 
-                    RAISE NOTICE 'HNSW index created for 1536-dim vectors.';
+                        RAISE NOTICE 'HNSW index created for 1536-dim vectors.';
+                    ELSE
+                        RAISE NOTICE 'embeddings table does not exist yet, skipping migration';
+                    END IF;
                 ELSE
                     RAISE NOTICE 'pgvector extension not installed, skipping vector migration';
                 END IF;
@@ -99,26 +108,35 @@ def downgrade() -> None:
                 IF EXISTS (
                     SELECT 1 FROM pg_extension WHERE extname = 'vector'
                 ) THEN
-                    -- Step 1: Drop existing vector indexes
-                    DROP INDEX IF EXISTS idx_embeddings_vec_hnsw;
-                    DROP INDEX IF EXISTS idx_embeddings_vec_cosine;
-                    DROP INDEX IF EXISTS idx_embeddings_vec_ivf;
+                    -- Check if embeddings table exists
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.tables
+                        WHERE table_schema = 'public'
+                        AND table_name = 'embeddings'
+                    ) THEN
+                        -- Step 1: Drop existing vector indexes
+                        DROP INDEX IF EXISTS idx_embeddings_vec_hnsw;
+                        DROP INDEX IF EXISTS idx_embeddings_vec_cosine;
+                        DROP INDEX IF EXISTS idx_embeddings_vec_ivf;
 
-                    -- Step 2: Rollback to vector(768)
-                    ALTER TABLE embeddings ALTER COLUMN vec TYPE vector(768);
+                        -- Step 2: Rollback to vector(768)
+                        ALTER TABLE embeddings ALTER COLUMN vec TYPE vector(768);
 
-                    -- Step 3: Truncate table (1536-dim data is invalid for 768-dim)
-                    TRUNCATE TABLE embeddings CASCADE;
+                        -- Step 3: Truncate table (1536-dim data is invalid for 768-dim)
+                        TRUNCATE TABLE embeddings CASCADE;
 
-                    RAISE NOTICE 'Rolled back to vector(768). Data truncated.';
+                        RAISE NOTICE 'Rolled back to vector(768). Data truncated.';
 
-                    -- Step 4: Recreate index for 768-dim
-                    CREATE INDEX idx_embeddings_vec_hnsw
-                    ON embeddings
-                    USING hnsw (vec vector_cosine_ops)
-                    WITH (m = 16, ef_construction = 64);
+                        -- Step 4: Recreate index for 768-dim
+                        CREATE INDEX idx_embeddings_vec_hnsw
+                        ON embeddings
+                        USING hnsw (vec vector_cosine_ops)
+                        WITH (m = 16, ef_construction = 64);
 
-                    RAISE NOTICE 'HNSW index recreated for 768-dim vectors.';
+                        RAISE NOTICE 'HNSW index recreated for 768-dim vectors.';
+                    ELSE
+                        RAISE NOTICE 'embeddings table does not exist, skipping rollback';
+                    END IF;
                 ELSE
                     RAISE NOTICE 'pgvector extension not installed, skipping rollback';
                 END IF;
