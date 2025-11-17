@@ -80,23 +80,31 @@ def upgrade() -> None:
                 RAISE NOTICE 'taxonomy_edges table already exists, skipping';
             END IF;
 
-            -- 3. doc_taxonomy table
+            -- 3. doc_taxonomy table (requires documents table)
             IF NOT EXISTS (
                 SELECT 1 FROM information_schema.tables
                 WHERE table_name = 'doc_taxonomy'
             ) THEN
-                CREATE TABLE doc_taxonomy (
-                    mapping_id SERIAL PRIMARY KEY,
-                    doc_id UUID,
-                    node_id UUID,
-                    version TEXT,
-                    path TEXT[],
-                    confidence FLOAT,
-                    hitl_required BOOLEAN DEFAULT false,
-                    FOREIGN KEY (doc_id) REFERENCES documents(doc_id),
-                    FOREIGN KEY (node_id) REFERENCES taxonomy_nodes(node_id)
-                );
-                RAISE NOTICE 'Created doc_taxonomy table';
+                -- Check if documents table exists before creating doc_taxonomy
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_name = 'documents'
+                ) THEN
+                    CREATE TABLE doc_taxonomy (
+                        mapping_id SERIAL PRIMARY KEY,
+                        doc_id UUID,
+                        node_id UUID,
+                        version TEXT,
+                        path TEXT[],
+                        confidence FLOAT,
+                        hitl_required BOOLEAN DEFAULT false,
+                        FOREIGN KEY (doc_id) REFERENCES documents(doc_id),
+                        FOREIGN KEY (node_id) REFERENCES taxonomy_nodes(node_id)
+                    );
+                    RAISE NOTICE 'Created doc_taxonomy table';
+                ELSE
+                    RAISE NOTICE 'documents table does not exist, skipping doc_taxonomy creation';
+                END IF;
             ELSE
                 RAISE NOTICE 'doc_taxonomy table already exists, skipping';
             END IF;
