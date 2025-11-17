@@ -39,53 +39,63 @@ def upgrade() -> None:
         print("Adding PII tracking columns to PostgreSQL chunks table...")
 
         op.execute("""
-            -- Add token_count column
-            ALTER TABLE chunks
-            ADD COLUMN IF NOT EXISTS token_count INTEGER NOT NULL DEFAULT 0;
-
-            -- Add has_pii column
-            ALTER TABLE chunks
-            ADD COLUMN IF NOT EXISTS has_pii BOOLEAN NOT NULL DEFAULT FALSE;
-
-            -- Add pii_types column (array of text)
-            ALTER TABLE chunks
-            ADD COLUMN IF NOT EXISTS pii_types TEXT[] DEFAULT ARRAY[]::TEXT[];
-
-            -- Create index for PII filtering
-            CREATE INDEX IF NOT EXISTS idx_chunks_has_pii
-            ON chunks(has_pii)
-            WHERE has_pii = TRUE;
-
-            -- Create index for token count queries
-            CREATE INDEX IF NOT EXISTS idx_chunks_token_count
-            ON chunks(token_count);
-
-            -- Update existing rows with estimated token count
-            UPDATE chunks
-            SET token_count = GREATEST(LENGTH(text) / 4, 1)
-            WHERE token_count = 0;
-
-            -- Add constraint to ensure positive token count (without IF NOT EXISTS)
             DO $$
             BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM pg_constraint WHERE conname = 'chk_token_count_positive'
+                -- Check if chunks table exists
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                    AND table_name = 'chunks'
                 ) THEN
+                    -- Add token_count column
                     ALTER TABLE chunks
-                    ADD CONSTRAINT chk_token_count_positive
-                    CHECK (token_count > 0);
+                    ADD COLUMN IF NOT EXISTS token_count INTEGER NOT NULL DEFAULT 0;
+
+                    -- Add has_pii column
+                    ALTER TABLE chunks
+                    ADD COLUMN IF NOT EXISTS has_pii BOOLEAN NOT NULL DEFAULT FALSE;
+
+                    -- Add pii_types column (array of text)
+                    ALTER TABLE chunks
+                    ADD COLUMN IF NOT EXISTS pii_types TEXT[] DEFAULT ARRAY[]::TEXT[];
+
+                    -- Create index for PII filtering
+                    CREATE INDEX IF NOT EXISTS idx_chunks_has_pii
+                    ON chunks(has_pii)
+                    WHERE has_pii = TRUE;
+
+                    -- Create index for token count queries
+                    CREATE INDEX IF NOT EXISTS idx_chunks_token_count
+                    ON chunks(token_count);
+
+                    -- Update existing rows with estimated token count
+                    UPDATE chunks
+                    SET token_count = GREATEST(LENGTH(text) / 4, 1)
+                    WHERE token_count = 0;
+
+                    -- Add constraint to ensure positive token count
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint WHERE conname = 'chk_token_count_positive'
+                    ) THEN
+                        ALTER TABLE chunks
+                        ADD CONSTRAINT chk_token_count_positive
+                        CHECK (token_count > 0);
+                    END IF;
+
+                    -- Add column comments
+                    COMMENT ON COLUMN chunks.token_count IS 'Number of tokens in chunk (tiktoken-based)';
+                    COMMENT ON COLUMN chunks.has_pii IS 'Whether chunk contains personally identifiable information';
+                    COMMENT ON COLUMN chunks.pii_types IS 'Array of PII types detected (e.g., resident_registration_number, phone_number, email, credit_card, bank_account)';
+
+                    RAISE NOTICE 'PII tracking columns added successfully';
+                ELSE
+                    RAISE NOTICE 'chunks table does not exist yet, skipping migration';
                 END IF;
-            END $$;
+            END
+            $$;
         """)
 
-        op.execute("""
-            -- Add column comments
-            COMMENT ON COLUMN chunks.token_count IS 'Number of tokens in chunk (tiktoken-based)';
-            COMMENT ON COLUMN chunks.has_pii IS 'Whether chunk contains personally identifiable information';
-            COMMENT ON COLUMN chunks.pii_types IS 'Array of PII types detected (e.g., resident_registration_number, phone_number, email, credit_card, bank_account)';
-        """)
-
-        print("PII tracking columns added successfully")
+        print("PII tracking migration completed")
     else:
         print("SQLite detected - adding PII tracking columns...")
 
