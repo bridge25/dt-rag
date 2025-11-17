@@ -101,6 +101,7 @@ nul
 *.db
 *.sqlite
 *.sql
+!migrations/*.sql
 
 # Archives
 *.zip
