@@ -113,7 +113,7 @@ apps/frontend/
 # Other apps not needed in API image
 apps/agent_system/
 apps/frontend-admin/
-apps/core/
+# apps/core/ - REQUIRED by apps/api/database.py for db_session imports
 
 # Monitoring and evaluation (runtime only)
 apps/monitoring/
