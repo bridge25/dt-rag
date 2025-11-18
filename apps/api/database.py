@@ -332,8 +332,8 @@ class ExecutionLog(Base):
     __table_args__ = {'extend_existing': True}
 
     log_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    case_id: Mapped[uuid.UUID] = mapped_column(
-        get_uuid_type(), ForeignKey("case_bank.case_id"), nullable=False
+    case_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("case_bank.case_id"), nullable=False
     )
     success: Mapped[bool] = mapped_column(Boolean, nullable=False)
     error_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
