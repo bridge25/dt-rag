@@ -44,72 +44,55 @@ def upgrade() -> None:
     op.execute("""
         DO $$
         BEGIN
-            -- 1. taxonomy_nodes table
-            IF NOT EXISTS (
-                SELECT 1 FROM information_schema.tables
-                WHERE table_name = 'taxonomy_nodes'
-            ) THEN
-                CREATE TABLE taxonomy_nodes (
-                    node_id UUID NOT NULL,
-                    label TEXT,
-                    canonical_path TEXT[],
-                    version TEXT,
-                    confidence FLOAT,
-                    PRIMARY KEY (node_id)
-                );
-                RAISE NOTICE 'Created taxonomy_nodes table';
-            ELSE
-                RAISE NOTICE 'taxonomy_nodes table already exists, skipping';
-            END IF;
+            -- @CODE:CASEBANK-UNIFY-MIGRATION-003 - Drop old taxonomy tables from Migration 0001
+            -- Migration 0001 creates taxonomy_nodes with SERIAL (INTEGER) node_id
+            -- Migration 0008 creates taxonomy_nodes with UUID node_id
+            -- This causes FK type mismatch when creating doc_taxonomy
 
-            -- 2. taxonomy_edges table
-            IF NOT EXISTS (
-                SELECT 1 FROM information_schema.tables
-                WHERE table_name = 'taxonomy_edges'
-            ) THEN
-                CREATE TABLE taxonomy_edges (
-                    parent UUID NOT NULL,
-                    child UUID NOT NULL,
-                    version TEXT NOT NULL,
-                    PRIMARY KEY (parent, child, version),
-                    FOREIGN KEY (parent) REFERENCES taxonomy_nodes(node_id),
-                    FOREIGN KEY (child) REFERENCES taxonomy_nodes(node_id)
-                );
-                RAISE NOTICE 'Created taxonomy_edges table';
-            ELSE
-                RAISE NOTICE 'taxonomy_edges table already exists, skipping';
-            END IF;
-
-            -- 3. doc_taxonomy table (requires documents table)
-            -- @CODE:CASEBANK-UNIFY-MIGRATION-002 - Drop old doc_taxonomy from Migration 0001 if exists
-            -- Migration 0001 creates doc_taxonomy with old schema (source, assigned_at, assigned_by)
-            -- Migration 0008 creates doc_taxonomy with new schema (hitl_required, node_id, version)
-            -- We need to replace the old table with the new schema
-
-            -- Drop old doc_taxonomy if it exists (from Migration 0001)
+            -- Drop taxonomy_edges first (has FK to taxonomy_nodes)
+            DROP TABLE IF EXISTS taxonomy_edges CASCADE;
+            -- Drop doc_taxonomy (has FK to taxonomy_nodes)
             DROP TABLE IF EXISTS doc_taxonomy CASCADE;
-            RAISE NOTICE 'Dropped old doc_taxonomy table if it existed';
+            -- Drop taxonomy_nodes
+            DROP TABLE IF EXISTS taxonomy_nodes CASCADE;
+            RAISE NOTICE 'Dropped old taxonomy tables (SERIAL->UUID migration)';
 
-            -- Check if documents table exists before creating new doc_taxonomy
-            IF EXISTS (
-                SELECT 1 FROM information_schema.tables
-                WHERE table_name = 'documents'
-            ) THEN
-                CREATE TABLE doc_taxonomy (
-                    mapping_id SERIAL PRIMARY KEY,
-                    doc_id UUID,
-                    node_id UUID,
-                    version TEXT,
-                    path TEXT[],
-                    confidence FLOAT,
-                    hitl_required BOOLEAN DEFAULT false,
-                    FOREIGN KEY (doc_id) REFERENCES documents(doc_id),
-                    FOREIGN KEY (node_id) REFERENCES taxonomy_nodes(node_id)
-                );
-                RAISE NOTICE 'Created new doc_taxonomy table with hitl_required column';
-            ELSE
-                RAISE NOTICE 'documents table does not exist, skipping doc_taxonomy creation';
-            END IF;
+            -- 1. taxonomy_nodes table (UUID version)
+            CREATE TABLE taxonomy_nodes (
+                node_id UUID NOT NULL,
+                label TEXT,
+                canonical_path TEXT[],
+                version TEXT,
+                confidence FLOAT,
+                PRIMARY KEY (node_id)
+            );
+            RAISE NOTICE 'Created taxonomy_nodes table with UUID node_id';
+
+            -- 2. taxonomy_edges table (UUID version)
+            CREATE TABLE taxonomy_edges (
+                parent UUID NOT NULL,
+                child UUID NOT NULL,
+                version TEXT NOT NULL,
+                PRIMARY KEY (parent, child, version),
+                FOREIGN KEY (parent) REFERENCES taxonomy_nodes(node_id),
+                FOREIGN KEY (child) REFERENCES taxonomy_nodes(node_id)
+            );
+            RAISE NOTICE 'Created taxonomy_edges table with UUID FK';
+
+            -- 3. doc_taxonomy table (UUID version with hitl_required)
+            -- Already dropped above along with other taxonomy tables
+            CREATE TABLE doc_taxonomy (
+                mapping_id SERIAL PRIMARY KEY,
+                doc_id UUID,
+                node_id UUID,
+                version TEXT,
+                path TEXT[],
+                confidence FLOAT,
+                hitl_required BOOLEAN DEFAULT false,
+                FOREIGN KEY (doc_id) REFERENCES documents(doc_id),
+                FOREIGN KEY (node_id) REFERENCES taxonomy_nodes(node_id)
+            );
+            RAISE NOTICE 'Created doc_taxonomy table with UUID FK and hitl_required column';
 
             -- 4. taxonomy_migrations table
             IF NOT EXISTS (
@@ -179,44 +162,37 @@ def upgrade() -> None:
                 RAISE NOTICE 'Created index idx_taxonomy_edges_version';
             END IF;
 
-            -- doc_taxonomy indexes (only if table exists)
-            IF EXISTS (
-                SELECT 1 FROM information_schema.tables
-                WHERE table_name = 'doc_taxonomy'
+            -- doc_taxonomy indexes (table is always created above)
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_indexes
+                WHERE indexname = 'idx_doc_taxonomy_path'
             ) THEN
-                IF NOT EXISTS (
-                    SELECT 1 FROM pg_indexes
-                    WHERE indexname = 'idx_doc_taxonomy_path'
-                ) THEN
-                    CREATE INDEX idx_doc_taxonomy_path ON doc_taxonomy USING gin (path);
-                    RAISE NOTICE 'Created index idx_doc_taxonomy_path';
-                END IF;
+                CREATE INDEX idx_doc_taxonomy_path ON doc_taxonomy USING gin (path);
+                RAISE NOTICE 'Created index idx_doc_taxonomy_path';
+            END IF;
 
-                IF NOT EXISTS (
-                    SELECT 1 FROM pg_indexes
-                    WHERE indexname = 'idx_doc_taxonomy_hitl'
-                ) THEN
-                    CREATE INDEX idx_doc_taxonomy_hitl ON doc_taxonomy (hitl_required) WHERE hitl_required = true;
-                    RAISE NOTICE 'Created index idx_doc_taxonomy_hitl';
-                END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_indexes
+                WHERE indexname = 'idx_doc_taxonomy_hitl'
+            ) THEN
+                CREATE INDEX idx_doc_taxonomy_hitl ON doc_taxonomy (hitl_required) WHERE hitl_required = true;
+                RAISE NOTICE 'Created index idx_doc_taxonomy_hitl';
+            END IF;
 
-                IF NOT EXISTS (
-                    SELECT 1 FROM pg_indexes
-                    WHERE indexname = 'idx_doc_taxonomy_doc_id'
-                ) THEN
-                    CREATE INDEX idx_doc_taxonomy_doc_id ON doc_taxonomy (doc_id);
-                    RAISE NOTICE 'Created index idx_doc_taxonomy_doc_id';
-                END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_indexes
+                WHERE indexname = 'idx_doc_taxonomy_doc_id'
+            ) THEN
+                CREATE INDEX idx_doc_taxonomy_doc_id ON doc_taxonomy (doc_id);
+                RAISE NOTICE 'Created index idx_doc_taxonomy_doc_id';
+            END IF;
 
-                IF NOT EXISTS (
-                    SELECT 1 FROM pg_indexes
-                    WHERE indexname = 'idx_doc_taxonomy_node_id'
-                ) THEN
-                    CREATE INDEX idx_doc_taxonomy_node_id ON doc_taxonomy (node_id);
-                    RAISE NOTICE 'Created index idx_doc_taxonomy_node_id';
-                END IF;
-            ELSE
-                RAISE NOTICE 'doc_taxonomy table does not exist, skipping doc_taxonomy indexes';
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_indexes
+                WHERE indexname = 'idx_doc_taxonomy_node_id'
+            ) THEN
+                CREATE INDEX idx_doc_taxonomy_node_id ON doc_taxonomy (node_id);
+                RAISE NOTICE 'Created index idx_doc_taxonomy_node_id';
             END IF;
 
             IF NOT EXISTS (
