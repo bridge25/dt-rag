@@ -81,32 +81,34 @@ def upgrade() -> None:
             END IF;
 
             -- 3. doc_taxonomy table (requires documents table)
-            IF NOT EXISTS (
+            -- @CODE:CASEBANK-UNIFY-MIGRATION-002 - Drop old doc_taxonomy from Migration 0001 if exists
+            -- Migration 0001 creates doc_taxonomy with old schema (source, assigned_at, assigned_by)
+            -- Migration 0008 creates doc_taxonomy with new schema (hitl_required, node_id, version)
+            -- We need to replace the old table with the new schema
+
+            -- Drop old doc_taxonomy if it exists (from Migration 0001)
+            DROP TABLE IF EXISTS doc_taxonomy CASCADE;
+            RAISE NOTICE 'Dropped old doc_taxonomy table if it existed';
+
+            -- Check if documents table exists before creating new doc_taxonomy
+            IF EXISTS (
                 SELECT 1 FROM information_schema.tables
-                WHERE table_name = 'doc_taxonomy'
+                WHERE table_name = 'documents'
             ) THEN
-                -- Check if documents table exists before creating doc_taxonomy
-                IF EXISTS (
-                    SELECT 1 FROM information_schema.tables
-                    WHERE table_name = 'documents'
-                ) THEN
-                    CREATE TABLE doc_taxonomy (
-                        mapping_id SERIAL PRIMARY KEY,
-                        doc_id UUID,
-                        node_id UUID,
-                        version TEXT,
-                        path TEXT[],
-                        confidence FLOAT,
-                        hitl_required BOOLEAN DEFAULT false,
-                        FOREIGN KEY (doc_id) REFERENCES documents(doc_id),
-                        FOREIGN KEY (node_id) REFERENCES taxonomy_nodes(node_id)
-                    );
-                    RAISE NOTICE 'Created doc_taxonomy table';
-                ELSE
-                    RAISE NOTICE 'documents table does not exist, skipping doc_taxonomy creation';
-                END IF;
+                CREATE TABLE doc_taxonomy (
+                    mapping_id SERIAL PRIMARY KEY,
+                    doc_id UUID,
+                    node_id UUID,
+                    version TEXT,
+                    path TEXT[],
+                    confidence FLOAT,
+                    hitl_required BOOLEAN DEFAULT false,
+                    FOREIGN KEY (doc_id) REFERENCES documents(doc_id),
+                    FOREIGN KEY (node_id) REFERENCES taxonomy_nodes(node_id)
+                );
+                RAISE NOTICE 'Created new doc_taxonomy table with hitl_required column';
             ELSE
-                RAISE NOTICE 'doc_taxonomy table already exists, skipping';
+                RAISE NOTICE 'documents table does not exist, skipping doc_taxonomy creation';
             END IF;
 
             -- 4. taxonomy_migrations table
