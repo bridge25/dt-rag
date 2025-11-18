@@ -29,6 +29,7 @@ cryptography>=44.0.1
 # Data processing
 numpy>=1.24.0
 pandas>=2.0.0
+networkx>=3.0  # Required by apps/api/taxonomy_dag.py for DAG processing
 
 # Document parsing
 pymupdf>=1.23.0
