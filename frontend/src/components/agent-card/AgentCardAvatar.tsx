@@ -71,7 +71,7 @@ export const AgentCardAvatar = memo<AgentCardAvatarProps>(function AgentCardAvat
 
   // Fallback: Lucide Icon based on rarity and agent_id
   const iconName = getDefaultAvatarIcon(rarity, agentId)
-  const IconComponent = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[iconName]
+  const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[iconName]
 
   if (!IconComponent) {
     // Ultimate fallback: User icon
