@@ -163,22 +163,6 @@ def upgrade() -> None:
 
             IF NOT EXISTS (
                 SELECT 1 FROM pg_indexes
-                WHERE indexname = 'idx_doc_taxonomy_path'
-            ) THEN
-                CREATE INDEX idx_doc_taxonomy_path ON doc_taxonomy USING gin (path);
-                RAISE NOTICE 'Created index idx_doc_taxonomy_path';
-            END IF;
-
-            IF NOT EXISTS (
-                SELECT 1 FROM pg_indexes
-                WHERE indexname = 'idx_doc_taxonomy_hitl'
-            ) THEN
-                CREATE INDEX idx_doc_taxonomy_hitl ON doc_taxonomy (hitl_required) WHERE hitl_required = true;
-                RAISE NOTICE 'Created index idx_doc_taxonomy_hitl';
-            END IF;
-
-            IF NOT EXISTS (
-                SELECT 1 FROM pg_indexes
                 WHERE indexname = 'idx_taxonomy_nodes_version'
             ) THEN
                 CREATE INDEX idx_taxonomy_nodes_version ON taxonomy_nodes (version);
@@ -193,20 +177,44 @@ def upgrade() -> None:
                 RAISE NOTICE 'Created index idx_taxonomy_edges_version';
             END IF;
 
-            IF NOT EXISTS (
-                SELECT 1 FROM pg_indexes
-                WHERE indexname = 'idx_doc_taxonomy_doc_id'
+            -- doc_taxonomy indexes (only if table exists)
+            IF EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_name = 'doc_taxonomy'
             ) THEN
-                CREATE INDEX idx_doc_taxonomy_doc_id ON doc_taxonomy (doc_id);
-                RAISE NOTICE 'Created index idx_doc_taxonomy_doc_id';
-            END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_indexes
+                    WHERE indexname = 'idx_doc_taxonomy_path'
+                ) THEN
+                    CREATE INDEX idx_doc_taxonomy_path ON doc_taxonomy USING gin (path);
+                    RAISE NOTICE 'Created index idx_doc_taxonomy_path';
+                END IF;
 
-            IF NOT EXISTS (
-                SELECT 1 FROM pg_indexes
-                WHERE indexname = 'idx_doc_taxonomy_node_id'
-            ) THEN
-                CREATE INDEX idx_doc_taxonomy_node_id ON doc_taxonomy (node_id);
-                RAISE NOTICE 'Created index idx_doc_taxonomy_node_id';
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_indexes
+                    WHERE indexname = 'idx_doc_taxonomy_hitl'
+                ) THEN
+                    CREATE INDEX idx_doc_taxonomy_hitl ON doc_taxonomy (hitl_required) WHERE hitl_required = true;
+                    RAISE NOTICE 'Created index idx_doc_taxonomy_hitl';
+                END IF;
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_indexes
+                    WHERE indexname = 'idx_doc_taxonomy_doc_id'
+                ) THEN
+                    CREATE INDEX idx_doc_taxonomy_doc_id ON doc_taxonomy (doc_id);
+                    RAISE NOTICE 'Created index idx_doc_taxonomy_doc_id';
+                END IF;
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_indexes
+                    WHERE indexname = 'idx_doc_taxonomy_node_id'
+                ) THEN
+                    CREATE INDEX idx_doc_taxonomy_node_id ON doc_taxonomy (node_id);
+                    RAISE NOTICE 'Created index idx_doc_taxonomy_node_id';
+                END IF;
+            ELSE
+                RAISE NOTICE 'doc_taxonomy table does not exist, skipping doc_taxonomy indexes';
             END IF;
 
             IF NOT EXISTS (
