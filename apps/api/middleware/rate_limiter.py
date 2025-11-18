@@ -30,6 +30,8 @@ RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
 REDIS_RATE_LIMIT_ENABLED = (
     os.getenv("REDIS_RATE_LIMIT_ENABLED", "true").lower() == "true"
 )
+# Support both REDIS_URL (Railway) and individual components (legacy)
+REDIS_URL = os.getenv("REDIS_URL")
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_DB = int(os.getenv("REDIS_DB_RATE_LIMIT", "1"))
@@ -53,10 +55,13 @@ class RedisRateLimiter:
         try:
             import asyncio
 
+            # Use REDIS_URL if available (Railway), otherwise fall back to individual components
+            redis_url = REDIS_URL or f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+
             # Add timeout to prevent hang during Redis connection
             self.redis_client = await asyncio.wait_for(
                 aioredis.from_url(
-                    f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+                    redis_url,
                     encoding="utf-8",
                     decode_responses=True,
                     socket_connect_timeout=2.0,  # 2 second connection timeout
@@ -65,8 +70,9 @@ class RedisRateLimiter:
                 timeout=5.0  # 5 second overall timeout
             )
             await asyncio.wait_for(self.redis_client.ping(), timeout=2.0)
+            redis_source = "REDIS_URL" if REDIS_URL else f"{REDIS_HOST}:{REDIS_PORT}"
             logger.info(
-                f"Rate limiter initialized with Redis at {REDIS_HOST}:{REDIS_PORT}"
+                f"Rate limiter initialized with Redis at {redis_source}"
             )
         except asyncio.TimeoutError:
             logger.warning(f"Redis connection timeout - rate limiting disabled")
