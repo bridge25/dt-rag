@@ -28,7 +28,7 @@ export interface CoverageResponse {
 }
 
 export async function fetchAgents(params?: FetchAgentsParams): Promise<AgentCardData[]> {
-  const response = await apiClient.get<AgentsListResponse>('/api/v1/agents', params)
+  const response = await apiClient.get<AgentsListResponse>('/api/v1/agents/', params)
   const validated = AgentsListResponseSchema.parse(response)
   return validated.agents
 }
