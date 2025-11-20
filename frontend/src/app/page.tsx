@@ -1,5 +1,6 @@
 // @CODE:AGENT-CARD-001-PAGE-001
 // @CODE:FRONTEND-INTEGRATION-001-HOME-PAGE-UPDATE
+// @CODE:HOME-STATS-001:HOME-PAGE-REDESIGN
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,6 +9,9 @@ import { useAgents } from '../hooks/useAgents'
 import { AgentCard } from '../components/agent-card/AgentCard'
 import { VirtualList } from '../components/common/VirtualList'
 import { LoadingSpinner } from '../components/common/LoadingSpinner'
+import { StatCard } from '../components/home/StatCard'
+import { RecommendationPanel } from '../components/home/RecommendationPanel'
+import { Users, BookOpen, MessageSquare, Folder, Plus } from 'lucide-react'
 
 const VIRTUAL_SCROLL_THRESHOLD = Number(import.meta.env.VITE_VIRTUAL_SCROLL_THRESHOLD) || 100
 
@@ -36,6 +40,15 @@ export default function HomePage() {
   const handleDelete = (agentId: string) => {
     console.log('Delete agent:', agentId)
   }
+
+  const handleCreateAgent = () => {
+    // TODO: Navigate to agent creation page
+    console.log('Create agent clicked')
+  }
+
+  // Calculate statistics
+  const totalDocuments = agents.reduce((sum, agent) => sum + (agent.total_documents || 0), 0)
+  const totalConversations = agents.reduce((sum, agent) => sum + (agent.total_queries || 0), 0)
 
   if (isLoading) {
     return (
@@ -92,38 +105,9 @@ export default function HomePage() {
     )
   }
 
-  if (agents.length === 0) {
-    return (
-      <main className="p-8">
-        <header className="flex items-center gap-6 mb-8">
-          <img
-            src="/company-logo.jpg"
-            alt="Company Logo"
-            className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
-          />
-          <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Agents</h1>
-            <p className="text-sm md:text-base text-gray-600 mt-1">
-              Dynamic Taxonomy RAG System
-            </p>
-          </div>
-        </header>
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg">
-            No agents found. Create your first agent to get started.
-          </p>
-        </div>
-      </main>
-    )
-  }
-
-  const useVirtualScroll = agents.length > VIRTUAL_SCROLL_THRESHOLD
-  const columnCount = Math.floor(dimensions.width / 320) || 1
-  const columnWidth = 320
-  const rowHeight = 450
-
-  return (
-    <main className="p-8">
+  // Common layout structure for both empty and populated states
+  const renderLayout = (content: React.ReactNode) => (
+    <main className="p-8 max-w-7xl mx-auto">
       {/* Header with Logo */}
       <header className="flex items-center gap-6 mb-8">
         <img
@@ -141,8 +125,84 @@ export default function HomePage() {
         </div>
       </header>
 
+      {/* Statistics Section - Always Visible */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          title="Agents"
+          value={agents.length}
+          icon={<Users className="w-5 h-5" />}
+          description="Total agents"
+        />
+        <StatCard
+          title="Knowledge Base"
+          value={totalDocuments}
+          icon={<BookOpen className="w-5 h-5" />}
+          description="Total documents"
+        />
+        <StatCard
+          title="Conversations"
+          value={totalConversations}
+          icon={<MessageSquare className="w-5 h-5" />}
+          description="Total queries"
+        />
+        <StatCard
+          title="Taxonomy"
+          value="v1.0.0"
+          icon={<Folder className="w-5 h-5" />}
+          description="Current version"
+        />
+      </div>
+
+      {content}
+    </main>
+  )
+
+  if (agents.length === 0) {
+    return renderLayout(
+      <>
+        {/* Empty State with Recommendation Panel */}
+        <RecommendationPanel hasAgents={false} onCreateAgent={handleCreateAgent} />
+      </>
+    )
+  }
+
+  const useVirtualScroll = agents.length > VIRTUAL_SCROLL_THRESHOLD
+  const columnCount = Math.floor(dimensions.width / 320) || 1
+  const columnWidth = 320
+  const rowHeight = 450
+
+  // Agents exist - show grid with controls
+  return renderLayout(
+    <>
+      {/* Agent Controls */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-semibold text-gray-800">My Agents</h2>
+          <select className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>Sort: Recent</option>
+            <option>Sort: Level</option>
+            <option>Sort: Name</option>
+          </select>
+          <select className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>Filter: All Levels</option>
+            <option>Filter: Common</option>
+            <option>Filter: Rare</option>
+            <option>Filter: Epic</option>
+            <option>Filter: Legendary</option>
+          </select>
+        </div>
+        <button
+          onClick={handleCreateAgent}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+        >
+          <Plus className="w-4 h-4" />
+          New Agent
+        </button>
+      </div>
+
+      {/* Agent Grid */}
       {useVirtualScroll ? (
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-8">
           <VirtualList
             agents={agents}
             columnCount={columnCount}
@@ -155,7 +215,7 @@ export default function HomePage() {
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {agents.map((agent) => (
             <AgentCard
               key={agent.agent_id}
@@ -166,6 +226,9 @@ export default function HomePage() {
           ))}
         </div>
       )}
-    </main>
+
+      {/* Recommendation Panel */}
+      <RecommendationPanel hasAgents={true} />
+    </>
   )
 }
