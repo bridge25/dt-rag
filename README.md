@@ -1,5 +1,12 @@
 # Dynamic Taxonomy RAG v2.2.0 - 100% Type Safety Achieved
 
+<!--
+@DOC:PROJECT-001 - Main project documentation
+@DOC:API-001 - API reference (see DEPLOYMENT_GUIDE.md for API setup)
+@DOC:SEARCH-001 - Search system documentation
+@DOC:ORCHESTRATION-001 - LangGraph pipeline documentation
+-->
+
 <!-- @DOC:MYPY-CONSOLIDATION-002-README-BADGE -->
 ![MyPy Type Safety](https://img.shields.io/badge/mypy-100%25%20type%20safe-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)

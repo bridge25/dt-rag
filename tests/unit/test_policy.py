@@ -1,4 +1,15 @@
 # @TEST:SOFTQ-001:0.2 | SPEC: SPEC-SOFTQ-001.md
+"""
+Soft Q-learning Policy Unit Tests
+
+Tests for SoftQPolicy class:
+- Softmax probability distribution
+- Action sampling behavior
+- Temperature effect on exploration
+- Numeric overflow prevention
+
+@TEST:BANDIT-001
+"""
 
 import pytest
 from apps.orchestration.src.bandit.policy import SoftQPolicy

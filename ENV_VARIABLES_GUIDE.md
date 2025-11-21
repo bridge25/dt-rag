@@ -1,5 +1,7 @@
 # 🔐 환경 변수 설정 가이드
 
+<!-- @DOC:CONFIG-001 - Environment configuration guide -->
+
 **프로젝트**: dt-rag v2.0.0
 **플랫폼**: Railway (백엔드) + Vercel (프론트엔드)
 
