@@ -1,3 +1,9 @@
+/**
+ * Error boundary component for application error handling
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import { useEffect } from "react";

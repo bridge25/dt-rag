@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:AGENTS-API
+/**
+ * API client for agent-related endpoints
+ *
+ * @CODE:FRONTEND-001
+ */
 import { apiClient } from './client'
 import type { AgentCardData } from './types'
 import { AgentCardDataSchema } from './types'

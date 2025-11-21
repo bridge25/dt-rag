@@ -1,3 +1,9 @@
+/**
+ * Tooltip component with positioning
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"

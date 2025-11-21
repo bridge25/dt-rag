@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:API-CLIENT
+/**
+ * API client for making HTTP requests with error handling
+ *
+ * @CODE:FRONTEND-001
+ */
 import axios from 'axios'
 import type { AxiosInstance, AxiosError } from 'axios'
 import { env } from '@/lib/config/env'

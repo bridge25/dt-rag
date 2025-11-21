@@ -1,3 +1,9 @@
+/**
+ * Progress bar component
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React from "react"

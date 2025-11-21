@@ -1,4 +1,13 @@
-// @CODE:POKEMON-IMAGE-COMPLETE-001-AVATAR-001
+/**
+ * AgentCardAvatar Component
+ *
+ * Displays Pokemon-style avatar for Agent Cards.
+ * - Uses Lucide Icons as fallback (12 icons mapped by rarity)
+ * - Deterministic icon selection based on agent_id hash
+ * - Supports future image URLs (avatar_url)
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { memo } from 'react'
 import * as LucideIcons from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,16 +38,6 @@ const RARITY_ICON_SIZES: Record<Rarity, string> = {
   Legendary: 'w-28 h-28',
 }
 
-/**
- * AgentCardAvatar Component
- *
- * Displays Pokemon-style avatar for Agent Cards.
- * - Uses Lucide Icons as fallback (12 icons mapped by rarity)
- * - Deterministic icon selection based on agent_id hash
- * - Supports future image URLs (avatar_url)
- *
- * @see SPEC-POKEMON-IMAGE-COMPLETE-001
- */
 export const AgentCardAvatar = memo<AgentCardAvatarProps>(function AgentCardAvatar({
   agentId,
   agentName,

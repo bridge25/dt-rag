@@ -1,3 +1,9 @@
+/**
+ * Taxonomy browser page
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import { useQuery } from "@tanstack/react-query";

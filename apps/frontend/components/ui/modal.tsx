@@ -1,3 +1,9 @@
+/**
+ * Modal component
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React, { useEffect } from "react"

@@ -1,3 +1,9 @@
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ */
+
 // @TEST:FRONTEND-INTEGRATION-001:PHASE3:XP-API
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { awardXP } from './xp'

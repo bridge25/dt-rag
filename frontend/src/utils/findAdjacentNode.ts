@@ -1,6 +1,8 @@
-// @CODE:TAXONOMY-KEYNAV-002-008
-// @CODE:TAXONOMY-KEYNAV-002-009
-// Spatial navigation algorithm using Euclidean distance with tree hierarchy support
+/**
+ * Spatial navigation algorithm using Euclidean distance with tree hierarchy support
+ *
+ * @CODE:FRONTEND-001
+ */
 
 import type { FlowNode } from '../hooks/useArrowKeyNavigation'
 import type { LayoutType } from '../components/taxonomy/taxonomyLayouts'

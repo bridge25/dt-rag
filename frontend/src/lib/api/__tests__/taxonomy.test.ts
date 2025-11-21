@@ -1,5 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-002
-// Tests for Taxonomy API client
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fetchTaxonomyTree } from '../taxonomy'

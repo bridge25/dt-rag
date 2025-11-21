@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UTILS-004
+/**
+ * Quality score calculation from RAGAS scores
+ *
+ * @CODE:FRONTEND-001
+ */
 
 export function calculateQualityScore(ragasScore: number): number {
   const clamped = Math.max(0, Math.min(1, ragasScore))

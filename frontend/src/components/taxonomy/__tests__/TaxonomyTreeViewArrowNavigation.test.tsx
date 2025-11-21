@@ -1,5 +1,9 @@
-// @TEST:TAXONOMY-KEYNAV-002-010
-// Integration tests for arrow key navigation in TaxonomyTreeView
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'

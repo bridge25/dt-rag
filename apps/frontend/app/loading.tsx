@@ -1,3 +1,9 @@
+/**
+ * Loading component for page transitions
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 

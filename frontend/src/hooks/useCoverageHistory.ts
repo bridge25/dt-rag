@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:HISTORY-HOOK
+/**
+ * Hook for fetching agent coverage history
+ *
+ * @CODE:FRONTEND-001
+ */
 import { useQuery } from '@tanstack/react-query'
 import { fetchCoverageHistory, type CoverageHistoryResponse } from '@/lib/api/history'
 

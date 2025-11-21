@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-UTILS-002
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect } from 'vitest'
 import { calculateLevel, getNextLevelXp, LEVEL_THRESHOLDS } from '../levelCalculator'
 

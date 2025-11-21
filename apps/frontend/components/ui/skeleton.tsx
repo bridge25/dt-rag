@@ -1,3 +1,9 @@
+/**
+ * Skeleton component for loading placeholders
+ *
+ * @CODE:UI-001
+ */
+
 import { type HTMLAttributes } from "react"
 import { cn } from "@/lib/utils"
 

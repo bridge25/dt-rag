@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-UTILS-004
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect } from 'vitest'
 import { calculateQualityScore } from '../qualityScoreCalculator'
 

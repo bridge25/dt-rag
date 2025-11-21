@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UI-001
+/**
+ * RarityBadge Component
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { Rarity } from '@/lib/api/types'

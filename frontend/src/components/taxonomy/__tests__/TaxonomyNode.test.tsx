@@ -1,6 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-004
-// @TEST:TAXONOMY-KEYNAV-002-003
-// Custom Taxonomy Node Component tests
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render, screen } from '@testing-library/react'

@@ -1,3 +1,9 @@
+/**
+ * Pipeline page for RAG execution visualization
+ *
+ * @CODE:MONITORING-001
+ */
+
 "use client"
 
 import { useState } from "react"

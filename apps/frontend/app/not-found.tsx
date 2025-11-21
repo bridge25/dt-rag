@@ -1,3 +1,9 @@
+/**
+ * 404 Not Found page
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

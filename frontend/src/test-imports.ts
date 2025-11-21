@@ -1,3 +1,9 @@
+/**
+ * Test file to verify all imports are resolvable
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import type { SearchRequest, TaxonomyNode } from '@/lib/api/types'
 import { apiClient } from '@/lib/api/client'
 import { env } from '@/lib/env'

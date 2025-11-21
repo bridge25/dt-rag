@@ -1,7 +1,9 @@
-// @TEST:TAXONOMY-KEYNAV-002-008
-// @TEST:TAXONOMY-KEYNAV-002-009
-// Tests for findAdjacentNode utility - spatial algorithm with Euclidean distance + tree hierarchy
-
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect } from 'vitest'
 import { findAdjacentNode, type Direction } from '../findAdjacentNode'
 import type { FlowNode } from '../../hooks/useArrowKeyNavigation'

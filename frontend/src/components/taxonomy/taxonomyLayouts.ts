@@ -1,5 +1,8 @@
-// @CODE:TAXONOMY-VIZ-001-014
-// Taxonomy layout algorithms - Dagre (tree) and D3 Force (radial)
+/**
+ * Taxonomy layout algorithms - Dagre (tree) and D3 Force (radial)
+ *
+ * @CODE:TAXONOMY-VIZ-001
+ */
 
 import * as d3Force from 'd3-force'
 import dagre from 'dagre'

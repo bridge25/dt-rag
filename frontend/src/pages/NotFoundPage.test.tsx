@@ -1,4 +1,10 @@
-// @TEST:FRONTEND-INTEGRATION-001:PHASE2:NOT-FOUND
+/**
+ * Not Found Page tests
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-INTEGRATION-001:PHASE2:NOT-FOUND
+ */
+
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'

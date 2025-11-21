@@ -1,5 +1,8 @@
-// @CODE:TAXONOMY-VIZ-001-002
-// Taxonomy API client for fetching taxonomy tree structure
+/**
+ * API client for taxonomy tree endpoints
+ *
+ * @CODE:FRONTEND-001
+ */
 
 import { apiClient } from './client'
 import type { TaxonomyNode } from './types'

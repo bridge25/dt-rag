@@ -1,5 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-013
-// TaxonomySearchFilter component tests
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'

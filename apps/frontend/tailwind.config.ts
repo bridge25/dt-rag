@@ -1,3 +1,9 @@
+/**
+ * Tailwind CSS configuration
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import type { Config } from "tailwindcss";
 
 const config: Config = {

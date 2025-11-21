@@ -1,3 +1,9 @@
+/**
+ * Wave chart component
+ *
+ * @CODE:MONITORING-001
+ */
+
 "use client"
 
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis } from "recharts"

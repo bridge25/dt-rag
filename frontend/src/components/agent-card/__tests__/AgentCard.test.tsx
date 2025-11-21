@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-UI-005
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:AGENT-CARD-001
+ */
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { AgentCard } from '../AgentCard'
@@ -60,7 +65,6 @@ describe('AgentCard', () => {
     expect(card.className).toContain('border')
   })
 
-  // @TEST:AGENT-CARD-AVATAR-001 - Pokemon Avatar System Tests
   describe('Pokemon Avatar System', () => {
     it('should render Lucide Icon avatar when avatar_url is provided', () => {
       const agentWithAvatar: AgentCardData = {

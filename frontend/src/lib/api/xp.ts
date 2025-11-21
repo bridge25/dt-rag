@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:XP-API
+/**
+ * API client for agent XP endpoints
+ *
+ * @CODE:FRONTEND-001
+ */
 import { apiClient } from './client'
 import { AwardXPResponseSchema, type AwardXPResponseType } from './types'
 

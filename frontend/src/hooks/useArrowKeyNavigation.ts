@@ -1,6 +1,8 @@
-// @CODE:TAXONOMY-KEYNAV-002-007
-// @CODE:TAXONOMY-KEYNAV-002-008
-// Hook for arrow key navigation in taxonomy visualization
+/**
+ * Hook for arrow key navigation in taxonomy visualization
+ *
+ * @CODE:FRONTEND-001
+ */
 
 import { useCallback, useEffect } from 'react'
 import { useFocusManagement } from './useFocusManagement'

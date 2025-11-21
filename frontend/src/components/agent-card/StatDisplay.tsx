@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UI-003
+/**
+ * StatDisplay Component
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'

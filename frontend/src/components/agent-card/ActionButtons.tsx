@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UI-004
+/**
+ * ActionButtons Component
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { memo } from 'react'
 import { cn } from '@/lib/utils'
 

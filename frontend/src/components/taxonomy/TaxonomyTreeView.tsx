@@ -1,17 +1,11 @@
-// @CODE:TAXONOMY-VIZ-001-003
-// @CODE:TAXONOMY-VIZ-001-004
-// @CODE:TAXONOMY-VIZ-001-005
-// @CODE:TAXONOMY-VIZ-001-007
-// @CODE:TAXONOMY-VIZ-001-012
-// @CODE:TAXONOMY-VIZ-001-013
-// @CODE:TAXONOMY-VIZ-001-014
-// @CODE:TAXONOMY-KEYNAV-002-004
-// @CODE:TAXONOMY-KEYNAV-002-010
-// @CODE:TAXONOMY-KEYNAV-002-012
-// TaxonomyTreeView component - optimized for 500+ nodes with performance monitoring
-// Tab navigation order: Search Filter → Layout Toggle → Zoom Controls → Nodes → Detail Panel
-// Arrow key navigation: integrated with keyboard mode management
-// Keyboard shortcuts: /, +/=, -, L, Home, ?
+/**
+ * TaxonomyTreeView component - optimized for 500+ nodes with performance monitoring
+ * Tab navigation order: Search Filter → Layout Toggle → Zoom Controls → Nodes → Detail Panel
+ * Arrow key navigation: integrated with keyboard mode management
+ * Keyboard shortcuts: /, +/=, -, L, Home, ?
+ *
+ * @CODE:TAXONOMY-VIZ-001
+ */
 
 import { useCallback, useMemo, useState, useEffect } from 'react'
 import {

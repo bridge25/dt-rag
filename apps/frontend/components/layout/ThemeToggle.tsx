@@ -1,3 +1,9 @@
+/**
+ * Theme toggle component for light/dark mode
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import { Moon, Sun } from "lucide-react";

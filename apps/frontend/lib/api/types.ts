@@ -1,3 +1,9 @@
+/**
+ * API type definitions and schemas
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import { z } from "zod"
 
 // ============================================================================

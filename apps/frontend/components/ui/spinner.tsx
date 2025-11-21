@@ -1,3 +1,9 @@
+/**
+ * Spinner component for loading states
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React from "react"

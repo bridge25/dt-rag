@@ -1,3 +1,9 @@
+/**
+ * Sidebar navigation component
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import Link from "next/link";

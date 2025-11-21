@@ -1,3 +1,9 @@
+/**
+ * Documents page for uploading and managing documents
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import { useState, type DragEvent, type ChangeEvent } from "react";

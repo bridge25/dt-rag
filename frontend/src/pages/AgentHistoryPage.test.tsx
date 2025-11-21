@@ -1,4 +1,10 @@
-// @TEST:FRONTEND-INTEGRATION-001:PHASE2:HISTORY-PAGE
+/**
+ * Agent History Page tests
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-INTEGRATION-001:PHASE2:HISTORY-PAGE
+ */
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'

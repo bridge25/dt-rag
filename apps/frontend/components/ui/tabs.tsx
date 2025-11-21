@@ -1,3 +1,9 @@
+/**
+ * Tabs component for tabbed navigation
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React, { createContext, useContext, useState } from "react"

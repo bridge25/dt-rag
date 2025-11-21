@@ -1,4 +1,9 @@
-// @TEST:FRONTEND-INTEGRATION-001:AGENTS-API
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fetchAgents, fetchAgent, calculateCoverage } from '../agents'
 import * as clientModule from '../client'

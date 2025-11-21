@@ -1,5 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-005
-// Custom Taxonomy Edge Component tests
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'

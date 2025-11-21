@@ -1,5 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:ENV-CONFIG
-// Force rebuild to include environment variables
+/**
+ * Environment configuration validation
+ *
+ * @CODE:FRONTEND-001
+ */
 import { z } from 'zod'
 
 const envSchema = z.object({

@@ -1,3 +1,9 @@
+/**
+ * Badge component with colors and variants
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React from "react"

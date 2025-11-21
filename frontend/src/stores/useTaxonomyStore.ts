@@ -1,5 +1,8 @@
-// @CODE:TAXONOMY-KEYNAV-002-001
-// Zustand Store Extension for Keyboard Navigation
+/**
+ * Zustand store for taxonomy visualization and keyboard navigation state management
+ *
+ * @CODE:FRONTEND-001
+ */
 
 import { create } from 'zustand'
 

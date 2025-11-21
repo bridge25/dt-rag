@@ -1,4 +1,10 @@
-// @TEST:FRONTEND-INTEGRATION-001:PHASE2:ROUTING
+/**
+ * App routing and integration tests
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-INTEGRATION-001:PHASE2:ROUTING
+ */
+
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import App from './App'

@@ -1,11 +1,11 @@
-// @CODE:TAXONOMY-VIZ-001-014
-// @CODE:TAXONOMY-VIZ-001-016
-// @CODE:TAXONOMY-KEYNAV-002-004
-// @CODE:TAXONOMY-KEYNAV-002-006
-// Layout toggle button - switch between tree (Dagre) and radial (D3 Force) layouts
-// Accessibility: aria-hidden for decorative SVGs, WCAG 2.1 AA compliant
-// Tab order: Second interactive element after Search Filter
-// Focus indicators: Blue ring (focus:ring-2) with offset (focus:ring-offset-2)
+/**
+ * Layout toggle button - switch between tree (Dagre) and radial (D3 Force) layouts
+ * Accessibility: aria-hidden for decorative SVGs, WCAG 2.1 AA compliant
+ * Tab order: Second interactive element after Search Filter
+ * Focus indicators: Blue ring (focus:ring-2) with offset (focus:ring-offset-2)
+ *
+ * @CODE:TAXONOMY-VIZ-001
+ */
 
 import type { LayoutType } from './taxonomyLayouts'
 

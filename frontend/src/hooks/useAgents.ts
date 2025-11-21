@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:AGENTS-HOOK
+/**
+ * Hook for fetching list of agents
+ *
+ * @CODE:FRONTEND-001
+ */
 import { useQuery } from '@tanstack/react-query'
 import { fetchAgents, type FetchAgentsParams } from '@/lib/api/agents'
 import type { AgentCardData } from '@/lib/api/types'

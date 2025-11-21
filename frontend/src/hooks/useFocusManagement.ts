@@ -1,5 +1,8 @@
-// @CODE:TAXONOMY-KEYNAV-002-002
-// Reusable hook for focus management logic
+/**
+ * Hook for managing focus state and history in taxonomy visualization
+ *
+ * @CODE:FRONTEND-001
+ */
 
 import { useCallback } from 'react'
 import { useTaxonomyStore } from '../stores/useTaxonomyStore'

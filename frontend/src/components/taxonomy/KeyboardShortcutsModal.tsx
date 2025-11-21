@@ -1,6 +1,9 @@
-// @CODE:TAXONOMY-KEYNAV-002-013
-// Modal component for displaying keyboard shortcuts
-// WCAG 2.1 AA compliant with focus trap and proper ARIA attributes
+/**
+ * Modal component for displaying keyboard shortcuts
+ * WCAG 2.1 AA compliant with focus trap and proper ARIA attributes
+ *
+ * @CODE:TAXONOMY-VIZ-001
+ */
 
 import { useEffect } from 'react'
 import * as FocusTrapReact from 'focus-trap-react'
