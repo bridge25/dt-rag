@@ -1,5 +1,7 @@
 # 🚀 DT-RAG Railway + Vercel 배포 가이드
 
+<!-- @DOC:DEPLOY-001 - Deployment guide for Railway + Vercel -->
+
 **프로젝트**: dt-rag v2.0.0
 **배포 아키텍처**: Railway (백엔드) + Vercel (프론트엔드)
 **작성일**: 2025-11-12

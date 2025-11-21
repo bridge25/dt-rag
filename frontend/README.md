@@ -1,5 +1,7 @@
 # React + TypeScript + Vite
 
+<!-- @DOC:FRONTEND-001 - Frontend application documentation -->
+
 Dynamic Taxonomy RAG System - Frontend Application
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
