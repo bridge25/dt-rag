@@ -2,6 +2,8 @@
 Taxonomy Tree 엔드포인트 - Enhanced with DAG Management
 실제 PostgreSQL 데이터베이스에서 분류체계 로드
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수 + DAG versioning and rollback
+
+@CODE:TAXONOMY-001
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body

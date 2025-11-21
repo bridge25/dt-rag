@@ -1,4 +1,13 @@
-"""Monitoring router with Langfuse LLM cost tracking"""
+"""
+Monitoring router with Langfuse LLM cost tracking.
+
+Provides REST endpoints for system monitoring:
+- LLM cost tracking via Langfuse
+- System health metrics
+- Performance monitoring
+
+@CODE:MONITORING-001
+"""
 
 from typing import Any, Dict
 from fastapi import APIRouter

@@ -4,6 +4,8 @@ Meta-Planner Implementation
 
 Provides query complexity analysis and LLM-based planning for DT-RAG pipeline.
 Supports timeout handling and fallback strategies.
+
+@CODE:ORCHESTRATION-001
 """
 
 import asyncio

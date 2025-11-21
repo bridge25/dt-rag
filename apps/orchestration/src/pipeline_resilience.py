@@ -2,6 +2,7 @@
 B-O3: 재시도 로직 및 메모리 모니터링 시스템
 파이프라인 안정성과 복원력 강화
 
+@CODE:ORCHESTRATION-001
 @CODE:MYPY-001:PHASE2:BATCH3
 """
 

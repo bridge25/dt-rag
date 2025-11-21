@@ -12,6 +12,8 @@ Phase 5 (1P) Scope:
 - Basic sequential pipeline without Debate/Tools
 - Simple confidence calculation (rerank score + source count)
 - Timeout enforcement per step
+
+@CODE:ORCHESTRATION-001
 """
 
 import time

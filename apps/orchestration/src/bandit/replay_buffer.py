@@ -1,6 +1,8 @@
 # @SPEC:REPLAY-001 @IMPL:REPLAY-001:0.1
 """
 Experience Replay Buffer for Soft Q-learning Bandit (SPEC-REPLAY-001)
+
+@CODE:BANDIT-001
 """
 from collections import deque
 import asyncio

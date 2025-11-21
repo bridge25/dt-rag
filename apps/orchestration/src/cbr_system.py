@@ -1,6 +1,8 @@
 """
 B-O4: CBR (Case-Based Reasoning) 시스템
 A팀 case_bank 테이블 연동 + 유사도 로그/성과 레이블 적재 (PRD 준수)
+
+@CODE:CASEBANK-002
 """
 
 import json

@@ -1,3 +1,14 @@
+"""
+Document Ingestion API Router for DT-RAG v1.8.1
+
+Provides REST endpoints for document upload and processing:
+- Document upload and format detection
+- Job orchestration and status tracking
+- Ingestion pipeline management
+
+@CODE:INGESTION-001
+"""
+
 from fastapi import (
     APIRouter,
     UploadFile,

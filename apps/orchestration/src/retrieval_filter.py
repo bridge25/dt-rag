@@ -1,6 +1,8 @@
 """
 B-O2: Retriever 스코프 제한 필터
 allowed_category_paths 기반 retrieval 필터 (범위 외 접근 차단)
+
+@CODE:ORCHESTRATION-001
 """
 
 import logging

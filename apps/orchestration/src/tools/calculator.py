@@ -3,6 +3,8 @@
 Calculator Tool
 
 Basic calculator tool for testing MCP tool execution.
+
+@CODE:ORCHESTRATION-001
 """
 
 from typing import cast

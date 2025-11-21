@@ -7,6 +7,8 @@ Defines prompts for:
 - Critical agent (skeptical, alternative perspectives)
 - Critique prompts for Round 2
 - Synthesis prompt for final answer
+
+@CODE:DEBATE-001
 """
 
 AFFIRMATIVE_PROMPT_R1 = """[Role] You are an Affirmative agent in a debate system. Your task is to provide a well-supported, confident answer to the user's question.

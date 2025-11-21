@@ -6,6 +6,8 @@ Provides optimized batch search operations for processing multiple queries effic
 - Shared embedding computation
 - Result aggregation and deduplication
 - Performance analytics for batch operations
+
+@CODE:SEARCH-001
 """
 
 import sys

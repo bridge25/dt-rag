@@ -1,4 +1,8 @@
-"""Health check router"""
+"""
+Health check router for DT-RAG API.
+
+@CODE:API-001
+"""
 
 from typing import Dict, Any
 from fastapi import APIRouter
