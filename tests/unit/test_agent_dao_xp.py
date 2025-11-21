@@ -1,3 +1,12 @@
+"""
+Unit tests for agent DAO XP management (apps.api.agent_dao)
+
+This test module provides comprehensive coverage for agent experience points
+and leveling system functionality.
+
+@TEST:AGENT-GROWTH-001
+"""
+
 import pytest
 import asyncio
 from uuid import uuid4

@@ -1,3 +1,9 @@
+/**
+ * Card component with elevation and hover effects
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React from "react"

@@ -1,3 +1,8 @@
+"""
+HTML document parser.
+
+@CODE:INGESTION-001
+"""
 from typing import Optional
 from .base import BaseParser, ParserError
 
@@ -11,6 +16,7 @@ except ImportError:
 
 class HTMLParser(BaseParser):
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    # @CODE:INGESTION-001
     def __init__(self) -> None:
         if not BS4_AVAILABLE:
             raise ParserError("beautifulsoup4 not installed")

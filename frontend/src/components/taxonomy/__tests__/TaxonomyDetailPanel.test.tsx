@@ -1,6 +1,10 @@
-// @TEST:TAXONOMY-KEYNAV-002-005
-// Unit test for Focus Trap in TaxonomyDetailPanel
-// Tests: Tab within panel, Escape key closes panel, focus restoration
+/**
+ * Unit test for Focus Trap in TaxonomyDetailPanel
+ * Tests: Tab within panel, Escape key closes panel, focus restoration
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'

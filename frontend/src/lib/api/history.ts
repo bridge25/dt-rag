@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:HISTORY-API
+/**
+ * API client for coverage history endpoints
+ *
+ * @CODE:FRONTEND-001
+ */
 import { apiClient } from './client'
 import { z } from 'zod'
 

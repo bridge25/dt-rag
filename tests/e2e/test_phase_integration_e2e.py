@@ -1,3 +1,9 @@
+"""
+End-to-End integration tests for MoAI Pipeline phases
+
+@TEST:E2E-001
+"""
+
 import pytest
 from typing import Dict, Any
 from apps.orchestration.src.langgraph_pipeline import LangGraphPipeline, PipelineRequest

@@ -1,6 +1,8 @@
 """
 고성능 검색 캐싱 시스템
 검색 결과, 임베딩, 쿼리 제안을 메모리와 Redis에 캐싱
+
+@CODE:API-001
 """
 
 import asyncio

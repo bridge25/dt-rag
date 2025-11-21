@@ -12,6 +12,8 @@ Performance targets:
 - Recall@10 ≥ 0.85
 - Search latency p95 ≤ 1s
 - Cost ≤ ₩3/search
+
+@CODE:SEARCH-001
 """
 
 __version__ = "1.8.1"

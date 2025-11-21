@@ -1,3 +1,15 @@
+"""
+PII Detection Performance Benchmarks
+
+Tests performance metrics for PII detector:
+- Resident registration number detection
+- Phone number detection accuracy
+- Email pattern detection
+- Performance under various text loads
+
+@TEST:PERFORMANCE-001
+"""
+
 import pytest
 from apps.ingestion.pii.detector import PIIDetector, PIIType
 

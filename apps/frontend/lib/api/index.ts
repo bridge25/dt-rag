@@ -1,3 +1,9 @@
+/**
+ * API endpoints and functions
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import { z } from "zod"
 import { apiClient } from "./client"
 import {

@@ -1,6 +1,8 @@
 """
 Comprehensive Performance Monitoring System
 Real-time monitoring for PostgreSQL + pgvector + RAG system
+
+@CODE:MONITORING-001
 """
 
 import asyncio

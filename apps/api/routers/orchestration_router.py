@@ -6,6 +6,8 @@ Provides REST endpoints for LangGraph-based RAG pipeline orchestration including
 - Pipeline configuration and customization
 - Real-time pipeline monitoring
 - Pipeline result analysis and caching
+
+@CODE:ORCHESTRATION-001
 """
 
 import logging

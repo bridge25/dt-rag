@@ -8,6 +8,8 @@ Features:
 - Atomic migration operations with rollback (TTR ≤ 15분)
 - Concurrent modification support
 - ACID compliance
+
+@CODE:TAXONOMY-001
 """
 
 import asyncio

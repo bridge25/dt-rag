@@ -1,3 +1,9 @@
+/**
+ * Agents page for managing AI agents and their performance metrics
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client"
 
 import { useState } from "react"

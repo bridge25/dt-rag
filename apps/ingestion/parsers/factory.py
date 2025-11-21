@@ -1,3 +1,8 @@
+"""
+Parser factory for creating document parsers.
+
+@CODE:INGESTION-001
+"""
 from typing import Dict, Type
 from .base import BaseParser, ParserError
 from .pdf_parser import PDFParser

@@ -1,3 +1,9 @@
+/**
+ * API client configuration
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import axios from "axios"
 import { env } from "../env"
 

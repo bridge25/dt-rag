@@ -3,6 +3,8 @@ Gemini LLM Answer Generation Service
 
 Generates natural language answers from search results using Google's Gemini 2.0 Flash model.
 Supports multilingual question answering, summarization, and key point extraction.
+
+@CODE:API-001
 """
 
 import os

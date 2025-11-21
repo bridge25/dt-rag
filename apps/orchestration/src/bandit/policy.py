@@ -1,4 +1,9 @@
 # @CODE:SOFTQ-001:0.2 | SPEC: SPEC-SOFTQ-001.md | TEST: tests/unit/test_policy.py
+"""
+Soft Q-learning based policy with softmax action selection.
+
+@CODE:BANDIT-001
+"""
 
 import logging
 import math

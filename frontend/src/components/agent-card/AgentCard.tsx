@@ -1,5 +1,8 @@
-// @CODE:AGENT-CARD-001-UI-005
-// @CODE:POKEMON-IMAGE-COMPLETE-001-CARD-001
+/**
+ * AgentCard Component
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { AgentCardData } from '@/lib/api/types'
@@ -16,7 +19,6 @@ interface AgentCardProps {
   className?: string
 }
 
-// @CODE:FRONTEND-INTEGRATION-001-MEMO-CARDS
 const arePropsEqual = (prevProps: AgentCardProps, nextProps: AgentCardProps) => {
   return (
     prevProps.agent.agent_id === nextProps.agent.agent_id &&

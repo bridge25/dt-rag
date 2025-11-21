@@ -1,4 +1,10 @@
-// @TEST:AGENT-CARD-001-PAGE-001
+/**
+ * Home page tests
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:AGENT-CARD-001-PAGE-001
+ */
+
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

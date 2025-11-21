@@ -1,3 +1,8 @@
+/**
+ * Type definitions and validation schemas for API responses
+ *
+ * @CODE:FRONTEND-001
+ */
 import { z } from "zod"
 
 // ============================================================================

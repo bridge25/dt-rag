@@ -6,6 +6,8 @@ security configuration, rate limiting, and performance tuning.
 
 This module integrates with the new environment management and LLM configuration systems
 to provide comprehensive, secure, and fallback-enabled configuration management.
+
+@CODE:API-001
 """
 
 import os

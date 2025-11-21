@@ -1,12 +1,13 @@
 """
 XSS (Cross-Site Scripting) Prevention Tests
-@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for XSS attack prevention:
 - Script tag injection blocked
 - Event handler injection blocked
 - HTML entity escaping
 - No script execution in responses
+
+@TEST:SECURITY-001
 """
 
 import pytest

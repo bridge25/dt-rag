@@ -1,3 +1,9 @@
+/**
+ * Application providers for React Query and theme management
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

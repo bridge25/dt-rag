@@ -6,6 +6,8 @@ Contains AI agent orchestration and management functionality:
 - Multi-agent coordination
 - Agent communication protocols
 - Performance monitoring and optimization
+
+@CODE:AGENT-GROWTH-001
 """
 
 from typing import List

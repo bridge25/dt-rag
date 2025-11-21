@@ -1,5 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-007
-// TaxonomyTreeView interaction tests - node selection and highlighting
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'

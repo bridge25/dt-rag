@@ -3,6 +3,8 @@ Secure API Key Generation Utilities
 
 This module provides production-ready API key generation with cryptographic security,
 proper entropy, and compliance with security best practices.
+
+@CODE:AUTH-002
 """
 
 import secrets

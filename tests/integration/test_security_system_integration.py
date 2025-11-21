@@ -7,6 +7,8 @@ These tests verify the integration between:
 - Rate limiting
 - Security middleware
 - Access control
+
+@TEST:AUTH-002
 """
 
 import pytest

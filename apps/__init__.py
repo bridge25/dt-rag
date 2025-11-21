@@ -5,6 +5,8 @@ This package contains all the main application modules for the DT-RAG system:
 - api/: REST API endpoints and routers
 - agent_system/: AI agent orchestration and management
 - core/: Core business logic and utilities
+
+@CODE:API-001
 """
 
 __version__ = "1.8.1"

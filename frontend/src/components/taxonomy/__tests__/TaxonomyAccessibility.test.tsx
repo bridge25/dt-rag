@@ -1,6 +1,10 @@
-// @TEST:TAXONOMY-KEYNAV-002-006
-// Accessibility test for WCAG 2.1 AA compliant focus indicators
-// Tests: axe-core audit, focus indicator visibility, color contrast
+/**
+ * Accessibility test for WCAG 2.1 AA compliant focus indicators
+ * Tests: axe-core audit, focus indicator visibility, color contrast
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'

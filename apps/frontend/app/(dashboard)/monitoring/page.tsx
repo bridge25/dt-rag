@@ -1,3 +1,9 @@
+/**
+ * Monitoring page for system health and performance
+ *
+ * @CODE:MONITORING-001
+ */
+
 "use client";
 
 import { useQuery } from "@tanstack/react-query";

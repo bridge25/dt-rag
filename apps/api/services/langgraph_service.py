@@ -3,6 +3,8 @@ LangGraph Service - Wrapper for 7-Step RAG Pipeline
 
 Integrates existing LangGraph pipeline from apps/orchestration into main API.
 This service provides a thin wrapper to convert between API models and pipeline models.
+
+@CODE:API-001
 """
 
 import logging

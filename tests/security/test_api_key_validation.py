@@ -6,6 +6,8 @@ Tests the complete API key security implementation including:
 - Rate limiting and abuse protection
 - Database integration and permissions
 - Audit logging and compliance features
+
+@TEST:SECURITY-001
 """
 
 import pytest

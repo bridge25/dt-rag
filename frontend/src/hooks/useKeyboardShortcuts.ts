@@ -1,6 +1,8 @@
-// @CODE:TAXONOMY-KEYNAV-002-011
-// Hook for managing keyboard shortcuts in taxonomy visualization
-// Uses react-hotkeys-hook for robust shortcut handling with scope awareness
+/**
+ * Hook for managing keyboard shortcuts in taxonomy visualization
+ *
+ * @CODE:FRONTEND-001
+ */
 
 import { useHotkeys } from 'react-hotkeys-hook'
 import { useFocusManagement } from './useFocusManagement'

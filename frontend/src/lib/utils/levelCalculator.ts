@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UTILS-002
+/**
+ * Level and XP threshold calculations
+ *
+ * @CODE:FRONTEND-001
+ */
 
 export const LEVEL_THRESHOLDS = [
   0,      // Level 1: 0 XP

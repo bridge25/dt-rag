@@ -1,3 +1,9 @@
+/**
+ * Header component with theme toggle
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import { ThemeToggle } from "./ThemeToggle";
 
 export function Header() {

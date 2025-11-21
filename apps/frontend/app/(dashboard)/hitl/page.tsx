@@ -1,3 +1,9 @@
+/**
+ * HITL (Human-in-the-Loop) review page
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client"
 
 import { useState, useEffect } from "react"

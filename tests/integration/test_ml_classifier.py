@@ -1,6 +1,8 @@
 """
 ML Classifier Integration Tests
 Tests sentence-transformers based classification
+
+@TEST:CLASS-001
 """
 
 import pytest

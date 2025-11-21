@@ -1,3 +1,9 @@
+/**
+ * Toast notification component
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React, { useEffect, useState, useCallback } from "react"

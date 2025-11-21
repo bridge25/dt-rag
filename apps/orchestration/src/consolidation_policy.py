@@ -1,4 +1,9 @@
 # @SPEC:CONSOLIDATION-001 @IMPL:CONSOLIDATION-001:0.1
+"""
+Memory Consolidation Policy for automatic CaseBank management.
+
+@CODE:CONSOLIDATION-001
+"""
 
 import logging
 from typing import List, Dict, Any, Optional, Union

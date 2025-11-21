@@ -1,3 +1,9 @@
+/**
+ * Dashboard layout component with sidebar and header
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import type { ReactNode } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";

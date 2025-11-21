@@ -7,6 +7,8 @@ Provides REST endpoints for hierarchical taxonomy operations including:
 - Node operations (CRUD)
 - Version comparison and rollback
 - Taxonomy validation and statistics
+
+@CODE:TAXONOMY-001
 """
 
 import logging

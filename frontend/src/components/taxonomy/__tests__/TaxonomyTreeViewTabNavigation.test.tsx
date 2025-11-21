@@ -1,6 +1,10 @@
-// @TEST:TAXONOMY-KEYNAV-002-004
-// Unit test for Tab navigation order in TaxonomyTreeView
-// Tests Tab key sequence: Search Filter → Layout Toggle → Zoom Controls → Nodes
+/**
+ * Unit test for Tab navigation order in TaxonomyTreeView
+ * Tests Tab key sequence: Search Filter → Layout Toggle → Zoom Controls → Nodes
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'

@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-UTILS-003
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect } from 'vitest'
 import { resolveRarity, Rarity } from '../rarityResolver'
 

@@ -14,6 +14,8 @@ Features:
 - Real-time monitoring and observability
 - Comprehensive authentication and authorization
 - OpenAPI 3.0.3 specification with interactive documentation
+
+@CODE:API-001
 """
 
 import logging

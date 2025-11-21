@@ -6,6 +6,8 @@ Contains the core source code for the agent system:
 - Agent orchestration logic
 - Communication protocols
 - Performance optimization
+
+@CODE:AGENT-GROWTH-001
 """
 
 from typing import List

@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UTILS-003
+/**
+ * Rarity level resolution based on agent level
+ *
+ * @CODE:FRONTEND-001
+ */
 
 export type Rarity = 'Common' | 'Rare' | 'Epic' | 'Legendary'
 

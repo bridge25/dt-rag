@@ -1,4 +1,4 @@
-# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+# @CODE:AUTH-002
 """
 Core Security Manager for DT-RAG v1.8.1
 Orchestrates all security components and provides unified security interface

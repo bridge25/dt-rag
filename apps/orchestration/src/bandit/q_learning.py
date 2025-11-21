@@ -2,6 +2,8 @@
 # @IMPL:REPLAY-001:0.2 @CODE:SOFTQ-001:0.3
 """
 Soft Q-learning with Experience Replay (SPEC-REPLAY-001, SPEC-SOFTQ-001)
+
+@CODE:BANDIT-001
 """
 import logging
 from typing import Dict, List, Optional

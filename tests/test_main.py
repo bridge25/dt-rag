@@ -3,6 +3,8 @@ Unit tests for main application startup and lifecycle - SPEC-ENV-VALIDATE-001
 
 Tests environment validation logic during FastAPI application startup,
 particularly focusing on OpenAI API key validation across different environments.
+
+@TEST:API-001
 """
 
 import pytest

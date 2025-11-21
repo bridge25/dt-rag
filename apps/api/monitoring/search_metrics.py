@@ -3,6 +3,8 @@
 
 이 모듈은 검색 관련 메트릭을 수집하고 관리합니다.
 MetricsCollector를 래핑하여 검색 특화 인터페이스를 제공합니다.
+
+@CODE:MONITORING-001
 """
 
 import logging

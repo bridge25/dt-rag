@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:XP-HOOK
+/**
+ * Hook for awarding XP to agents with optimistic updates
+ *
+ * @CODE:FRONTEND-001
+ */
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { awardXP, type AwardXPRequest, type AwardXPResponse } from '@/lib/api/xp'
 import type { AgentCardData } from '@/lib/api/types'

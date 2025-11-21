@@ -1,3 +1,9 @@
+/**
+ * Search page for hybrid search through knowledge base
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import { useState, type FormEvent } from "react";

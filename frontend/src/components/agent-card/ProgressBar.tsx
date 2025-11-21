@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UI-002
+/**
+ * ProgressBar Component
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { memo } from 'react'
 import { cn } from '@/lib/utils'
 

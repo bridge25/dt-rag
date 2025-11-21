@@ -1,3 +1,9 @@
+/**
+ * Root layout component for the application
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Inter } from "next/font/google";

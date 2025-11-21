@@ -1,5 +1,8 @@
-// @CODE:AGENT-CARD-001-ANIM-001
-// @CODE:TAILWIND-V4-COMPLETE-001-JIT-FIX-MODAL
+/**
+ * LevelUpModal Component
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Confetti from 'react-confetti'

@@ -3,6 +3,8 @@ Unit tests for utility functions and helper modules
 
 This test module provides comprehensive coverage for utility functions,
 helper methods, and common functionality used across the DT-RAG system.
+
+@TEST:UTIL-001
 """
 
 import pytest

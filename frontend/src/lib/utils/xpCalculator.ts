@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-UTILS-001
+/**
+ * XP calculation utilities
+ *
+ * @CODE:FRONTEND-001
+ */
 
 export type XpAction = 'CHAT' | 'FEEDBACK' | 'RAGAS'
 

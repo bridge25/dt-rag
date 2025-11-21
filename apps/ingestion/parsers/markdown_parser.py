@@ -1,3 +1,8 @@
+"""
+Markdown document parser.
+
+@CODE:INGESTION-001
+"""
 from typing import Optional
 import re
 from .base import BaseParser, ParserError

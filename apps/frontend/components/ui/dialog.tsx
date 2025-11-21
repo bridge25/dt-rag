@@ -1,3 +1,9 @@
+/**
+ * Dialog component based on Radix UI
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import * as React from "react"

@@ -1,6 +1,8 @@
 """
 Common models for DT-RAG API
 Local replacement for missing common_schemas
+
+@CODE:API-001
 """
 
 from typing import List, Dict, Any, Optional

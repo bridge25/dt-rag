@@ -1,6 +1,8 @@
 """
 Taxonomy Service - Real implementation
 Replaces Mock TaxonomyService with actual database operations
+
+@CODE:API-001
 """
 
 from typing import List, Dict, Any

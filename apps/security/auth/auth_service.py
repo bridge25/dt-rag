@@ -1,4 +1,4 @@
-# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+# @CODE:AUTH-002
 """
 Authentication and Authorization Service for DT-RAG v1.8.1
 Implements JWT-based authentication with RBAC

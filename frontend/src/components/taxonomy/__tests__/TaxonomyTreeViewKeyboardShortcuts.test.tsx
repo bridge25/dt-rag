@@ -1,4 +1,10 @@
-// @TEST:TAXONOMY-KEYNAV-002-012
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
+
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'

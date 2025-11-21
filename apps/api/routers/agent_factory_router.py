@@ -6,6 +6,8 @@ Provides REST endpoints for dynamic agent creation and management including:
 - Agent configuration and customization
 - Agent lifecycle management
 - Agent performance monitoring
+
+@CODE:AGENT-GROWTH-001
 """
 
 import logging

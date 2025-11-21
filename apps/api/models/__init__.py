@@ -5,6 +5,8 @@ Contains Pydantic models and schemas for API request/response handling:
 - Database models
 - Request/response schemas
 - Validation models
+
+@CODE:API-001
 """
 
 from typing import List

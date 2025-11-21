@@ -4,6 +4,8 @@ Multi-Agent Debate Module for Answer Quality Enhancement
 
 Provides 2-agent debate structure (Affirmative vs Critical)
 with 2-round debate process and synthesis.
+
+@CODE:DEBATE-001
 """
 
 from apps.orchestration.src.debate.debate_engine import (

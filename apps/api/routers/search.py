@@ -2,6 +2,8 @@
 Document Search 엔드포인트
 실제 BM25 + Vector 하이브리드 검색 구현
 Bridge Pack ACCESS_CARD.md 스펙 100% 준수
+
+@CODE:SEARCH-001
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Query

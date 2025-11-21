@@ -1,4 +1,9 @@
-// @TEST:FRONTEND-INTEGRATION-001:API-CLIENT
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import axios from 'axios'
 

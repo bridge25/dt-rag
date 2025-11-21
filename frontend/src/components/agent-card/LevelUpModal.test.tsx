@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-ANIM-001
+/**
+ * LevelUpModal Tests
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:AGENT-CARD-001
+ */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import type { Rarity } from '@/lib/api/types'

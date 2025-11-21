@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-UI-002
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:AGENT-CARD-001
+ */
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ProgressBar } from '../ProgressBar'

@@ -6,6 +6,8 @@ Provides REST endpoints for RAG system evaluation including:
 - Batch evaluation
 - Quality monitoring and alerting
 - Golden dataset management
+
+@CODE:EVAL-001
 """
 
 import logging

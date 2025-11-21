@@ -1,4 +1,9 @@
-// @TEST:FRONTEND-INTEGRATION-001:PHASE3:INTERVAL-HOOK
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { useInterval } from './useInterval'

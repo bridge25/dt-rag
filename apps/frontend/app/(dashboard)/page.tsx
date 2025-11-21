@@ -1,3 +1,9 @@
+/**
+ * Dashboard home page with system metrics and performance overview
+ *
+ * @CODE:FRONTEND-001
+ */
+
 "use client";
 
 import { useQuery } from "@tanstack/react-query";

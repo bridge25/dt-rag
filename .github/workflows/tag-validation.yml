@@ -37,11 +37,6 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install dependencies
-        run: |
-          uv pip install --system -e .
-          uv pip install --system requests
-
       - name: Get PR number
         id: pr
         run: |
@@ -55,32 +50,20 @@ jobs:
         if: github.event_name == 'push' || github.event.pull_request.draft == false
         id: validate_info
         continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ steps.pr.outputs.number }}" != "0" ]; then
-            python -m moai_adk.core.tags.ci_validator \
-              --pr-number ${{ steps.pr.outputs.number }} \
-              --output-json validation-report.json \
-              --output-comment pr-comment.md
-          else
-            echo "Skipping PR validation on push event"
-            echo '{"status": "skipped", "message": "Push event - no PR validation"}' > validation-report.json
-            echo "# TAG Validation Skipped\n\nPush event detected. TAG validation runs on PRs." > pr-comment.md
-          fi
+          python scripts/validate_tags.py \
+            --output-json validation-report.json \
+            --output-md pr-comment.md
 
       - name: Run TAG validation (strict mode)
         if: github.event.pull_request.ready_for_review == true
         id: validate_strict
         continue-on-error: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python -m moai_adk.core.tags.ci_validator \
-            --pr-number ${{ steps.pr.outputs.number }} \
+          python scripts/validate_tags.py \
             --strict \
             --output-json validation-report-strict.json \
-            --output-comment pr-comment-strict.md
+            --output-md pr-comment-strict.md
 
       - name: Upload validation report
         if: always()

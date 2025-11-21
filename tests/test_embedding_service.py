@@ -2,6 +2,8 @@
 Unit tests for EmbeddingService - SPEC-ENV-VALIDATE-001 Phase 3-4
 
 Tests health check expansion and 401 error handling in embedding service.
+
+@TEST:EMBED-001
 """
 
 import pytest

@@ -1,5 +1,12 @@
 """
-B-O2 Retrieval Filter 테스트
+B-O2 Retrieval Filter Tests
+
+Tests retrieval filter functionality:
+- Category filtering
+- Security filtering
+- Filter application and enforcement
+
+@TEST:SEARCH-001
 """
 
 import pytest

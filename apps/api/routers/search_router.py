@@ -6,6 +6,8 @@ Provides REST endpoints for hybrid search operations including:
 - Taxonomy-filtered search
 - Search result analysis and statistics
 - Search configuration management
+
+@CODE:SEARCH-001
 """
 
 import logging

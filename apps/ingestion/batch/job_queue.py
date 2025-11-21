@@ -1,3 +1,8 @@
+"""
+Job queue management for ingestion tasks.
+
+@CODE:INGESTION-001
+"""
 import asyncio
 import json
 import logging

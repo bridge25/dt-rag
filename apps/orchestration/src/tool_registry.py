@@ -3,6 +3,8 @@
 Tool Registry for MCP Tools
 
 Manages tool registration, retrieval, and whitelist validation.
+
+@CODE:ORCHESTRATION-001
 """
 
 import os

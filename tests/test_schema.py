@@ -1,6 +1,8 @@
 """
 Database schema tests for Dynamic Taxonomy RAG v1.8.1
 Tests all tables, indexes, constraints, and procedures
+
+@TEST:API-001
 """
 
 import pytest

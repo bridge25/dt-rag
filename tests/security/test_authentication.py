@@ -1,12 +1,13 @@
 """
 API Key Authentication Tests
-@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for API key authentication security:
 - Missing API key rejection
 - Invalid API key rejection
 - Expired API key rejection
 - Health check endpoint exemption
+
+@TEST:SECURITY-001
 """
 
 import pytest

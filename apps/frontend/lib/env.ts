@@ -1,3 +1,9 @@
+/**
+ * Environment configuration
+ *
+ * @CODE:FRONTEND-001
+ */
+
 import { z } from "zod"
 
 const envSchema = z.object({

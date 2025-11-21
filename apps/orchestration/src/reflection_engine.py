@@ -1,4 +1,9 @@
 # @SPEC:REFLECTION-001 @IMPL:REFLECTION-001:0.2
+"""
+Reflection Engine - Case performance analysis and improvement suggestions.
+
+@CODE:REFLECTION-001
+"""
 
 import logging
 from typing import List, Dict, Any, Optional, cast

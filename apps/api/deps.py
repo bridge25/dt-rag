@@ -3,6 +3,8 @@ A팀 API 공통 의존성
 - API Key 검증 (Production-Ready Security)
 - Request ID 생성
 - 공통 응답 필드
+
+@CODE:API-001
 """
 
 import re

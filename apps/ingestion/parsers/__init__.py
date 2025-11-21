@@ -1,3 +1,8 @@
+"""
+Parsers module for document format handling.
+
+@CODE:INGESTION-001
+"""
 from .base import BaseParser, ParserError
 from .pdf_parser import PDFParser
 from .docx_parser import DOCXParser

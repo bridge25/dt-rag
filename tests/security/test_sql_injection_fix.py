@@ -1,3 +1,14 @@
+"""
+SQL Injection Fix Validation Tests
+
+Tests for SQL injection prevention in search filters:
+- Taxonomy path injection prevention
+- Filter clause parameterization
+- Safe filter building
+
+@TEST:SECURITY-001
+"""
+
 import sys
 from pathlib import Path
 

@@ -1,3 +1,14 @@
+"""
+Ingestion Pipeline Metrics Tests
+
+Tests metrics collection during ingestion pipeline execution:
+- Parser performance
+- Chunking efficiency
+- PII detection accuracy
+
+@TEST:INGESTION-001
+"""
+
 import time
 import json
 from typing import Dict, Any, List

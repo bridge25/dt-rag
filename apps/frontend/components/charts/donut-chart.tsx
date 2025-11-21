@@ -1,3 +1,9 @@
+/**
+ * Donut chart component
+ *
+ * @CODE:MONITORING-001
+ */
+
 "use client"
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"

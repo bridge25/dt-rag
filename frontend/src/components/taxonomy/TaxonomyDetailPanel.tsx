@@ -1,11 +1,11 @@
-// @CODE:TAXONOMY-VIZ-001-007
-// @CODE:TAXONOMY-VIZ-001-016
-// @CODE:TAXONOMY-KEYNAV-002-005
-// @CODE:TAXONOMY-KEYNAV-002-006
-// Taxonomy Detail Panel - displays selected node information
-// Accessibility: complementary role, aria-label, focus ring, focus trap, WCAG 2.1 AA compliant
-// Keyboard: Escape key closes panel, Tab stays within panel
-// Focus indicators: Blue ring (focus:ring-2) on close button
+/**
+ * Taxonomy Detail Panel - displays selected node information
+ * Accessibility: complementary role, aria-label, focus ring, focus trap, WCAG 2.1 AA compliant
+ * Keyboard: Escape key closes panel, Tab stays within panel
+ * Focus indicators: Blue ring (focus:ring-2) on close button
+ *
+ * @CODE:TAXONOMY-VIZ-001
+ */
 
 import { useEffect, useRef, useCallback } from 'react'
 import * as FocusTrapReact from 'focus-trap-react'

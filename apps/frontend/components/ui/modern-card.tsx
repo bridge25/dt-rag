@@ -1,3 +1,9 @@
+/**
+ * Modern card component with variants
+ *
+ * @CODE:UI-001
+ */
+
 import { ReactNode, HTMLAttributes } from "react"
 import { cn } from "@/lib/utils"
 

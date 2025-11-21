@@ -1,11 +1,11 @@
-// @CODE:TAXONOMY-VIZ-001-004
-// @CODE:TAXONOMY-VIZ-001-016
-// @CODE:TAXONOMY-KEYNAV-002-003
-// @CODE:TAXONOMY-KEYNAV-002-006
-// Custom Taxonomy Node Component - displays name, level, and document count
-// Accessibility: role, tab index, ARIA labels, screen reader support, WCAG 2.1 AA focus indicators
-// Keyboard navigation: forwardRef for programmatic focus
-// Focus indicator: 2px blue outline with 2px offset (focus-visible:outline-2)
+/**
+ * Custom Taxonomy Node Component - displays name, level, and document count
+ * Accessibility: role, tab index, ARIA labels, screen reader support, WCAG 2.1 AA focus indicators
+ * Keyboard navigation: forwardRef for programmatic focus
+ * Focus indicator: 2px blue outline with 2px offset (focus-visible:outline-2)
+ *
+ * @CODE:TAXONOMY-VIZ-001
+ */
 
 import { memo, forwardRef } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'

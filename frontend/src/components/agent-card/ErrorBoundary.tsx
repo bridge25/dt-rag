@@ -1,4 +1,8 @@
-// @CODE:AGENT-CARD-001-ERROR-001
+/**
+ * AgentCardErrorBoundary Component
+ *
+ * @CODE:AGENT-CARD-001
+ */
 import { Component, type ReactNode, type ErrorInfo } from 'react'
 
 interface ErrorBoundaryProps {

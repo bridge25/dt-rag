@@ -1,3 +1,9 @@
+/**
+ * Button component with multiple variants and sizes
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React, { useState } from "react"

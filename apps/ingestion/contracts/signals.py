@@ -1,3 +1,8 @@
+"""
+Contract definitions for ingestion events and commands.
+
+@CODE:INGESTION-001
+"""
 from typing import Optional, Dict, Any, List, Literal
 from datetime import datetime
 from enum import Enum

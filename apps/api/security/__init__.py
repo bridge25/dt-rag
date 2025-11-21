@@ -6,6 +6,8 @@ Contains authentication, authorization, and security utilities:
 - JWT token handling
 - Rate limiting
 - Security middleware
+
+@CODE:AUTH-002
 """
 
 from typing import List

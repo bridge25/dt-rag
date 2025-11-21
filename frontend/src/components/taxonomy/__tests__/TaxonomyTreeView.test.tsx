@@ -1,6 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-003
-// @TEST:TAXONOMY-VIZ-001-014
-// TaxonomyTreeView component tests - React Flow canvas with Dagre layout and layout switching
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'

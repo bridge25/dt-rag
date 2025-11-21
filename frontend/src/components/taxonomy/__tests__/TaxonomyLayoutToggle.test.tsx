@@ -1,5 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-014
-// TaxonomyLayoutToggle component tests - layout switching button
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'

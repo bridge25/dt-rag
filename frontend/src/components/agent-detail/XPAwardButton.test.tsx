@@ -1,3 +1,9 @@
+/**
+ * Test file
+ *
+ * @CODE:AGENT-CARD-001
+ */
+
 // @TEST:FRONTEND-INTEGRATION-001:PHASE3:XP-BUTTON
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'

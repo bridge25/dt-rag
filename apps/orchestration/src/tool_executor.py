@@ -3,6 +3,8 @@
 Tool Executor for MCP Tools
 
 Handles tool execution with timeout, validation, and error handling.
+
+@CODE:ORCHESTRATION-001
 """
 
 import time

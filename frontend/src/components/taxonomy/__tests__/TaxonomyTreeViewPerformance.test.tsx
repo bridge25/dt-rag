@@ -1,5 +1,9 @@
-// @TEST:TAXONOMY-VIZ-001-012
-// TaxonomyTreeView performance tests - 500+ nodes optimization
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:TAXONOMY-VIZ-001
+ */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, waitFor } from '@testing-library/react'

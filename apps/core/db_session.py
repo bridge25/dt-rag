@@ -1,6 +1,8 @@
 """
 Database session and engine management
 순환 참조 방지를 위한 순수 DB 연결 계층
+
+@CODE:DATABASE-001
 """
 
 import os

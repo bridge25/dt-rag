@@ -1,4 +1,8 @@
-// @CODE:FRONTEND-INTEGRATION-001:INTERVAL-HOOK
+/**
+ * Hook for managing intervals with cleanup and callback updates
+ *
+ * @CODE:FRONTEND-001
+ */
 import { useEffect, useRef } from 'react'
 
 export function useInterval(callback: () => void, delay: number | null) {

@@ -1,3 +1,9 @@
+/**
+ * Grid layout component with configurable gaps and spans
+ *
+ * @CODE:UI-001
+ */
+
 "use client"
 
 import React from "react"

@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-ERROR-001
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:AGENT-CARD-001
+ */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { AgentCardErrorBoundary } from '../ErrorBoundary'

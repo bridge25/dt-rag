@@ -1,4 +1,4 @@
-# @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+# @CODE:MONITORING-001
 """
 RAGAS Metrics Extension for MetricsCollector
 

@@ -1,4 +1,9 @@
-// @TEST:FRONTEND-INTEGRATION-001:ENV-CONFIG
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect } from 'vitest'
 import { z } from 'zod'
 

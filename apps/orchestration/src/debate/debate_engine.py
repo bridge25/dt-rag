@@ -11,6 +11,8 @@ Architecture:
 - Round 1: Parallel independent answer generation (2 LLM calls)
 - Round 2: Parallel critique and improvement (2 LLM calls)
 - Synthesis: Final answer integration (1 LLM call)
+
+@CODE:DEBATE-001
 """
 
 import asyncio

@@ -1,5 +1,8 @@
-// @CODE:TAXONOMY-VIZ-001-005
-// Custom Taxonomy Edge Component - visualizes hierarchical relationships
+/**
+ * Custom Taxonomy Edge Component - visualizes hierarchical relationships
+ *
+ * @CODE:TAXONOMY-VIZ-001
+ */
 
 import { memo } from 'react'
 import {

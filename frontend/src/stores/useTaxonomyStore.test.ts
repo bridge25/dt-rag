@@ -1,6 +1,9 @@
-// @TEST:TAXONOMY-KEYNAV-002-001
-// Test for TAG-001: Zustand Store Setup for Keyboard Navigation
-
+/**
+ * Test file
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:FRONTEND-001
+ */
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useTaxonomyStore } from './useTaxonomyStore'

@@ -6,6 +6,8 @@ These tests verify the integration between:
 - Search result caching
 - API response caching
 - Cache invalidation strategies
+
+@TEST:INTEGRATION-001
 """
 
 import pytest

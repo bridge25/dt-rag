@@ -1,6 +1,8 @@
 """
 Sentry + Langfuse integration test
 Check for conflicts between monitoring tools
+
+@TEST:MONITORING-001
 """
 
 import os

@@ -7,6 +7,8 @@ Contains all FastAPI routers, middleware, and API-related functionality:
 - security/: Authentication and authorization
 - cache/: Caching implementations
 - monitoring/: API monitoring and metrics
+
+@CODE:API-001
 """
 
 from typing import List

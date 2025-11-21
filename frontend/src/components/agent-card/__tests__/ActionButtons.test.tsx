@@ -1,4 +1,9 @@
-// @TEST:AGENT-CARD-001-UI-004
+/**
+ * ActionButtons Tests
+ *
+ * @CODE:FRONTEND-001
+ * @TEST:AGENT-CARD-001
+ */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
