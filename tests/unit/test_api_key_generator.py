@@ -3,6 +3,8 @@ Unit tests for API key generator module (apps.api.security.api_key_generator)
 
 This test module provides comprehensive coverage for secure API key generation
 functionality including format validation, entropy calculation, and security features.
+
+@TEST:API-001
 """
 
 import pytest

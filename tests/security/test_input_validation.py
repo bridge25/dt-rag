@@ -1,12 +1,13 @@
 """
 Input Validation Security Tests
-@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for input validation security:
 - Missing required field rejection
 - Invalid type rejection
 - Oversized input rejection
 - Schema validation enforcement
+
+@TEST:SECURITY-001
 """
 
 import pytest

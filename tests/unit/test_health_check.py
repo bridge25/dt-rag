@@ -3,6 +3,8 @@ Unit tests for health check module (apps.api.monitoring.health_check)
 
 This test module provides comprehensive coverage for system health monitoring
 functionality including component health checks and system status aggregation.
+
+@TEST:API-001
 """
 
 import pytest

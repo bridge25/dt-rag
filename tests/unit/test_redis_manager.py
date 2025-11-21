@@ -3,6 +3,8 @@ Unit tests for Redis manager module (apps.api.cache.redis_manager)
 
 This test module provides comprehensive coverage for Redis connection management,
 caching operations, and fallback functionality.
+
+@TEST:API-001
 """
 
 import pytest

@@ -1,3 +1,14 @@
+"""
+Ingestion Pipeline Component Tests
+
+Tests the document ingestion pipeline components:
+- Parser factory and format support
+- Intelligent chunking
+- PII detection
+
+@TEST:INGESTION-001
+"""
+
 import pytest
 import time
 from apps.ingestion.parsers import ParserFactory, ParserError

@@ -1,6 +1,8 @@
 """
 E2E test for HITL (Human-in-the-Loop) workflow
 Tests the complete flow from task retrieval to review submission
+
+@TEST:E2E-001
 """
 
 import pytest

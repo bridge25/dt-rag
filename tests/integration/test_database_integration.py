@@ -1,6 +1,8 @@
 """
 Database Integration Tests
 Tests database connections and DAO operations
+
+@TEST:INTEGRATION-001
 """
 
 import pytest

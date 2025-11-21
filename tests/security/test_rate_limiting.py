@@ -1,12 +1,13 @@
 """
 Rate Limiting Tests
-@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for rate limiting functionality:
 - Rate limit enforcement (100 req/min default)
 - 429 Too Many Requests response
 - Per-API-key rate limiting
 - Rate limit headers
+
+@TEST:SECURITY-001
 """
 
 import pytest

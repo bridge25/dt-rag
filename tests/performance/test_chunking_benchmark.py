@@ -1,3 +1,14 @@
+"""
+Chunking Algorithm Performance Benchmarks
+
+Tests performance metrics for intelligent chunking:
+- Chunk size optimization
+- Sentence boundary preservation
+- Overlap handling efficiency
+
+@TEST:PERFORMANCE-001
+"""
+
 import pytest
 from apps.ingestion.chunking.intelligent_chunker import IntelligentChunker
 

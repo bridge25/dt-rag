@@ -3,6 +3,8 @@ Unit tests for configuration module (apps.api.config)
 
 This test module provides comprehensive coverage for API configuration management
 including database, Redis, security settings, and environment-specific configurations.
+
+@TEST:API-001
 """
 
 import pytest

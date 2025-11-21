@@ -3,6 +3,8 @@ Unit tests for search router module (apps.api.routers.search_router)
 
 This test module provides comprehensive coverage for search API endpoints
 including request validation, response formatting, and error handling.
+
+@TEST:SEARCH-001
 """
 
 import pytest

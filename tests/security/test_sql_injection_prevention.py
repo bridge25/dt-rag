@@ -1,12 +1,13 @@
 """
 SQL Injection Prevention Tests
-@TEST:TEST-004 | SPEC: SPEC-TEST-004.md
 
 Tests for SQL injection attack prevention:
 - SQL injection in case_id blocked
 - SQL injection in search query blocked
 - Parameterized queries enforcement
 - No data leakage on injection attempts
+
+@TEST:SECURITY-001
 """
 
 import pytest
