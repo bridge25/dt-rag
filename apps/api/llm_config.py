@@ -3,6 +3,8 @@ LLM Configuration Manager for DT-RAG v1.8.1
 
 Manages configuration and initialization of Language Model services including
 OpenAI, Anthropic, Azure OpenAI, and embedding services with fallback handling.
+
+@CODE:API-001
 """
 
 import os

@@ -1,6 +1,8 @@
 """
 ML 기반 텍스트 분류 서비스
 BERT/RoBERTa를 사용한 의미론적 유사도 기반 분류
+
+@CODE:API-001
 """
 
 import logging

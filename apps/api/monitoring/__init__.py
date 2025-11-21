@@ -1,6 +1,8 @@
 """
 Dynamic Taxonomy RAG v1.8.1 - Monitoring Module
 모니터링과 성능 추적 기능을 제공하는 모듈
+
+@CODE:MONITORING-001
 """
 
 from .metrics import MetricsCollector, get_metrics_collector

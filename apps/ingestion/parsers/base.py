@@ -1,3 +1,8 @@
+"""
+Base parser interface for document processing.
+
+@CODE:INGESTION-001
+"""
 from abc import ABC, abstractmethod
 from typing import Optional
 

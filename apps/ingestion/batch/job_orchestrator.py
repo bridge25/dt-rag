@@ -1,3 +1,8 @@
+"""
+Job orchestration for batch document processing.
+
+@CODE:INGESTION-001
+"""
 import asyncio
 import logging
 from typing import Optional, Dict, Any, List

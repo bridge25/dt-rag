@@ -10,6 +10,8 @@ Provides structured error reporting with 5-field format for all critical failure
 3. Logs/Metrics (bm25_time, vector_time, total_time, cache_hit)
 4. Hypothesis (possible causes list)
 5. Next steps (actions to take)
+
+@CODE:MONITORING-001
 """
 
 import logging

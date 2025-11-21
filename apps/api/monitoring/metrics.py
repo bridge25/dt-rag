@@ -1,5 +1,7 @@
 """
 성능 메트릭 수집 및 Prometheus 익스포트 시스템
+
+@CODE:MONITORING-001
 """
 
 import time

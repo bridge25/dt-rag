@@ -11,6 +11,8 @@ Usage:
     @observe(name="my_function", as_type="generation")
     async def my_llm_function():
         pass
+
+@CODE:MONITORING-001
 """
 
 import os

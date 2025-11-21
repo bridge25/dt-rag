@@ -1,3 +1,8 @@
+"""
+Contracts module for ingestion pipeline.
+
+@CODE:INGESTION-001
+"""
 from .signals import (
     DocumentFormatV1,
     ProcessingStatusV1,

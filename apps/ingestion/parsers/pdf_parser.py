@@ -1,3 +1,8 @@
+"""
+PDF document parser.
+
+@CODE:INGESTION-001
+"""
 import io
 from typing import Optional
 from .base import BaseParser, ParserError
@@ -13,6 +18,7 @@ except ImportError:
 
 class PDFParser(BaseParser):
     # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
+    # @CODE:INGESTION-001
     def __init__(self) -> None:
         if not PYMUPDF_AVAILABLE:
             raise ParserError("pymupdf and pymupdf4llm not installed")

@@ -1,3 +1,8 @@
+"""
+Intelligent text chunking with sentence boundary preservation.
+
+@CODE:INGESTION-001
+"""
 import re
 from typing import List
 from dataclasses import dataclass

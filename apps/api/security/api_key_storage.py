@@ -3,8 +3,10 @@ Secure API Key Storage and Management
 
 This module provides database models and management functions for secure API key storage,
 including proper hashing, rate limiting, and audit logging.
+
+@CODE:AUTH-002
+@CODE:MYPY-CONSOLIDATION-002 | Phase 1: SQLAlchemy Column Type Casting
 """
-# @CODE:MYPY-CONSOLIDATION-002 | Phase 1: SQLAlchemy Column Type Casting
 
 import hashlib
 import logging

@@ -1,4 +1,4 @@
-# @CODE:AGENT-GROWTH-001:DOMAIN
+# @CODE:KNOWLEDGE-001
 from typing import List, Optional, Dict, Any
 from .models import CoverageMetrics, CoverageResult, Gap
 

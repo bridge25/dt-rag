@@ -8,6 +8,8 @@ Performance targets:
 - Vector search latency: < 100ms
 - Hybrid score calculation: < 10ms
 - Memory overhead: < 100MB per search
+
+@CODE:API-001
 """
 
 import asyncio

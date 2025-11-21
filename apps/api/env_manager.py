@@ -3,6 +3,8 @@ Environment Manager for DT-RAG v1.8.1
 
 Handles environment-specific configuration management including environment detection,
 database configuration, security settings, and feature flags.
+
+@CODE:API-001
 """
 
 import os

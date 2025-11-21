@@ -1,6 +1,8 @@
 """
 Security API Router for DT-RAG v1.8.1
 Provides security management endpoints for authentication, compliance, and monitoring
+
+@CODE:AUTH-002
 """
 
 import logging

@@ -2,6 +2,8 @@
 Security Middleware for DT-RAG v1.8.1
 FastAPI middleware that implements comprehensive security controls
 Integrates with the security framework for request/response processing
+
+@CODE:AUTH-002
 """
 
 import json

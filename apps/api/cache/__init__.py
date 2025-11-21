@@ -5,6 +5,8 @@ Contains caching implementations and utilities:
 - redis_manager: Redis connection and operations
 - search_cache: Search result caching
 - Cache strategies and invalidation
+
+@CODE:API-001
 """
 
 from typing import List

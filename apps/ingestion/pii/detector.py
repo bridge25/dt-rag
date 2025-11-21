@@ -1,3 +1,8 @@
+"""
+PII detection and masking utilities.
+
+@CODE:INGESTION-001
+"""
 import re
 from typing import List, Tuple, Dict
 from dataclasses import dataclass
