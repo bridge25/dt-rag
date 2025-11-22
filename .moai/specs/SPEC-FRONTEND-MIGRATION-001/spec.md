@@ -1,9 +1,9 @@
 ---
 id: SPEC-FRONTEND-MIGRATION-001
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: completed
 created: 2025-11-21
-updated: 2025-11-21
+updated: 2025-11-23
 author: "@spec-builder"
 priority: high
 domain: frontend
@@ -15,6 +15,20 @@ tags: [migration, nextjs, vite, agent-card, taxonomy]
 > **English**: Migration of Vite Agent Card System to Next.js
 
 ## HISTORY
+
+### v1.1.0 (2025-11-23)
+
+- **COMPLETED**: 전체 마이그레이션 완료
+- **AUTHOR**: @alfred
+- **PHASES**:
+  - Phase 1-3, 5: 유틸리티, Common, Agent Card, Home 컴포넌트 마이그레이션 완료
+  - Phase 4: Taxonomy 컴포넌트 @xyflow/react 통합 완료
+  - Phase 3 추가: Agent Detail/History 페이지 및 컴포넌트 마이그레이션
+- **COMMITS**:
+  - `feat(frontend): Migrate components from Vite to Next.js (Phases 1-3, 5)`
+  - `feat(frontend): Migrate Taxonomy components with @xyflow/react integration (Phase 4)`
+  - `feat(frontend): Add Agent Detail page, History page, and related API modules`
+- **TAGS**: 20+ @CODE:FRONTEND-MIGRATION-* tags across implementation
 
 ### v1.0.0 (2025-11-21)
 

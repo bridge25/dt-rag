@@ -1,9 +1,9 @@
 ---
 id: SPEC-FRONTEND-MIGRATION-001-PLAN
-version: 1.0.0
-status: draft
+version: 1.1.0
+status: completed
 created: 2025-11-21
-updated: 2025-11-21
+updated: 2025-11-23
 author: "@spec-builder"
 parent_spec: SPEC-FRONTEND-MIGRATION-001
 ---
@@ -13,6 +13,23 @@ parent_spec: SPEC-FRONTEND-MIGRATION-001
 > **English**: Implementation Plan for Vite to Next.js Migration
 
 ## HISTORY
+
+### v1.1.0 (2025-11-23)
+
+- **COMPLETED**: 전체 마이그레이션 구현 완료
+- **AUTHOR**: @alfred
+- **PHASES COMPLETED**:
+  - [x] Phase 1: 의존성 설치 및 유틸리티 마이그레이션
+  - [x] Phase 2: Common 컴포넌트 마이그레이션
+  - [x] Phase 3: Agent Card 컴포넌트 마이그레이션
+  - [x] Phase 4: Taxonomy 컴포넌트 마이그레이션 (@xyflow/react)
+  - [x] Phase 5: Home 컴포넌트 및 페이지 통합
+  - [x] Phase 6: 통합 테스트 (Vitest)
+- **ADDITIONAL IMPLEMENTATION**:
+  - Agent Detail Page (`/agents/[id]`)
+  - History Page (`/agents/[id]/history`)
+  - API modules: agents.ts, xp.ts, history.ts
+  - Hooks: useAgent, useXPAward, useCoverageHistory
 
 ### v1.0.0 (2025-11-21)
 
