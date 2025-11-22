@@ -4,7 +4,7 @@
  * @CODE:FRONTEND-MIGRATION-001
  */
 
-export type XpAction = 'CHAT' | 'FEEDBACK' | 'RAGAS'
+export type XpAction = "CHAT" | "FEEDBACK" | "RAGAS"
 
 const XP_VALUES: Record<XpAction, number> = {
   CHAT: 10,

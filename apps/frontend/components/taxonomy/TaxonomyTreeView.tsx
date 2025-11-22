@@ -18,7 +18,6 @@ import {
   useNodesState,
   useEdgesState,
   useReactFlow,
-  type Node,
   type Edge,
   type NodeMouseHandler,
 } from "@xyflow/react"
@@ -113,7 +112,7 @@ export default function TaxonomyTreeView() {
 
     const startTime = performance.now()
     const { nodes, edges } = convertTaxonomyToFlow(taxonomyData)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line
     const layoutedNodes = applyLayout(nodes as any, edges, currentLayout)
     const endTime = performance.now()
 

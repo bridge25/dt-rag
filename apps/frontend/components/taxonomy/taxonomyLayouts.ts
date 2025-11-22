@@ -69,7 +69,7 @@ export function applyD3ForceLayout(nodes: FlowNode[], edges: Edge[]): FlowNode[]
             target: edge.target,
           }))
         )
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line
         .id((d: any) => d.id)
         .distance(100)
         .strength(0.5)
@@ -84,7 +84,7 @@ export function applyD3ForceLayout(nodes: FlowNode[], edges: Edge[]): FlowNode[]
     simulation.tick()
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line
   const simulationNodes = simulation.nodes() as any[]
 
   return nodes.map((node, i) => ({

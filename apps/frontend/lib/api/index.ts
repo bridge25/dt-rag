@@ -71,14 +71,14 @@ export async function getTaxonomyTree(version: string): Promise<TaxonomyNode[]> 
 }
 
 export async function uploadDocument(formData: FormData): Promise<DocumentUploadResponse> {
-  const response = await apiClient.post("http://localhost:8000/ingestion/upload", formData, {
+  const response = await apiClient.post("/ingestion/upload", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   })
   return DocumentUploadResponseSchema.parse(response.data)
 }
 
 export async function getHealth(): Promise<HealthCheckResponse> {
-  const response = await apiClient.get("http://localhost:8000/health")
+  const response = await apiClient.get("/health")
   return HealthCheckResponseSchema.parse(response.data)
 }
 

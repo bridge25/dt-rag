@@ -4,24 +4,24 @@
  * @CODE:FRONTEND-MIGRATION-001
  */
 
-export type Rarity = 'Common' | 'Rare' | 'Epic' | 'Legendary'
+export type Rarity = "Common" | "Rare" | "Epic" | "Legendary"
 
 export function resolveRarity(level: number): Rarity {
   if (level <= 0) {
-    return 'Common'
+    return "Common"
   }
 
   if (level >= 9) {
-    return 'Legendary'
+    return "Legendary"
   }
 
   if (level >= 7) {
-    return 'Epic'
+    return "Epic"
   }
 
   if (level >= 4) {
-    return 'Rare'
+    return "Rare"
   }
 
-  return 'Common'
+  return "Common"
 }
