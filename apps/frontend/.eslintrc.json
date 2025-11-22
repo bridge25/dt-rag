@@ -8,14 +8,20 @@
     "indent": "off",
     "no-unused-vars": ["error", {
       "argsIgnorePattern": "^_",
-      "varsIgnorePattern": "^_"
-    }]
+      "varsIgnorePattern": "^_",
+      "args": "none"
+    }],
+    "@typescript-eslint/no-explicit-any": "off"
   },
   "overrides": [
     {
       "files": ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
       "env": {
         "jest": true
+      },
+      "rules": {
+        "quotes": "off",
+        "no-unused-vars": "off"
       }
     }
   ],

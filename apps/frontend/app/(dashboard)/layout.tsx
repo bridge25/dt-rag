@@ -1,21 +1,18 @@
 /**
- * Dashboard layout component with sidebar and header
+ * Dashboard layout component
+ * Simplified layout - pages handle their own layout structure
+ * (Migrated from Vite frontend pattern per frontend-design-master-plan.md)
  *
  * @CODE:FRONTEND-001
+ * @CODE:FRONTEND-MIGRATION-001
  */
 
 import type { ReactNode } from "react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex flex-1 flex-col">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {children}
     </div>
   );
 }

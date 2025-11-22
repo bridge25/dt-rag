@@ -5,7 +5,7 @@
 > **Document Language**: English
 > **Project Owner**: @user
 > **Config**: `.moai/config.json`
-> **Version**: 0.22.5 (from .moai/config.json)
+> **Version**: 0.27.2 (from .moai/config.json)
 > **Current Conversation Language**: English (`conversation_language: "en"`)
 >
 > **Note**: `Skill("moai-alfred-ask-user-questions")` provides TUI-based responses when user interaction is needed. The skill loads on-demand.
