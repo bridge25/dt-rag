@@ -448,3 +448,32 @@ export const AgentCardListResponseSchema = z.object({
 })
 
 export type AgentCardListResponse = z.infer<typeof AgentCardListResponseSchema>
+
+// ============================================================================
+// XP Award Models (for Agent Gamification)
+// @CODE:FRONTEND-MIGRATION-002
+// ============================================================================
+
+export const AwardXPResponseSchema = z.object({
+  agent_id: z.string(),
+  current_xp: z.number().int().min(0),
+  new_level: z.number().int().min(1),
+  leveled_up: z.boolean(),
+})
+
+export type AwardXPResponseType = z.infer<typeof AwardXPResponseSchema>
+
+// ============================================================================
+// Coverage Models (for Agent Statistics)
+// @CODE:FRONTEND-MIGRATION-002
+// ============================================================================
+
+export const CoverageResponseSchema = z.object({
+  agent_id: z.string(),
+  coverage_percentage: z.number().min(0).max(100),
+  total_documents: z.number().int().min(0),
+  covered_documents: z.number().int().min(0),
+  taxonomy_depth: z.number().int().min(0),
+})
+
+export type CoverageResponse = z.infer<typeof CoverageResponseSchema>
