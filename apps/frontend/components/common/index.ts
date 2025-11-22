@@ -5,4 +5,4 @@
 
 export { LoadingSpinner } from "./LoadingSpinner"
 export { ErrorBoundary } from "./ErrorBoundary"
-export { VirtualList, type VirtualListAgent } from "./VirtualList"
+export { VirtualList } from "./VirtualList"

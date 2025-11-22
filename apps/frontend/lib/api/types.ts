@@ -415,3 +415,36 @@ export type TaxonomyVersion = z.infer<typeof TaxonomyVersionSchema>
 export type HITLTask = z.infer<typeof HITLTaskSchema>
 export type HITLReviewRequest = z.infer<typeof HITLReviewRequestSchema>
 export type HITLReviewResponse = z.infer<typeof HITLReviewResponseSchema>
+
+// ============================================================================
+// Agent Card Models (Frontend-specific for Pokemon-style UI)
+// @CODE:FRONTEND-MIGRATION-001
+// ============================================================================
+
+export const RaritySchema = z.enum(["Common", "Rare", "Epic", "Legendary"])
+export type Rarity = z.infer<typeof RaritySchema>
+
+export const AgentCardDataSchema = z.object({
+  agent_id: z.string(),
+  name: z.string().min(1).max(100),
+  level: z.number().int().min(1).max(10),
+  current_xp: z.number().int().min(0),
+  next_level_xp: z.number().int().min(0).nullable(),
+  rarity: RaritySchema,
+  total_documents: z.number().int().min(0),
+  total_queries: z.number().int().min(0),
+  quality_score: z.number().min(0).max(100),
+  status: z.string().min(1),
+  created_at: z.string(),
+  last_used: z.string().optional(),
+  avatar_url: z.string().max(500).optional().nullable(),
+  character_description: z.string().max(500).optional().nullable(),
+})
+
+export type AgentCardData = z.infer<typeof AgentCardDataSchema>
+
+export const AgentCardListResponseSchema = z.object({
+  agents: z.array(AgentCardDataSchema),
+})
+
+export type AgentCardListResponse = z.infer<typeof AgentCardListResponseSchema>

@@ -1,22 +1,16 @@
 /**
  * Agent Card Type Definitions
+ * Re-exports from lib/api/types for consistency
  * @CODE:FRONTEND-MIGRATION-001
  */
 
-export type Rarity = "Common" | "Rare" | "Epic" | "Legendary"
+import type { Rarity as RarityType } from "@/lib/api/types"
 
-export interface AgentCardData {
-  agent_id: string
-  name: string
-  level: number
-  current_xp: number
-  next_level_xp: number | null
-  rarity: Rarity
-  total_documents: number
-  total_queries: number
-  quality_score: number
-  avatar_url?: string | null
-}
+// Re-export from centralized types
+export type { Rarity, AgentCardData } from "@/lib/api/types"
+
+// Use imported type for function parameter
+type Rarity = RarityType
 
 // Lucide icon names for each rarity tier
 const COMMON_ICONS = ["Bot", "Cpu", "Database", "Server"]

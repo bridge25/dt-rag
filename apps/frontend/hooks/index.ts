@@ -7,3 +7,4 @@
 export { useFocusManagement } from "./useFocusManagement"
 export { useArrowKeyNavigation } from "./useArrowKeyNavigation"
 export { useKeyboardShortcuts } from "./useKeyboardShortcuts"
+export { useAgents } from "./useAgents"
