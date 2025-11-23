@@ -7,6 +7,11 @@
 export { TaxonomyBuilder } from "./TaxonomyBuilder"
 export { ActionToolbar } from "./ActionToolbar"
 export { NodeEditor } from "./NodeEditor"
+export {
+  DraggableTreeNode,
+  DragOverlayNode,
+  RootDropZone,
+} from "./DraggableTreeNode"
 
 export type {
   TaxonomyNode,
