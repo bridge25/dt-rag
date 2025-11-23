@@ -1,178 +1,238 @@
 /**
- * Dashboard home page with system metrics and performance overview
+ * Home page with Agent Cards - Pokemon-style UI
+ * Migrated from Vite frontend per frontend-design-master-plan.md
  *
- * @CODE:FRONTEND-001
+ * @CODE:FRONTEND-MIGRATION-001
+ * @CODE:HOME-STATS-001:HOME-PAGE-REDESIGN
  */
 
-"use client";
+"use client"
 
-import { useQuery } from "@tanstack/react-query";
-import { getHealth } from "@/lib/api";
-import { ModernCard } from "@/components/ui/modern-card";
-import { IconBadge } from "@/components/ui/icon-badge";
-import { Activity, Database, Server, Zap, TrendingUp, Users, FileText, CheckCircle, Clock, Star, ArrowUpRight } from "lucide-react";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAgents } from "@/hooks/useAgents"
+import { AgentCard } from "@/components/agent-card"
+import { VirtualList } from "@/components/common/VirtualList"
+import { LoadingSpinner } from "@/components/common/LoadingSpinner"
+import { StatCard } from "@/components/home/StatCard"
+import { RecommendationPanel } from "@/components/home/RecommendationPanel"
+import { Users, BookOpen, MessageSquare, Folder, Plus } from "lucide-react"
 
-export default function DashboardPage() {
-  const { data: healthData } = useQuery({
-    queryKey: ["health"],
-    queryFn: getHealth,
-    refetchInterval: 60000,
-  })
+const VIRTUAL_SCROLL_THRESHOLD = 100
 
-  return (
-    <div className="space-y-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
-        <p className="mt-2 text-lg text-muted-foreground">
-          RAG System Overview and Performance Metrics
-        </p>
-      </div>
+export default function HomePage() {
+  const router = useRouter()
+  const { agents, isLoading, error, refetch } = useAgents()
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ModernCard variant="dark" className="lg:row-span-2">
-          <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold">System Performance</h3>
-            <IconBadge icon={Activity} color="orange" />
-          </div>
+  useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth - 64,
+        height: window.innerHeight - 200,
+      })
+    }
 
-          <div className="mt-8 grid grid-cols-2 gap-8">
-            <div>
-              <p className="text-sm text-white/70">Uptime</p>
-              <div className="mt-2 text-5xl font-bold">
-                {healthData?.status === "healthy" ? "99%" : "..."}
-              </div>
-            </div>
-            <div>
-              <p className="text-sm text-white/70">Response Time</p>
-              <div className="mt-2 text-5xl font-bold">
-                <span className="text-tealAccent">42</span>
-                <span className="text-2xl">ms</span>
-              </div>
-            </div>
-          </div>
+    updateDimensions()
+    window.addEventListener("resize", updateDimensions)
+    return () => window.removeEventListener("resize", updateDimensions)
+  }, [])
 
-          <div className="mt-8 space-y-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm text-white/90">Database connection active</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm text-white/90">Redis cache operational</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm text-white/90">Search engine ready</span>
-            </div>
-          </div>
-        </ModernCard>
+  const handleView = (agentId: string) => {
+    router.push(`/agents/${agentId}`)
+  }
 
-        <ModernCard variant="teal">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-700">Active Sessions</p>
-              <h3 className="mt-2 text-4xl font-bold text-gray-900">
-                {healthData?.status ? "24" : "..."}
-              </h3>
-            </div>
-            <IconBadge icon={Users} color="blue" size="lg" />
-          </div>
-          <p className="mt-4 text-sm text-gray-600">
-            Your data updates every 3 hours
-          </p>
-        </ModernCard>
+  const handleDelete = (agentId: string) => {
+    console.log("Delete agent:", agentId)
+  }
 
-        <ModernCard variant="beige" className="lg:col-span-2">
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold text-gray-900">System Metrics</h3>
-            <p className="mt-1 text-sm text-gray-600">
-              Real-time statistics of your RAG system
+  const handleCreateAgent = () => {
+    router.push("/agents/create")
+  }
+
+  // Calculate statistics
+  const totalDocuments = agents.reduce((sum, agent) => sum + (agent.total_documents || 0), 0)
+  const totalConversations = agents.reduce((sum, agent) => sum + (agent.total_queries || 0), 0)
+
+  if (isLoading) {
+    return (
+      <main className="p-8">
+        <header className="flex items-center gap-6 mb-8">
+          <img
+            src="/company-logo.jpg"
+            alt="Company Logo"
+            className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
+          />
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">Agents</h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
+              Dynamic Taxonomy RAG System
             </p>
           </div>
+        </header>
+        <LoadingSpinner />
+      </main>
+    )
+  }
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <IconBadge icon={Zap} color="orange" className="mb-3" />
-              <p className="text-xs text-gray-600">Queries Today</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {healthData?.status ? "847" : "..."}
-              </p>
-              <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> +12%
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <IconBadge icon={FileText} color="blue" className="mb-3" />
-              <p className="text-xs text-gray-600">Documents</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {healthData?.status ? "1,234" : "..."}
-              </p>
-              <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> +8%
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <IconBadge icon={Star} color="purple" className="mb-3" />
-              <p className="text-xs text-gray-600">Avg Quality</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {healthData?.status ? "94%" : "..."}
-              </p>
-              <p className="mt-1 text-xs text-gray-500">Excellent</p>
-            </div>
-
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <IconBadge icon={Clock} color="teal" className="mb-3" />
-              <p className="text-xs text-gray-600">Avg. Latency</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900">
-                {healthData?.status ? "42ms" : "..."}
-              </p>
-              <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
-                Fast
-              </p>
-            </div>
+  if (error) {
+    return (
+      <main className="p-8">
+        <header className="flex items-center gap-6 mb-8">
+          <img
+            src="/company-logo.jpg"
+            alt="Company Logo"
+            className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
+          />
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">Agents</h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
+              Dynamic Taxonomy RAG System
+            </p>
           </div>
-        </ModernCard>
+        </header>
+        <div className="text-center py-12">
+          <p className="text-red-600 text-lg mb-4">
+            Error: {error.message}
+          </p>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Failed to fetch agents. Please try again.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  // Common layout structure for both empty and populated states
+  const renderLayout = (content: React.ReactNode) => (
+    <main className="p-8 max-w-7xl mx-auto">
+      {/* Header with Logo */}
+      <header className="flex items-center gap-6 mb-8">
+        <img
+          src="/company-logo.jpg"
+          alt="Company Logo"
+          className="h-16 md:h-20 w-auto object-contain rounded-lg shadow-md"
+        />
+        <div className="flex-1">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-gray-100">
+            Agents {agents.length > 0 && `(${agents.length})`}
+          </h1>
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
+            Dynamic Taxonomy RAG System
+          </p>
+        </div>
+      </header>
+
+      {/* Statistics Section - Always Visible */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          title="Agents"
+          value={agents.length}
+          icon={<Users className="w-5 h-5" />}
+          description="Total agents"
+        />
+        <StatCard
+          title="Knowledge Base"
+          value={totalDocuments}
+          icon={<BookOpen className="w-5 h-5" />}
+          description="Total documents"
+        />
+        <StatCard
+          title="Conversations"
+          value={totalConversations}
+          icon={<MessageSquare className="w-5 h-5" />}
+          description="Total queries"
+        />
+        <StatCard
+          title="Taxonomy"
+          value="v1.0.0"
+          icon={<Folder className="w-5 h-5" />}
+          description="Current version"
+        />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <ModernCard variant="purple">
-          <div className="flex items-center justify-between">
-            <Database className="h-8 w-8 text-white" />
-            <ArrowUpRight className="h-5 w-5 text-white/70" />
-          </div>
-          <h4 className="mt-4 text-lg font-semibold">Database</h4>
-          <p className="mt-1 text-3xl font-bold capitalize">
-            {healthData?.database || "Loading..."}
-          </p>
-          <p className="mt-2 text-sm text-white/70">PostgreSQL + pgvector</p>
-        </ModernCard>
+      {content}
+    </main>
+  )
 
-        <ModernCard variant="green">
-          <div className="flex items-center justify-between">
-            <Server className="h-8 w-8 text-white" />
-            <ArrowUpRight className="h-5 w-5 text-white/70" />
-          </div>
-          <h4 className="mt-4 text-lg font-semibold">Cache</h4>
-          <p className="mt-1 text-3xl font-bold capitalize">
-            {healthData?.redis || "Loading..."}
-          </p>
-          <p className="mt-2 text-sm text-white/70">Redis cache layer</p>
-        </ModernCard>
+  if (agents.length === 0) {
+    return renderLayout(
+      <>
+        {/* Empty State with Recommendation Panel */}
+        <RecommendationPanel hasAgents={false} onCreateAgent={handleCreateAgent} />
+      </>
+    )
+  }
 
-        <ModernCard variant="dark">
-          <div className="flex items-center justify-between">
-            <Activity className="h-8 w-8 text-white" />
-            <ArrowUpRight className="h-5 w-5 text-white/70" />
-          </div>
-          <h4 className="mt-4 text-lg font-semibold">Status</h4>
-          <p className="mt-1 text-3xl font-bold capitalize">
-            {healthData?.status || "Loading..."}
-          </p>
-          <p className="mt-2 text-sm text-white/70">Real-time monitoring</p>
-        </ModernCard>
+  const useVirtualScroll = agents.length > VIRTUAL_SCROLL_THRESHOLD
+  const columnCount = Math.floor(dimensions.width / 320) || 1
+  const columnWidth = 320
+  const rowHeight = 450
+
+  // Agents exist - show grid with controls
+  return renderLayout(
+    <>
+      {/* Agent Controls */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">My Agents</h2>
+          <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100">
+            <option>Sort: Recent</option>
+            <option>Sort: Level</option>
+            <option>Sort: Name</option>
+          </select>
+          <select className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100">
+            <option>Filter: All Levels</option>
+            <option>Filter: Common</option>
+            <option>Filter: Rare</option>
+            <option>Filter: Epic</option>
+            <option>Filter: Legendary</option>
+          </select>
+        </div>
+        <button
+          onClick={handleCreateAgent}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+        >
+          <Plus className="w-4 h-4" />
+          New Agent
+        </button>
       </div>
-    </div>
-  );
+
+      {/* Agent Grid */}
+      {useVirtualScroll ? (
+        <div className="flex justify-center mb-8">
+          <VirtualList
+            agents={agents}
+            columnCount={columnCount}
+            columnWidth={columnWidth}
+            rowHeight={rowHeight}
+            height={dimensions.height}
+            width={dimensions.width}
+            onView={handleView}
+            onDelete={handleDelete}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          {agents.map((agent) => (
+            <AgentCard
+              key={agent.agent_id}
+              agent={agent}
+              onView={() => handleView(agent.agent_id)}
+              onDelete={() => handleDelete(agent.agent_id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Recommendation Panel */}
+      <RecommendationPanel hasAgents={true} />
+    </>
+  )
 }

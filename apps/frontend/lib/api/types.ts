@@ -92,9 +92,11 @@ export const TaxonomyNodeSchema: z.ZodType<{
     children?: any[]
     metadata?: Record<string, any>
     level: number
+    document_count?: number
   }>
   metadata?: Record<string, any>
   level: number
+  document_count?: number
 }> = z.object({
   id: z.string(),
   name: z.string(),
@@ -103,6 +105,7 @@ export const TaxonomyNodeSchema: z.ZodType<{
   children: z.array(z.lazy(() => TaxonomyNodeSchema)).optional(),
   metadata: z.record(z.string(), z.any()).optional(),
   level: z.number(),
+  document_count: z.number().optional(),
 })
 
 export const ClassifyRequestSchema = z.object({
@@ -412,3 +415,65 @@ export type TaxonomyVersion = z.infer<typeof TaxonomyVersionSchema>
 export type HITLTask = z.infer<typeof HITLTaskSchema>
 export type HITLReviewRequest = z.infer<typeof HITLReviewRequestSchema>
 export type HITLReviewResponse = z.infer<typeof HITLReviewResponseSchema>
+
+// ============================================================================
+// Agent Card Models (Frontend-specific for Pokemon-style UI)
+// @CODE:FRONTEND-MIGRATION-001
+// ============================================================================
+
+export const RaritySchema = z.enum(["Common", "Rare", "Epic", "Legendary"])
+export type Rarity = z.infer<typeof RaritySchema>
+
+export const AgentCardDataSchema = z.object({
+  agent_id: z.string(),
+  name: z.string().min(1).max(100),
+  level: z.number().int().min(1).max(10),
+  current_xp: z.number().int().min(0),
+  next_level_xp: z.number().int().min(0).nullable(),
+  rarity: RaritySchema,
+  total_documents: z.number().int().min(0),
+  total_queries: z.number().int().min(0),
+  quality_score: z.number().min(0).max(100),
+  status: z.string().min(1),
+  created_at: z.string(),
+  last_used: z.string().optional(),
+  avatar_url: z.string().max(500).optional().nullable(),
+  character_description: z.string().max(500).optional().nullable(),
+})
+
+export type AgentCardData = z.infer<typeof AgentCardDataSchema>
+
+export const AgentCardListResponseSchema = z.object({
+  agents: z.array(AgentCardDataSchema),
+})
+
+export type AgentCardListResponse = z.infer<typeof AgentCardListResponseSchema>
+
+// ============================================================================
+// XP Award Models (for Agent Gamification)
+// @CODE:FRONTEND-MIGRATION-002
+// ============================================================================
+
+export const AwardXPResponseSchema = z.object({
+  agent_id: z.string(),
+  current_xp: z.number().int().min(0),
+  new_level: z.number().int().min(1),
+  leveled_up: z.boolean(),
+})
+
+export type AwardXPResponseType = z.infer<typeof AwardXPResponseSchema>
+
+// ============================================================================
+// Coverage Models (for Agent Statistics)
+// @CODE:FRONTEND-MIGRATION-002
+// ============================================================================
+
+export const CoverageResponseSchema = z.object({
+  agent_id: z.string(),
+  coverage_percentage: z.number().min(0).max(100),
+  total_documents: z.number().int().min(0),
+  covered_documents: z.number().int().min(0),
+  taxonomy_depth: z.number().int().min(0),
+})
+
+export type CoverageResponse = z.infer<typeof CoverageResponseSchema>

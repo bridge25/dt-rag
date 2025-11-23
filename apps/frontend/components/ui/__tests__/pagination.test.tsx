@@ -1,15 +1,16 @@
+import { describe, test, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { Pagination } from "../pagination"
 
 describe("Pagination", () => {
   test("renders current page and total pages", () => {
-    render(<Pagination currentPage={3} totalPages={10} onPageChange={jest.fn()} />)
+    render(<Pagination currentPage={3} totalPages={10} onPageChange={vi.fn()} />)
 
     expect(screen.getByText("3")).toBeInTheDocument()
   })
 
   test("calls onPageChange when page button is clicked", () => {
-    const onPageChange = jest.fn()
+    const onPageChange = vi.fn()
     render(<Pagination currentPage={3} totalPages={10} onPageChange={onPageChange} />)
 
     const nextPageButton = screen.getByText("4")
@@ -19,14 +20,14 @@ describe("Pagination", () => {
   })
 
   test("shows first and last page buttons", () => {
-    render(<Pagination currentPage={5} totalPages={10} onPageChange={jest.fn()} />)
+    render(<Pagination currentPage={5} totalPages={10} onPageChange={vi.fn()} />)
 
     expect(screen.getByLabelText("First page")).toBeInTheDocument()
     expect(screen.getByLabelText("Last page")).toBeInTheDocument()
   })
 
   test("navigates to first page", () => {
-    const onPageChange = jest.fn()
+    const onPageChange = vi.fn()
     render(<Pagination currentPage={5} totalPages={10} onPageChange={onPageChange} />)
 
     const firstPageButton = screen.getByLabelText("First page")
@@ -36,7 +37,7 @@ describe("Pagination", () => {
   })
 
   test("navigates to last page", () => {
-    const onPageChange = jest.fn()
+    const onPageChange = vi.fn()
     render(<Pagination currentPage={5} totalPages={10} onPageChange={onPageChange} />)
 
     const lastPageButton = screen.getByLabelText("Last page")
@@ -46,21 +47,21 @@ describe("Pagination", () => {
   })
 
   test("disables first page button when on first page", () => {
-    render(<Pagination currentPage={1} totalPages={10} onPageChange={jest.fn()} />)
+    render(<Pagination currentPage={1} totalPages={10} onPageChange={vi.fn()} />)
 
     const firstPageButton = screen.getByLabelText("First page")
     expect(firstPageButton).toBeDisabled()
   })
 
   test("disables last page button when on last page", () => {
-    render(<Pagination currentPage={10} totalPages={10} onPageChange={jest.fn()} />)
+    render(<Pagination currentPage={10} totalPages={10} onPageChange={vi.fn()} />)
 
     const lastPageButton = screen.getByLabelText("Last page")
     expect(lastPageButton).toBeDisabled()
   })
 
   test("shows current page with ±2 range", () => {
-    render(<Pagination currentPage={5} totalPages={10} onPageChange={jest.fn()} />)
+    render(<Pagination currentPage={5} totalPages={10} onPageChange={vi.fn()} />)
 
     expect(screen.getByText("3")).toBeInTheDocument()
     expect(screen.getByText("4")).toBeInTheDocument()
@@ -70,7 +71,7 @@ describe("Pagination", () => {
   })
 
   test("highlights current page", () => {
-    render(<Pagination currentPage={5} totalPages={10} onPageChange={jest.fn()} />)
+    render(<Pagination currentPage={5} totalPages={10} onPageChange={vi.fn()} />)
 
     const currentPageButton = screen.getByText("5")
     expect(currentPageButton).toHaveClass("bg-accent-600", "text-white")

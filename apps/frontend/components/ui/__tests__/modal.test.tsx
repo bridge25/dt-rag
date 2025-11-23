@@ -1,10 +1,11 @@
+import { describe, test, expect, vi } from "vitest"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { Modal } from "../modal"
 
 describe("Modal", () => {
   test("renders when open", () => {
     render(
-      <Modal isOpen={true} onClose={jest.fn()} title="Test Modal">
+      <Modal isOpen={true} onClose={vi.fn()} title="Test Modal">
         <p>Modal Content</p>
       </Modal>
     )
@@ -14,7 +15,7 @@ describe("Modal", () => {
 
   test("does not render when closed", () => {
     render(
-      <Modal isOpen={false} onClose={jest.fn()} title="Test Modal">
+      <Modal isOpen={false} onClose={vi.fn()} title="Test Modal">
         <p>Modal Content</p>
       </Modal>
     )
@@ -22,7 +23,7 @@ describe("Modal", () => {
   })
 
   test("closes on ESC key", () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     render(
       <Modal isOpen={true} onClose={onClose} title="Test Modal">
         <p>Modal Content</p>
@@ -34,7 +35,7 @@ describe("Modal", () => {
   })
 
   test("closes on backdrop click", () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     render(
       <Modal isOpen={true} onClose={onClose} title="Test Modal">
         <p>Modal Content</p>
@@ -47,7 +48,7 @@ describe("Modal", () => {
   })
 
   test("closes on X button click", () => {
-    const onClose = jest.fn()
+    const onClose = vi.fn()
     render(
       <Modal isOpen={true} onClose={onClose} title="Test Modal">
         <p>Modal Content</p>
@@ -61,7 +62,7 @@ describe("Modal", () => {
 
   test("renders without title", () => {
     render(
-      <Modal isOpen={true} onClose={jest.fn()}>
+      <Modal isOpen={true} onClose={vi.fn()}>
         <p>Modal Content</p>
       </Modal>
     )

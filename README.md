@@ -76,7 +76,7 @@ frontend/src/components/taxonomy/
 ---
 
 <!-- @DOC:AGENT-CARD-001-ROOT-README -->
-## 🎮 Frontend: Pokemon-Style Agent Growth System (v2.1.0)
+## 🎮 Frontend: Pokemon-Style Agent Growth System (v2.2.0)
 
 **🟡 부분 완료 (이미지 기능 미구현)** 에이전트 성장을 Pokemon 카드 스타일로 시각화하는 게임화 UI/UX 시스템입니다.
 
@@ -88,6 +88,32 @@ frontend/src/components/taxonomy/
 - **TanStack Query 5.90.5**: 에이전트 상태 자동 동기화 및 캐싱
 - **타입 안전성**: Zod 3.25.1 스키마 검증 (UUID, ISO datetime, range checks)
 - **100% 접근성**: ARIA 레이블, 키보드 내비게이션, 스크린 리더 지원
+
+### 🆕 Agent Detail & History Pages (v2.2.0)
+
+**구현 완료!** Next.js App Router 기반의 상세 페이지 및 히스토리 분석 기능입니다.
+
+#### Agent Detail Page (`/agents/[id]`)
+- **AgentDetailCard**: 에이전트 전체 정보 표시 (레벨, XP, 희귀도, 통계)
+- **XPAwardButton**: 실시간 XP 수여 및 레벨업 트리거
+- **LevelUpTimeline**: 레벨업 히스토리 시각화
+- **LevelUpModal**: confetti 효과와 함께 레벨업 축하
+
+#### Agent History Page (`/agents/[id]/history`)
+- **CoverageChart**: recharts LineChart 기반 커버리지 추이
+- **XPGrowthChart**: recharts BarChart 기반 XP 성장 분석
+- **ChartContainer**: 기간 필터링 (7/14/30/90일)
+- **Summary Statistics**: 문서, 쿼리, 품질 점수 요약
+
+#### API Integration
+- **lib/api/agents.ts**: fetchAgent, fetchAgents, calculateCoverage
+- **lib/api/xp.ts**: awardXP (POST /api/v1/agents/{id}/xp)
+- **lib/api/history.ts**: fetchCoverageHistory
+
+#### React Query Hooks
+- **useAgent**: 단일 에이전트 조회 (30초 stale time)
+- **useXPAward**: XP 수여 mutation + 자동 캐시 무효화
+- **useCoverageHistory**: 기간별 히스토리 조회
 
 ### 기술 스택
 - **Framework**: React 19.1.1 + TypeScript 5.9.3 + Vite 6.2.1
@@ -159,6 +185,8 @@ function App() {
 - **@CODE:AGENT-CARD-001** (40 locations)
 - **@TEST:AGENT-CARD-001** (31 locations)
 - **@DOC:AGENT-CARD-001** (16 locations)
+- **@SPEC:FRONTEND-MIGRATION-001** (migration spec)
+- **@CODE:FRONTEND-MIGRATION-002** (20+ locations - Detail/History pages)
 
 ---
 

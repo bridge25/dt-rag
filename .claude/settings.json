@@ -125,6 +125,7 @@
       "Bash(uv:*)",
       "Bash(wc:*)",
       "Bash(which:*)",
+      "Bash(codex:*)",
       "BashOutput",
       "Edit",
       "Glob",
