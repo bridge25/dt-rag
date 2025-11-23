@@ -48,6 +48,7 @@ from apps.api.routers.agent_factory_router import agent_factory_router
 from apps.api.routers.agent_router import router as agent_router
 from apps.api.routers.monitoring_router import router as monitoring_router
 from apps.api.routers.embedding_router import router as embedding_router
+from apps.api.routers.evolution_router import router as evolution_router
 from apps.api.routers.admin.api_keys import router as api_keys_admin_router
 
 # Import evaluation router
@@ -537,6 +538,9 @@ app.include_router(monitoring_router, prefix="/api/v1", tags=["Monitoring"])
 
 # Include embedding router
 app.include_router(embedding_router, prefix="/api/v1", tags=["Vector Embeddings"])
+
+# Include taxonomy evolution router
+app.include_router(evolution_router, tags=["Taxonomy Evolution"])
 
 # Include evaluation router if available
 if EVALUATION_AVAILABLE:
