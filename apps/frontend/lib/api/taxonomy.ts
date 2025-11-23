@@ -17,7 +17,7 @@ export async function fetchTaxonomyTree(
   params?: FetchTaxonomyTreeParams
 ): Promise<TaxonomyNode> {
   const response = await apiClient.get<TaxonomyNode>(
-    "/api/v1/taxonomy/tree",
+    "/taxonomy/tree",
     params as Record<string, unknown>
   )
   const validated = TaxonomyNodeSchema.parse(response)

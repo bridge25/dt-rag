@@ -31,7 +31,7 @@ export async function fetchAgents(
   params?: FetchAgentsParams
 ): Promise<AgentCardData[]> {
   const response = await apiClient.get<AgentsListResponse>(
-    "/api/v1/agents/",
+    "/agents",
     params ? { params } : undefined
   )
   const validated = AgentsListResponseSchema.parse(response.data)
@@ -40,7 +40,7 @@ export async function fetchAgents(
 
 export async function fetchAgent(agentId: string): Promise<AgentCardData> {
   const response = await apiClient.get<AgentCardData>(
-    `/api/v1/agents/${agentId}`
+    `/agents/${agentId}`
   )
   const validated = AgentCardDataSchema.parse(response.data)
   return validated
@@ -50,7 +50,7 @@ export async function calculateCoverage(
   agentId: string
 ): Promise<CoverageResponse> {
   const response = await apiClient.get<CoverageResponse>(
-    `/api/v1/agents/${agentId}/coverage`
+    `/agents/${agentId}/coverage`
   )
   const validated = CoverageResponseSchema.parse(response.data)
   return validated

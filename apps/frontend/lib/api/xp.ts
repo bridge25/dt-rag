@@ -23,7 +23,7 @@ export interface AwardXPResponse {
 export async function awardXP(request: AwardXPRequest): Promise<AwardXPResponse> {
   try {
     const response = await apiClient.post<AwardXPResponseType>(
-      `/api/v1/agents/${request.agentId}/xp`,
+      `/agents/${request.agentId}/xp`,
       {
         amount: request.amount,
         reason: request.reason,

@@ -41,7 +41,7 @@ export async function fetchCoverageHistory(
 ): Promise<CoverageHistoryResponse> {
   try {
     const response = await apiClient.get<CoverageHistoryResponse>(
-      `/api/v1/agents/${agentId}/coverage/history`,
+      `/agents/${agentId}/coverage/history`,
       params ? { params } : undefined
     )
     return CoverageHistoryResponseSchema.parse(response.data)
