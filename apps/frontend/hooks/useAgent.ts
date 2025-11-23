@@ -24,10 +24,18 @@ export function useAgent(agentId: string): UseAgentReturn {
     enabled: !!agentId,
   })
 
+  // Guard refetch to prevent calling with falsy agentId
+  const safeRefetch = async () => {
+    if (!agentId) {
+      return Promise.resolve(undefined)
+    }
+    return refetch()
+  }
+
   return {
     agent: data,
     isLoading,
     error: error ?? null,
-    refetch,
+    refetch: safeRefetch,
   }
 }

@@ -5,6 +5,7 @@
  */
 import { apiClient } from "./client"
 import { AwardXPResponseSchema, type AwardXPResponseType } from "./types"
+import { isAxiosError } from "axios"
 
 export interface AwardXPRequest {
   agentId: string
@@ -33,7 +34,7 @@ export async function awardXP(request: AwardXPRequest): Promise<AwardXPResponse>
     return validated
   } catch (error) {
     // Handle 404 gracefully - agent doesn't exist yet
-    if (error && typeof error === "object" && "status" in error && error.status === 404) {
+    if (isAxiosError(error) && error.response?.status === 404) {
       return {
         agent_id: request.agentId,
         current_xp: 0,

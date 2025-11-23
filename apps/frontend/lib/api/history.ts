@@ -5,6 +5,7 @@
  */
 import { apiClient } from "./client"
 import { z } from "zod"
+import { isAxiosError } from "axios"
 
 export interface CoverageHistoryItem {
   date: string
@@ -46,12 +47,7 @@ export async function fetchCoverageHistory(
     return CoverageHistoryResponseSchema.parse(response.data)
   } catch (error) {
     // Handle 404 with dummy data for development/demo
-    if (
-      error &&
-      typeof error === "object" &&
-      "status" in error &&
-      error.status === 404
-    ) {
+    if (isAxiosError(error) && error.response?.status === 404) {
       const dummyHistory: CoverageHistoryItem[] = Array.from(
         { length: 30 },
         (_, i) => {
