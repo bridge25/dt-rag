@@ -8,12 +8,16 @@
 
 import { create } from "zustand"
 import { immer } from "zustand/middleware/immer"
+import { enableMapSet } from "immer"
 import type {
   TaxonomyNode,
   TaxonomyAction,
   ViewMode,
   TaxonomyBuilderStore,
 } from "@/components/taxonomy-builder/types"
+
+// Enable immer MapSet plugin for Map/Set support
+enableMapSet()
 
 const generateId = () => `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
@@ -428,6 +432,7 @@ export const useTaxonomyBuilderStore = create<TaxonomyBuilderStore>()(
       set((state) => {
         state.nodes = new Map()
         state.selectedNodeId = null
+        state.viewMode = "tree"
         state.undoStack = []
         state.redoStack = []
         state.isDirty = false
