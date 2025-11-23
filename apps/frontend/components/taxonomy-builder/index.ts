@@ -12,6 +12,7 @@ export {
   DragOverlayNode,
   RootDropZone,
 } from "./DraggableTreeNode"
+export { GraphView } from "./GraphView"
 
 export type {
   TaxonomyNode,
