@@ -122,25 +122,57 @@ async def get_taxonomy_analytics(
     taxonomy_id: str,
     period: str,
 ) -> Dict[str, Any]:
-    """Get analytics for a taxonomy"""
-    return {
-        "taxonomy_id": taxonomy_id,
-        "period": period,
-        "usage_stats": {
-            "total_queries": 0,
-            "category_hits": {},
-        },
-        "effectiveness_metrics": {
-            "hit_rate": 0.0,
-            "avg_results": 0.0,
-        },
-        "evolution_history": [],
-        "suggestions_summary": {
-            "pending": 0,
-            "accepted": 0,
-            "rejected": 0,
-        },
-    }
+    """Get analytics for a taxonomy using metrics service"""
+    from ..services.taxonomy_metrics_service import get_metrics_service
+    from ..models.metrics_models import AggregationPeriod
+
+    try:
+        metrics_service = get_metrics_service()
+
+        # Map string period to enum
+        period_enum = AggregationPeriod(period)
+
+        # Get dashboard summary
+        summary = await metrics_service.get_dashboard_summary(taxonomy_id, period_enum)
+
+        # Get health metrics
+        health = await metrics_service.get_taxonomy_health(taxonomy_id, period_enum)
+
+        # Get zero result patterns
+        zero_patterns = await metrics_service.get_zero_result_patterns(taxonomy_id, min_occurrences=3)
+
+        return {
+            "taxonomy_id": taxonomy_id,
+            "period": period,
+            "usage_stats": {
+                "total_queries": summary.get("total_searches", 0),
+                "total_events": summary.get("total_events", 0),
+                "category_views": summary.get("total_category_views", 0),
+                "unique_users": summary.get("unique_users", 0),
+            },
+            "effectiveness_metrics": {
+                "hit_rate": 1.0 - health.zero_result_rate,
+                "zero_result_rate": health.zero_result_rate,
+                "avg_response_time_ms": summary.get("avg_response_time_ms", 0.0),
+                "active_categories": health.active_categories,
+            },
+            "evolution_history": [],
+            "suggestions_summary": {
+                "pending": len(_suggestions.get(taxonomy_id, [])),
+                "potential_categories": len(zero_patterns),
+            },
+        }
+
+    except Exception as e:
+        logger.warning(f"Failed to get analytics: {e}")
+        return {
+            "taxonomy_id": taxonomy_id,
+            "period": period,
+            "usage_stats": {"total_queries": 0},
+            "effectiveness_metrics": {"hit_rate": 0.0},
+            "evolution_history": [],
+            "suggestions_summary": {"pending": 0},
+        }
 
 
 async def get_documents_for_generation(
