@@ -49,6 +49,7 @@ from apps.api.routers.agent_router import router as agent_router
 from apps.api.routers.monitoring_router import router as monitoring_router
 from apps.api.routers.embedding_router import router as embedding_router
 from apps.api.routers.evolution_router import router as evolution_router
+from apps.api.routers.research_router import research_router
 from apps.api.routers.admin.api_keys import router as api_keys_admin_router
 
 # Import evaluation router
@@ -529,6 +530,8 @@ app.include_router(orchestration_router, prefix="/api/v1", tags=["Orchestration"
 app.include_router(agent_factory_router, prefix="/api/v1", tags=["Agent Factory"])
 
 app.include_router(agent_router, prefix="/api/v1", tags=["Agents"])
+
+app.include_router(research_router, tags=["Research"])
 
 # Include monitoring router if available
 if MONITORING_AVAILABLE:
