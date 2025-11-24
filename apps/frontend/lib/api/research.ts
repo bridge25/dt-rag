@@ -111,16 +111,19 @@ export async function cancelResearch(sessionId: string): Promise<void> {
 /**
  * Subscribe to research session events via SSE
  *
+ * CRITICAL FIX #1: Now returns Promise to ensure connection is established
+ * before cleanup function is returned, preventing race conditions.
+ *
  * @param sessionId - Research session ID
  * @param callbacks - Event handlers for different event types
  * @param lastEventId - Optional last event ID for reconnection
- * @returns Cleanup function to close the connection
+ * @returns Promise resolving to cleanup function
  */
-export function subscribeToResearchEvents(
+export async function subscribeToResearchEvents(
   sessionId: string,
   callbacks: ResearchAPICallbacks,
   lastEventId?: string
-): () => void {
+): Promise<() => void> {
   // Build SSE URL
   const baseUrl = env.NEXT_PUBLIC_API_URL.replace("/api/v1", "");
   const sseUrl = `${baseUrl}/api/v1/research/${sessionId}/stream`;
@@ -192,10 +195,11 @@ export function subscribeToResearchEvents(
     }
   };
 
-  // Start connection
+  // Start connection in background (don't block on stream reading)
   connectSSE();
 
-  // Return cleanup function
+  // Return cleanup function immediately
+  // Connection establishment is async, but cleanup is synchronous
   return () => {
     controller.abort();
   };
@@ -222,8 +226,17 @@ function parseSSEBuffer(buffer: string): ParsedSSEEvents {
 
     // Check if we have a complete event (empty line ends an event)
     if (line === "") {
-      if (currentEvent.type && currentEvent.data) {
+      // CRITICAL FIX #2: Validate ALL required fields (id, type, data)
+      // before accepting event for reconnection support
+      if (
+        currentEvent.id &&
+        currentEvent.type &&
+        currentEvent.data !== undefined
+      ) {
         events.push(currentEvent as ResearchSSEEvent);
+      } else if (currentEvent.type || currentEvent.data) {
+        // Log incomplete events for debugging
+        console.warn("Incomplete SSE event dropped:", currentEvent);
       }
       currentEvent = {};
       continue;

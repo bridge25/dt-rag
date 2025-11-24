@@ -35,6 +35,10 @@ import type { ResearchStage } from "@/types/research";
 // Set to true to use mock simulation, false to use real API
 const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 
+// HIGH PRIORITY FIX #7: Input validation constants
+const MIN_QUERY_LENGTH = 3;
+const MAX_QUERY_LENGTH = 1000;
+
 // ============================================================================
 // Page Component
 // ============================================================================
@@ -65,27 +69,75 @@ export default function ResearchPage() {
   const sseCleanupRef = useRef<(() => void) | null>(null);
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
-  // Cleanup SSE on unmount
+  // HIGH PRIORITY FIX #5: Lifecycle tracking to prevent stale operations
+  const isMountedRef = useRef(true);
+
+  // HIGH PRIORITY FIX #3: Improved cleanup with lifecycle tracking
   useEffect(() => {
+    isMountedRef.current = true;
+
     return () => {
+      isMountedRef.current = false;
       if (sseCleanupRef.current) {
         sseCleanupRef.current();
+        sseCleanupRef.current = null;
       }
     };
   }, []);
+
+  // HIGH PRIORITY FIX #6: Consolidated error handler
+  const handleResearchError = useCallback(
+    (error: Error | { message: string }, type: "connection" | "research" | "validation") => {
+      const message =
+        type === "connection"
+          ? `서버 연결 오류: ${error.message}. 다시 시도해 주세요.`
+          : type === "validation"
+          ? `입력 오류: ${error.message}`
+          : `오류가 발생했습니다: ${error.message}`;
+
+      updateStage("error");
+      if (type === "connection") {
+        setConnectionError(error.message);
+      }
+      addMessage({
+        role: "system",
+        content: message,
+      });
+    },
+    [updateStage, setConnectionError, addMessage]
+  );
 
   // Real API integration
   const startResearchWithAPI = useCallback(
     async (query: string) => {
       try {
+        // HIGH PRIORITY FIX #7: Input validation
+        const trimmedQuery = query.trim();
+        if (trimmedQuery.length < MIN_QUERY_LENGTH) {
+          throw new Error(
+            `검색어는 최소 ${MIN_QUERY_LENGTH}자 이상이어야 합니다.`
+          );
+        }
+        if (trimmedQuery.length > MAX_QUERY_LENGTH) {
+          throw new Error(
+            `검색어는 최대 ${MAX_QUERY_LENGTH}자를 초과할 수 없습니다.`
+          );
+        }
+
         setConnectionError(null);
 
         // Call backend API to start research
-        const response = await researchApi.startResearch({ query });
+        const response = await researchApi.startResearch({ query: trimmedQuery });
         const { sessionId, estimatedDuration } = response;
 
+        // HIGH PRIORITY FIX #5: Check if component is still mounted
+        if (!isMountedRef.current) {
+          console.log("Component unmounted, aborting research setup");
+          return;
+        }
+
         // Update store with real session ID
-        startResearchAction(query);
+        startResearchAction(trimmedQuery);
 
         // Update session ID in store
         useResearchStore.setState((state) => ({
@@ -97,15 +149,26 @@ export default function ResearchPage() {
         // Set up SSE callbacks
         const callbacks: ResearchAPICallbacks = {
           onProgress: (data) => {
+            if (!isMountedRef.current) return;
             console.log("Progress:", data);
             updateProgress(data.progress * 100); // Backend sends 0-1, frontend uses 0-100
           },
           onStageChange: (data) => {
+            if (!isMountedRef.current) return;
             console.log("Stage change:", data);
             updateStage(data.newStage as ResearchStage);
           },
           onDocumentFound: (data) => {
+            if (!isMountedRef.current) return;
             console.log("Document found:", data);
+
+            // HIGH PRIORITY FIX #9: Check for duplicate documents
+            const existingDoc = session?.documents.find(d => d.id === data.document.id);
+            if (existingDoc) {
+              console.log("Document already exists, skipping:", data.document.id);
+              return;
+            }
+
             addDocument({
               id: data.document.id,
               title: data.document.title,
@@ -118,18 +181,17 @@ export default function ResearchPage() {
             updateMetrics({ documentsFound: data.totalCount });
           },
           onMetricsUpdate: (data) => {
+            if (!isMountedRef.current) return;
             console.log("Metrics update:", data);
             updateMetrics(data.metrics);
           },
           onError: (data) => {
+            if (!isMountedRef.current) return;
             console.error("Research error:", data);
-            updateStage("error");
-            addMessage({
-              role: "system",
-              content: `오류가 발생했습니다: ${data.message}`,
-            });
+            handleResearchError(data, "research");
           },
           onCompleted: (data) => {
+            if (!isMountedRef.current) return;
             console.log("Research completed:", data);
             updateStage("confirming");
             updateProgress(90);
@@ -143,34 +205,49 @@ export default function ResearchPage() {
             });
           },
           onConnectionError: (error) => {
+            if (!isMountedRef.current) return;
             console.error("SSE connection error:", error);
-            setConnectionError(error.message);
-            addMessage({
-              role: "system",
-              content: `서버 연결 오류: ${error.message}. 다시 시도해 주세요.`,
-            });
+            handleResearchError(error, "connection");
           },
         };
 
-        // Subscribe to SSE events
-        sseCleanupRef.current = researchApi.subscribeToResearchEvents(
+        // Subscribe to SSE events (now returns Promise)
+        const cleanup = await researchApi.subscribeToResearchEvents(
           sessionId,
           callbacks
         );
+
+        // HIGH PRIORITY FIX #5: Only set cleanup if still mounted
+        if (isMountedRef.current) {
+          sseCleanupRef.current = cleanup;
+        } else {
+          // Component unmounted during async operation, cleanup immediately
+          cleanup();
+        }
 
         console.log(
           `Research started: session=${sessionId}, estimated=${estimatedDuration}s`
         );
       } catch (error) {
         console.error("Failed to start research:", error);
-        setConnectionError((error as Error).message);
-        addMessage({
-          role: "system",
-          content: `리서치 시작 실패: ${(error as Error).message}`,
-        });
+        const errorType = (error as Error).message.includes("검색어")
+          ? "validation"
+          : "connection";
+        handleResearchError(error as Error, errorType);
       }
     },
-    [startResearchAction, updateStage, updateProgress, updateMetrics, addDocument, addMessage]
+    // HIGH PRIORITY FIX #4: Add missing setConnectionError dependency
+    [
+      startResearchAction,
+      updateStage,
+      updateProgress,
+      updateMetrics,
+      addDocument,
+      addMessage,
+      setConnectionError,
+      handleResearchError,
+      session,
+    ]
   );
 
   // Handlers
