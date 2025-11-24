@@ -18,6 +18,7 @@ import {
   selectSession,
   selectMessages,
   selectIsLoading,
+  selectSelectedDocumentIds,
 } from "@/stores/researchStore";
 
 // ============================================================================
@@ -29,12 +30,18 @@ export default function ResearchPage() {
   const session = useResearchStore(selectSession);
   const messages = useResearchStore(selectMessages);
   const isLoading = useResearchStore(selectIsLoading);
+  const selectedDocumentIds = useResearchStore(selectSelectedDocumentIds);
+  const expandedDocumentIds = useResearchStore((state) => state.expandedDocumentIds);
 
   // Actions
   const startResearch = useResearchStore((state) => state.startResearch);
   const addMessage = useResearchStore((state) => state.addMessage);
   const confirmResearch = useResearchStore((state) => state.confirmResearch);
   const cancelResearch = useResearchStore((state) => state.cancelResearch);
+  const toggleDocumentSelection = useResearchStore((state) => state.toggleDocumentSelection);
+  const toggleDocumentExpand = useResearchStore((state) => state.toggleDocumentExpand);
+  const selectAllDocuments = useResearchStore((state) => state.selectAllDocuments);
+  const deselectAllDocuments = useResearchStore((state) => state.deselectAllDocuments);
 
   // Handlers
   const handleSendMessage = useCallback(
@@ -84,9 +91,15 @@ export default function ResearchPage() {
       <div className="h-1/2 w-full lg:h-full lg:w-3/5">
         <ProgressZone
           session={session}
+          selectedDocumentIds={selectedDocumentIds}
+          expandedDocumentIds={expandedDocumentIds}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
           onRetry={handleRetry}
+          onDocumentSelect={toggleDocumentSelection}
+          onDocumentExpand={toggleDocumentExpand}
+          onSelectAll={selectAllDocuments}
+          onDeselectAll={deselectAllDocuments}
         />
       </div>
     </div>

@@ -7,3 +7,5 @@
 
 export { ChatZone } from "./ChatZone";
 export { ProgressZone } from "./ProgressZone";
+export { DocumentPreview } from "./DocumentPreview";
+export { ConfirmationDialog } from "./ConfirmationDialog";

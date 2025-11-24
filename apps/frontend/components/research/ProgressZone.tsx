@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { DocumentPreview } from "./DocumentPreview";
 import type { ResearchSession, ResearchStage, StageInfo } from "@/types/research";
 
 // ============================================================================
@@ -29,9 +30,15 @@ import type { ResearchSession, ResearchStage, StageInfo } from "@/types/research
 
 interface ProgressZoneProps {
   session: ResearchSession | null;
+  selectedDocumentIds: string[];
+  expandedDocumentIds: string[];
   onConfirm?: () => void;
   onCancel?: () => void;
   onRetry?: () => void;
+  onDocumentSelect?: (id: string) => void;
+  onDocumentExpand?: (id: string) => void;
+  onSelectAll?: () => void;
+  onDeselectAll?: () => void;
 }
 
 // ============================================================================
@@ -259,9 +266,15 @@ function EmptyState() {
 
 export function ProgressZone({
   session,
+  selectedDocumentIds = [],
+  expandedDocumentIds = [],
   onConfirm,
   onCancel,
   onRetry,
+  onDocumentSelect,
+  onDocumentExpand,
+  onSelectAll,
+  onDeselectAll,
 }: ProgressZoneProps) {
   const isIdle = !session || session.stage === "idle";
   const isError = session?.stage === "error";
@@ -345,18 +358,22 @@ export function ProgressZone({
             </Card>
           )}
 
-          {/* Document Count Summary */}
+          {/* Document Preview */}
           {(session?.documents.length || 0) > 0 && (
             <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    수집된 문서
-                  </span>
-                  <span className="text-lg font-semibold">
-                    {session?.documents.length}개
-                  </span>
-                </div>
+              <CardHeader className="pb-2">
+                <h3 className="text-sm font-medium">수집된 문서</h3>
+              </CardHeader>
+              <CardContent>
+                <DocumentPreview
+                  documents={session?.documents || []}
+                  selectedIds={selectedDocumentIds}
+                  expandedIds={expandedDocumentIds}
+                  onSelect={onDocumentSelect || (() => {})}
+                  onExpand={onDocumentExpand || (() => {})}
+                  onSelectAll={onSelectAll || (() => {})}
+                  onDeselectAll={onDeselectAll || (() => {})}
+                />
               </CardContent>
             </Card>
           )}
