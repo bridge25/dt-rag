@@ -58,74 +58,113 @@ class ResearchMetrics:
         )
 
     def _init_prometheus_metrics(self) -> None:
-        """Initialize Prometheus metrics"""
+        """Initialize Prometheus metrics with error handling"""
         if not self.enable_prometheus:
             return
 
-        # Counters
-        self.sessions_started_counter = Counter(
-            "research_sessions_started_total",
-            "Total research sessions started",
-            ["depth_level"],
-        )
+        try:
+            # Counters
+            self.sessions_started_counter = Counter(
+                "research_sessions_started_total",
+                "Total research sessions started",
+                ["depth_level"],
+            )
 
-        self.sessions_completed_counter = Counter(
-            "research_sessions_completed_total",
-            "Total research sessions completed",
-            ["status"],
-        )
+            self.sessions_completed_counter = Counter(
+                "research_sessions_completed_total",
+                "Total research sessions completed",
+                ["status"],
+            )
 
-        self.sessions_error_counter = Counter(
-            "research_sessions_error_total",
-            "Total research session errors",
-        )
+            self.sessions_error_counter = Counter(
+                "research_sessions_error_total",
+                "Total research session errors",
+            )
 
-        self.documents_found_counter = Counter(
-            "research_documents_found_total",
-            "Total documents found",
-        )
+            self.documents_found_counter = Counter(
+                "research_documents_found_total",
+                "Total documents found",
+            )
 
-        # Histograms
-        self.research_duration_histogram = Histogram(
-            "research_session_duration_seconds",
-            "Research session duration in seconds",
-            ["depth_level"],
-            buckets=[10, 30, 60, 120, 300, 600],
-        )
+            # Histograms
+            self.research_duration_histogram = Histogram(
+                "research_session_duration_seconds",
+                "Research session duration in seconds",
+                ["depth_level"],
+                buckets=[10, 30, 60, 120, 300, 600],
+            )
 
-        # Gauges
-        self.active_sessions_gauge = Gauge(
-            "research_sessions_active",
-            "Currently active research sessions",
-        )
+            # Gauges
+            self.active_sessions_gauge = Gauge(
+                "research_sessions_active",
+                "Currently active research sessions",
+            )
 
-        self.active_sse_connections_gauge = Gauge(
-            "research_sse_connections_active",
-            "Currently active SSE connections",
-        )
+            self.active_sse_connections_gauge = Gauge(
+                "research_sse_connections_active",
+                "Currently active SSE connections",
+            )
 
-        self._prometheus_initialized = True
+            # Only set initialized if ALL metrics were created successfully
+            self._prometheus_initialized = True
+
+        except Exception as e:
+            logger.warning(
+                f"Failed to initialize Prometheus metrics, falling back to built-in: {e}"
+            )
+            self._prometheus_initialized = False
+            self.enable_prometheus = False
+
+    def _safe_prometheus_call(self, metric_name: str, method: str, *args, **kwargs) -> None:
+        """
+        Safely call a Prometheus metric method with fallback on error.
+
+        Args:
+            metric_name: Name of the metric attribute
+            method: Method name to call (e.g., 'inc', 'set', 'observe')
+            *args, **kwargs: Arguments to pass to the method
+        """
+        if not self._prometheus_initialized:
+            return
+
+        try:
+            metric = getattr(self, metric_name, None)
+            if metric is not None:
+                method_func = getattr(metric, method, None)
+                if method_func:
+                    method_func(*args, **kwargs)
+        except Exception as e:
+            logger.warning(f"Prometheus metric call failed ({metric_name}.{method}): {e}")
 
     def record_session_started(self, depth_level: str = "default") -> None:
         """Record research session start"""
         self.counters["sessions_started"] = self.counters.get("sessions_started", 0) + 1
 
-        if self.enable_prometheus and hasattr(self, "sessions_started_counter"):
-            self.sessions_started_counter.labels(depth_level=depth_level).inc()
+        if self._prometheus_initialized:
+            try:
+                self.sessions_started_counter.labels(depth_level=depth_level).inc()
+            except Exception as e:
+                logger.warning(f"Prometheus metric error: {e}")
 
     def record_session_completed(self, status: str = "completed") -> None:
         """Record research session completion"""
         self.counters["sessions_completed"] = self.counters.get("sessions_completed", 0) + 1
 
-        if self.enable_prometheus and hasattr(self, "sessions_completed_counter"):
-            self.sessions_completed_counter.labels(status=status).inc()
+        if self._prometheus_initialized:
+            try:
+                self.sessions_completed_counter.labels(status=status).inc()
+            except Exception as e:
+                logger.warning(f"Prometheus metric error: {e}")
 
     def record_session_error(self) -> None:
         """Record research session error"""
         self.counters["sessions_error"] = self.counters.get("sessions_error", 0) + 1
 
-        if self.enable_prometheus and hasattr(self, "sessions_error_counter"):
-            self.sessions_error_counter.inc()
+        if self._prometheus_initialized:
+            try:
+                self.sessions_error_counter.inc()
+            except Exception as e:
+                logger.warning(f"Prometheus metric error: {e}")
 
     def record_session_duration(
         self, duration_seconds: float, depth_level: str = "default"
@@ -133,24 +172,33 @@ class ResearchMetrics:
         """Record research session duration"""
         self.duration_samples.append(duration_seconds)
 
-        if self.enable_prometheus and hasattr(self, "research_duration_histogram"):
-            self.research_duration_histogram.labels(depth_level=depth_level).observe(
-                duration_seconds
-            )
+        if self._prometheus_initialized:
+            try:
+                self.research_duration_histogram.labels(depth_level=depth_level).observe(
+                    duration_seconds
+                )
+            except Exception as e:
+                logger.warning(f"Prometheus metric error: {e}")
 
     def record_documents_found(self, count: int) -> None:
         """Record documents found during research"""
         self.counters["documents_found"] = self.counters.get("documents_found", 0) + count
 
-        if self.enable_prometheus and hasattr(self, "documents_found_counter"):
-            self.documents_found_counter.inc(count)
+        if self._prometheus_initialized:
+            try:
+                self.documents_found_counter.inc(count)
+            except Exception as e:
+                logger.warning(f"Prometheus metric error: {e}")
 
     def set_active_sessions(self, count: int) -> None:
         """Set the current number of active sessions"""
         self.gauges["active_sessions"] = float(count)
 
-        if self.enable_prometheus and hasattr(self, "active_sessions_gauge"):
-            self.active_sessions_gauge.set(count)
+        if self._prometheus_initialized:
+            try:
+                self.active_sessions_gauge.set(count)
+            except Exception as e:
+                logger.warning(f"Prometheus metric error: {e}")
 
     def increment_active_sessions(self) -> None:
         """Increment active sessions counter"""
@@ -166,8 +214,11 @@ class ResearchMetrics:
         """Set the current number of active SSE connections"""
         self.gauges["active_sse_connections"] = float(count)
 
-        if self.enable_prometheus and hasattr(self, "active_sse_connections_gauge"):
-            self.active_sse_connections_gauge.set(count)
+        if self._prometheus_initialized:
+            try:
+                self.active_sse_connections_gauge.set(count)
+            except Exception as e:
+                logger.warning(f"Prometheus metric error: {e}")
 
     def increment_active_sse_connections(self) -> None:
         """Increment active SSE connections counter"""

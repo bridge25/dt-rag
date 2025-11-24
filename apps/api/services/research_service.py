@@ -107,8 +107,16 @@ class ResearchService:
         # Store task reference for cancellation
         self._active_tasks[session_id] = task
 
-        # Cleanup task on completion
-        task.add_done_callback(lambda _: self._active_tasks.pop(session_id, None))
+        # Cleanup task on completion with proper closure
+        def _cleanup_task(task_result, sid=session_id):
+            """
+            Cleanup callback that safely removes task from active tasks.
+            Uses default argument to capture session_id value at definition time,
+            preventing race conditions with concurrent cancellations.
+            """
+            self._active_tasks.pop(sid, None)
+
+        task.add_done_callback(_cleanup_task)
 
         # Estimated duration in seconds (base estimate)
         estimated_duration = 30

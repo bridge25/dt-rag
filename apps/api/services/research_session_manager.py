@@ -106,9 +106,8 @@ class ResearchSessionManager:
         )
 
         # Serialize and save to Redis
+        # Note: model_dump_json() handles datetime serialization to ISO format
         session_data = json.loads(session.model_dump_json())
-        session_data["created_at"] = now.isoformat()
-        session_data["updated_at"] = now.isoformat()
 
         success = await redis.set(
             self._get_session_key(session_id),
@@ -184,9 +183,8 @@ class ResearchSessionManager:
         session.updated_at = datetime.now()
 
         # Save updated session
+        # Note: model_dump_json() handles datetime serialization consistently
         session_data = json.loads(session.model_dump_json())
-        session_data["created_at"] = session.created_at.isoformat()
-        session_data["updated_at"] = session.updated_at.isoformat()
 
         success = await redis.set(
             self._get_session_key(session_id),
@@ -254,8 +252,8 @@ class ResearchSessionManager:
         )
 
         # Serialize event
+        # Note: model_dump_json() handles datetime serialization consistently
         event_data = json.loads(event.model_dump_json())
-        event_data["timestamp"] = now.isoformat()
 
         # Push to event list (using LPUSH for chronological order)
         await redis.lpush(
