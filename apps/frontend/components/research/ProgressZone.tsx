@@ -78,8 +78,15 @@ function CircularProgress({ progress, size = 180 }: { progress: number; size?: n
   const offset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="relative inline-flex items-center justify-center">
-      <svg width={size} height={size} className="-rotate-90">
+    <div
+      className="relative inline-flex items-center justify-center"
+      role="progressbar"
+      aria-valuenow={Math.round(progress)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`진행률 ${Math.round(progress)}%`}
+    >
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
         {/* Background circle */}
         <circle
           cx={size / 2}
@@ -284,10 +291,14 @@ export function ProgressZone({
 
   if (isIdle) {
     return (
-      <div className="flex h-full flex-col border-l bg-muted/30">
-        <div className="border-b px-4 py-3">
+      <div
+        className="flex h-full flex-col border-l bg-muted/30"
+        role="region"
+        aria-label="리서치 진행 상황"
+      >
+        <header className="border-b px-4 py-3">
           <h2 className="text-lg font-semibold">진행 상황</h2>
-        </div>
+        </header>
         <div className="flex-1 p-4">
           <EmptyState />
         </div>
@@ -296,13 +307,20 @@ export function ProgressZone({
   }
 
   return (
-    <div className="flex h-full flex-col border-l bg-muted/30">
+    <div
+      className="flex h-full flex-col border-l bg-muted/30"
+      role="region"
+      aria-label="리서치 진행 상황"
+      aria-live="polite"
+    >
       {/* Header */}
-      <div className="border-b px-4 py-3">
+      <header className="border-b px-4 py-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">진행 상황</h2>
+          <h2 className="text-lg font-semibold" id="progress-title">진행 상황</h2>
           {session && (
             <span
+              role="status"
+              aria-label={`현재 상태: ${STAGE_CONFIG[session.stage].label}`}
               className={cn(
                 "rounded-full px-3 py-1 text-xs font-medium",
                 isError && "bg-red-100 text-red-700",
@@ -314,7 +332,7 @@ export function ProgressZone({
             </span>
           )}
         </div>
-      </div>
+      </header>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">

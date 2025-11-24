@@ -55,6 +55,7 @@ const DEFAULT_SUGGESTIONS: ChatSuggestion[] = [
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
+  const roleLabel = isUser ? "사용자" : isSystem ? "시스템" : "어시스턴트";
 
   return (
     <div
@@ -62,6 +63,8 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         "flex w-full",
         isUser ? "justify-end" : "justify-start"
       )}
+      role="article"
+      aria-label={`${roleLabel} 메시지`}
     >
       <div
         className={cn(
@@ -74,8 +77,8 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         )}
       >
         {message.metadata?.isLoading ? (
-          <div className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
+          <div className="flex items-center gap-2" aria-live="polite">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             <span>생각 중...</span>
           </div>
         ) : (
@@ -100,14 +103,16 @@ function SuggestionChip({
   return (
     <button
       onClick={onClick}
+      aria-label={`제안: ${suggestion.text}`}
       className={cn(
         "flex items-center gap-2 rounded-full px-4 py-2 text-sm",
         "bg-secondary/50 hover:bg-secondary",
         "border border-border/50 hover:border-border",
-        "transition-colors duration-200"
+        "transition-colors duration-200",
+        "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
       )}
     >
-      <Sparkles className="h-3 w-3 text-primary" />
+      <Sparkles className="h-3 w-3 text-primary" aria-hidden="true" />
       <span className="truncate">{suggestion.text}</span>
     </button>
   );
@@ -162,17 +167,23 @@ export function ChatZone({
   const showSuggestions = messages.length === 0 && !isLoading;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" role="region" aria-label="리서치 채팅">
       {/* Header */}
-      <div className="border-b px-4 py-3">
-        <h2 className="text-lg font-semibold">리서치 에이전트</h2>
+      <header className="border-b px-4 py-3">
+        <h2 className="text-lg font-semibold" id="chat-title">리서치 에이전트</h2>
         <p className="text-sm text-muted-foreground">
           원하는 전문 지식 영역을 설명해 주세요
         </p>
-      </div>
+      </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div
+        className="flex-1 overflow-y-auto p-4"
+        role="log"
+        aria-label="메시지 목록"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         {showSuggestions ? (
           <div className="flex h-full flex-col items-center justify-center gap-6">
             <div className="text-center">
@@ -203,9 +214,21 @@ export function ChatZone({
       </div>
 
       {/* Input Area */}
-      <div className="border-t p-4">
-        <div className="flex items-end gap-2">
+      <footer className="border-t p-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="flex items-end gap-2"
+          role="form"
+          aria-label="메시지 입력"
+        >
+          <label htmlFor="research-input" className="sr-only">
+            리서치 주제 입력
+          </label>
           <Textarea
+            id="research-input"
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -214,21 +237,26 @@ export function ChatZone({
             disabled={disabled || isLoading}
             rows={1}
             className="min-h-[44px] max-h-[120px] resize-none"
+            aria-describedby="input-hint"
           />
+          <span id="input-hint" className="sr-only">
+            Enter로 전송, Shift+Enter로 줄바꿈
+          </span>
           <Button
-            onClick={handleSend}
+            type="submit"
             disabled={!input.trim() || isLoading || disabled}
             size="icon"
             className="h-11 w-11 shrink-0"
+            aria-label={isLoading ? "전송 중" : "메시지 전송"}
           >
             {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             ) : (
-              <Send className="h-5 w-5" />
+              <Send className="h-5 w-5" aria-hidden="true" />
             )}
           </Button>
-        </div>
-      </div>
+        </form>
+      </footer>
     </div>
   );
 }
