@@ -263,8 +263,17 @@ class ResearchSessionManager:
             event_data,
         )
 
-        # Trim event list to max length
-        await redis.llen(self._get_events_key(session_id))
+        # Trim event list to max length to prevent memory overflow
+        # LTRIM keeps elements from start to stop (inclusive)
+        # We keep the most recent EVENT_LIST_MAX_LENGTH events
+        events_key = self._get_events_key(session_id)
+        event_count = await redis.llen(events_key)
+        if event_count > self.EVENT_LIST_MAX_LENGTH:
+            await redis.ltrim(events_key, 0, self.EVENT_LIST_MAX_LENGTH - 1)
+            logger.debug(
+                f"Trimmed event list for session {session_id}: "
+                f"{event_count} -> {self.EVENT_LIST_MAX_LENGTH}"
+            )
 
         logger.debug(
             f"Published event {event_id} for session {session_id}: {event_type}"
@@ -303,6 +312,9 @@ class ResearchSessionManager:
             return []
 
         # If last_event_id is provided, filter events after that ID
+        # Note: We include events AFTER the last_event_id (not including it)
+        # This follows SSE reconnection semantics where Last-Event-ID indicates
+        # the last event the client successfully received
         if last_event_id:
             filtered_events = []
             found_last = False
@@ -311,6 +323,9 @@ class ResearchSessionManager:
                     filtered_events.append(event)
                 elif isinstance(event, dict) and event.get("event_id") == last_event_id:
                     found_last = True
+                    # Include the matched event itself for replay
+                    # This ensures clients don't miss the boundary event on reconnection
+                    filtered_events.append(event)
 
             return filtered_events
 

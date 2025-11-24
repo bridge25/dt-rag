@@ -37,6 +37,10 @@ from apps.api.monitoring.research_metrics import get_research_metrics
 
 logger = logging.getLogger(__name__)
 
+# Query validation constants
+MAX_QUERY_LENGTH = 2000  # Maximum characters for research query (DoS prevention)
+MIN_QUERY_LENGTH = 3  # Minimum characters for meaningful query
+
 
 class ResearchStatusResponse(BaseModel):
     """Response for GET /api/v1/research/{id}"""
@@ -110,11 +114,25 @@ def create_research_router(
             403: Invalid or missing API key
         """
         try:
-            # Validate query
+            # Validate query - check for empty
             if not request.query or not request.query.strip():
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Query cannot be empty",
+                )
+
+            # Validate query length - DoS prevention
+            query_stripped = request.query.strip()
+            if len(query_stripped) < MIN_QUERY_LENGTH:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Query too short. Minimum {MIN_QUERY_LENGTH} characters required.",
+                )
+
+            if len(query_stripped) > MAX_QUERY_LENGTH:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Query too long. Maximum {MAX_QUERY_LENGTH} characters allowed.",
                 )
 
             # Convert config to dict if provided

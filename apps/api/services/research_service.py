@@ -391,8 +391,18 @@ class ResearchService:
         metrics = get_research_metrics()
 
         try:
-            # Get pipeline service
-            pipeline = self._get_langgraph_service()
+            # Get pipeline service with error handling
+            try:
+                pipeline = self._get_langgraph_service()
+                logger.info(f"LangGraph service loaded for session {session_id}")
+            except Exception as pipeline_init_error:
+                logger.error(
+                    f"Failed to initialize LangGraph service for session {session_id}: "
+                    f"{pipeline_init_error}"
+                )
+                raise RuntimeError(
+                    f"LangGraph service initialization failed: {pipeline_init_error}"
+                )
 
             # Update session: ANALYZING stage
             await self.session_manager.update_session(
@@ -407,8 +417,23 @@ class ResearchService:
                 data={"stage": ResearchStage.ANALYZING},
             )
 
-            # Execute pipeline
-            result = await pipeline.execute_pipeline(query=query)
+            # Execute pipeline with comprehensive error handling
+            logger.info(f"Starting LangGraph pipeline for session {session_id}, query: {query[:50]}...")
+            try:
+                result = await pipeline.execute_pipeline(query=query)
+                logger.info(
+                    f"LangGraph pipeline completed for session {session_id}, "
+                    f"result keys: {list(result.keys()) if isinstance(result, dict) else type(result)}"
+                )
+            except asyncio.TimeoutError:
+                logger.error(f"LangGraph pipeline timeout for session {session_id}")
+                raise RuntimeError("Research pipeline timed out. Please try again.")
+            except Exception as pipeline_error:
+                logger.error(
+                    f"LangGraph pipeline failed for session {session_id}: {pipeline_error}",
+                    exc_info=True,
+                )
+                raise RuntimeError(f"Research pipeline error: {pipeline_error}")
 
             # Update session: SEARCHING stage
             await self.session_manager.update_session(
@@ -423,11 +448,21 @@ class ResearchService:
                 data={"stage": ResearchStage.SEARCHING},
             )
 
-            # Mock document collection
+            # TODO: Replace with actual document discovery from LangGraph result
+            # Mock document collection - placeholder for actual document sources
+            # Future integration should:
+            # 1. Extract documents from pipeline result
+            # 2. Apply quality threshold filtering (config.quality_threshold)
+            # 3. Limit by max_documents (config.max_documents)
+            # 4. Apply sources_filter (config.sources_filter)
             documents = [
                 {"id": str(uuid.uuid4()), "title": f"Document {i + 1}"}
                 for i in range(3)
             ]
+            logger.info(
+                f"Collected {len(documents)} documents for session {session_id} "
+                "(mock data - pending real integration)"
+            )
 
             # Update session: COLLECTING stage
             await self.session_manager.update_session(

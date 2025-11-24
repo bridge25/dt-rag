@@ -114,6 +114,51 @@ class TestStartResearchEndpoint:
         # Pydantic validation returns 422, endpoint validation returns 400
         assert response.status_code in [400, 422]
 
+    @pytest.mark.asyncio
+    async def test_start_research_rejects_short_query(
+        self, mock_research_service, mock_api_key
+    ):
+        """Test that query shorter than MIN_QUERY_LENGTH is rejected"""
+        from apps.api.routers.research_router import create_research_router
+
+        router = create_research_router(mock_research_service)
+        client = create_test_app(router, mock_api_key)
+
+        request_data = {"query": "ab", "config": None}  # 2 chars, min is 3
+
+        response = client.post(
+            "/api/v1/research",
+            json=request_data,
+            headers={"X-API-Key": "test_key"},
+        )
+
+        assert response.status_code == 400
+        assert "too short" in response.json()["detail"].lower()
+
+    @pytest.mark.asyncio
+    async def test_start_research_rejects_long_query(
+        self, mock_research_service, mock_api_key
+    ):
+        """Test that query longer than MAX_QUERY_LENGTH is rejected"""
+        from apps.api.routers.research_router import create_research_router
+
+        router = create_research_router(mock_research_service)
+        client = create_test_app(router, mock_api_key)
+
+        # Create a query that exceeds MAX_QUERY_LENGTH (2000 chars)
+        long_query = "a" * 2001
+
+        request_data = {"query": long_query, "config": None}
+
+        response = client.post(
+            "/api/v1/research",
+            json=request_data,
+            headers={"X-API-Key": "test_key"},
+        )
+
+        # Either 400 (endpoint validation) or 422 (Pydantic validation)
+        assert response.status_code in [400, 422]
+
 
 class TestGetSessionEndpoint:
     """Test GET /api/v1/research/{id} endpoint"""

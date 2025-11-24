@@ -361,6 +361,7 @@ class TestPublishEvent:
     ):
         """Test publishing an event"""
         mock_redis_manager.lpush.return_value = 1
+        mock_redis_manager.llen.return_value = 1  # Below max length, no trim needed
 
         event_id = await session_manager.publish_event(
             session_id=sample_session_id,
@@ -380,6 +381,7 @@ class TestPublishEvent:
     ):
         """Test publishing multiple events"""
         mock_redis_manager.lpush.return_value = 1
+        mock_redis_manager.llen.return_value = 2  # Below max length, no trim needed
 
         event_id_1 = await session_manager.publish_event(
             sample_session_id,
@@ -406,6 +408,7 @@ class TestPublishEvent:
     ):
         """Test that published event includes timestamp"""
         mock_redis_manager.lpush.return_value = 1
+        mock_redis_manager.llen.return_value = 1  # Below max length, no trim needed
 
         await session_manager.publish_event(
             sample_session_id,
@@ -416,6 +419,54 @@ class TestPublishEvent:
         # Verify lpush was called with event data
         call_args = mock_redis_manager.lpush.call_args
         assert call_args is not None
+
+    @pytest.mark.asyncio
+    async def test_publish_event_trims_when_exceeds_max_length(
+        self,
+        session_manager,
+        mock_redis_manager,
+        sample_session_id
+    ):
+        """Test that event list is trimmed when it exceeds max length"""
+        mock_redis_manager.lpush.return_value = 1
+        # Simulate event count exceeding max length
+        mock_redis_manager.llen.return_value = 1001
+        mock_redis_manager.ltrim.return_value = True
+
+        await session_manager.publish_event(
+            sample_session_id,
+            "progress",
+            {"progress": 0.5}
+        )
+
+        # Verify ltrim was called to trim the list
+        mock_redis_manager.ltrim.assert_called_once()
+        # Verify it keeps the first 1000 events (0 to 999)
+        call_args = mock_redis_manager.ltrim.call_args
+        assert call_args is not None
+        args = call_args[0]
+        assert args[1] == 0  # start index
+        assert args[2] == 999  # end index (max length - 1)
+
+    @pytest.mark.asyncio
+    async def test_publish_event_no_trim_when_below_max_length(
+        self,
+        session_manager,
+        mock_redis_manager,
+        sample_session_id
+    ):
+        """Test that event list is not trimmed when below max length"""
+        mock_redis_manager.lpush.return_value = 1
+        mock_redis_manager.llen.return_value = 500  # Below max length
+
+        await session_manager.publish_event(
+            sample_session_id,
+            "progress",
+            {"progress": 0.5}
+        )
+
+        # Verify ltrim was NOT called
+        mock_redis_manager.ltrim.assert_not_called()
 
 
 class TestGetEventsSince:
@@ -547,6 +598,7 @@ class TestSessionEventIntegration:
         """Test complete workflow: create session, publish events, retrieve"""
         mock_redis_manager.set.return_value = True
         mock_redis_manager.lpush.return_value = 1
+        mock_redis_manager.llen.return_value = 1  # Below max length, no trim needed
         mock_redis_manager.lrange.return_value = []
         mock_redis_manager.get.return_value = {
             "id": sample_session_id,
