@@ -1,145 +1,210 @@
 /**
- * Taxonomy browser page
+ * Taxonomy browser page - Constellation Graph View
  *
- * @CODE:FRONTEND-001
+ * @CODE:FRONTEND-MIGRATION-002
  */
 
 "use client";
 
+import { useCallback, useMemo } from 'react';
 import { useQuery } from "@tanstack/react-query";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  Connection,
+  Edge,
+  Node,
+  Position,
+  MarkerType
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import dagre from 'dagre';
+
 import { getTaxonomyTree } from "@/lib/api";
-import { ModernCard } from "@/components/ui/modern-card";
+import { TaxonomyGraphNode } from "@/components/taxonomy/TaxonomyGraphNode";
 import { IconBadge } from "@/components/ui/icon-badge";
-import { Network, ChevronRight, FolderTree } from "lucide-react";
+import { Network, Loader2 } from "lucide-react";
+
+// Node Types Configuration
+const nodeTypes = {
+  taxonomyNode: TaxonomyGraphNode,
+};
+
+// Layout Calculation using Dagre
+const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+  dagreGraph.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 150 });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: 80, height: 80 });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - 40,
+        y: nodeWithPosition.y - 40,
+      },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
+// Transform API data to React Flow elements
+const transformDataToGraph = (data: any[]) => {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+
+  const traverse = (item: any, parentId: string | null = null) => {
+    const nodeId = item.id;
+
+    nodes.push({
+      id: nodeId,
+      type: 'taxonomyNode',
+      data: {
+        label: item.name,
+        type: item.level === 1 ? 'root' : item.children?.length ? 'category' : 'item',
+        count: item.children?.length
+      },
+      position: { x: 0, y: 0 }, // Initial position, will be calculated by dagre
+    });
+
+    if (parentId) {
+      edges.push({
+        id: `e${parentId}-${nodeId}`,
+        source: parentId,
+        target: nodeId,
+        type: 'default',
+        animated: true,
+        style: { stroke: 'rgba(255, 255, 255, 0.2)', strokeWidth: 1 },
+      });
+    }
+
+    if (item.children) {
+      item.children.forEach((child: any) => traverse(child, nodeId));
+    }
+  };
+
+  data.forEach(root => traverse(root));
+
+  return getLayoutedElements(nodes, edges);
+};
 
 export default function TaxonomyPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["taxonomy"],
     queryFn: () => getTaxonomyTree("1.8.1"),
-  })
+  });
 
-  const getVariant = (index: number) => {
-    const variants = ["purple", "green", "teal"] as const;
-    return variants[index % variants.length];
+  const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
+    if (!data) return { nodes: [], edges: [] };
+    return transformDataToGraph(data);
+  }, [data]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Update graph when data loads
+  useMemo(() => {
+    if (data) {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = transformDataToGraph(data);
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+    }
+  }, [data, setNodes, setEdges]);
+
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-dark-navy">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-accent-glow-blue" />
+          <p className="text-gray-400 animate-pulse">Mapping the constellation...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-dark-navy">
+        <div className="text-center space-y-4">
+          <div className="inline-flex p-4 rounded-full bg-red-500/10 border border-red-500/20">
+            <Network className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Failed to load taxonomy</h2>
+          <p className="text-gray-400">Could not retrieve the star chart data.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="space-y-6 p-8">
+    <div className="h-[calc(100vh-4rem)] w-full bg-dark-navy relative overflow-hidden">
+      {/* Header Overlay */}
+      <div className="absolute top-6 left-8 z-10 pointer-events-none">
         <div className="flex items-center gap-4">
-          <IconBadge icon={FolderTree} color="purple" size="lg" />
+          <IconBadge icon={Network} color="blue" size="lg" className="bg-glass border-white/10 backdrop-blur-md" />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Taxonomy</h1>
-            <p className="text-muted-foreground">
-              Browse and manage your classification taxonomy
+            <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-lg">Taxonomy Constellation</h1>
+            <p className="text-gray-300 drop-shadow-md">
+              Interactive knowledge graph visualization
             </p>
           </div>
         </div>
-
-        {isLoading && (
-          <ModernCard>
-            <p className="text-center text-muted-foreground py-8">Loading taxonomy...</p>
-          </ModernCard>
-        )}
-
-        {isError && (
-          <ModernCard variant="default" className="border-2 border-destructive">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <IconBadge icon={Network} color="red" size="sm" />
-                <h3 className="text-lg font-semibold text-destructive">Error</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Failed to load taxonomy tree
-              </p>
-            </div>
-          </ModernCard>
-        )}
-
-        {data && (
-          <div className="grid gap-6">
-            {data.map((node, index) => (
-              <ModernCard key={node.id} variant={getVariant(index)}>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4">
-                    <IconBadge
-                      icon={Network}
-                      color={getVariant(index) === "purple" ? "purple" : getVariant(index) === "green" ? "green" : "teal"}
-                      size="md"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-2xl font-bold truncate">{node.name}</h2>
-                        <IconBadge
-                          icon={ChevronRight}
-                          color="orange"
-                          size="sm"
-                          className="opacity-60"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium">
-                          Level {node.level}
-                        </span>
-                        <span className="text-sm opacity-80">
-                          Path: {node.path.join(" > ")}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {node.children && node.children.length > 0 && (
-                    <div className="mt-6 pl-4 border-l-4 border-white/30 space-y-4">
-                      {node.children.map((child) => (
-                        <div
-                          key={child.id}
-                          className="group transition-all duration-200 hover:translate-x-2"
-                        >
-                          <div className="flex items-center gap-3 p-4 rounded-xl bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors">
-                            <ChevronRight className="h-5 w-5 opacity-60 group-hover:opacity-100 transition-opacity" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-lg font-semibold truncate">{child.name}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 text-xs font-medium">
-                                  Level {child.level}
-                                </span>
-                                {child.children && child.children.length > 0 && (
-                                  <span className="text-xs opacity-60">
-                                    {child.children.length} child{child.children.length !== 1 ? "ren" : ""}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          {child.children && child.children.length > 0 && (
-                            <div className="mt-2 ml-8 pl-4 border-l-2 border-white/20 space-y-2">
-                              {child.children.map((grandchild) => (
-                                <div
-                                  key={grandchild.id}
-                                  className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                                >
-                                  <ChevronRight className="h-4 w-4 opacity-40" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-base font-medium truncate">{grandchild.name}</p>
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/15 text-xs mt-1">
-                                      Level {grandchild.level}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </ModernCard>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* React Flow Graph */}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        nodeTypes={nodeTypes}
+        fitView
+        className="bg-dark-navy"
+        minZoom={0.1}
+        maxZoom={1.5}
+        defaultEdgeOptions={{
+          type: 'default',
+          animated: true,
+          style: { stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1.5 },
+        }}
+      >
+        <Background
+          color="#4a5568"
+          gap={20}
+          size={1}
+          className="opacity-20"
+        />
+        <Controls
+          className="bg-glass border border-white/10 text-white fill-white [&>button]:border-b-white/10 [&>button:hover]:bg-white/10"
+        />
+      </ReactFlow>
+
+      {/* Ambient Particles (CSS only for performance) */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(11,17,33,0.8)_100%)]" />
     </div>
   );
 }
+

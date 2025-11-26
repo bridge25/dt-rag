@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Glass Dashboard Mockup</title>
+    <style>
+        :root {
+            --bg-color: #0b1121; /* Deep Charcoal */
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-gold: #ffd700;
+            --neon-green: #0aff0a;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 80px;
+            background: rgba(15, 23, 42, 0.8);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 2rem;
+            gap: 2rem;
+        }
+
+        .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .icon:hover {
+            background: var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue);
+            color: #000;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background: radial-gradient(circle at top right, rgba(0, 243, 255, 0.05), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(188, 19, 254, 0.05), transparent 40%);
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Agent Card */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Rarity Glows */
+        .card.blue { border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
+        .card.purple { border-color: var(--neon-purple); box-shadow: 0 0 10px rgba(188, 19, 254, 0.2); }
+        .card.gold { border-color: var(--neon-gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.2); }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            opacity: 0.5;
+        }
+
+        .avatar-container {
+            width: 100%;
+            height: 160px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 2;
+        }
+
+        .hologram-effect {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: conic-gradient(from 0deg, transparent, var(--neon-blue), transparent);
+            animation: rotate 4s linear infinite;
+            opacity: 0.1;
+        }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-role {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 1rem;
+        }
+        .progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            width: 75%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="icon">🏠</div>
+        <div class="icon">🤖</div>
+        <div class="icon">📊</div>
+        <div class="icon">⚙️</div>
+    </div>
+    <div class="main">
+        <div class="header">
+            <h1>Agent Command Center</h1>
+            <p style="color: var(--text-secondary);">Manage and monitor your autonomous agents</p>
+        </div>
+        
+        <div class="grid">
+            <!-- Card 1: Rare (Blue) -->
+            <div class="card blue">
+                <div class="avatar-container">
+                    <div class="hologram-effect" style="background: conic-gradient(from 0deg, transparent, var(--neon-blue), transparent);"></div>
+                    <div class="avatar-placeholder">🤖</div>
+                </div>
+                <div class="card-title">Research Agent Alpha</div>
+                <div class="card-role">
+                    <span class="badge">Researcher</span>
+                    <span class="badge" style="color: var(--neon-blue); border-color: var(--neon-blue);">RARE</span>
+                </div>
+                <div class="progress-container">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem;">
+                        <span>XP Progress</span>
+                        <span>75%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 75%; background: var(--neon-blue);"></div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">1.2k</div>
+                        <div class="stat-label">Docs</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">98%</div>
+                        <div class="stat-label">Acc</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">45ms</div>
+                        <div class="stat-label">Lat</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Epic (Purple) -->
+            <div class="card purple">
+                <div class="avatar-container">
+                    <div class="hologram-effect" style="background: conic-gradient(from 0deg, transparent, var(--neon-purple), transparent);"></div>
+                    <div class="avatar-placeholder">⚡</div>
+                </div>
+                <div class="card-title">Debate Master</div>
+                <div class="card-role">
+                    <span class="badge">Critic</span>
+                    <span class="badge" style="color: var(--neon-purple); border-color: var(--neon-purple);">EPIC</span>
+                </div>
+                <div class="progress-container">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem;">
+                        <span>XP Progress</span>
+                        <span>92%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 92%; background: var(--neon-purple);"></div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">3.4k</div>
+                        <div class="stat-label">Args</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">99%</div>
+                        <div class="stat-label">Win</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">120ms</div>
+                        <div class="stat-label">Lat</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Legendary (Gold) -->
+            <div class="card gold">
+                <div class="avatar-container">
+                    <div class="hologram-effect" style="background: conic-gradient(from 0deg, transparent, var(--neon-gold), transparent);"></div>
+                    <div class="avatar-placeholder">👑</div>
+                </div>
+                <div class="card-title">Orchestrator Prime</div>
+                <div class="card-role">
+                    <span class="badge">Manager</span>
+                    <span class="badge" style="color: var(--neon-gold); border-color: var(--neon-gold);">LEGENDARY</span>
+                </div>
+                <div class="progress-container">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem;">
+                        <span>XP Progress</span>
+                        <span>100%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 100%; background: var(--neon-gold);"></div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">10k+</div>
+                        <div class="stat-label">Ops</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">10ms</div>
+                        <div class="stat-label">Lat</div>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Card 4: Common (Green) -->
+             <div class="card" style="border-color: var(--neon-green); box-shadow: 0 0 10px rgba(10, 255, 10, 0.2);">
+                <div class="avatar-container">
+                    <div class="hologram-effect" style="background: conic-gradient(from 0deg, transparent, var(--neon-green), transparent);"></div>
+                    <div class="avatar-placeholder">🌱</div>
+                </div>
+                <div class="card-title">Scraper Bot v1</div>
+                <div class="card-role">
+                    <span class="badge">Ingestion</span>
+                    <span class="badge" style="color: var(--neon-green); border-color: var(--neon-green);">COMMON</span>
+                </div>
+                <div class="progress-container">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.3rem;">
+                        <span>XP Progress</span>
+                        <span>15%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 15%; background: var(--neon-green);"></div>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">500</div>
+                        <div class="stat-label">Pages</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">85%</div>
+                        <div class="stat-label">Succ</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">2s</div>
+                        <div class="stat-label">Lat</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
