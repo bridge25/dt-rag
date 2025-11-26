@@ -2,6 +2,7 @@
 
 /**
  * Research Agent Page
+ * Ethereal Glass Aesthetic
  *
  * Main page for the Research Agent interface with split layout.
  * Left: ChatZone (40%) - Natural language interaction
@@ -9,7 +10,7 @@
  *
  * Now integrated with real backend API via SSE for real-time updates.
  *
- * @CODE:FRONTEND-UX-001
+ * @CODE:FRONTEND-UX-002
  */
 
 import { useCallback, useRef, useEffect, useState } from "react";
@@ -27,6 +28,7 @@ import {
   type ResearchAPICallbacks,
 } from "@/lib/api/research";
 import type { ResearchStage } from "@/types/research";
+import { AlertTriangle, WifiOff } from "lucide-react";
 
 // ============================================================================
 // Configuration
@@ -92,8 +94,8 @@ export default function ResearchPage() {
         type === "connection"
           ? `서버 연결 오류: ${error.message}. 다시 시도해 주세요.`
           : type === "validation"
-          ? `입력 오류: ${error.message}`
-          : `오류가 발생했습니다: ${error.message}`;
+            ? `입력 오류: ${error.message}`
+            : `오류가 발생했습니다: ${error.message}`;
 
       updateStage("error");
       if (type === "connection") {
@@ -331,14 +333,15 @@ export default function ResearchPage() {
   }, [session, startResearchAction, startResearchWithAPI]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row">
+    <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row gap-6 p-6 max-w-[1920px] mx-auto">
       {/* Connection Error Banner */}
       {connectionError && (
-        <div className="absolute left-0 right-0 top-0 z-50 bg-red-500 p-2 text-center text-white">
-          연결 오류: {connectionError}
+        <div className="absolute left-0 right-0 top-0 z-50 bg-red-500/90 backdrop-blur-md p-3 text-center text-white flex items-center justify-center gap-2 shadow-lg">
+          <WifiOff className="w-4 h-4" />
+          <span>연결 오류: {connectionError}</span>
           <button
             onClick={() => setConnectionError(null)}
-            className="ml-4 underline"
+            className="ml-4 underline hover:text-white/80"
           >
             닫기
           </button>
@@ -347,13 +350,13 @@ export default function ResearchPage() {
 
       {/* API Mode Indicator (dev only) */}
       {process.env.NODE_ENV === "development" && (
-        <div className="absolute right-4 top-2 z-50 rounded bg-gray-800 px-2 py-1 text-xs text-white">
+        <div className="absolute right-8 top-20 z-50 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-xs text-white/60 backdrop-blur-md">
           {USE_MOCK_API ? "🎭 Mock Mode" : "🔗 API Mode"}
         </div>
       )}
 
       {/* Chat Zone - 40% on desktop, full width stacked on mobile */}
-      <div className="h-1/2 w-full lg:h-full lg:w-2/5 lg:min-w-[400px]">
+      <div className="h-1/2 w-full lg:h-full lg:w-2/5 lg:min-w-[400px] rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden shadow-glass">
         <ChatZone
           messages={messages}
           onSendMessage={handleSendMessage}
@@ -363,7 +366,7 @@ export default function ResearchPage() {
       </div>
 
       {/* Progress Zone - 60% on desktop, full width stacked on mobile */}
-      <div className="h-1/2 w-full lg:h-full lg:w-3/5">
+      <div className="h-1/2 w-full lg:h-full lg:w-3/5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden shadow-glass">
         <ProgressZone
           session={session}
           selectedDocumentIds={selectedDocumentIds}
