@@ -1,0 +1,70 @@
+apps/classification/hitl_queue.py:146:                            "alternatives": [],  # TODO: Fetch from candidates table
+apps/frontend-admin/src/components/agents/AgentFactory.tsx:128:    // TODO: Implement agent creation modal
+apps/frontend-admin/src/components/agents/AgentFactory.tsx:132:    // TODO: Implement agent testing
+apps/frontend-admin/src/components/agents/AgentFactory.tsx:137:    // TODO: Implement agent deployment
+apps/security/routers/security_router.py:18:from ..compliance.compliance_manager import (  # type: ignore[import-not-found]  # TODO: Implement compliance manager module
+apps/security/routers/security_router.py:24:from ..monitoring.security_monitor import ThreatLevel, AlertType  # type: ignore[import-not-found]  # TODO: Implement security monitor module
+apps/security/routers/security_router.py:25:from ..scanning.vulnerability_scanner import ScanType  # type: ignore[import-not-found]  # TODO: Implement vulnerability scanner module
+apps/security/middleware/security_middleware.py:21:from ..audit.audit_logger import EventType, SeverityLevel  # type: ignore[import-not-found]  # TODO: Implement audit logger module
+apps/security/core/security_manager.py:16:from ..audit.audit_logger import AuditLogger, SecurityEvent, EventType, SeverityLevel  # type: ignore[import-not-found]  # TODO: Implement audit logger module
+apps/security/core/security_manager.py:17:from ..compliance.pii_detector import PIIDetector  # type: ignore[import-not-found]  # TODO: Implement PII detector module
+apps/security/core/security_manager.py:18:from ..compliance.compliance_manager import ComplianceManager  # type: ignore[import-not-found]  # TODO: Implement compliance manager module
+apps/security/core/security_manager.py:19:from ..monitoring.security_monitor import SecurityMonitor  # type: ignore[import-not-found]  # TODO: Implement security monitor module
+apps/security/core/security_manager.py:20:from ..scanning.vulnerability_scanner import VulnerabilityScanner  # type: ignore[import-not-found]  # TODO: Implement vulnerability scanner module
+apps/frontend-admin.backup/src/components/agents/AgentFactory.tsx:128:    // TODO: Implement agent creation modal
+apps/frontend-admin.backup/src/components/agents/AgentFactory.tsx:132:    // TODO: Implement agent testing
+apps/frontend-admin.backup/src/components/agents/AgentFactory.tsx:137:    // TODO: Implement agent deployment
+apps/orchestration/src/langgraph_pipeline.py:210:                "date": "2025-09-01",  # TODO: Extract from metadata
+apps/orchestration/src/langgraph_pipeline.py:348:            # TODO: execute_tool() return type mismatch - should have ToolResult/ExecutionResult type
+apps/orchestration/src/langgraph_pipeline.py:455:    TODO: Extract citation logic from step5 in future
+apps/orchestration/src/langgraph_pipeline.py:458:    # TODO: Extract citation logic from step5 in future
+apps/orchestration/src/langgraph_pipeline.py:631:                cost=0.0,  # TODO: Calculate actual cost
+apps/orchestration/src/main.py:54:        from common_schemas.models import SearchRequest, SearchResponse, SearchHit  # type: ignore[import-not-found]  # TODO: Implement common schemas
+apps/orchestration/src/main.py:135:        from langgraph_pipeline import get_pipeline as _get_pipeline_absolute  # type: ignore[import-not-found]  # TODO: Implement langgraph pipeline
+apps/orchestration/src/main.py:156:            from langgraph_pipeline import get_pipeline as _get_pipeline_directory  # TODO: Implement langgraph pipeline
+apps/orchestration/src/main.py:263:        from langgraph_pipeline import PipelineRequest as _PipelineRequest_absolute  # TODO: Implement langgraph pipeline
+apps/orchestration/src/main.py:278:        from langgraph_pipeline import PipelineRequest as _PipelineRequest_directory  # TODO: Implement langgraph pipeline
+apps/orchestration/src/main.py:1551:    # TODO: 실제 하이브리드 검색 구현
+apps/orchestration/src/main.py:1775:        # TODO: 로그 업데이트 로직 구현 필요
+apps/orchestration/src/main.py:2109:    # TODO: 실제 메트릭 수집 시스템과 연동
+apps/api/routers/agent_factory_router.py:115:        # TODO: Schema mismatch - model has category_path (List[str]), code expects node_paths (List[List[str]])
+apps/api/routers/agent_factory_router.py:266:        # TODO: Schema mismatch - model has category_path (List[str]), code expects node_paths (List[List[str]])
+apps/api/routers/agent_router.py:132:        # TODO: AgentDAO.search_agents() method not implemented - should support name search
+apps/api/routers/agent_router.py:269:        # TODO: Schema mismatch - CoverageMetrics.node_coverage is Dict[str, int]
+apps/api/routers/taxonomy.py:432:                "max_depth": None,  # TODO: Calculate max depth
+apps/api/routers/reflection_router.py:35:    from reflection_engine import ReflectionEngine  # type: ignore[import-not-found]  # TODO: Implement reflection engine
+apps/api/routers/reflection_router.py:95:        from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine as RE
+apps/api/routers/reflection_router.py:124:                from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine
+apps/api/routers/reflection_router.py:162:                from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine
+apps/api/routers/reflection_router.py:196:                from reflection_engine import ReflectionEngine  # TODO: Implement reflection engine
+apps/api/routers/search.py:34:    from ..optimization.async_executor import get_async_optimizer  # type: ignore[import-not-found]  # TODO: Implement async executor
+apps/api/routers/search.py:35:    from ..optimization.memory_optimizer import get_memory_monitor  # type: ignore[import-not-found]  # TODO: Implement memory optimizer
+apps/api/routers/search.py:36:    from ..optimization.concurrency_control import get_concurrency_controller  # type: ignore[import-not-found]  # TODO: Implement concurrency control
+apps/api/routers/search.py:420:        from database import db_manager  # type: ignore[import-not-found]  # TODO: Fix database import path
+apps/api/routers/search.py:424:            # TODO: Implement SearchDAO.create_embeddings_for_chunks(session, chunk_ids, batch_size)
+apps/api/routers/search.py:521:        from database import db_manager  # TODO: Fix database import path
+apps/api/routers/search.py:570:        from database import db_manager  # TODO: Fix database import path
+apps/api/routers/search.py:613:        from database import EmbeddingService, db_manager  # TODO: Fix database import path
+apps/api/routers/orchestration_router.py:144:                canonical_filter=None,  # TODO: Extract from search_config if needed
+apps/api/routers/classification_router.py:173:        # TODO: Schema mismatch - ClassifyResponse has 'classifications' (List[ClassificationResult]),
+apps/api/database.py:750:    from ..search.vector_engine import EmbeddingService as OptimizedEmbeddingService  # type: ignore[import-not-found]  # TODO: Implement vector engine module
+apps/api/database.py:1000:            from .optimization.async_executor import get_async_optimizer  # type: ignore[import-not-found]  # TODO: Implement async executor
+apps/api/database.py:1001:            from .optimization.memory_optimizer import get_gc_optimizer  # type: ignore[import-not-found]  # TODO: Implement memory optimizer
+apps/api/database.py:1002:            from .optimization.concurrency_control import get_concurrency_controller  # type: ignore[import-not-found]  # TODO: Implement concurrency control
+apps/api/database.py:1620:            # TODO: 실제 BERT/RoBERTa 등 분류 모델로 교체
+apps/api/monitoring/dashboard.py:183:            "environment": "testing",  # TODO: 환경변수에서 읽기
+apps/api/monitoring/dashboard.py:332:                    "peak_hour": None,  # TODO: 시간별 분석
+apps/api/main.py:75:    from apps.api.routers.monitoring import router as monitoring_api_router  # type: ignore[import-not-found]  # TODO: Implement monitoring router
+apps/api/main.py:242:            from cache.redis_manager import get_redis_manager  # type: ignore[import-not-found]  # TODO: Fix cache import path
+apps/api/main.py:339:                from routers.monitoring import track_request_metrics  # TODO: Fix routers import path
+apps/api/main.py:359:                from routers.monitoring import track_request_metrics  # type: ignore[import-not-found]  # TODO: Fix routers import path
+apps/api/main.py:603:    # TODO: Implement actual rate limit checking based on user/API key
+apps/api/services/research_service.py:459:            # TODO: Replace with actual document discovery from LangGraph result
+apps/evaluation/quality_monitor.py:183:                # TODO: Implement alert history from database
+apps/evaluation/quality_monitor.py:551:            # TODO: Send notifications (email, webhook, etc.)
+apps/evaluation/dashboard.py:298:                // TODO: Calculate and show trend
+apps/evaluation/evaluation_router.py:158:            # TODO: Implement async job processing with Celery or similar
+apps/evaluation/evaluation_router.py:587:        # TODO: Load golden dataset from database
+apps/evaluation/evaluation_router.py:683:                        "trends": "stable",  # TODO: Calculate actual trends
+apps/monitoring/performance_monitor.py:221:            from ..search.optimization import get_performance_monitor  # type: ignore[import-not-found]  # TODO: Implement optimization module
+apps/monitoring/performance_monitor.py:222:            from ..search.optimized_hybrid_engine import get_hybrid_engine  # type: ignore[import-not-found]  # TODO: Implement optimized hybrid engine

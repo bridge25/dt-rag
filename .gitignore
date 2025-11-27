@@ -151,3 +151,7 @@ docs/out/
 # Duplicate/Archive directories
 dt-rag-1/
 _archive/
+dt-rag/
+*.backup
+*.backup.*
+dt-rag*.md
