@@ -31,7 +31,7 @@ else:
         # 현재 파일의 절대 경로 기준으로 프로젝트 루트 찾기
         current_file = Path(__file__).resolve()
         project_root = current_file.parent.parent.parent.parent
-        common_schemas_path = project_root / "packages" / "common-schemas"
+        common_schemas_path = project_root / "packages" / "common_schemas"
 
         # 경로가 존재하는 경우에만 추가
         if common_schemas_path.exists():
@@ -39,10 +39,10 @@ else:
         else:
             # GitHub Actions에서 다른 구조일 수 있으므로 대안 경로들 시도
             alternative_paths = [
-                Path.cwd() / "packages" / "common-schemas",
-                project_root / "dt-rag" / "packages" / "common-schemas",
+                Path.cwd() / "packages" / "common_schemas",
+                project_root / "dt-rag" / "packages" / "common_schemas",
                 Path(
-                    "/github/workspace/packages/common-schemas"
+                    "/github/workspace/packages/common_schemas"
                 ),  # GitHub Actions 기본 경로
             ]
 
