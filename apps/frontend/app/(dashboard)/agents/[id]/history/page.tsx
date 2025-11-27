@@ -39,9 +39,9 @@ export default function AgentHistoryPage() {
     return (
       <div className="min-h-screen p-8">
         <div className="max-w-6xl mx-auto">
-          <div className="h-12 bg-gray-200 rounded w-48 mb-8 animate-pulse"></div>
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="h-96 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-12 bg-white/10 rounded w-48 mb-8 animate-pulse"></div>
+          <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-8">
+            <div className="h-96 bg-white/10 rounded animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -58,9 +58,9 @@ export default function AgentHistoryPage() {
           >
             &larr; Back
           </button>
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-8 text-center">
             <p className="text-red-600 text-lg mb-4">Error: {error.message}</p>
-            <p className="text-gray-600">Failed to load agent history.</p>
+            <p className="text-white/60">Failed to load agent history.</p>
           </div>
         </div>
       </div>
@@ -77,8 +77,8 @@ export default function AgentHistoryPage() {
           >
             &larr; Back to Home
           </Link>
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <p className="text-gray-600">Agent not found.</p>
+          <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-8 text-center">
+            <p className="text-white/60">Agent not found.</p>
           </div>
         </div>
       </div>
@@ -86,13 +86,13 @@ export default function AgentHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50">
+    <div className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
         {/* Navigation */}
         <div className="mb-8 flex items-center justify-between">
           <button
             onClick={() => router.back()}
-            className="text-blue-600 hover:text-blue-800 font-semibold"
+            className="text-blue-400 hover:text-blue-300 font-semibold"
           >
             &larr; Back
           </button>
@@ -105,11 +105,11 @@ export default function AgentHistoryPage() {
         </div>
 
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-6 mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
             {agent.name} - History & Analytics
           </h1>
-          <p className="text-gray-600">
+          <p className="text-white/60">
             Level {agent.level} &bull; {agent.rarity} &bull; {agent.current_xp} XP
           </p>
         </div>
@@ -117,8 +117,8 @@ export default function AgentHistoryPage() {
         {/* Charts */}
         <ChartContainer onPeriodChange={handlePeriodChange}>
           {isHistoryLoading ? (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="h-96 bg-gray-200 rounded animate-pulse"></div>
+            <div className="bg-white/5 rounded-lg border border-white/10 p-6">
+              <div className="h-96 bg-white/10 rounded animate-pulse"></div>
             </div>
           ) : filteredHistory.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -126,33 +126,33 @@ export default function AgentHistoryPage() {
               <XPGrowthChart data={filteredHistory} />
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-lg p-6 text-center">
-              <p className="text-gray-500">No history data available</p>
+            <div className="bg-white/5 rounded-lg border border-white/10 p-6 text-center">
+              <p className="text-white/50">No history data available</p>
             </div>
           )}
         </ChartContainer>
 
         {/* Stats Summary */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+        <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-6 mt-8">
+          <h2 className="text-xl font-semibold text-white mb-4">
             Summary Statistics
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded p-4">
-              <p className="text-sm text-gray-600 mb-1">Total Documents</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="bg-white/5 rounded p-4 border border-white/10">
+              <p className="text-sm text-white/60 mb-1">Total Documents</p>
+              <p className="text-2xl font-bold text-white">
                 {agent.total_documents}
               </p>
             </div>
-            <div className="bg-gray-50 rounded p-4">
-              <p className="text-sm text-gray-600 mb-1">Total Queries</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="bg-white/5 rounded p-4 border border-white/10">
+              <p className="text-sm text-white/60 mb-1">Total Queries</p>
+              <p className="text-2xl font-bold text-white">
                 {agent.total_queries}
               </p>
             </div>
-            <div className="bg-gray-50 rounded p-4">
-              <p className="text-sm text-gray-600 mb-1">Quality Score</p>
-              <p className="text-2xl font-bold text-green-600">
+            <div className="bg-white/5 rounded p-4 border border-white/10">
+              <p className="text-sm text-white/60 mb-1">Quality Score</p>
+              <p className="text-2xl font-bold text-green-400">
                 {agent.quality_score}
               </p>
             </div>

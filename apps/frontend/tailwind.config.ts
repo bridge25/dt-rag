@@ -94,6 +94,7 @@ const config: Config = {
         '128': '32rem',
       },
       colors: {
+        'dark-navy': 'hsl(var(--dark-navy))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

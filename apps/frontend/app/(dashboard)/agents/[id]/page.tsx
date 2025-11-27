@@ -61,9 +61,9 @@ export default function AgentDetailPage() {
     return (
       <div className="min-h-screen p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="h-12 bg-gray-200 rounded w-48 mb-8 animate-pulse"></div>
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-12 bg-white/10 rounded w-48 mb-8 animate-pulse"></div>
+          <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-8">
+            <div className="h-64 bg-white/10 rounded animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -80,9 +80,9 @@ export default function AgentDetailPage() {
           >
             &larr; Back
           </button>
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-8 text-center">
             <p className="text-red-600 text-lg mb-4">Error: {error.message}</p>
-            <p className="text-gray-600 mb-6">Failed to load agent details.</p>
+            <p className="text-white/60 mb-6">Failed to load agent details.</p>
             <button
               onClick={() => refetch()}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -105,8 +105,8 @@ export default function AgentDetailPage() {
           >
             &larr; Back to Home
           </Link>
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <p className="text-gray-600">Agent not found.</p>
+          <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-8 text-center">
+            <p className="text-white/60">Agent not found.</p>
           </div>
         </div>
       </div>
@@ -115,12 +115,12 @@ export default function AgentDetailPage() {
 
   return (
     <>
-      <div className="min-h-screen p-8 bg-gray-50">
+      <div className="min-h-screen p-8">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8 flex items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="text-blue-600 hover:text-blue-800 font-semibold"
+              className="text-blue-400 hover:text-blue-300 font-semibold"
             >
               &larr; Back
             </button>
@@ -139,7 +139,7 @@ export default function AgentDetailPage() {
             </div>
 
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+              <div className="bg-white/5 rounded-lg border border-white/10 backdrop-blur-md p-6 sticky top-8">
                 <XPAwardButton agentId={agent.agent_id} onLevelUp={handleLevelUp} />
               </div>
             </div>
