@@ -234,14 +234,14 @@ export default function DocumentsPage() {
                   <div className="flex items-start gap-4">
                     <div className={cn(
                       "p-3 rounded-xl border transition-colors",
-                      uploadFile.status === 'success' ? "bg-accent-glow-green/10 border-accent-glow-green/20" :
-                        uploadFile.status === 'error' ? "bg-red-500/10 border-red-500/20" :
+                      uploadFile.status === "success" ? "bg-accent-glow-green/10 border-accent-glow-green/20" :
+                        uploadFile.status === "error" ? "bg-red-500/10 border-red-500/20" :
                           "bg-white/5 border-white/10"
                     )}>
                       <FileText className={cn(
                         "w-6 h-6",
-                        uploadFile.status === 'success' ? "text-accent-glow-green" :
-                          uploadFile.status === 'error' ? "text-red-400" :
+                        uploadFile.status === "success" ? "text-accent-glow-green" :
+                          uploadFile.status === "error" ? "text-red-400" :
                             "text-gray-400"
                       )} />
                     </div>

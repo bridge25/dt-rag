@@ -200,7 +200,7 @@ export default function PipelinePage() {
               <div className="space-y-6">
                 {pipelineSteps.map((step, index) => {
                   const isSelected = selectedStep === step.id
-                  const isRunning = step.status === 'running'
+                  const isRunning = step.status === "running"
 
                   return (
                     <div
@@ -214,8 +214,8 @@ export default function PipelinePage() {
                       {/* Node Connector */}
                       <div className={cn(
                         "absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 transition-all duration-300 z-10",
-                        step.status === 'completed' ? "bg-dark-navy border-accent-glow-green shadow-[0_0_10px_rgba(74,222,128,0.5)]" :
-                          step.status === 'running' ? "bg-dark-navy border-accent-glow-blue shadow-[0_0_15px_rgba(96,165,250,0.8)] animate-pulse" :
+                        step.status === "completed" ? "bg-dark-navy border-accent-glow-green shadow-[0_0_10px_rgba(74,222,128,0.5)]" :
+                          step.status === "running" ? "bg-dark-navy border-accent-glow-blue shadow-[0_0_15px_rgba(96,165,250,0.8)] animate-pulse" :
                             "bg-dark-navy border-gray-600"
                       )} />
 
@@ -261,8 +261,8 @@ export default function PipelinePage() {
                                     {step.duration}ms
                                   </span>
                                 )}
-                                {step.status === 'completed' && <CheckCircle2 className="w-5 h-5 text-accent-glow-green" />}
-                                {step.status === 'running' && <Cpu className="w-5 h-5 text-accent-glow-blue animate-spin" />}
+                                {step.status === "completed" && <CheckCircle2 className="w-5 h-5 text-accent-glow-green" />}
+                                {step.status === "running" && <Cpu className="w-5 h-5 text-accent-glow-blue animate-spin" />}
                               </div>
                             </div>
 
@@ -277,8 +277,8 @@ export default function PipelinePage() {
                                   key={i}
                                   className={cn(
                                     "flex-1 transition-all duration-300",
-                                    step.status === 'completed' ? "bg-accent-glow-green/50" :
-                                      step.status === 'running' && i <= activePulse ? "bg-accent-glow-blue" :
+                                    step.status === "completed" ? "bg-accent-glow-green/50" :
+                                      step.status === "running" && i <= activePulse ? "bg-accent-glow-blue" :
                                         "bg-white/5"
                                   )}
                                 />

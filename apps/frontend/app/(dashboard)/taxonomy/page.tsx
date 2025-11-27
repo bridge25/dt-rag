@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ReactFlow,
@@ -20,9 +20,9 @@ import {
   Node,
   Position,
   MarkerType
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import dagre from 'dagre';
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import dagre from "dagre";
 
 import { getTaxonomyTree } from "@/lib/api";
 import { TaxonomyGraphNode } from "@/components/taxonomy/TaxonomyGraphNode";
@@ -39,7 +39,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-  dagreGraph.setGraph({ rankdir: 'TB', nodesep: 100, ranksep: 150 });
+  dagreGraph.setGraph({ rankdir: "TB", nodesep: 100, ranksep: 150 });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: 80, height: 80 });
@@ -75,10 +75,10 @@ const transformDataToGraph = (data: any[]) => {
 
     nodes.push({
       id: nodeId,
-      type: 'taxonomyNode',
+      type: "taxonomyNode",
       data: {
         label: item.name,
-        type: item.level === 1 ? 'root' : item.children?.length ? 'category' : 'item',
+        type: item.level === 1 ? "root" : item.children?.length ? "category" : "item",
         count: item.children?.length
       },
       position: { x: 0, y: 0 }, // Initial position, will be calculated by dagre
@@ -89,9 +89,9 @@ const transformDataToGraph = (data: any[]) => {
         id: `e${parentId}-${nodeId}`,
         source: parentId,
         target: nodeId,
-        type: 'default',
+        type: "default",
         animated: true,
-        style: { stroke: 'rgba(255, 255, 255, 0.2)', strokeWidth: 1 },
+        style: { stroke: "rgba(255, 255, 255, 0.2)", strokeWidth: 1 },
       });
     }
 
@@ -186,9 +186,9 @@ export default function TaxonomyPage() {
         minZoom={0.1}
         maxZoom={1.5}
         defaultEdgeOptions={{
-          type: 'default',
+          type: "default",
           animated: true,
-          style: { stroke: 'rgba(255, 255, 255, 0.15)', strokeWidth: 1.5 },
+          style: { stroke: "rgba(255, 255, 255, 0.15)", strokeWidth: 1.5 },
         }}
       >
         <Background

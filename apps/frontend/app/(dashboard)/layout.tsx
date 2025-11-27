@@ -1,18 +1,19 @@
 /**
  * Dashboard layout component
- * Simplified layout - pages handle their own layout structure
+ * Ethereal Glass themed layout with space background
  * (Migrated from Vite frontend pattern per frontend-design-master-plan.md)
  *
  * @CODE:FRONTEND-001
- * @CODE:FRONTEND-MIGRATION-001
+ * @CODE:FRONTEND-REDESIGN-001
  */
 
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-dark-navy space-background">
+      {/* Space background ensures consistent Ethereal Glass aesthetic */}
       {children}
     </div>
-  );
+  )
 }
