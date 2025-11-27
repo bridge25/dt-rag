@@ -1,88 +1,71 @@
 /**
- * Button component with multiple variants and sizes
+ * Button component with Ethereal Glass aesthetic
  *
- * @CODE:UI-001
+ * @CODE:UI-002
  */
 
 "use client"
 
-import React, { useState } from "react"
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline" | "default"
-  size?: "sm" | "md" | "lg" | "icon"
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20 border border-blue-500/50",
+        destructive:
+          "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20",
+        outline:
+          "border border-white/10 bg-white/5 hover:bg-white/10 hover:text-white text-white/80 backdrop-blur-sm",
+        secondary:
+          "bg-white/10 text-white hover:bg-white/20 border border-white/10 backdrop-blur-sm",
+        ghost: "hover:bg-white/10 hover:text-white text-white/70",
+        link: "text-blue-400 underline-offset-4 hover:underline",
+        glass: "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 backdrop-blur-md shadow-glass hover:shadow-glass-hover",
+        glow: "bg-blue-500/10 border border-blue-500/50 text-blue-300 hover:bg-blue-500/20 hover:text-blue-200 shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:shadow-[0_0_20px_rgba(59,130,246,0.4)]",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  VariantProps<typeof buttonVariants> {
+  asChild?: boolean
   loading?: boolean
-  children: React.ReactNode
 }
 
-export function Button({
-  variant = "primary",
-  size = "md",
-  loading = false,
-  disabled,
-  children,
-  className = "",
-  onMouseEnter,
-  onMouseLeave,
-  ...props
-}: ButtonProps) {
-  const [isHovered, setIsHovered] = useState(false)
-
-  const baseStyles = "relative inline-flex items-center justify-center font-medium transition-all duration-normal focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
-
-  const variantStyles = {
-    primary: "bg-primary-800 text-white hover:bg-primary-900 focus:ring-primary-500 shadow-elevation-1 hover:shadow-elevation-2",
-    secondary: "bg-accent-600 text-white hover:bg-accent-700 focus:ring-accent-500 shadow-elevation-1 hover:shadow-elevation-2",
-    ghost: "bg-transparent text-primary-800 hover:bg-primary-50 focus:ring-primary-500 border border-primary-300",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-elevation-1 hover:shadow-elevation-2",
-    outline: "bg-transparent text-primary-800 hover:bg-primary-50 focus:ring-primary-500 border border-primary-300 hover:border-primary-400",
-    default: "bg-primary-800 text-white hover:bg-primary-900 focus:ring-primary-500 shadow-elevation-1 hover:shadow-elevation-2"
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, loading = false, children, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={props.disabled || loading}
+        {...props}
+      >
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {children}
+      </Comp>
+    )
   }
+)
+Button.displayName = "Button"
 
-  const sizeStyles = {
-    sm: "px-3 py-1.5 text-sm rounded-md",
-    md: "px-4 py-2 text-base rounded-md",
-    lg: "px-6 py-3 text-lg rounded-lg",
-    icon: "p-2 rounded-md"
-  }
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setIsHovered(true)
-    onMouseEnter?.(e)
-  }
-
-  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setIsHovered(false)
-    onMouseLeave?.(e)
-  }
-
-  return (
-    <button
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
-      disabled={disabled || loading}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      {...props}
-    >
-      {loading && (
-        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-      )}
-
-      {children}
-
-      {(variant === "primary" || variant === "secondary" || variant === "default") && (
-        <span
-          className={`absolute inset-0 ${
-            isHovered ? "animate-shine" : ""
-          } motion-reduce:animate-none`}
-          style={{
-            background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
-            transform: isHovered ? "translateX(0)" : "translateX(-100%)",
-            pointerEvents: "none"
-          }}
-        />
-      )}
-    </button>
-  )
-}
+export { Button, buttonVariants }

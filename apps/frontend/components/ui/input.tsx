@@ -1,99 +1,49 @@
 /**
- * Input component with states and icons
+ * Input component with Ethereal Glass aesthetic
  *
- * @CODE:UI-001
+ * @CODE:UI-002
  */
 
 "use client"
 
-import React from "react"
-import { AlertCircle, CheckCircle } from "lucide-react"
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  helperText?: string
-  state?: "default" | "error" | "success"
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode
   iconPosition?: "left" | "right"
 }
 
-export function Input({
-  label,
-  helperText,
-  state = "default",
-  icon,
-  iconPosition = "left",
-  className = "",
-  id,
-  ...props
-}: InputProps) {
-  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
-
-  const baseStyles = "w-full px-4 py-2 text-base border rounded-md transition-all duration-normal focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-
-  const stateStyles = {
-    default: "border-gray-300 focus:border-accent-500 focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 motion-reduce:focus:ring-offset-0",
-    error: "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 motion-reduce:focus:ring-offset-0 text-red-900",
-    success: "border-green-500 focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 motion-reduce:focus:ring-offset-0 text-green-900"
-  }
-
-  const getStateIcon = () => {
-    if (state === "error") return <AlertCircle className="w-5 h-5 text-red-500" />
-    if (state === "success") return <CheckCircle className="w-5 h-5 text-green-500" />
-    return null
-  }
-
-  const stateIcon = getStateIcon()
-  const displayIcon = stateIcon || icon
-
-  return (
-    <div className="w-full">
-      {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          {label}
-        </label>
-      )}
-
-      <div className="relative">
-        {displayIcon && iconPosition === "left" && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            {displayIcon}
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, icon, iconPosition = "left", ...props }, ref) => {
+    return (
+      <div className="relative w-full">
+        {icon && iconPosition === "left" && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
+            {icon}
           </div>
         )}
-
         <input
-          id={inputId}
-          className={`
-            ${baseStyles}
-            ${stateStyles[state]}
-            ${displayIcon && iconPosition === "left" ? "pl-11" : ""}
-            ${displayIcon && iconPosition === "right" ? "pr-11" : ""}
-            ${className}
-          `}
+          type={type}
+          className={cn(
+            "flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 backdrop-blur-sm transition-all duration-200 hover:bg-white/10 hover:border-white/20",
+            icon && iconPosition === "left" && "pl-10",
+            icon && iconPosition === "right" && "pr-10",
+            className
+          )}
+          ref={ref}
           {...props}
         />
-
-        {displayIcon && iconPosition === "right" && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            {displayIcon}
+        {icon && iconPosition === "right" && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
+            {icon}
           </div>
         )}
       </div>
+    )
+  }
+)
+Input.displayName = "Input"
 
-      {helperText && (
-        <p
-          className={`mt-2 text-sm ${
-            state === "error" ? "text-red-600" :
-            state === "success" ? "text-green-600" :
-            "text-gray-600"
-          }`}
-        >
-          {helperText}
-        </p>
-      )}
-    </div>
-  )
-}
+export { Input }

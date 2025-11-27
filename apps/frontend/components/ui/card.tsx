@@ -1,59 +1,51 @@
 /**
- * Card component with elevation and hover effects
+ * Card component with Ethereal Glass aesthetic
  *
- * @CODE:UI-001
+ * @CODE:UI-002
  */
 
 "use client"
 
 import React from "react"
+import { cn } from "@/lib/utils"
 
-export interface CardProps {
-  children: React.ReactNode
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   elevation?: 0 | 1 | 2 | 3 | 4
   hoverable?: boolean
-  className?: string
-  onClick?: () => void
+  glass?: boolean
 }
 
 export function Card({
   children,
   elevation = 1,
   hoverable = false,
-  className = "",
-  onClick
+  glass = true,
+  className,
+  onClick,
+  ...props
 }: CardProps) {
-  const baseStyles = "bg-white rounded-lg transition-all duration-normal"
-
-  const elevationStyles = {
-    0: "shadow-none",
-    1: "shadow-elevation-1",
-    2: "shadow-elevation-2",
-    3: "shadow-elevation-3",
-    4: "shadow-elevation-4"
-  }
-
-  const hoverStyles = hoverable
-    ? "hover:shadow-elevation-2 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 cursor-pointer"
-    : ""
-
   return (
     <div
-      className={`
-        ${baseStyles}
-        ${elevationStyles[elevation]}
-        ${hoverStyles}
-        ${className}
-      `}
+      className={cn(
+        "rounded-xl transition-all duration-300",
+        // Glass styles (default)
+        glass && "bg-white/5 border border-white/10 backdrop-blur-md shadow-glass",
+        // Hover effects
+        hoverable && "hover:bg-white/10 hover:border-white/20 hover:shadow-glass-hover hover:-translate-y-0.5 cursor-pointer",
+        // Non-glass fallback (if needed)
+        !glass && "bg-card text-card-foreground border shadow-sm",
+        className
+      )}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyPress={onClick ? (e) => {
+      onKeyDown={onClick ? (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
-          onClick()
+          onClick(e as any)
         }
       } : undefined}
+      {...props}
     >
       {children}
     </div>
@@ -62,27 +54,47 @@ export function Card({
 
 export function CardHeader({
   children,
-  className = ""
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`p-6 border-b border-gray-200 ${className}`}>
+    <div className={cn("flex flex-col space-y-1.5 p-6 border-b border-white/5", className)} {...props}>
       {children}
     </div>
   )
 }
 
+export function CardTitle({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <h3 className={cn("text-2xl font-semibold leading-none tracking-tight text-white", className)} {...props}>
+      {children}
+    </h3>
+  )
+}
+
+export function CardDescription({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <p className={cn("text-sm text-white/60", className)} {...props}>
+      {children}
+    </p>
+  )
+}
+
 export function CardContent({
   children,
-  className = ""
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`p-6 ${className}`}>
+    <div className={cn("p-6", className)} {...props}>
       {children}
     </div>
   )
@@ -90,13 +102,11 @@ export function CardContent({
 
 export function CardFooter({
   children,
-  className = ""
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`p-6 border-t border-gray-200 ${className}`}>
+    <div className={cn("flex items-center p-6 pt-0 border-t border-white/5 mt-auto", className)} {...props}>
       {children}
     </div>
   )
