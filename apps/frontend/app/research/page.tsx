@@ -7,10 +7,12 @@
  * Left: ChatZone (40%) - Natural language interaction
  * Right: ProgressZone (60%) - Real-time progress and results
  *
+ * Now integrated with real backend API via SSE for real-time updates.
+ *
  * @CODE:FRONTEND-UX-001
  */
 
-import { useCallback } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { ChatZone } from "@/components/research/ChatZone";
 import { ProgressZone } from "@/components/research/ProgressZone";
 import {
@@ -20,6 +22,22 @@ import {
   selectIsLoading,
   selectSelectedDocumentIds,
 } from "@/stores/researchStore";
+import {
+  researchApi,
+  type ResearchAPICallbacks,
+} from "@/lib/api/research";
+import type { ResearchStage } from "@/types/research";
+
+// ============================================================================
+// Configuration
+// ============================================================================
+
+// Set to true to use mock simulation, false to use real API
+const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
+
+// HIGH PRIORITY FIX #7: Input validation constants
+const MIN_QUERY_LENGTH = 3;
+const MAX_QUERY_LENGTH = 1000;
 
 // ============================================================================
 // Page Component
@@ -34,14 +52,203 @@ export default function ResearchPage() {
   const expandedDocumentIds = useResearchStore((state) => state.expandedDocumentIds);
 
   // Actions
-  const startResearch = useResearchStore((state) => state.startResearch);
+  const startResearchAction = useResearchStore((state) => state.startResearch);
   const addMessage = useResearchStore((state) => state.addMessage);
-  const confirmResearch = useResearchStore((state) => state.confirmResearch);
-  const cancelResearch = useResearchStore((state) => state.cancelResearch);
+  const confirmResearchAction = useResearchStore((state) => state.confirmResearch);
+  const cancelResearchAction = useResearchStore((state) => state.cancelResearch);
   const toggleDocumentSelection = useResearchStore((state) => state.toggleDocumentSelection);
   const toggleDocumentExpand = useResearchStore((state) => state.toggleDocumentExpand);
   const selectAllDocuments = useResearchStore((state) => state.selectAllDocuments);
   const deselectAllDocuments = useResearchStore((state) => state.deselectAllDocuments);
+  const updateStage = useResearchStore((state) => state.updateStage);
+  const updateProgress = useResearchStore((state) => state.updateProgress);
+  const updateMetrics = useResearchStore((state) => state.updateMetrics);
+  const addDocument = useResearchStore((state) => state.addDocument);
+
+  // SSE cleanup ref
+  const sseCleanupRef = useRef<(() => void) | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // HIGH PRIORITY FIX #5: Lifecycle tracking to prevent stale operations
+  const isMountedRef = useRef(true);
+
+  // HIGH PRIORITY FIX #3: Improved cleanup with lifecycle tracking
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      if (sseCleanupRef.current) {
+        sseCleanupRef.current();
+        sseCleanupRef.current = null;
+      }
+    };
+  }, []);
+
+  // HIGH PRIORITY FIX #6: Consolidated error handler
+  const handleResearchError = useCallback(
+    (error: Error | { message: string }, type: "connection" | "research" | "validation") => {
+      const message =
+        type === "connection"
+          ? `서버 연결 오류: ${error.message}. 다시 시도해 주세요.`
+          : type === "validation"
+          ? `입력 오류: ${error.message}`
+          : `오류가 발생했습니다: ${error.message}`;
+
+      updateStage("error");
+      if (type === "connection") {
+        setConnectionError(error.message);
+      }
+      addMessage({
+        role: "system",
+        content: message,
+      });
+    },
+    [updateStage, setConnectionError, addMessage]
+  );
+
+  // Real API integration
+  const startResearchWithAPI = useCallback(
+    async (query: string) => {
+      try {
+        // HIGH PRIORITY FIX #7: Input validation
+        const trimmedQuery = query.trim();
+        if (trimmedQuery.length < MIN_QUERY_LENGTH) {
+          throw new Error(
+            `검색어는 최소 ${MIN_QUERY_LENGTH}자 이상이어야 합니다.`
+          );
+        }
+        if (trimmedQuery.length > MAX_QUERY_LENGTH) {
+          throw new Error(
+            `검색어는 최대 ${MAX_QUERY_LENGTH}자를 초과할 수 없습니다.`
+          );
+        }
+
+        setConnectionError(null);
+
+        // Call backend API to start research
+        const response = await researchApi.startResearch({ query: trimmedQuery });
+        const { sessionId, estimatedDuration } = response;
+
+        // HIGH PRIORITY FIX #5: Check if component is still mounted
+        if (!isMountedRef.current) {
+          console.log("Component unmounted, aborting research setup");
+          return;
+        }
+
+        // Update store with real session ID
+        startResearchAction(trimmedQuery);
+
+        // Update session ID in store
+        useResearchStore.setState((state) => ({
+          session: state.session
+            ? { ...state.session, id: sessionId }
+            : null,
+        }));
+
+        // Set up SSE callbacks
+        const callbacks: ResearchAPICallbacks = {
+          onProgress: (data) => {
+            if (!isMountedRef.current) return;
+            console.log("Progress:", data);
+            updateProgress(data.progress * 100); // Backend sends 0-1, frontend uses 0-100
+          },
+          onStageChange: (data) => {
+            if (!isMountedRef.current) return;
+            console.log("Stage change:", data);
+            updateStage(data.newStage as ResearchStage);
+          },
+          onDocumentFound: (data) => {
+            if (!isMountedRef.current) return;
+            console.log("Document found:", data);
+
+            // HIGH PRIORITY FIX #9: Check for duplicate documents
+            const existingDoc = session?.documents.find(d => d.id === data.document.id);
+            if (existingDoc) {
+              console.log("Document already exists, skipping:", data.document.id);
+              return;
+            }
+
+            addDocument({
+              id: data.document.id,
+              title: data.document.title,
+              source: data.document.source,
+              snippet: data.document.snippet,
+              relevanceScore: data.document.relevanceScore,
+              collectedAt: new Date(data.document.collectedAt),
+              categories: data.document.categories,
+            });
+            updateMetrics({ documentsFound: data.totalCount });
+          },
+          onMetricsUpdate: (data) => {
+            if (!isMountedRef.current) return;
+            console.log("Metrics update:", data);
+            updateMetrics(data.metrics);
+          },
+          onError: (data) => {
+            if (!isMountedRef.current) return;
+            console.error("Research error:", data);
+            handleResearchError(data, "research");
+          },
+          onCompleted: (data) => {
+            if (!isMountedRef.current) return;
+            console.log("Research completed:", data);
+            updateStage("confirming");
+            updateProgress(90);
+            updateMetrics({
+              documentsFound: data.totalDocuments,
+              qualityScore: data.qualityScore,
+            });
+            addMessage({
+              role: "assistant",
+              content: `리서치가 완료되었습니다. ${data.totalDocuments}개의 문서를 찾았습니다. 수집된 문서를 확인하고 저장할지 결정해 주세요.`,
+            });
+          },
+          onConnectionError: (error) => {
+            if (!isMountedRef.current) return;
+            console.error("SSE connection error:", error);
+            handleResearchError(error, "connection");
+          },
+        };
+
+        // Subscribe to SSE events (now returns Promise)
+        const cleanup = await researchApi.subscribeToResearchEvents(
+          sessionId,
+          callbacks
+        );
+
+        // HIGH PRIORITY FIX #5: Only set cleanup if still mounted
+        if (isMountedRef.current) {
+          sseCleanupRef.current = cleanup;
+        } else {
+          // Component unmounted during async operation, cleanup immediately
+          cleanup();
+        }
+
+        console.log(
+          `Research started: session=${sessionId}, estimated=${estimatedDuration}s`
+        );
+      } catch (error) {
+        console.error("Failed to start research:", error);
+        const errorType = (error as Error).message.includes("검색어")
+          ? "validation"
+          : "connection";
+        handleResearchError(error as Error, errorType);
+      }
+    },
+    // HIGH PRIORITY FIX #4: Add missing setConnectionError dependency
+    [
+      startResearchAction,
+      updateStage,
+      updateProgress,
+      updateMetrics,
+      addDocument,
+      addMessage,
+      setConnectionError,
+      handleResearchError,
+      session,
+    ]
+  );
 
   // Handlers
   const handleSendMessage = useCallback(
@@ -51,32 +258,100 @@ export default function ResearchPage() {
 
       // If no active session, start research
       if (!session || session.stage === "idle" || session.stage === "completed") {
-        startResearch(content);
-
-        // Simulate progress updates (will be replaced by WebSocket)
-        simulateResearchProgress();
+        if (USE_MOCK_API) {
+          // Use mock simulation
+          startResearchAction(content);
+          simulateResearchProgress();
+        } else {
+          // Use real API
+          startResearchWithAPI(content);
+        }
       }
     },
-    [session, addMessage, startResearch]
+    [session, addMessage, startResearchAction, startResearchWithAPI]
   );
 
-  const handleConfirm = useCallback(() => {
-    confirmResearch();
-  }, [confirmResearch]);
+  const handleConfirm = useCallback(async () => {
+    if (!session) return;
 
-  const handleCancel = useCallback(() => {
-    cancelResearch();
-  }, [cancelResearch]);
+    if (USE_MOCK_API) {
+      confirmResearchAction();
+    } else {
+      try {
+        // Call backend to import documents
+        const result = await researchApi.importDocuments(session.id, {
+          selectedDocumentIds,
+          taxonomyId: undefined,
+        });
+
+        if (result.success) {
+          confirmResearchAction();
+          addMessage({
+            role: "assistant",
+            content: `${result.documentsImported}개의 문서가 지식 베이스에 추가되었습니다.`,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to import documents:", error);
+        addMessage({
+          role: "system",
+          content: `문서 임포트 실패: ${(error as Error).message}`,
+        });
+      }
+    }
+  }, [session, selectedDocumentIds, confirmResearchAction, addMessage]);
+
+  const handleCancel = useCallback(async () => {
+    // Clean up SSE connection
+    if (sseCleanupRef.current) {
+      sseCleanupRef.current();
+      sseCleanupRef.current = null;
+    }
+
+    if (!USE_MOCK_API && session?.id) {
+      try {
+        await researchApi.cancelResearch(session.id);
+      } catch (error) {
+        console.error("Failed to cancel research:", error);
+      }
+    }
+
+    cancelResearchAction();
+  }, [session, cancelResearchAction]);
 
   const handleRetry = useCallback(() => {
     if (session?.query) {
-      startResearch(session.query);
-      simulateResearchProgress();
+      if (USE_MOCK_API) {
+        startResearchAction(session.query);
+        simulateResearchProgress();
+      } else {
+        startResearchWithAPI(session.query);
+      }
     }
-  }, [session, startResearch]);
+  }, [session, startResearchAction, startResearchWithAPI]);
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row">
+      {/* Connection Error Banner */}
+      {connectionError && (
+        <div className="absolute left-0 right-0 top-0 z-50 bg-red-500 p-2 text-center text-white">
+          연결 오류: {connectionError}
+          <button
+            onClick={() => setConnectionError(null)}
+            className="ml-4 underline"
+          >
+            닫기
+          </button>
+        </div>
+      )}
+
+      {/* API Mode Indicator (dev only) */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="absolute right-4 top-2 z-50 rounded bg-gray-800 px-2 py-1 text-xs text-white">
+          {USE_MOCK_API ? "🎭 Mock Mode" : "🔗 API Mode"}
+        </div>
+      )}
+
       {/* Chat Zone - 40% on desktop, full width stacked on mobile */}
       <div className="h-1/2 w-full lg:h-full lg:w-2/5 lg:min-w-[400px]">
         <ChatZone
@@ -107,7 +382,7 @@ export default function ResearchPage() {
 }
 
 // ============================================================================
-// Mock Progress Simulation (temporary - will be replaced by WebSocket)
+// Mock Progress Simulation (for development without backend)
 // ============================================================================
 
 function simulateResearchProgress() {

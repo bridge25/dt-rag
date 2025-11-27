@@ -40,6 +40,9 @@ const config: Config = {
         'elevation-5': '0 25px 50px rgba(0,0,0,0.25)',
         'lift': '0 10px 30px rgba(139, 92, 246, 0.15)',
         'lift-hover': '0 20px 40px rgba(139, 92, 246, 0.25)',
+        'neon-blue': '0 0 10px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.3)',
+        'neon-purple': '0 0 10px rgba(188, 19, 254, 0.5), 0 0 20px rgba(188, 19, 254, 0.3)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
       },
       animation: {
         'fade-in': 'fadeIn 250ms ease-in-out',
@@ -47,6 +50,8 @@ const config: Config = {
         'shine': 'shine 2s infinite',
         'lift': 'lift 200ms ease-out',
         'confetti': 'confetti 500ms ease-out',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'float': 'float 6s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -69,6 +74,10 @@ const config: Config = {
           '0%': { transform: 'translateY(0) rotate(0deg)', opacity: '1' },
           '100%': { transform: 'translateY(-100px) rotate(360deg)', opacity: '0' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
       },
       transitionDuration: {
         'fast': '200ms',
@@ -93,17 +102,7 @@ const config: Config = {
           foreground: 'hsl(var(--popover-foreground))'
         },
         primary: {
-          DEFAULT: '#1e293b',
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
+          DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))'
         },
         secondary: {
@@ -115,17 +114,7 @@ const config: Config = {
           foreground: 'hsl(var(--muted-foreground))'
         },
         accent: {
-          DEFAULT: '#8b5cf6',
-          50: '#faf5ff',
-          100: '#f3e8ff',
-          200: '#e9d5ff',
-          300: '#d8b4fe',
-          400: '#c084fc',
-          500: '#a855f7',
-          600: '#8b5cf6',
-          700: '#7c3aed',
-          800: '#6d28d9',
-          900: '#581c87',
+          DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))'
         },
         destructive: {
@@ -142,14 +131,18 @@ const config: Config = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))'
         },
-        darkNavy: 'hsl(var(--dark-navy))',
-        darkCard: 'hsl(var(--dark-card))',
-        tealAccent: 'hsl(var(--teal-accent))',
-        beigeAccent: 'hsl(var(--beige-accent))',
-        orangePrimary: 'hsl(var(--orange-primary))',
-        graySidebar: 'hsl(var(--gray-sidebar))',
-        greenFolder: 'hsl(var(--green-folder))',
-        purpleFolder: 'hsl(var(--purple-folder))'
+        // Cyberpunk Glass Custom Colors
+        neon: {
+          blue: '#00f3ff',
+          purple: '#bc13fe',
+          green: '#0aff0a',
+          pink: '#ff00ff',
+        },
+        glass: {
+          border: 'rgba(255, 255, 255, 0.1)',
+          surface: 'rgba(255, 255, 255, 0.05)',
+          highlight: 'rgba(255, 255, 255, 0.15)',
+        }
       }
     }
   },
