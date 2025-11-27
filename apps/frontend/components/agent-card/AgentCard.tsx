@@ -40,13 +40,22 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({
   onDelete,
   className,
 }) {
+  // Determine border color based on rarity
+  const rarityBorderColor = {
+    Common: "border-gray-400",
+    Rare: "border-blue-400",
+    Epic: "border-purple-500",
+    Legendary: "border-amber-500",
+  }[agent.rarity] || "border-white/5"
+
   return (
     <article
       role="article"
       aria-label={`${agent.name} - Level ${agent.level} ${agent.rarity} agent`}
       className={cn(
         "group relative w-full p-5 rounded-3xl transition-all duration-300",
-        "bg-glass backdrop-blur-md border border-white/5",
+        "bg-glass backdrop-blur-md border",
+        rarityBorderColor,
         "hover:shadow-glass-hover hover:-translate-y-1",
         className
       )}
