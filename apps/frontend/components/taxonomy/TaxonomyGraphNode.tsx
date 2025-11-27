@@ -1,14 +1,14 @@
-import { memo } from 'react';
-import { Handle, Position, NodeProps, Node } from '@xyflow/react';
-import { cn } from '@/lib/utils';
-import { FolderTree, FileText, Tag } from 'lucide-react';
+import { memo } from "react";
+import { Handle, Position, NodeProps, Node } from "@xyflow/react";
+import { cn } from "@/lib/utils";
+import { FolderTree, FileText, Tag } from "lucide-react";
 
 export type TaxonomyNodeData = Node<{
     label: string;
     type: string;
     count?: number;
     isHovered?: boolean;
-}>['data'];
+}>["data"];
 
 const Icons = {
     root: FolderTree,
@@ -18,7 +18,7 @@ const Icons = {
 
 export const TaxonomyGraphNode = memo(({ data, selected }: NodeProps<TaxonomyNodeData>) => {
     const Icon = Icons[data.type as keyof typeof Icons] || Tag;
-    const isRoot = data.type === 'root';
+    const isRoot = data.type === "root";
 
     return (
         <div className="group relative">

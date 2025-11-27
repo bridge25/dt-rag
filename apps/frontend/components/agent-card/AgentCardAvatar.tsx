@@ -67,8 +67,8 @@ export const AgentCardAvatar = memo<AgentCardAvatarProps>(
             loading="lazy"
             onError={(e) => {
               // Fallback to Lucide icon if image fails
-              e.currentTarget.style.display = 'none'
-              e.currentTarget.nextElementSibling?.classList.remove('hidden')
+              e.currentTarget.style.display = "none"
+              e.currentTarget.nextElementSibling?.classList.remove("hidden")
             }}
           />
 
