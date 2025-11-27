@@ -1,15 +1,18 @@
 ---
 name: moai-lang-scala
-version: 2.1.0
-created: 2025-10-22
-updated: 2025-11-02
-status: active
-description: Scala 3.6+ best practices with ScalaTest 3.2, sbt 1.10, functional programming patterns, and Play Framework.
-keywords: ['scala', 'scalatest', 'sbt', 'functional', 'play-framework']
+version: 4.0.0
+updated: '2025-11-19'
+status: stable
+stability: stable
+description: Scala 3.6+ best practices with ScalaTest 3.2, sbt 1.10, functional programming
 allowed-tools:
-  - Read
-  - Bash
+- Read
+- Bash
+- WebSearch
+- WebFetch
 ---
+
+
 
 # Lang Scala Skill
 
@@ -105,7 +108,7 @@ _Documentation links updated 2025-10-22_
 ## Works Well With
 
 - `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
+- `moai-core-code-reviewer` (code review)
 - `moai-essentials-debug` (debugging support)
 
 ---

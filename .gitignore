@@ -116,3 +116,38 @@ coverage.json
 # Cache
 # Virtual environment
 .venv/
+.moai/temp/
+.claude/settings.local.*.json
+.uv_cache
+*_backup_*/
+# Package templates (src/moai_adk/templates/) are tracked
+# MoAI dynamic content (로컬 프로젝트만 무시, but package templates are tracked)
+.claude/.env.local*
+.moai/*.tmp
+docs_backup_*/
+.moai/reports/*-draft.*
+.uv-cache
+hooks_backup_*/
+.venv_issue43_py313
+.env*
+# Next.js build output
+.claude/settings.local.json
+.moai/reports/*.tmp
+# Environment variables and deployment secrets
+.mypy_cache
+.moai/logs/
+.firebase/
+.netlify/
+.playwright-mcp
+docs/.next/
+.ruff_cache
+/CLAUDE.md
+# MoAI reports (임시 보고서만 무시)
+.aws/
+docs/out/
+# Claude and MoAI configuration (user-specific, root only)
+.vercel
+
+# Duplicate/Archive directories
+dt-rag-1/
+_archive/

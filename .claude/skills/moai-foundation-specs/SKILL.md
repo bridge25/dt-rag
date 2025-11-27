@@ -1,113 +1,178 @@
 ---
 name: moai-foundation-specs
-version: 2.0.0
-created: 2025-10-22
-updated: 2025-10-22
-status: active
-description: SPEC YAML frontmatter validation (7 required fields) and HISTORY section enforcement.
-keywords: ['spec', 'yaml', 'validation', 'history']
-allowed-tools:
-  - Read
-  - Bash
+version: 4.0.0
+updated: 2025-11-20
+status: stable
+tier: foundation
+description: SPEC writing standards with EARS format and TAG traceability
+allowed-tools: [Read, Write, WebSearch, WebFetch]
 ---
 
-# Foundation Specs Skill
+# SPEC Writing Expert
 
-## Skill Metadata
+**Requirement Specification Standards**
 
-| Field | Value |
-| ----- | ----- |
-| **Skill Name** | moai-foundation-specs |
-| **Version** | 2.0.0 (2025-10-22) |
-| **Allowed tools** | Read (read_file), Bash (terminal) |
-| **Auto-load** | On demand when keywords detected |
-| **Tier** | Foundation |
+> **Format**: EARS (Easy Approach to Requirements Syntax)  
+> **Traceability**: TAG-based (SPEC→TEST→CODE→DOC)
 
 ---
 
-## What It Does
+## Overview
 
-SPEC YAML frontmatter validation (7 required fields) and HISTORY section enforcement.
+Standardized approach to writing clear, testable requirements.
 
-**Key capabilities**:
-- ✅ Best practices enforcement for foundation domain
-- ✅ TRUST 5 principles integration
-- ✅ Latest tool versions (2025-10-22)
-- ✅ TDD workflow support
+### SPEC Components
 
----
-
-## When to Use
-
-**Automatic triggers**:
-- Related code discussions and file patterns
-- SPEC implementation (`/alfred:2-run`)
-- Code review requests
-
-**Manual invocation**:
-- Review code for TRUST 5 compliance
-- Design new features
-- Troubleshoot issues
+1.  **Functional Requirements**: What the system does.
+2.  **Non-Functional Requirements**: Performance, security, usability.
+3.  **Acceptance Criteria**: Testable conditions for completion.
+4.  **TAG Assignment**: Unique identifier for traceability.
 
 ---
 
-## Inputs
+## EARS Format (5 Types)
 
-- Language-specific source directories
-- Configuration files
-- Test suites and sample data
+### 1. Ubiquitous Requirements
 
-## Outputs
+Always true, no conditions.
 
-- Test/lint execution plan
-- TRUST 5 review checkpoints
-- Migration guidance
+**Template**: The [system] shall [action].
 
-## Failure Modes
+**Example**:
 
-- When required tools are not installed
-- When dependencies are missing
-- When test coverage falls below 85%
+```
+The authentication system shall encrypt passwords using bcrypt.
+```
 
-## Dependencies
+### 2. Event-Driven Requirements
 
-- Access to project files via Read/Bash tools
-- Integration with `moai-foundation-langs` for language detection
-- Integration with `moai-foundation-trust` for quality gates
+Triggered by events.
+
+**Template**: When [trigger], the [system] shall [action].
+
+**Example**:
+
+```
+When a user submits login credentials, the system shall validate against the database.
+```
+
+### 3. State-Driven Requirements
+
+Depends on system state.
+
+**Template**: While [state], the [system] shall [action].
+
+**Example**:
+
+```
+While user is authenticated, the system shall display personalized dashboard.
+```
+
+### 4. Optional Requirements
+
+May or may not occur.
+
+**Template**: Where [condition], the [system] shall [action].
+
+**Example**:
+
+```
+Where MFA is enabled, the system shall require second factor authentication.
+```
+
+### 5. Complex Requirements
+
+Multiple conditions.
+
+**Template**: If [condition], then [action], else [alternative].
+
+**Example**:
+
+```
+If password validation fails, then system shall display error message, else proceed to dashboard.
+```
 
 ---
 
-## References (Latest Documentation)
+## SPEC Template
 
-_Documentation links updated 2025-10-22_
+```markdown
+# SPEC-001: User Authentication
 
----
+## Overview
 
-## Changelog
+Implement secure user authentication with JWT tokens.
 
-- **v2.0.0** (2025-10-22): Major update with latest tool versions, comprehensive best practices, TRUST 5 integration
-- **v1.0.0** (2025-03-29): Initial Skill release
+## Functional Requirements
 
----
+### @AUTH-001: Login Validation
 
-## Works Well With
+**Type**: Event-Driven
+**Requirement**: When user submits credentials, system shall validate email and password format before database lookup.
+**Acceptance Criteria**:
 
-- `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
-- `moai-essentials-debug` (debugging support)
+- Email format: RFC 5322 compliant
+- Password: min 8 characters
+- Return validation errors within 100ms
+
+### @AUTH-002: Password Hashing
+
+**Type**: Ubiquitous
+**Requirement**: System shall hash passwords using bcrypt with 12 rounds.
+**Acceptance Criteria**:
+
+- Bcrypt algorithm (OWASP recommended)
+- 12 salt rounds (2025 standard)
+- Unique salt per password
+
+## Non-Functional Requirements
+
+### @AUTH-NF-001: Performance
+
+- Login response time: <500ms (p95)
+- Concurrent logins: 1000/sec
+
+### @AUTH-NF-002: Security
+
+- OWASP Top 10 compliance
+- TLS 1.3 for transmission
+- Rate limiting: 5 attempts/min per IP
+
+## TAG Traceability
+
+- SPEC: @AUTH-001, @AUTH-002
+- Tests: test_auth.py
+- Code: auth/login.py
+- Docs: api/authentication.md
+```
 
 ---
 
 ## Best Practices
 
-✅ **DO**:
-- Follow foundation best practices
-- Use latest stable tool versions
-- Maintain test coverage ≥85%
-- Document all public APIs
+1.  **One Requirement Per TAG**: Don't combine multiple requirements.
+2.  **Testable**: Each requirement must be verifiable.
+3.  **Unambiguous**: Use "shall" (mandatory), "should" (recommended), "may" (optional).
+4.  **Measurable**: Include quantifiable acceptance criteria.
 
-❌ **DON'T**:
-- Skip quality gates
-- Use deprecated tools
-- Ignore security warnings
-- Mix testing frameworks
+---
+
+## Validation Checklist
+
+- [ ] **EARS Format**: Correct template used?
+- [ ] **TAG Assignment**: Unique @TAG-### assigned?
+- [ ] **Testable**: Can be verified with tests?
+- [ ] **Complete**: Acceptance criteria defined?
+- [ ] **Traceable**: Linked to TEST/CODE/DOC?
+
+---
+
+## Related Skills
+
+- `moai-foundation-ears`: Detailed EARS syntax
+- `moai-foundation-tags`: TAG management
+- `moai-foundation-trust`: Quality principles
+
+---
+
+**Last Updated**: 2025-11-20

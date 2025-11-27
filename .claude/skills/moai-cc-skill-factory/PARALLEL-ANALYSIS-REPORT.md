@@ -14,7 +14,7 @@
 | 계층 | 스킬명 | 점수 | 상태 | 핵심 문제 |
 |-----|-------|------|------|---------|
 | **Foundation** | moai-foundation-trust | 75/100 | 🟡 개선필요 | 구체적인 검증 명령어 부족 |
-| **Alfred** | moai-alfred-tag-scanning | 68/100 | 🔴 미완성 | 템플릿 파일 누락, 예시 부족 |
+| **Alfred** | moai-core-tag-scanning | 68/100 | 🔴 미완성 | 템플릿 파일 누락, 예시 부족 |
 | **Domain** | moai-domain-backend | 75/100 | 🟡 개선필요 | 코드 예시 부족, 보안/배포 누락 |
 | **Language** | moai-lang-python | 85/100 | 🟢 우수 | 최적화 완료, 경미한 개선만 필요 |
 
@@ -72,12 +72,11 @@ trigger_cues: TRUST 준수 확인, 릴리즈 준비 검증, 품질 게이트 적
 
 ---
 
-### 2️⃣ Alfred 계층: `moai-alfred-tag-scanning` (68/100)
+### 2️⃣ Alfred 계층: `moai-core-tag-scanning` (68/100)
 
 #### 📋 메타데이터
 ```yaml
-name: moai-alfred-tag-scanning
-description: @TAG 마커 직접 스캔하여 TAG 인벤토리 생성 (CODE-FIRST 원칙)
+name: moai-core-tag-scanning
 tier: Alfred (워크플로우 내부)
 auto_load: /alfred:3-sync 추적 가능성 게이트
 trigger_cues: TAG Scan, TAG List, TAG Inventory, Find orphan TAG, Check TAG chain
@@ -86,7 +85,6 @@ trigger_cues: TAG Scan, TAG List, TAG Inventory, Find orphan TAG, Check TAG chai
 #### ✅ 강점
 1. **명확한 CODE-FIRST 원칙**: 캐시 없이 직접 스캔 강조
 2. **구체적인 명령어 제시**: `rg '@(SPEC|TEST|CODE|DOC):' -n .moai/specs/ tests/ src/ docs/`
-3. **포괄적 TAG 유형 커버**: @SPEC, @TEST, @CODE, @DOC 모두 다룸
 4. **완벽한 메타데이터**: YAML frontmatter 100점
 
 #### 🔴 심각한 문제
@@ -115,11 +113,9 @@ trigger_cues: TAG Scan, TAG List, TAG Inventory, Find orphan TAG, Check TAG chai
 
 3. [HIGH] 3-5개 구체적 사용 사례
    - "TAG-001 → TEST 없음 → orphan 감지"
-   - "중복 @CODE:AUTH-001 발견"
    - "깨진 SPEC 참조 수리" 워크플로우
 
 4. [MEDIUM] 에러 처리 가이드
-   - 잘못된 TAG 형식 (@CODE-001 vs @CODE:001)
    - 권한 문제로 인한 스캔 실패
    - 매우 큰 코드베이스 성능 최적화
 ```
@@ -129,13 +125,10 @@ trigger_cues: TAG Scan, TAG List, TAG Inventory, Find orphan TAG, Check TAG chai
 # TAG-scanning 개선된 템플릿
 
 ## 정상 TAG 체인 (✅)
-@SPEC:AUTH-001 → tests/auth.test.ts (@TEST:AUTH-001) → src/auth.ts (@CODE:AUTH-001) → docs/auth.md (@DOC:AUTH-001)
 
 ## orphan TAG (❌)
-@CODE:PAYMENT-005 발견 → SPEC/TEST/DOC 없음 → 고아 태그 경고
 
 ## 중복 ID (⚠️)
-@CODE:UTIL-003 (3개 파일에서 발견) → 중복 경고
 ```
 
 ---
@@ -360,7 +353,7 @@ Language: python 최적화
 #### Step 1️⃣: 대상 선정
 ```
 Foundation 계층 → moai-foundation-trust (핵심 원칙)
-Alfred 계층    → moai-alfred-tag-scanning (추적 시스템)
+Alfred 계층    → moai-core-tag-scanning (추적 시스템)
 Domain 계층    → moai-domain-backend (아키텍처)
 Language 계층  → moai-lang-python (최신 표준)
 ```

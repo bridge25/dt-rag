@@ -1,113 +1,129 @@
 ---
 name: moai-foundation-langs
-version: 2.0.0
-created: 2025-10-22
-updated: 2025-10-22
-status: active
-description: Auto-detects project language from package.json, pyproject.toml, go.mod, Cargo.toml, etc.
-keywords: ['language', 'detection', 'framework', 'auto']
-allowed-tools:
-  - Read
-  - Bash
+version: 4.0.0
+updated: 2025-11-20
+status: stable
+tier: foundation
+description: Programming language detection and setup patterns
+allowed-tools: [Read, Bash, WebSearch, WebFetch]
 ---
 
-# Foundation Langs Skill
+# Language & Stack Detection
 
-## Skill Metadata
+**Automatic Language Recognition & Setup**
 
-| Field | Value |
-| ----- | ----- |
-| **Skill Name** | moai-foundation-langs |
-| **Version** | 2.0.0 (2025-10-22) |
-| **Allowed tools** | Read (read_file), Bash (terminal) |
-| **Auto-load** | On demand when keywords detected |
-| **Tier** | Foundation |
+> **Detection**: File extensions, config files, package managers  
+> **Support**: 25+ languages
 
 ---
 
-## What It Does
+## Overview
 
-Auto-detects project language from package.json, pyproject.toml, go.mod, Cargo.toml, etc.
+Automatically detect project language and recommend appropriate tooling.
 
-**Key capabilities**:
-- ✅ Best practices enforcement for foundation domain
-- ✅ TRUST 5 principles integration
-- ✅ Latest tool versions (2025-10-22)
-- ✅ TDD workflow support
+### Detection Methods
 
----
-
-## When to Use
-
-**Automatic triggers**:
-- Related code discussions and file patterns
-- SPEC implementation (`/alfred:2-run`)
-- Code review requests
-
-**Manual invocation**:
-- Review code for TRUST 5 compliance
-- Design new features
-- Troubleshoot issues
+1.  **File Extensions**: `.py`, `.js`, `.go`, `.rs`
+2.  **Config Files**: `package.json`, `Cargo.toml`, `go.mod`
+3.  **Lock Files**: `package-lock.json`, `Cargo.lock`, `go.sum`
 
 ---
 
-## Inputs
+## Language Patterns
 
-- Language-specific source directories
-- Configuration files
-- Test suites and sample data
+### Python
 
-## Outputs
+**Detection**:
 
-- Test/lint execution plan
-- TRUST 5 review checkpoints
-- Migration guidance
+- Files: `*.py`, `requirements.txt`, `pyproject.toml`
+- Tools: `pip`, `uv`, `poetry`
 
-## Failure Modes
+**Setup**:
 
-- When required tools are not installed
-- When dependencies are missing
-- When test coverage falls below 85%
+```bash
+# Modern (uv)
+uv init
+uv add fastapi pytest
 
-## Dependencies
+# Traditional
+python -m venv .venv
+pip install -r requirements.txt
+```
 
-- Access to project files via Read/Bash tools
-- Integration with `moai-foundation-langs` for language detection
-- Integration with `moai-foundation-trust` for quality gates
+### JavaScript/TypeScript
+
+**Detection**:
+
+- Files: `*.js`, `*.ts`, `package.json`, `tsconfig.json`
+- Tools: `npm`, `yarn`, `pnpm`
+
+**Setup**:
+
+```bash
+npm install
+npm run build
+```
+
+### Go
+
+**Detection**:
+
+- Files: `*.go`, `go.mod`, `go.sum`
+
+**Setup**:
+
+```bash
+go mod download
+go build ./...
+```
+
+### Rust
+
+**Detection**:
+
+- Files: `*.rs`, `Cargo.toml`, `Cargo.lock`
+
+**Setup**:
+
+```bash
+cargo build
+cargo test
+```
 
 ---
 
-## References (Latest Documentation)
+## Multi-Language Projects
 
-_Documentation links updated 2025-10-22_
+**Monorepo Detection**:
 
----
+```
+project/
+├── backend/     # Python
+│   └── pyproject.toml
+├── frontend/    # TypeScript
+│   └── package.json
+└── services/    # Go
+    └── go.mod
+```
 
-## Changelog
-
-- **v2.0.0** (2025-10-22): Major update with latest tool versions, comprehensive best practices, TRUST 5 integration
-- **v1.0.0** (2025-03-29): Initial Skill release
-
----
-
-## Works Well With
-
-- `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
-- `moai-essentials-debug` (debugging support)
+**Recommendation**: Use workspace tools (Turborepo, Nx, Lerna)
 
 ---
 
-## Best Practices
+## Validation Checklist
 
-✅ **DO**:
-- Follow foundation best practices
-- Use latest stable tool versions
-- Maintain test coverage ≥85%
-- Document all public APIs
+- [ ] **Detection**: Language correctly identified?
+- [ ] **Version**: Specific version recommended?
+- [ ] **Tools**: Package manager specified?
+- [ ] **Setup**: Installation steps provided?
 
-❌ **DON'T**:
-- Skip quality gates
-- Use deprecated tools
-- Ignore security warnings
-- Mix testing frameworks
+---
+
+## Related Skills
+
+- `moai-domain-backend`: Backend development
+- `moai-domain-frontend`: Frontend development
+
+---
+
+**Last Updated**: 2025-11-20

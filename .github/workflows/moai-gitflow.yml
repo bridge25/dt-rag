@@ -10,28 +10,8 @@ on:
     types: [opened, ready_for_review, converted_to_draft]
 
 jobs:
-  # Railway handles testing for Draft PRs (fast feedback)
-  railway-check:
-    name: 🚂 Railway Pre-Deploy Tests
-    if: github.event.pull_request.draft == true
-    runs-on: ubuntu-latest
-    steps:
-      - name: Railway handles testing
-        run: |
-          echo "✅ Tests run automatically via Railway Pre-Deploy Command"
-          echo "📊 Check Railway deployment logs for test results"
-          echo "⚡ Fast feedback: 5-10 minutes (vs 25-60 minutes on GitHub Actions)"
-          echo ""
-          echo "Railway executes:"
-          echo "  - Unit tests: pytest tests/unit/ -v"
-          echo "  - Integration tests: pytest tests/integration/ -v"
-          echo ""
-          echo "If tests fail, Railway deployment will be aborted."
-
   moai-pipeline:
     name: 🗿 MoAI-ADK Pipeline
-    # Only run comprehensive tests for Ready PRs and pushes to develop/feature branches
-    if: github.event.pull_request.draft == false || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     strategy:
@@ -247,11 +227,7 @@ jobs:
             fi
           fi
 
-      # TAG system validation (code files only)
-      - name: 🏷️ TAG System Validation
-        run: |
-          echo "✅ TAG validation is handled automatically in the tag_validator.py hook"
-
+    
       # Run per-branch stages
       - name: 📝 SPEC Stage (feature branch)
         if: startsWith(github.ref, 'refs/heads/feature/')
@@ -317,7 +293,6 @@ jobs:
       - name: Run PowerShell Package Validation Tests
         shell: powershell
         run: |
-          # @TAG:POWERSHELL-CI-001 | Windows CI/CD PowerShell validation
 
           $ErrorActionPreference = "Continue"
           $testResults = @{}
@@ -344,13 +319,7 @@ jobs:
           # Test 2: Module Loading
           Write-Host "[TEST] Module Loading" -ForegroundColor Yellow
           try {
-              python @"
-          import moai_adk
-          from moai_adk import cli, core, templates
-          modules = ['cli', 'core', 'templates']
-          for mod in modules:
-              print(f'✓ {mod} module loaded')
-"@ 2>&1 | Out-Null
+              python -c 'import moai_adk; from moai_adk import cli, core, templates; modules = ["cli", "core", "templates"]; [print(f"✓ {mod} module loaded") for mod in modules]' 2>&1 | Out-Null
               Write-Host "✓ All modules loaded successfully" -ForegroundColor Green
               $testResults["Module Loading"] = $true
           } catch {
@@ -428,7 +397,6 @@ jobs:
       - name: Run pytest Tests (Windows)
         shell: powershell
         run: |
-          # @TAG:POWERSHELL-CI-002 | Windows pytest execution
           pytest tests/ -v --tb=short --cov=src/moai_adk --cov-report=term-missing
         continue-on-error: ${{ github.event.pull_request.draft == true }}
 
@@ -436,4 +404,3 @@ jobs:
         run: |
           Write-Host "🪟 PowerShell cross-platform tests complete" -ForegroundColor Green
         shell: powershell
-

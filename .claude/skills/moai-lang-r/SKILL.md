@@ -1,15 +1,18 @@
 ---
 name: moai-lang-r
-version: 2.0.0
-created: 2025-10-22
-updated: 2025-10-22
-status: active
-description: R 4.4+ best practices with testthat 3.2, lintr 3.2, and data analysis patterns.
-keywords: ['r', 'testthat', 'lintr', 'data-analysis']
+version: 4.0.0
+updated: '2025-11-19'
+status: stable
+stability: stable
+description: R 4.4+ best practices with testthat 3.2, lintr 3.2, and data analysis
 allowed-tools:
-  - Read
-  - Bash
+- Read
+- Bash
+- WebSearch
+- WebFetch
 ---
+
+
 
 # Lang R Skill
 
@@ -103,7 +106,7 @@ _Documentation links updated 2025-10-22_
 ## Works Well With
 
 - `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
+- `moai-core-code-reviewer` (code review)
 - `moai-essentials-debug` (debugging support)
 
 ---

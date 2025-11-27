@@ -1,83 +1,42 @@
 {
-  "env": {
-    "MOAI_RUNTIME": "typescript",
-    "MOAI_AUTO_ROUTING": "true",
-    "MOAI_PERFORMANCE_MONITORING": "true",
-    "MOAI_STATUSLINE_MODE": "extended",
-    "PYTHON_ENV": "personal",
-    "MOAI_PROJECT_PATH": "./.",
-    "NODE_ENV": "personal"
-  },
+  "companyAnnouncements": [
+    "MoAI-ADK: SPEC-First TDD with 135+ Skills and Context7 integration",
+    "Commands: /moai:1-plan → /moai:2-run → /moai:3-sync → git deploy",
+    "Quality: TRUST 5 principles with ≥85% test coverage enforced",
+    "Context7: Real-time library documentation for hallucination-free code"
+  ],
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/alfred/session_start__show_project_info.py",
             "type": "command",
-            "description": "Display project info and language configuration at session start"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/moai/session_start__show_project_info.py"
           }
         ]
       }
     ],
     "PreToolUse": [
       {
+        "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/alfred/pre_tool__auto_checkpoint.py",
             "type": "command",
-            "description": "Create automatic checkpoint before file modifications"
-          },
-          {
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/alfred/pre_tool__auto_spec_proposal.py",
-            "type": "command",
-            "description": "Automatically propose SPEC generation on code file creation/modification"
-          }
-        ],
-        "matcher": "Edit|Write|MultiEdit"
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/alfred/user_prompt__jit_load_docs.py",
-            "type": "command",
-            "description": "Load documentation on-demand based on user intent"
+            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/moai/pre_tool__document_management.py"
           }
         ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/alfred/session_end__cleanup.py",
-            "type": "command",
-            "description": "Clean up session state and temporary files"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "uv run $CLAUDE_PROJECT_DIR/.claude/hooks/alfred/post_tool__log_changes.py",
-            "type": "command",
-            "description": "Log file changes for audit and tracking"
-          }
-        ],
-        "matcher": "Edit|Write|MultiEdit"
       }
     ]
   },
   "permissions": {
     "defaultMode": "default",
     "allow": [
+      "AskUserQuestion",
       "Bash(alfred:*)",
       "Bash(black:*)",
       "Bash(cat:*)",
+      "Bash(codex:*)",
+      "Bash(comm:*)",
       "Bash(coverage:*)",
       "Bash(cp:*)",
       "Bash(diff:*)",
@@ -100,10 +59,12 @@
       "Bash(git:*)",
       "Bash(jest:*)",
       "Bash(ls:*)",
+      "Bash(lsof:*)",
       "Bash(make:*)",
       "Bash(mkdir:*)",
       "Bash(moai-adk:*)",
       "Bash(moai-ts:*)",
+      "Bash(moai:*)",
       "Bash(mv:*)",
       "Bash(mypy:*)",
       "Bash(node:*)",
@@ -115,7 +76,9 @@
       "Bash(python:*)",
       "Bash(rg:*)",
       "Bash(ruff:*)",
+      "Bash(sed:*)",
       "Bash(sort:*)",
+      "Bash(time:*)",
       "Bash(touch:*)",
       "Bash(tree:*)",
       "Bash(ts-node:*)",
@@ -125,7 +88,7 @@
       "Bash(uv:*)",
       "Bash(wc:*)",
       "Bash(which:*)",
-      "Bash(codex:*)",
+      "Bash(xargs:*)",
       "BashOutput",
       "Edit",
       "Glob",
@@ -134,11 +97,14 @@
       "MultiEdit",
       "NotebookEdit",
       "Read",
+      "Skill",
       "Task",
       "TodoWrite",
       "WebFetch",
       "WebSearch",
-      "Write"
+      "Write",
+      "mcp__context7__get-library-docs",
+      "mcp__context7__resolve-library-id"
     ],
     "ask": [
       "Bash(gh pr merge:*)",
@@ -158,15 +124,31 @@
       "Bash(rm:*)",
       "Bash(sudo:*)",
       "Bash(uv add:*)",
-      "Bash(uv remove:*)"
+      "Bash(uv remove:*)",
+      "Read(./.env)",
+      "Read(./.env.*)"
     ],
     "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
       "Read(./secrets/**)",
       "Read(~/.ssh/**)",
       "Read(~/.aws/**)",
       "Read(~/.config/gcloud/**)",
+      "Write(./secrets/**)",
+      "Write(~/.ssh/**)",
+      "Write(~/.aws/**)",
+      "Write(~/.config/gcloud/**)",
+      "Edit(./secrets/**)",
+      "Edit(~/.ssh/**)",
+      "Edit(~/.aws/**)",
+      "Edit(~/.config/gcloud/**)",
+      "Grep(./secrets/**)",
+      "Grep(~/.ssh/**)",
+      "Grep(~/.aws/**)",
+      "Grep(~/.config/gcloud/**)",
+      "Glob(./secrets/**)",
+      "Glob(~/.ssh/**)",
+      "Glob(~/.aws/**)",
+      "Glob(~/.config/gcloud/**)",
       "Bash(rm -rf /:*)",
       "Bash(rm -rf /*:*)",
       "Bash(rm -rf C\\:/:*)",
@@ -185,5 +167,24 @@
       "Bash(git reset --hard:*)",
       "Bash(git rebase -i:*)"
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "uv run moai-adk statusline",
+    "padding": 0,
+    "refreshInterval": 300
+  },
+  "spinnerTipsEnabled": false,
+  "outputStyle": "R2-D2",
+  "includeCoAuthoredBy": false,
+  "cleanupPeriodDays": 30,
+  "env": {
+    "MOAI_RUNTIME": "typescript",
+    "MOAI_AUTO_ROUTING": "true",
+    "MOAI_PERFORMANCE_MONITORING": "true",
+    "MOAI_STATUSLINE_MODE": "extended",
+    "PYTHON_ENV": "personal",
+    "MOAI_PROJECT_PATH": "./.",
+    "NODE_ENV": "personal"
   }
 }

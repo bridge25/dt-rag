@@ -1,15 +1,18 @@
 ---
 name: moai-lang-sql
-version: 2.0.0
-created: 2025-10-22
-updated: 2025-10-22
-status: active
-description: SQL best practices with pgTAP, sqlfluff 3.2, query optimization, and migration management.
-keywords: ['sql', 'postgresql', 'mysql', 'sqlfluff', 'migrations']
+version: 4.0.0
+updated: '2025-11-19'
+status: stable
+stability: stable
+description: SQL best practices with pgTAP, sqlfluff 3.2, query optimization, and
 allowed-tools:
-  - Read
-  - Bash
+- Read
+- Bash
+- WebSearch
+- WebFetch
 ---
+
+
 
 # Lang Sql Skill
 
@@ -104,7 +107,7 @@ _Documentation links updated 2025-10-22_
 ## Works Well With
 
 - `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
+- `moai-core-code-reviewer` (code review)
 - `moai-essentials-debug` (debugging support)
 
 ---

@@ -1,20 +1,30 @@
 ---
 name: moai-project-language-initializer
-version: 1.0.0
+version: 4.0.0
 created: 2025-11-05
-updated: 2025-11-05
-status: active
-description: Handle comprehensive project language and user setup workflows including language selection, agent prompt configuration, user profiles, team settings, and domain selection
-keywords: ['project', 'initialization', 'language', 'configuration', 'batch-questions', 'team-setup']
+updated: '2025-11-18'
+status: stable
+description: Handle comprehensive project language and user setup workflows including
+  language selection, agent prompt configuration, user profiles, team settings, and
+  domain selection
+keywords:
+- project
+- initialization
+- language
+- configuration
+- batch-questions
+- team-setup
 allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - MultiEdit
-  - Glob
-  - TodoWrite
-  - AskUserQuestion
+- Read
+- Write
+- Edit
+- MultiEdit
+- Glob
+- TodoWrite
+- AskUserQuestion
+stability: stable
 ---
+
 
 # MoAI Project Language & User Initializer
 
@@ -99,7 +109,7 @@ Skill("moai-project-language-initializer", mode="team_setup")
 
 ## Configuration Management
 
-The skill automatically manages `.moai/config.json` persistence:
+The skill automatically manages `.moai/config/config.json` persistence:
 
 ### Basic Configuration Structure
 ```json
@@ -180,12 +190,12 @@ The skill automatically manages `.moai/config.json` persistence:
 - `/alfred:3-sync`: Respects report generation settings
 
 ### With Other Skills
-- `moai-alfred-ask-user-questions`: Uses TUI survey patterns
+- `moai-core-ask-user-questions`: Uses TUI survey patterns
 - `moai-skill-factory`: Can be invoked for skill template application
-- `moai-alfred-agent-guide`: Provides agent lineup based on domains
+- `moai-core-agent-guide`: Provides agent lineup based on domains
 
 ### Configuration Dependencies
-- `.moai/config.json`: Primary configuration store
+- `.moai/config/config.json`: Primary configuration store
 - `mode`: Determines team vs personal workflow
 - `github`: Team-specific settings
 - `language`: Conversation and prompt language settings

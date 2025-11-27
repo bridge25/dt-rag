@@ -1,15 +1,18 @@
 ---
 name: moai-lang-ruby
-version: 2.0.0
-created: 2025-10-22
-updated: 2025-10-22
-status: active
-description: Ruby 3.4+ best practices with RSpec 4, RuboCop 2, Bundler, and Rails 8 patterns.
-keywords: ['ruby', 'rspec', 'rubocop', 'bundler', 'rails']
+version: 4.0.0
+updated: '2025-11-19'
+status: stable
+stability: stable
+description: Ruby 3.4+ best practices with RSpec 4, RuboCop 2, Bundler, and Rails
 allowed-tools:
-  - Read
-  - Bash
+- Read
+- Bash
+- WebSearch
+- WebFetch
 ---
+
+
 
 # Lang Ruby Skill
 
@@ -104,7 +107,7 @@ _Documentation links updated 2025-10-22_
 ## Works Well With
 
 - `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
+- `moai-core-code-reviewer` (code review)
 - `moai-essentials-debug` (debugging support)
 
 ---

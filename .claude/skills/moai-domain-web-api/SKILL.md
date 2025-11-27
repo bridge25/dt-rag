@@ -1,15 +1,23 @@
 ---
 name: moai-domain-web-api
-version: 2.0.0
+version: 4.0.0
 created: 2025-10-22
-updated: 2025-10-22
-status: active
-description: REST API and GraphQL design with OpenAPI 3.1, authentication, versioning, and rate limiting.
-keywords: ['rest', 'graphql', 'openapi', 'api-design', 'authentication']
+updated: '2025-11-18'
+status: stable
+description: REST API and GraphQL design with OpenAPI 3.1, authentication, versioning,
+  and rate limiting.
+keywords:
+- rest
+- graphql
+- openapi
+- api-design
+- authentication
 allowed-tools:
-  - Read
-  - Bash
+- Read
+- Bash
+stability: stable
 ---
+
 
 # Domain Web Api Skill
 
@@ -18,7 +26,7 @@ allowed-tools:
 | Field | Value |
 | ----- | ----- |
 | **Skill Name** | moai-domain-web-api |
-| **Version** | 2.0.0 (2025-10-22) |
+| **Version** | 2.0.0 (2025-11-18) |
 | **Allowed tools** | Read (read_file), Bash (terminal) |
 | **Auto-load** | On demand when keywords detected |
 | **Tier** | Domain |
@@ -32,7 +40,7 @@ REST API and GraphQL design with OpenAPI 3.1, authentication, versioning, and ra
 **Key capabilities**:
 - ✅ Best practices enforcement for domain domain
 - ✅ TRUST 5 principles integration
-- ✅ Latest tool versions (2025-10-22)
+- ✅ Latest tool versions (2025-11-18)
 - ✅ TDD workflow support
 
 ---
@@ -51,7 +59,7 @@ REST API and GraphQL design with OpenAPI 3.1, authentication, versioning, and ra
 
 ---
 
-## Tool Version Matrix (2025-10-22)
+## Tool Version Matrix (2025-11-18)
 
 | Tool | Version | Purpose | Status |
 |------|---------|---------|--------|
@@ -95,15 +103,15 @@ _Documentation links updated 2025-10-22_
 
 ## Changelog
 
-- **v2.0.0** (2025-10-22): Major update with latest tool versions, comprehensive best practices, TRUST 5 integration
-- **v1.0.0** (2025-03-29): Initial Skill release
+- ** .0** (2025-11-18): Major update with latest tool versions, comprehensive best practices, TRUST 5 integration
+- ** .0** (2025-11-18): Initial Skill release
 
 ---
 
 ## Works Well With
 
 - `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
+- `moai-core-code-reviewer` (code review)
 - `moai-essentials-debug` (debugging support)
 
 ---
