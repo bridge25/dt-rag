@@ -1,8 +1,8 @@
 "use client"
 
 /**
- * AgentCard Component - Main Pokemon-style agent card
- * @CODE:FRONTEND-MIGRATION-001
+ * AgentCard Component - Ethereal Glass Design
+ * @CODE:FRONTEND-MIGRATION-002
  */
 
 import { memo } from "react"
@@ -45,25 +45,25 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({
       role="article"
       aria-label={`${agent.name} - Level ${agent.level} ${agent.rarity} agent`}
       className={cn(
-        "w-full p-4 bg-white rounded-lg border-2 shadow-md hover:shadow-lg transition-shadow",
-        agent.rarity === "Common" && "border-gray-300",
-        agent.rarity === "Rare" && "border-blue-400",
-        agent.rarity === "Epic" && "border-purple-500",
-        agent.rarity === "Legendary" && "border-amber-500",
+        "group relative w-full p-5 rounded-3xl transition-all duration-300",
+        "bg-glass backdrop-blur-md border border-white/5",
+        "hover:shadow-glass-hover hover:-translate-y-1",
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="text-lg font-bold text-gray-900">{agent.name}</h3>
-          <p className="text-sm text-gray-600">Level {agent.level}</p>
+          <h3 className="text-lg font-bold text-white tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-400 transition-all">
+            {agent.name}
+          </h3>
+          <p className="text-sm text-gray-400 font-medium">Level {agent.level}</p>
         </div>
         <RarityBadge rarity={agent.rarity} />
       </div>
 
       {/* Avatar */}
-      <div className="mb-4">
+      <div className="mb-5">
         <AgentCardAvatar
           agentId={agent.agent_id}
           agentName={agent.name}
@@ -73,7 +73,7 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({
       </div>
 
       {/* XP Progress */}
-      <div className="mb-4">
+      <div className="mb-5">
         <ProgressBar
           current={agent.current_xp}
           max={agent.next_level_xp || agent.current_xp}
@@ -83,7 +83,7 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-3 gap-2 mb-5 p-3 rounded-2xl bg-white/5 border border-white/5">
         <StatDisplay
           label="Docs"
           value={agent.total_documents}
@@ -103,7 +103,9 @@ export const AgentCard = memo<AgentCardProps>(function AgentCard({
       </div>
 
       {/* Action Buttons */}
-      <ActionButtons onView={onView} onDelete={onDelete} agentName={agent.name} />
+      <div className="pt-2 border-t border-white/5">
+        <ActionButtons onView={onView} onDelete={onDelete} agentName={agent.name} />
+      </div>
     </article>
   )
 }, arePropsEqual)

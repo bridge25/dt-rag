@@ -2,8 +2,9 @@
 
 /**
  * TaxonomyBuilder - Main container component for taxonomy editing
+ * Ethereal Glass Aesthetic
  *
- * @CODE:TAXONOMY-BUILDER-001
+ * @CODE:TAXONOMY-BUILDER-002
  */
 
 import { useEffect, useCallback, useState } from "react"
@@ -30,7 +31,7 @@ import {
 } from "./DraggableTreeNode"
 import { GraphView } from "./GraphView"
 import type { TaxonomyBuilderProps, TaxonomyNode } from "./types"
-import { Folder, AlertCircle } from "lucide-react"
+import { Folder, AlertCircle, Plus } from "lucide-react"
 
 export function TaxonomyBuilder({
   taxonomyId,
@@ -273,8 +274,8 @@ export function TaxonomyBuilder({
 
   if (store.isLoading) {
     return (
-      <div className={cn("flex items-center justify-center h-96", className)}>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      <div className={cn("flex items-center justify-center h-96 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md", className)}>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400" />
       </div>
     )
   }
@@ -290,20 +291,20 @@ export function TaxonomyBuilder({
     >
       <div
         className={cn(
-          "flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden",
+          "flex flex-col h-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden shadow-glass",
           className
         )}
       >
         {/* Error Banner */}
         {store.error && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
-            <span className="text-sm text-red-600 dark:text-red-400">
+          <div className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border-b border-red-500/20 backdrop-blur-sm">
+            <AlertCircle className="w-4 h-4 text-red-400" />
+            <span className="text-sm text-red-400">
               {store.error}
             </span>
             <button
               onClick={() => store.setError(null)}
-              className="ml-auto text-sm text-red-600 dark:text-red-400 underline"
+              className="ml-auto text-sm text-red-400 underline hover:text-red-300"
             >
               Dismiss
             </button>
@@ -330,21 +331,24 @@ export function TaxonomyBuilder({
         <div className="flex flex-1 overflow-hidden">
           {/* Tree View or Graph View based on viewMode */}
           {store.viewMode === "tree" ? (
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
               {rootNodes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
-                  <Folder className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  <div className="h-16 w-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4 border border-white/10">
+                    <Folder className="w-8 h-8 text-white/40" />
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">
                     No taxonomy nodes yet
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    Click &quot;Add Node&quot; to create your first category
+                  <p className="text-sm text-white/60 mb-6">
+                    Click "Add Node" to create your first category
                   </p>
                   {!readOnly && (
                     <button
                       onClick={handleAddNode}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-lg shadow-blue-500/20"
                     >
+                      <Plus className="w-4 h-4" />
                       Add First Node
                     </button>
                   )}
@@ -385,13 +389,13 @@ export function TaxonomyBuilder({
         </div>
 
         {/* Status Bar */}
-        <div className="flex items-center justify-between px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm">
-          <span className="text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between px-4 py-2 border-t border-white/10 bg-white/5 text-sm backdrop-blur-sm">
+          <span className="text-white/40">
             {nodesArray.length} nodes
             {activeId && " • Dragging..."}
           </span>
           {store.lastSavedAt && (
-            <span className="text-gray-500 dark:text-gray-400">
+            <span className="text-white/40">
               Last saved: {store.lastSavedAt.toLocaleTimeString()}
             </span>
           )}

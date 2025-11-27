@@ -2,8 +2,9 @@
 
 /**
  * GraphView - ReactFlow-based graph visualization for TaxonomyBuilder
+ * Constellation Explorer Aesthetic
  *
- * @CODE:TAXONOMY-BUILDER-001
+ * @CODE:TAXONOMY-BUILDER-002
  */
 
 import { useCallback, useMemo, useEffect } from "react"
@@ -23,7 +24,7 @@ import {
 } from "@xyflow/react"
 import { memo } from "react"
 import { cn } from "@/lib/utils"
-import { Folder } from "lucide-react"
+import { Folder, Database, Globe, FileText, Sparkles } from "lucide-react"
 import dagre from "dagre"
 import type { TaxonomyNode } from "./types"
 import "@xyflow/react/dist/style.css"
@@ -40,31 +41,75 @@ const BuilderNodeComponent = memo<{ data: BuilderNodeData; id: string }>(
     const { node, isSelected, documentsCount } = data
 
     return (
-      <div
-        className={cn(
-          "px-4 py-2 rounded-lg border-2 bg-white dark:bg-gray-800 shadow-md min-w-[120px]",
-          "transition-all duration-150",
-          isSelected
-            ? "border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800"
-            : "border-gray-200 dark:border-gray-600 hover:border-blue-300"
-        )}
-      >
-        <Handle type="target" position={Position.Top} className="!bg-gray-400" />
+      <div className="relative group">
+        {/* Glow Effect */}
+        <div
+          className={cn(
+            "absolute inset-0 rounded-full blur-xl transition-all duration-500",
+            isSelected
+              ? "bg-blue-500/40 scale-150"
+              : "bg-blue-500/0 group-hover:bg-blue-500/20 scale-125"
+          )}
+        />
 
-        <div className="flex items-center gap-2">
-          <Folder className="w-4 h-4 text-amber-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[100px]">
+        {/* Node Body */}
+        <div
+          className={cn(
+            "relative flex flex-col items-center justify-center w-24 h-24 rounded-full border-2 transition-all duration-300 backdrop-blur-md",
+            isSelected
+              ? "bg-blue-900/40 border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.5)] scale-110"
+              : "bg-black/40 border-white/10 hover:border-blue-400/50 hover:bg-blue-900/20"
+          )}
+        >
+          <Handle
+            type="target"
+            position={Position.Top}
+            className="!bg-blue-400 !w-2 !h-2 !border-none"
+          />
+
+          {/* Icon */}
+          <div className={cn(
+            "mb-2 transition-colors duration-300",
+            isSelected ? "text-blue-200" : "text-blue-400/70 group-hover:text-blue-300"
+          )}>
+            {documentsCount > 10 ? (
+              <Database className="w-6 h-6" />
+            ) : (
+              <Folder className="w-6 h-6" />
+            )}
+          </div>
+
+          {/* Label */}
+          <span className={cn(
+            "text-xs font-medium text-center px-2 truncate w-full transition-colors duration-300",
+            isSelected ? "text-white" : "text-white/70 group-hover:text-white"
+          )}>
             {node.name}
           </span>
+
+          {/* Badge */}
+          {documentsCount > 0 && (
+            <div className={cn(
+              "absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all duration-300",
+              isSelected
+                ? "bg-blue-500 text-white border-blue-400 shadow-lg"
+                : "bg-blue-900/50 text-blue-200 border-blue-500/30"
+            )}>
+              {documentsCount}
+            </div>
+          )}
+
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            className="!bg-blue-400 !w-2 !h-2 !border-none"
+          />
         </div>
 
-        {documentsCount > 0 && (
-          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {documentsCount} docs
-          </div>
+        {/* Orbit Ring (Decorative) */}
+        {isSelected && (
+          <div className="absolute inset-0 -m-1 rounded-full border border-blue-500/30 animate-spin-slow pointer-events-none" />
         )}
-
-        <Handle type="source" position={Position.Bottom} className="!bg-gray-400" />
       </div>
     )
   }
@@ -88,10 +133,10 @@ function applyDagreLayout(
 ): Node[] {
   const g = new dagre.graphlib.Graph()
   g.setDefaultEdgeLabel(() => ({}))
-  g.setGraph({ rankdir: "TB", nodesep: 50, ranksep: 80 })
+  g.setGraph({ rankdir: "TB", nodesep: 100, ranksep: 120 })
 
   flowNodes.forEach((node) => {
-    g.setNode(node.id, { width: 150, height: 60 })
+    g.setNode(node.id, { width: 120, height: 120 })
   })
 
   flowEdges.forEach((edge) => {
@@ -105,8 +150,8 @@ function applyDagreLayout(
     return {
       ...node,
       position: {
-        x: nodeWithPosition.x - 75,
-        y: nodeWithPosition.y - 30,
+        x: nodeWithPosition.x - 60,
+        y: nodeWithPosition.y - 60,
       },
     }
   })
@@ -139,8 +184,12 @@ function convertToFlow(
         source: node.id,
         target: childId,
         type: "smoothstep",
-        animated: false,
-        style: { stroke: "#94a3b8", strokeWidth: 2 },
+        animated: true,
+        style: {
+          stroke: node.id === selectedNodeId ? "#60a5fa" : "#1e40af",
+          strokeWidth: node.id === selectedNodeId ? 2 : 1,
+          opacity: 0.6
+        },
       })
     })
   })
@@ -185,21 +234,24 @@ function GraphViewInner({
     return (
       <div
         className={cn(
-          "flex items-center justify-center h-full bg-gray-50 dark:bg-gray-900",
+          "flex items-center justify-center h-full bg-[#0B1120]",
           className
         )}
       >
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <Folder className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>No nodes to visualize</p>
-          <p className="text-sm">Add nodes to see the graph view</p>
+        <div className="text-center text-white/30">
+          <div className="relative mx-auto mb-4 w-16 h-16">
+            <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
+            <Sparkles className="relative w-16 h-16 text-blue-400/50" />
+          </div>
+          <p className="text-lg font-medium text-white/60">Constellation Empty</p>
+          <p className="text-sm">Add nodes to begin mapping</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className={cn("h-full w-full", className)}>
+    <div className={cn("h-full w-full bg-[#0B1120]", className)}>
       <ReactFlow
         nodes={flowNodes}
         edges={flowEdges}
@@ -214,15 +266,26 @@ function GraphViewInner({
         maxZoom={2}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         proOptions={{ hideAttribution: true }}
+        className="bg-[#0B1120]"
       >
-        <Background color="#e2e8f0" gap={16} />
-        <Controls showInteractive={false} />
+        <Background
+          color="#1e293b"
+          gap={32}
+          size={2}
+          className="bg-[#0B1120]"
+        />
+        <Controls
+          showInteractive={false}
+          className="!bg-white/5 !border-white/10 !fill-white/60 [&>button]:!border-b-white/10 hover:[&>button]:!bg-white/10"
+        />
         <MiniMap
           nodeStrokeWidth={3}
           zoomable
           pannable
+          className="!bg-white/5 !border-white/10 rounded-lg overflow-hidden"
+          maskColor="rgba(11, 17, 32, 0.8)"
           nodeColor={(node) =>
-            node.data.isSelected ? "#3b82f6" : "#f59e0b"
+            node.data.isSelected ? "#60a5fa" : "#1e3a8a"
           }
         />
       </ReactFlow>

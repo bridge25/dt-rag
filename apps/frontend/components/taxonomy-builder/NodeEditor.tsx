@@ -2,8 +2,9 @@
 
 /**
  * NodeEditor - Side panel for editing node properties
+ * Ethereal Glass Aesthetic
  *
- * @CODE:TAXONOMY-BUILDER-001
+ * @CODE:TAXONOMY-BUILDER-002
  */
 
 import { useState, useEffect, memo } from "react"
@@ -67,8 +68,8 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
 
   if (!node && !isNew) {
     return (
-      <div className="w-80 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-6 flex items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400 text-center">
+      <div className="w-80 border-l border-white/10 bg-white/5 backdrop-blur-md p-6 flex items-center justify-center">
+        <p className="text-white/40 text-center">
           Select a node to view details
         </p>
       </div>
@@ -76,15 +77,15 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
   }
 
   return (
-    <div className="w-80 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col">
+    <div className="w-80 border-l border-white/10 bg-white/5 backdrop-blur-md flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+      <div className="flex items-center justify-between p-4 border-b border-white/10">
+        <h3 className="text-lg font-semibold text-white">
           {isNew ? "New Node" : "Edit Node"}
         </h3>
         <button
           onClick={onCancel}
-          className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded"
+          className="p-1 text-white/40 hover:text-white rounded transition-colors"
           aria-label="Close panel"
         >
           <X className="w-5 h-5" />
@@ -92,12 +93,12 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
       </div>
 
       {/* Form */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {/* Name */}
         <div>
           <label
             htmlFor="node-name"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-white/80 mb-1"
           >
             Name *
           </label>
@@ -110,17 +111,16 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
               setErrors({})
             }}
             className={cn(
-              "w-full px-3 py-2 border rounded-lg text-sm",
-              "focus:outline-none focus:ring-2 focus:ring-blue-500",
-              "dark:bg-gray-700 dark:text-white",
+              "w-full px-3 py-2 border rounded-lg text-sm bg-white/5 text-white placeholder:text-white/20",
+              "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50",
               errors.name
-                ? "border-red-500"
-                : "border-gray-300 dark:border-gray-600"
+                ? "border-red-500/50"
+                : "border-white/10"
             )}
             placeholder="Enter node name"
           />
           {errors.name && (
-            <p className="mt-1 text-xs text-red-500">{errors.name}</p>
+            <p className="mt-1 text-xs text-red-400">{errors.name}</p>
           )}
         </div>
 
@@ -128,7 +128,7 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
         <div>
           <label
             htmlFor="node-description"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-white/80 mb-1"
           >
             Description
           </label>
@@ -138,10 +138,9 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             className={cn(
-              "w-full px-3 py-2 border rounded-lg text-sm resize-none",
-              "focus:outline-none focus:ring-2 focus:ring-blue-500",
-              "border-gray-300 dark:border-gray-600",
-              "dark:bg-gray-700 dark:text-white"
+              "w-full px-3 py-2 border rounded-lg text-sm resize-none bg-white/5 text-white placeholder:text-white/20",
+              "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50",
+              "border-white/10"
             )}
             placeholder="Enter description (optional)"
           />
@@ -151,7 +150,7 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
         <div>
           <label
             htmlFor="node-parent"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            className="block text-sm font-medium text-white/80 mb-1"
           >
             Parent Node
           </label>
@@ -160,10 +159,9 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
             value={parentId ?? ""}
             onChange={(e) => setParentId(e.target.value || null)}
             className={cn(
-              "w-full px-3 py-2 border rounded-lg text-sm",
-              "focus:outline-none focus:ring-2 focus:ring-blue-500",
-              "border-gray-300 dark:border-gray-600",
-              "dark:bg-gray-700 dark:text-white"
+              "w-full px-3 py-2 border rounded-lg text-sm bg-dark-navy text-white",
+              "focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50",
+              "border-white/10"
             )}
           >
             <option value="">No parent (root level)</option>
@@ -177,24 +175,24 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
 
         {/* Metadata (read-only for existing nodes) */}
         {node && !isNew && (
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            <h4 className="text-sm font-medium text-white/80">
               Metadata
             </h4>
 
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-white/60">
               <FileText className="w-4 h-4" />
               <span>{node.metadata.documentsCount} documents</span>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-white/60">
               <Calendar className="w-4 h-4" />
               <span>
                 Created: {new Date(node.metadata.createdAt).toLocaleDateString()}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-sm text-white/60">
               <User className="w-4 h-4" />
               <span>By: {node.metadata.createdBy}</span>
             </div>
@@ -203,17 +201,17 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+      <div className="p-4 border-t border-white/10 space-y-2 bg-white/5">
         <div className="flex gap-2">
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors shadow-lg shadow-blue-500/20"
           >
             {isNew ? "Create" : "Save Changes"}
           </button>
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white/80 bg-white/10 hover:bg-white/20 rounded-lg transition-colors border border-white/10"
           >
             Cancel
           </button>
@@ -223,14 +221,14 @@ export const NodeEditor = memo<NodeEditorProps>(function NodeEditor({
           <div className="flex gap-2">
             <button
               onClick={onAddChild}
-              className="flex-1 flex items-center justify-center gap-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 px-4 py-2 text-sm font-medium text-white/80 border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add Child
             </button>
             <button
               onClick={onDelete}
-              className="flex items-center justify-center gap-1 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="flex items-center justify-center gap-1 px-4 py-2 text-sm font-medium text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
               Delete
