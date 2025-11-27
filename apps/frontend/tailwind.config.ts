@@ -44,6 +44,8 @@ const config: Config = {
         'glass-hover': '0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1)',
         'glow-blue': '0 0 20px rgba(0, 243, 255, 0.15)',
         'glow-purple': '0 0 20px rgba(188, 19, 254, 0.15)',
+        'neon-blue': '0 0 10px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.3)',
+        'neon-purple': '0 0 10px rgba(188, 19, 254, 0.5), 0 0 20px rgba(188, 19, 254, 0.3)',
       },
       animation: {
         'fade-in': 'fadeIn 250ms ease-in-out',
