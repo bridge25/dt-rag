@@ -483,9 +483,11 @@ def get_api_config() -> APIConfig:
             config.cors.allow_origins = [
                 "http://localhost:3000",
                 "http://localhost:3001",
+                "http://localhost:3002",
                 "http://localhost:8080",
                 "http://localhost:8081",
                 "http://127.0.0.1:3000",
+                "http://127.0.0.1:3002",
                 "http://127.0.0.1:8080",
             ]
         config.cors.max_age = 300  # 5 minutes cache for development

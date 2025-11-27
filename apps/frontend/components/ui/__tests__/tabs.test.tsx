@@ -1,24 +1,25 @@
 import React from "react"
-import { render, screen, fireEvent } from "@testing-library/react"
-import { Tabs, TabList, Tab, TabPanel } from "../tabs"
+import { render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../tabs"
 
 describe("Tabs", () => {
   const TabsExample = () => (
     <Tabs defaultValue="tab1">
-      <TabList>
-        <Tab value="tab1">Tab 1</Tab>
-        <Tab value="tab2">Tab 2</Tab>
-        <Tab value="tab3">Tab 3</Tab>
-      </TabList>
-      <TabPanel value="tab1">
+      <TabsList>
+        <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+        <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+        <TabsTrigger value="tab3">Tab 3</TabsTrigger>
+      </TabsList>
+      <TabsContent value="tab1">
         <p>Content 1</p>
-      </TabPanel>
-      <TabPanel value="tab2">
+      </TabsContent>
+      <TabsContent value="tab2">
         <p>Content 2</p>
-      </TabPanel>
-      <TabPanel value="tab3">
+      </TabsContent>
+      <TabsContent value="tab3">
         <p>Content 3</p>
-      </TabPanel>
+      </TabsContent>
     </Tabs>
   )
 
@@ -32,30 +33,41 @@ describe("Tabs", () => {
   test("shows default tab content", () => {
     render(<TabsExample />)
     expect(screen.getByText("Content 1")).toBeInTheDocument()
+    // Content 2 and 3 are hidden
     expect(screen.queryByText("Content 2")).not.toBeInTheDocument()
+    expect(screen.queryByText("Content 3")).not.toBeInTheDocument()
   })
 
-  test("switches tab content on click", () => {
+  test("switches tab content on click", async () => {
+    const user = userEvent.setup()
     render(<TabsExample />)
 
     const tab2 = screen.getByText("Tab 2")
-    fireEvent.click(tab2)
+    await user.click(tab2)
 
-    expect(screen.getByText("Content 2")).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText("Content 2")).toBeInTheDocument()
+    })
     expect(screen.queryByText("Content 1")).not.toBeInTheDocument()
   })
 
-  test("highlights active tab", () => {
+  test("highlights active tab", async () => {
+    const user = userEvent.setup()
     render(<TabsExample />)
 
     const tab1 = screen.getByText("Tab 1")
-    expect(tab1).toHaveClass("border-accent-600", "text-accent-600")
+    expect(tab1).toHaveAttribute("data-state", "active")
+    expect(tab1).toHaveAttribute("aria-selected", "true")
 
     const tab2 = screen.getByText("Tab 2")
-    fireEvent.click(tab2)
+    await user.click(tab2)
 
-    expect(tab2).toHaveClass("border-accent-600", "text-accent-600")
-    expect(tab1).not.toHaveClass("border-accent-600")
+    await waitFor(() => {
+      expect(tab2).toHaveAttribute("data-state", "active")
+      expect(tab2).toHaveAttribute("aria-selected", "true")
+    })
+    expect(tab1).toHaveAttribute("data-state", "inactive")
+    expect(tab1).toHaveAttribute("aria-selected", "false")
   })
 
   test("has accessible attributes", () => {
@@ -77,12 +89,12 @@ describe("Tabs with controlled value", () => {
 
       return (
         <Tabs value={value} onValueChange={setValue}>
-          <TabList>
-            <Tab value="tab1">Tab 1</Tab>
-            <Tab value="tab2">Tab 2</Tab>
-          </TabList>
-          <TabPanel value="tab1">Content 1</TabPanel>
-          <TabPanel value="tab2">Content 2</TabPanel>
+          <TabsList>
+            <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+            <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+          </TabsList>
+          <TabsContent value="tab1">Content 1</TabsContent>
+          <TabsContent value="tab2">Content 2</TabsContent>
         </Tabs>
       )
     }

@@ -80,18 +80,20 @@ describe("AgentCard", () => {
     ).toBeInTheDocument()
   })
 
-  it("applies border color based on rarity", () => {
+  it("applies rarity styling to GlassCard", () => {
     const { container } = render(<AgentCard {...defaultProps} />)
-    const article = container.querySelector("article")
-    expect(article).toHaveClass("border-blue-400")
+    // GlassCard is the wrapper div - check for rarity-rare class
+    const glassCard = container.querySelector("div")
+    expect(glassCard).toHaveClass("rarity-rare")
   })
 
-  it("handles Legendary rarity", () => {
+  it("handles Legendary rarity styling", () => {
     const legendaryAgent = { ...mockAgent, rarity: "Legendary" as const }
     const { container } = render(
       <AgentCard {...defaultProps} agent={legendaryAgent} />
     )
-    const article = container.querySelector("article")
-    expect(article).toHaveClass("border-amber-500")
+    // Check for legendary rarity class on GlassCard
+    const glassCard = container.querySelector("div")
+    expect(glassCard).toHaveClass("rarity-legendary")
   })
 })

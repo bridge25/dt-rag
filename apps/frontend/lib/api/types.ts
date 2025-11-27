@@ -439,6 +439,7 @@ export const AgentCardDataSchema = z.object({
   last_used: z.string().optional(),
   avatar_url: z.string().max(500).optional().nullable(),
   character_description: z.string().max(500).optional().nullable(),
+  robot: z.string().optional().nullable(),
 })
 
 export type AgentCardData = z.infer<typeof AgentCardDataSchema>
