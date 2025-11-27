@@ -40,12 +40,28 @@ Apply the design to remaining routes.
 - Document reading pane and note-taking area in split glass view.
 
 ### Phase 4: UI Components
-Standardize the building blocks.
-#### [MODIFY] [components/ui/*](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/components/ui)
-- **Card**: Glass background, white/10 border.
-- **Button**: Glass hover effects, glowing primary buttons.
-- **Input/Select**: Transparent backgrounds with bottom borders or glass fills.
-- **Dialog/Modal**: Backdrop blur and glass container.
+Standardize the building blocks to use the "Ethereal Glass" aesthetic by default.
+
+#### [MODIFY] [components/ui/card.tsx](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/components/ui/card.tsx)
+- Update default styles to use `bg-white/5`, `border-white/10`, and `backdrop-blur-md`.
+
+#### [MODIFY] [components/ui/button.tsx](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/components/ui/button.tsx)
+- Update variants (default, secondary, ghost, outline) to use glass styles and glowing hover effects.
+
+#### [MODIFY] [components/ui/input.tsx](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/components/ui/input.tsx)
+- Update to transparent background with `border-white/10` and `focus:border-blue-500/50`.
+
+#### [MODIFY] [components/ui/dialog.tsx](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/components/ui/dialog.tsx)
+- Update overlay to `bg-black/80` and content to `bg-[#0b1121]/90` with glass border.
+
+#### [MODIFY] [components/ui/tabs.tsx](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/components/ui/tabs.tsx)
+- Update tab list to `bg-white/5` and triggers to use glass active states.
+
+#### [MODIFY] [components/ui/badge.tsx](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/components/ui/badge.tsx)
+- Update default badge to use glass background and subtle border.
+
+#### [MODIFY] [app/not-found.tsx](file:///wsl.localhost/Ubuntu/home/a/projects/dt-rag-standalone/apps/frontend/app/not-found.tsx)
+- Update to use the new glass components and layout.
 
 ## Verification Plan
 ### Automated Tests

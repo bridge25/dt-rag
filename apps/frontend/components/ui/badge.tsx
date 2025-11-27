@@ -1,68 +1,45 @@
 /**
- * Badge component with colors and variants
+ * Badge component with Ethereal Glass aesthetic
  *
- * @CODE:UI-001
+ * @CODE:UI-002
  */
 
 "use client"
 
-import React from "react"
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
 
-export interface BadgeProps {
-  children: React.ReactNode
-  color?: "info" | "success" | "warning" | "error" | "purple" | "blue" | "gray" | "dark"
-  variant?: "solid" | "outline"
-  shape?: "pill" | "square"
-  className?: string
-}
-
-export function Badge({
-  children,
-  color = "info",
-  variant = "solid",
-  shape = "pill",
-  className = ""
-}: BadgeProps) {
-  const baseStyles = "inline-flex items-center px-2.5 py-0.5 text-xs font-medium transition-colors"
-
-  const shapeStyles = {
-    pill: "rounded-full",
-    square: "rounded"
-  }
-
-  const colorStyles = {
-    solid: {
-      info: "bg-blue-100 text-blue-800",
-      success: "bg-green-100 text-green-800",
-      warning: "bg-yellow-100 text-yellow-800",
-      error: "bg-red-100 text-red-800",
-      purple: "bg-purple-100 text-purple-800",
-      blue: "bg-blue-100 text-blue-800",
-      gray: "bg-gray-100 text-gray-800",
-      dark: "bg-gray-800 text-white"
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 backdrop-blur-sm",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-blue-500/20 text-blue-100 hover:bg-blue-500/30 border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]",
+        secondary:
+          "border-transparent bg-white/10 text-white hover:bg-white/20 border-white/10",
+        destructive:
+          "border-transparent bg-red-500/20 text-red-100 hover:bg-red-500/30 border-red-500/30",
+        outline: "text-white border-white/20",
+        glass: "bg-white/5 border-white/10 text-white shadow-glass",
+        glow: "bg-blue-500/10 border-blue-500/50 text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.3)]",
+      },
     },
-    outline: {
-      info: "bg-transparent border border-blue-300 text-blue-700",
-      success: "bg-transparent border border-green-300 text-green-700",
-      warning: "bg-transparent border border-yellow-300 text-yellow-700",
-      error: "bg-transparent border border-red-300 text-red-700",
-      purple: "bg-transparent border border-purple-300 text-purple-700",
-      blue: "bg-transparent border border-blue-300 text-blue-700",
-      gray: "bg-transparent border border-gray-300 text-gray-700",
-      dark: "bg-transparent border border-gray-800 text-gray-800"
-    }
+    defaultVariants: {
+      variant: "default",
+    },
   }
+)
 
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+  VariantProps<typeof badgeVariants> { }
+
+function Badge({ className, variant, ...props }: BadgeProps) {
   return (
-    <span
-      className={`
-        ${baseStyles}
-        ${shapeStyles[shape]}
-        ${colorStyles[variant][color]}
-        ${className}
-      `}
-    >
-      {children}
-    </span>
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
   )
 }
+
+export { Badge, badgeVariants }
