@@ -1,0 +1,72 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <defs>
+    <radialGradient id="glow-common" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+    <filter id="glassglow-common">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="glass-common" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c0c0c0;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#808080;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#c0c0c0;stop-opacity:0.4" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background glow -->
+  <circle cx="256" cy="256" r="220" fill="url(#glow-common)" opacity="0.6"/>
+  
+  <!-- Head -->
+  <rect x="180" y="120" width="152" height="140" rx="20" fill="url(#glass-common)" stroke="#c0c0c0" stroke-width="2" filter="url(#glassglow-common)"/>
+  
+  <!-- Eyes -->
+  <circle cx="215" cy="170" r="18" fill="#ffffff" opacity="0.9"/>
+  <circle cx="297" cy="170" r="18" fill="#ffffff" opacity="0.9"/>
+  <circle cx="215" cy="170" r="10" fill="#000000"/>
+  <circle cx="297" cy="170" r="10" fill="#000000"/>
+  
+  <!-- Mouth -->
+  <path d="M 220 210 Q 256 225 292 210" stroke="#c0c0c0" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Upper body -->
+  <rect x="160" y="260" width="192" height="160" rx="16" fill="url(#glass-common)" stroke="#c0c0c0" stroke-width="2" filter="url(#glassglow-common)"/>
+  
+  <!-- Center chest panel -->
+  <rect x="200" y="290" width="112" height="100" rx="12" fill="#808080" stroke="#ffffff" stroke-width="2" opacity="0.7"/>
+  
+  <!-- Chest glow point -->
+  <circle cx="256" cy="340" r="24" fill="#ffffff" opacity="0.6"/>
+  <circle cx="256" cy="340" r="16" fill="#ffffff" opacity="0.4"/>
+  
+  <!-- Left arm -->
+  <rect x="80" y="300" width="70" height="90" rx="12" fill="url(#glass-common)" stroke="#c0c0c0" stroke-width="2" filter="url(#glassglow-common)"/>
+  <circle cx="100" cy="400" r="16" fill="#ffffff" opacity="0.8"/>
+  
+  <!-- Right arm -->
+  <rect x="362" y="300" width="70" height="90" rx="12" fill="url(#glass-common)" stroke="#c0c0c0" stroke-width="2" filter="url(#glassglow-common)"/>
+  <circle cx="412" cy="400" r="16" fill="#ffffff" opacity="0.8"/>
+  
+  <!-- Left leg -->
+  <rect x="200" y="420" width="50" height="80" rx="10" fill="url(#glass-common)" stroke="#c0c0c0" stroke-width="2" filter="url(#glassglow-common)"/>
+  <circle cx="225" cy="510" r="14" fill="#c0c0c0" opacity="0.8"/>
+  
+  <!-- Right leg -->
+  <rect x="262" y="420" width="50" height="80" rx="10" fill="url(#glass-common)" stroke="#c0c0c0" stroke-width="2" filter="url(#glassglow-common)"/>
+  <circle cx="287" cy="510" r="14" fill="#c0c0c0" opacity="0.8"/>
+  
+  <!-- Top antenna -->
+  <line x1="256" y1="115" x2="256" y2="60" stroke="#c0c0c0" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="256" cy="55" r="8" fill="#ffffff" opacity="0.9"/>
+  
+  <!-- Rarity indicator (top right) -->
+  <rect x="420" y="20" width="60" height="40" rx="8" fill="#808080" stroke="#c0c0c0" stroke-width="2" opacity="0.8"/>
+  <text x="450" y="48" text-anchor="middle" font-size="14" fill="#c0c0c0" font-weight="bold" font-family="Arial">COM</text>
+  
+  <!-- Name label -->
+  <text x="256" y="480" text-anchor="middle" font-size="16" fill="#c0c0c0" font-weight="bold" font-family="Arial">Guardian</text>
+</svg>
