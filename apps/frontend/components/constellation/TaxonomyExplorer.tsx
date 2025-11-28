@@ -11,12 +11,12 @@
  * @CODE:FRONTEND-REDESIGN-001-EXPLORER
  */
 
-'use client'
+"use client"
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import ConstellationGraph from './ConstellationGraph'
-import { X, ChevronRight } from 'lucide-react'
-import type { TaxonomyNode } from '@/lib/api/types'
+import { useState, useCallback, useMemo, useEffect } from "react"
+import ConstellationGraph from "./ConstellationGraph"
+import { X, ChevronRight } from "lucide-react"
+import type { TaxonomyNode } from "@/lib/api/types"
 
 interface TaxonomyExplorerProps {
   taxonomy: TaxonomyNode[]
@@ -79,18 +79,18 @@ const flattenTaxonomy = (nodes: TaxonomyNode[]): TaxonomyNode[] => {
 
 export default function TaxonomyExplorer({ taxonomy, onClose }: TaxonomyExplorerProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [searchTerm, setSearchTerm] = useState("")
 
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose?.()
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [onClose])
 
   // Flatten taxonomy for graph
@@ -145,7 +145,7 @@ export default function TaxonomyExplorer({ taxonomy, onClose }: TaxonomyExplorer
 
   // Handle search clear
   const handleClearSearch = useCallback(() => {
-    setSearchTerm('')
+    setSearchTerm("")
   }, [])
 
   return (
@@ -292,7 +292,7 @@ export default function TaxonomyExplorer({ taxonomy, onClose }: TaxonomyExplorer
                       <div key={key} className="text-sm">
                         <div className="text-white/60 capitalize">{key}:</div>
                         <div className="text-white break-words">
-                          {typeof value === 'string' ? value : JSON.stringify(value)}
+                          {typeof value === "string" ? value : JSON.stringify(value)}
                         </div>
                       </div>
                     ))}

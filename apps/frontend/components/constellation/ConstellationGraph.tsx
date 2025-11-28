@@ -11,13 +11,13 @@
  * @CODE:FRONTEND-REDESIGN-001-GRAPH
  */
 
-'use client'
+"use client"
 
-import { useState, useCallback, useRef, useMemo, useEffect } from 'react'
-import ConstellationNode from './ConstellationNode'
-import ConstellationEdge from './ConstellationEdge'
-import type { TaxonomyNode } from '@/lib/api/types'
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { useState, useCallback, useRef, useMemo } from "react"
+import ConstellationNode from "./ConstellationNode"
+import ConstellationEdge from "./ConstellationEdge"
+import ConstellationControlPanel from "./ConstellationControlPanel"
+import type { TaxonomyNode } from "@/lib/api/types"
 
 interface Position {
   x: number
@@ -89,6 +89,7 @@ export default function ConstellationGraph({
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
+  const [dataDensity, setDataDensity] = useState(50)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -141,11 +142,23 @@ export default function ConstellationGraph({
     setZoom(prev => Math.max(prev / 1.2, 0.2))
   }, [])
 
-  const handleResetView = useCallback(() => {
+  // Reset view - prefixed with underscore since not currently used but kept for future
+  const _handleResetView = useCallback(() => {
     setZoom(1)
     setPan({ x: 0, y: 0 })
     setSelectedNodeId(null)
     setHoveredNodeId(null)
+  }, [])
+
+  // Filter and Settings handlers (for future implementation)
+  const handleFilterClick = useCallback(() => {
+    // TODO: Implement filter modal/drawer
+    console.log("Filter clicked - density:", dataDensity)
+  }, [dataDensity])
+
+  const handleSettingsClick = useCallback(() => {
+    // TODO: Implement settings modal/drawer
+    console.log("Settings clicked")
   }, [])
 
   // Pan controls
@@ -186,9 +199,10 @@ export default function ConstellationGraph({
     [selectedNodeId]
   )
 
-  const edgeStyles = isLoading
-    ? 'opacity-50 pointer-events-none'
-    : ''
+  // Edge styles - prefixed with underscore since not currently used
+  const _edgeStyles = isLoading
+    ? "opacity-50 pointer-events-none"
+    : ""
 
   const transform = `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`
 
@@ -202,7 +216,7 @@ export default function ConstellationGraph({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
       onWheel={handleWheel}
-      style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+      style={{ cursor: isPanning ? "grabbing" : "grab" }}
     >
       {/* Loading State */}
       {isLoading && (
@@ -228,8 +242,8 @@ export default function ConstellationGraph({
         className="absolute inset-0"
         style={{
           transform: transform,
-          transformOrigin: '0 0',
-          transition: selectedNodeId ? 'none' : 'transform 0.3s ease'
+          transformOrigin: "0 0",
+          transition: selectedNodeId ? "none" : "transform 0.3s ease"
         }}
       >
         {/* SVG Layer for Edges */}
@@ -282,42 +296,15 @@ export default function ConstellationGraph({
         </div>
       </div>
 
-      {/* Control Panel */}
-      <div className="absolute bottom-6 right-6 z-10 flex gap-2 backdrop-blur-md bg-white/5 rounded-xl border border-white/10 p-2">
-        {/* Zoom Controls */}
-        <button
-          aria-label="Zoom in (increase magnification)"
-          onClick={handleZoomIn}
-          disabled={zoom >= 3}
-          className="p-2 rounded-lg hover:bg-cyan-500/20 disabled:opacity-50 transition-colors text-cyan-300"
-          title="Zoom In"
-        >
-          <ZoomIn size={20} />
-        </button>
-
-        <div className="w-px bg-white/10" />
-
-        <button
-          aria-label="Zoom out (decrease magnification)"
-          onClick={handleZoomOut}
-          disabled={zoom <= 0.2}
-          className="p-2 rounded-lg hover:bg-cyan-500/20 disabled:opacity-50 transition-colors text-cyan-300"
-          title="Zoom Out"
-        >
-          <ZoomOut size={20} />
-        </button>
-
-        <div className="w-px bg-white/10" />
-
-        <button
-          aria-label="Reset view (restore original zoom and position)"
-          onClick={handleResetView}
-          className="p-2 rounded-lg hover:bg-cyan-500/20 transition-colors text-cyan-300"
-          title="Reset View"
-        >
-          <RotateCcw size={20} />
-        </button>
-      </div>
+      {/* Constellation Control Panel - Bottom Left */}
+      <ConstellationControlPanel
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onFilterClick={handleFilterClick}
+        onSettingsClick={handleSettingsClick}
+        dataDensity={dataDensity}
+        onDataDensityChange={setDataDensity}
+      />
 
       {/* Info Panel - Shows Selected Node Details */}
       {selectedNode && (

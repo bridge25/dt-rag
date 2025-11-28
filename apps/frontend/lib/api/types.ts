@@ -93,10 +93,12 @@ export const TaxonomyNodeSchema: z.ZodType<{
     metadata?: Record<string, any>
     level: number
     document_count?: number
+    connection_count?: number
   }>
   metadata?: Record<string, any>
   level: number
   document_count?: number
+  connection_count?: number
 }> = z.object({
   id: z.string(),
   name: z.string(),
@@ -106,6 +108,7 @@ export const TaxonomyNodeSchema: z.ZodType<{
   metadata: z.record(z.string(), z.any()).optional(),
   level: z.number(),
   document_count: z.number().optional(),
+  connection_count: z.number().optional(),
 })
 
 export const ClassifyRequestSchema = z.object({
@@ -417,29 +420,42 @@ export type HITLReviewRequest = z.infer<typeof HITLReviewRequestSchema>
 export type HITLReviewResponse = z.infer<typeof HITLReviewResponseSchema>
 
 // ============================================================================
-// Agent Card Models (Frontend-specific for Pokemon-style UI)
-// @CODE:FRONTEND-MIGRATION-001
+// Agent Card Models (Frontend-specific for Ethereal Glass Design)
+// @CODE:FRONTEND-REDESIGN-001
 // ============================================================================
 
+// Rarity enum for agent gamification (PascalCase to match existing code)
 export const RaritySchema = z.enum(["Common", "Rare", "Epic", "Legendary"])
 export type Rarity = z.infer<typeof RaritySchema>
+
+export const AgentStatsSchema = z.object({
+  users: z.number().int().min(0).default(0),
+  robos: z.number().min(0).default(0),
+  revenue: z.number().min(0).default(0),
+  growth: z.number().default(0),
+})
+
+export type AgentStats = z.infer<typeof AgentStatsSchema>
 
 export const AgentCardDataSchema = z.object({
   agent_id: z.string(),
   name: z.string().min(1).max(100),
-  level: z.number().int().min(1).max(10),
-  current_xp: z.number().int().min(0),
-  next_level_xp: z.number().int().min(0).nullable(),
-  rarity: RaritySchema,
-  total_documents: z.number().int().min(0),
-  total_queries: z.number().int().min(0),
-  quality_score: z.number().min(0).max(100),
-  status: z.string().min(1),
-  created_at: z.string(),
+  robotImage: z.string().url().optional(),
+  progress: z.number().min(0).max(100).default(50),
+  stats: AgentStatsSchema,
+  status: z.string().min(1).default("active"),
+  created_at: z.string().optional(),
+  // Gamification fields (optional for backward compatibility)
+  level: z.number().int().min(1).default(1).optional(),
+  rarity: RaritySchema.default("Common").optional(),
+  current_xp: z.number().int().min(0).default(0).optional(),
+  next_level_xp: z.number().int().min(0).default(100).optional(),
+  // Agent metrics (optional)
+  total_documents: z.number().int().min(0).default(0).optional(),
+  total_queries: z.number().int().min(0).default(0).optional(),
+  quality_score: z.number().min(0).max(100).default(0).optional(),
+  // Usage tracking (optional)
   last_used: z.string().optional(),
-  avatar_url: z.string().max(500).optional().nullable(),
-  character_description: z.string().max(500).optional().nullable(),
-  robot: z.string().optional().nullable(),
 })
 
 export type AgentCardData = z.infer<typeof AgentCardDataSchema>

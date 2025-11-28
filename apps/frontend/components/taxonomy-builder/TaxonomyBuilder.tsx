@@ -341,7 +341,7 @@ export function TaxonomyBuilder({
                     No taxonomy nodes yet
                   </h3>
                   <p className="text-sm text-white/60 mb-6">
-                    Click "Add Node" to create your first category
+                    Click &quot;Add Node&quot; to create your first category
                   </p>
                   {!readOnly && (
                     <button

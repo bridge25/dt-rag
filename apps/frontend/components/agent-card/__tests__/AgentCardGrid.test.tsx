@@ -1,359 +1,254 @@
 /**
- * AgentCardGrid Component Tests
+ * AgentCardGrid Component Tests - Ethereal Glass Design
  * Testing responsive grid layout, empty states, and card rendering
- * @TEST:AGENT-CARD-GRID-001
+ * @TEST:FRONTEND-REDESIGN-001
  */
 
-import { describe, it, expect, vi } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { describe, it, expect } from "vitest"
+import { render, screen } from "@testing-library/react"
 import React from "react"
 import { AgentCardGrid } from "../AgentCardGrid"
-import type { AgentCardData } from "../types"
-
-// Mock the RobotAvatar component
-vi.mock("../../ui/robot-avatar", () => ({
-  RobotAvatar: ({ robot, rarity }: any) => (
-    <div data-testid={`robot-avatar-${robot}`}>
-      Avatar: {robot} - {rarity}
-    </div>
-  ),
-}))
-
-// Mock the AgentCard component
-vi.mock("../AgentCard", () => ({
-  AgentCard: ({ agent, onView, onDelete }: any) => (
-    <div
-      data-testid={`agent-card-${agent.agent_id}`}
-      data-agent-name={agent.name}
-    >
-      <button onClick={onView} data-testid={`view-${agent.agent_id}`}>
-        View
-      </button>
-      <button onClick={onDelete} data-testid={`delete-${agent.agent_id}`}>
-        Delete
-      </button>
-    </div>
-  ),
-}))
+import type { AgentCardData } from "@/lib/api/types"
 
 describe("AgentCardGrid", () => {
   const mockAgents: AgentCardData[] = [
     {
       agent_id: "1",
       name: "Analyst",
-      level: 5,
-      rarity: "Common",
-      robot: "analyst",
-      current_xp: 1000,
-      next_level_xp: 2000,
-      total_documents: 42,
-      total_queries: 156,
-      quality_score: 95,
-      avatar_url: "/avatars/analyst.svg",
+      robotImage: "/robots/analyst.png",
+      progress: 75,
+      stats: {
+        users: 1245,
+        robos: 1250,
+        revenue: 12500,
+        growth: 15,
+      },
+      status: "active",
     },
     {
       agent_id: "2",
       name: "Innovator",
-      level: 8,
-      rarity: "Rare",
-      robot: "innovator",
-      current_xp: 1500,
-      next_level_xp: 2500,
-      total_documents: 78,
-      total_queries: 234,
-      quality_score: 92,
-      avatar_url: "/avatars/innovator.svg",
+      robotImage: "/robots/innovator.png",
+      progress: 85,
+      stats: {
+        users: 2340,
+        robos: 2500,
+        revenue: 25000,
+        growth: 22,
+      },
+      status: "active",
     },
     {
       agent_id: "3",
       name: "Researcher",
-      level: 12,
-      rarity: "Epic",
-      robot: "researcher",
-      current_xp: 2000,
-      next_level_xp: 3000,
-      total_documents: 156,
-      total_queries: 512,
-      quality_score: 98,
-      avatar_url: "/avatars/researcher.svg",
+      robotImage: "/robots/researcher.png",
+      progress: 60,
+      stats: {
+        users: 1560,
+        robos: 1800,
+        revenue: 18000,
+        growth: 18,
+      },
+      status: "active",
     },
   ]
 
-  const mockHandlers = {
-    onView: vi.fn(),
-    onDelete: vi.fn(),
-  }
-
-  beforeEach(() => {
-    mockHandlers.onView.mockClear()
-    mockHandlers.onDelete.mockClear()
-  })
-
   describe("Rendering agents", () => {
     it("should render correct number of agent cards", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
       const cards = container.querySelectorAll("[data-testid^='agent-card-']")
-      // Filter to only direct children of the grid
-      const gridCards = Array.from(cards).filter((card) => {
-        return card.parentElement?.className?.includes("grid") || false
-      })
-      expect(gridCards).toHaveLength(3)
+      expect(cards).toHaveLength(3)
     })
 
-    it("should pass correct props to AgentCard components", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
+    it("should display agent names as data attributes", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
+      const card1 = container.querySelector("[data-agent-name='Analyst']")
+      const card2 = container.querySelector("[data-agent-name='Innovator']")
+      const card3 = container.querySelector("[data-agent-name='Researcher']")
 
-      const cards = container.querySelectorAll("[data-testid^='agent-card-']")
-      const gridCards = Array.from(cards).filter((card) => {
-        return card.parentElement?.className?.includes("grid") || false
-      })
-      expect(gridCards[0]).toHaveAttribute("data-agent-name", "Analyst")
-      expect(gridCards[1]).toHaveAttribute("data-agent-name", "Innovator")
+      expect(card1).toBeInTheDocument()
+      expect(card2).toBeInTheDocument()
+      expect(card3).toBeInTheDocument()
     })
 
-    it("should call onView when view button is clicked", () => {
-      render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      const viewButton = screen.getByTestId("view-1")
-      viewButton.click()
-
-      expect(mockHandlers.onView).toHaveBeenCalledWith(mockAgents[0])
-    })
-
-    it("should call onDelete when delete button is clicked", () => {
-      render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      const deleteButton = screen.getByTestId("delete-2")
-      deleteButton.click()
-
-      expect(mockHandlers.onDelete).toHaveBeenCalledWith(mockAgents[1])
+    it("should render agent cards with correct test IDs", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
+      expect(container.querySelector("[data-testid='agent-card-1']")).toBeInTheDocument()
+      expect(container.querySelector("[data-testid='agent-card-2']")).toBeInTheDocument()
+      expect(container.querySelector("[data-testid='agent-card-3']")).toBeInTheDocument()
     })
   })
 
   describe("Empty state handling", () => {
     it("should show empty state message when no agents provided", () => {
-      render(
-        <AgentCardGrid
-          agents={[]}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
+      render(<AgentCardGrid agents={[]} />)
       expect(screen.getByText(/no agents/i)).toBeInTheDocument()
     })
 
     it("should not render any agent cards when agents list is empty", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={[]}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
+      const { container } = render(<AgentCardGrid agents={[]} />)
       const cards = container.querySelectorAll("[data-testid^='agent-card-']")
       expect(cards).toHaveLength(0)
     })
 
-    it("should show suggestion in empty state", () => {
-      render(
-        <AgentCardGrid
-          agents={[]}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      const emptyState = screen.getByText(/no agents/i)
-      expect(emptyState).toBeInTheDocument()
+    it("should show helpful message in empty state", () => {
+      render(<AgentCardGrid agents={[]} />)
+      expect(
+        screen.getByText(/create or import agents to get started/i)
+      ).toBeInTheDocument()
     })
   })
 
   describe("Responsive grid layout", () => {
-    it("should have responsive grid classes", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      const grid = container.querySelector("[class*='grid']")
+    it("should have responsive grid classes for 5-column layout", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
+      const grid = container.querySelector("[class*='grid']") as HTMLElement
       expect(grid).toBeInTheDocument()
-      expect(grid?.className).toContain("grid")
+      expect(grid.className).toContain("grid-cols-1")
+      expect(grid.className).toContain("sm:grid-cols-2")
+      expect(grid.className).toContain("md:grid-cols-3")
+      expect(grid.className).toContain("lg:grid-cols-4")
+      expect(grid.className).toContain("xl:grid-cols-5")
     })
 
-    it("should apply grid column classes for responsiveness", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
+    it("should have proper gap between grid items", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
       const grid = container.querySelector("[class*='grid']") as HTMLElement
-      // Should have responsive column classes like grid-cols-1, md:grid-cols-2, etc.
-      expect(
-        grid.className.includes("grid-cols-") ||
-        grid.className.includes("md:grid-cols-") ||
-        grid.className.includes("lg:grid-cols-")
-      ).toBe(true)
+      expect(grid.className).toContain("gap-4")
+    })
+
+    it("should be full width", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
+      const grid = container.querySelector("[class*='grid']") as HTMLElement
+      expect(grid.className).toContain("w-full")
     })
   })
 
   describe("Animation and styling", () => {
-    it("should have staggered animation classes", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      // Each card should have animation delay
+    it("should have animation wrapper elements", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
       const cards = container.querySelectorAll("[data-testid^='agent-card-']")
-      const gridCards = Array.from(cards).filter((card) => {
-        return card.parentElement?.className?.includes("grid") || false
-      })
-      expect(gridCards.length).toBe(3)
 
-      gridCards.forEach((card) => {
-        const element = card as HTMLElement
-        expect(element.style.animation || element.className).toBeTruthy()
+      // Each card should be wrapped in an animation container
+      cards.forEach((card) => {
+        const animationWrapper = card.parentElement as HTMLElement
+        expect(animationWrapper).toBeDefined()
+        expect(animationWrapper.className).toBeTruthy()
       })
     })
 
-    it("should have gap between grid items", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      const grid = container.querySelector("[class*='grid']") as HTMLElement
-      expect(grid.className).toContain("gap-")
+    it("should define fadeInZoom keyframe animation", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
+      const style = container.querySelector("style")
+      expect(style?.textContent).toContain("@keyframes fadeInZoom")
+      expect(style?.textContent).toContain("opacity: 0")
+      expect(style?.textContent).toContain("transform: scale(0.95)")
     })
   })
 
-  describe("Memoization and performance", () => {
-    it("should handle multiple render cycles efficiently", () => {
-      const { rerender, container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      let cards = container.querySelectorAll("[data-testid^='agent-card-']")
-      let gridCards = Array.from(cards).filter((card) => {
-        return card.parentElement?.className?.includes("grid") || false
-      })
-      expect(gridCards).toHaveLength(3)
-
-      // Rerender with same props
-      rerender(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      cards = container.querySelectorAll("[data-testid^='agent-card-']")
-      gridCards = Array.from(cards).filter((card) => {
-        return card.parentElement?.className?.includes("grid") || false
-      })
-      expect(gridCards).toHaveLength(3)
-    })
-
-    it("should update when agent list changes", () => {
-      const { rerender, container } = render(
-        <AgentCardGrid
-          agents={[mockAgents[0]]}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      let cards = container.querySelectorAll("[data-testid^='agent-card-']")
-      let gridCards = Array.from(cards).filter((card) => {
-        return card.parentElement?.className?.includes("grid") || false
-      })
-      expect(gridCards).toHaveLength(1)
-
-      rerender(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
-      cards = container.querySelectorAll("[data-testid^='agent-card-']")
-      gridCards = Array.from(cards).filter((card) => {
-        return card.parentElement?.className?.includes("grid") || false
-      })
-      expect(gridCards).toHaveLength(3)
-    })
-  })
-
-  describe("Accessibility", () => {
-    it("should have semantic HTML structure", () => {
-      const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
-      )
-
+  describe("Semantic HTML and accessibility", () => {
+    it("should have semantic section element", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
       const section = container.querySelector("section")
       expect(section).toBeInTheDocument()
     })
 
-    it("should have proper ARIA labels", () => {
+    it("should have proper ARIA label", () => {
+      const { container } = render(<AgentCardGrid agents={mockAgents} />)
+      const section = container.querySelector("section")
+      expect(section).toHaveAttribute("aria-label", "Agent cards grid")
+    })
+
+    it("should support custom className prop", () => {
       const { container } = render(
-        <AgentCardGrid
-          agents={mockAgents}
-          onView={mockHandlers.onView}
-          onDelete={mockHandlers.onDelete}
-        />
+        <AgentCardGrid agents={mockAgents} className="custom-class" />
+      )
+      const section = container.querySelector("section")
+      expect(section).toHaveClass("custom-class")
+    })
+  })
+
+  describe("Memoization and performance", () => {
+    it("should handle multiple render cycles with same agents", () => {
+      const { rerender, container } = render(<AgentCardGrid agents={mockAgents} />)
+      let cards = container.querySelectorAll("[data-testid^='agent-card-']")
+      expect(cards).toHaveLength(3)
+
+      // Rerender with same props
+      rerender(<AgentCardGrid agents={mockAgents} />)
+
+      cards = container.querySelectorAll("[data-testid^='agent-card-']")
+      expect(cards).toHaveLength(3)
+    })
+
+    it("should update when agent list changes", () => {
+      const { rerender, container } = render(
+        <AgentCardGrid agents={[mockAgents[0]]} />
       )
 
-      const section = container.querySelector("section")
-      expect(section).toHaveAttribute("aria-label")
+      let cards = container.querySelectorAll("[data-testid^='agent-card-']")
+      expect(cards).toHaveLength(1)
+
+      // Rerender with different agents
+      rerender(<AgentCardGrid agents={mockAgents} />)
+
+      cards = container.querySelectorAll("[data-testid^='agent-card-']")
+      expect(cards).toHaveLength(3)
+    })
+
+    it("should update when progress changes", () => {
+      const agentsV1 = mockAgents.map((a) => ({
+        ...a,
+        progress: 50,
+      }))
+
+      const agentsV2 = mockAgents.map((a) => ({
+        ...a,
+        progress: 75,
+      }))
+
+      const { rerender, container } = render(
+        <AgentCardGrid agents={agentsV1} />
+      )
+
+      expect(container.querySelectorAll("[data-testid^='agent-card-']")).toHaveLength(3)
+
+      // Rerender with different progress
+      rerender(<AgentCardGrid agents={agentsV2} />)
+
+      expect(container.querySelectorAll("[data-testid^='agent-card-']")).toHaveLength(3)
+    })
+  })
+
+  describe("RefForwardRef support", () => {
+    it("should support ref forwarding", () => {
+      const ref = React.createRef<HTMLDivElement>()
+      render(<AgentCardGrid agents={mockAgents} ref={ref} />)
+      expect(ref.current).toBeInstanceOf(HTMLElement)
+    })
+  })
+
+  describe("Single agent rendering", () => {
+    it("should render single agent correctly", () => {
+      const { container } = render(
+        <AgentCardGrid agents={[mockAgents[0]]} />
+      )
+      const cards = container.querySelectorAll("[data-testid^='agent-card-']")
+      expect(cards).toHaveLength(1)
+    })
+  })
+
+  describe("Large agent list rendering", () => {
+    it("should handle large agent lists", () => {
+      const largeAgentList = Array.from({ length: 50 }, (_, i) => ({
+        ...mockAgents[0],
+        agent_id: `large-${i}`,
+        name: `Agent ${i}`,
+      }))
+
+      const { container } = render(<AgentCardGrid agents={largeAgentList} />)
+      const cards = container.querySelectorAll("[data-testid^='agent-card-']")
+      expect(cards).toHaveLength(50)
     })
   })
 })

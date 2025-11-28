@@ -19,13 +19,10 @@ import {
   Clock,
   Terminal,
   Cpu,
-  Zap,
-  AlertTriangle
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default function MonitoringPage() {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["health"],
     queryFn: getHealth,
     refetchInterval: 30000,

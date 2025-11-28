@@ -29,7 +29,7 @@ interface VirtualListProps {
 }
 
 function Cell({ columnIndex, rowIndex, style, data }: GridChildComponentProps<CellData>) {
-  const { agents, columnCount, onView, onDelete } = data
+  const { agents, columnCount, onView, onDelete: _onDelete } = data
   const index = rowIndex * columnCount + columnIndex
 
   if (index >= agents.length) return null
@@ -38,12 +38,14 @@ function Cell({ columnIndex, rowIndex, style, data }: GridChildComponentProps<Ce
 
   return (
     <div style={style}>
-      <div className="p-4">
-        <AgentCard
-          agent={agent}
-          onView={() => onView(agent.agent_id)}
-          onDelete={() => onDelete(agent.agent_id)}
-        />
+      <div
+        className="p-4 cursor-pointer"
+        onClick={() => onView(agent.agent_id)}
+        onKeyDown={(e) => e.key === "Enter" && onView(agent.agent_id)}
+        role="button"
+        tabIndex={0}
+      >
+        <AgentCard agent={agent} />
       </div>
     </div>
   )

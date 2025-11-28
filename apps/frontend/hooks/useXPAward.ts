@@ -37,7 +37,7 @@ export function useXPAward(options?: UseXPAwardOptions) {
       if (previousAgent) {
         queryClient.setQueryData<AgentCardData>(["agent", request.agentId], {
           ...previousAgent,
-          current_xp: previousAgent.current_xp + request.amount,
+          current_xp: (previousAgent.current_xp ?? 0) + request.amount,
         })
       }
 

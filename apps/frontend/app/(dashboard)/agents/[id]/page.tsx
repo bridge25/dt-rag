@@ -32,17 +32,18 @@ export default function AgentDetailPage() {
 
   // Track level changes for automatic level up modal
   useEffect(() => {
-    if (agent && previousLevel.current !== null && agent.level > previousLevel.current) {
+    const currentLevel = agent?.level ?? 1
+    if (agent && previousLevel.current !== null && currentLevel > previousLevel.current) {
       setLevelUpData({
         oldLevel: previousLevel.current,
-        newLevel: agent.level,
-        rarity: agent.rarity,
+        newLevel: currentLevel,
+        rarity: agent.rarity ?? "Common",
       })
       setIsLevelUpModalOpen(true)
     }
 
     if (agent) {
-      previousLevel.current = agent.level
+      previousLevel.current = currentLevel
     }
   }, [agent])
 
@@ -51,7 +52,7 @@ export default function AgentDetailPage() {
       setLevelUpData({
         oldLevel,
         newLevel,
-        rarity: agent.rarity,
+        rarity: agent.rarity ?? "Common",
       })
       setIsLevelUpModalOpen(true)
     }

@@ -7,9 +7,9 @@
  * @CODE:FRONTEND-REDESIGN-001-EDGE
  */
 
-'use client'
+"use client"
 
-import { memo, useMemo } from 'react'
+import { memo, useMemo } from "react"
 
 interface Position {
   x: number
@@ -45,15 +45,15 @@ const ConstellationEdge = memo(function ConstellationEdge({
 
   // CSS classes
   const baseClasses = [
-    'constellation-edge',
-    'transition-all duration-300'
+    "constellation-edge",
+    "transition-all duration-300"
   ]
 
   if (isActive) {
-    baseClasses.push('constellation-edge-active', 'energy-beam')
+    baseClasses.push("constellation-edge-active", "energy-beam")
   }
 
-  const classString = baseClasses.join(' ')
+  const classString = baseClasses.join(" ")
 
   return (
     <>
@@ -90,7 +90,7 @@ const ConstellationEdge = memo(function ConstellationEdge({
         filter={isActive ? `url(#glow-${edgeId})` : undefined}
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeDasharray={!isActive ? '5,5' : undefined}
+        strokeDasharray={!isActive ? "5,5" : undefined}
         vectorEffect="non-scaling-stroke"
       />
     </>

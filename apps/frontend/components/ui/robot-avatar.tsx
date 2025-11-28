@@ -39,7 +39,7 @@ export const RobotAvatar = React.forwardRef<HTMLDivElement, RobotAvatarProps>(
     const [imageError, setImageError] = useState(false)
 
     const sizeClasses = sizeConfig[size]
-    const rarityConfig = RarityConfig[rarity]
+    const _rarityConfig = RarityConfig[rarity] // Prefixed with _ to indicate intentionally unused
 
     // Build the avatar container classes with rarity-based styling
     const containerClasses = cn(

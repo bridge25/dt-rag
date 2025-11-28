@@ -113,6 +113,186 @@ describe('ConstellationNode', () => {
     })
   })
 
+  describe('Hover Badge (HOVERED)', () => {
+    it('should show HOVERED badge when isHovered is true', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      expect(screen.getByTestId('hovered-badge')).toBeInTheDocument()
+    })
+
+    it('should hide HOVERED badge when isHovered is false', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={false} />)
+      expect(screen.queryByTestId('hovered-badge')).not.toBeInTheDocument()
+    })
+
+    it('should display "HOVERED" text in badge', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      expect(screen.getByText('HOVERED')).toBeInTheDocument()
+    })
+
+    it('HOVERED badge should have cyan background styling', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const badge = screen.getByTestId('hovered-badge')
+      expect(badge).toHaveClass('bg-cyan-500')
+      expect(badge).toHaveClass('text-white')
+    })
+
+    it('HOVERED badge should be uppercase and semibold', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const badge = screen.getByTestId('hovered-badge')
+      expect(badge).toHaveClass('uppercase', 'font-semibold')
+    })
+
+    it('HOVERED badge should be positioned above node', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const badge = screen.getByTestId('hovered-badge')
+      expect(badge).toHaveClass('-top-8', 'absolute')
+    })
+
+    it('HOVERED badge should be centered horizontally', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const badge = screen.getByTestId('hovered-badge')
+      expect(badge).toHaveClass('left-1/2', '-translate-x-1/2')
+    })
+
+    it('HOVERED badge should have role="status" for accessibility', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const badge = screen.getByTestId('hovered-badge')
+      expect(badge).toHaveAttribute('role', 'status')
+      expect(badge).toHaveAttribute('aria-live', 'polite')
+    })
+
+    it('HOVERED badge should not interfere with pointer events', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const badge = screen.getByTestId('hovered-badge')
+      expect(badge).toHaveClass('pointer-events-none')
+    })
+  })
+
+  describe('NODE DETAILS Tooltip', () => {
+    it('should show NODE DETAILS tooltip when isHovered is true', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      expect(screen.getByTestId('node-details-tooltip')).toBeInTheDocument()
+    })
+
+    it('should hide NODE DETAILS tooltip when isHovered is false', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={false} />)
+      expect(screen.queryByTestId('node-details-tooltip')).not.toBeInTheDocument()
+    })
+
+    it('should display "NODE DETAILS:" label in tooltip', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      expect(screen.getByText('NODE DETAILS:')).toBeInTheDocument()
+    })
+
+    it('should display "ACTIVE CONNECTIONS -" text in tooltip', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      expect(screen.getByText(/ACTIVE CONNECTIONS -/)).toBeInTheDocument()
+    })
+
+    it('should display connection count from node.connection_count', () => {
+      const nodeWithConnections: TaxonomyNode = {
+        ...defaultNode,
+        connection_count: 142
+      }
+      render(
+        <ConstellationNode {...defaultProps} node={nodeWithConnections} isHovered={true} />
+      )
+      expect(screen.getByText('142')).toBeInTheDocument()
+    })
+
+    it('should display 0 when connection_count is undefined', () => {
+      const nodeNoConnections: TaxonomyNode = {
+        ...defaultNode,
+        connection_count: undefined
+      }
+      render(
+        <ConstellationNode {...defaultProps} node={nodeNoConnections} isHovered={true} />
+      )
+      expect(screen.getByText('0')).toBeInTheDocument()
+    })
+
+    it('tooltip should be positioned to the right of node', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const tooltip = screen.getByTestId('node-details-tooltip')
+      expect(tooltip).toHaveClass('left-full', 'ml-4')
+    })
+
+    it('tooltip should be vertically centered relative to node', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const tooltip = screen.getByTestId('node-details-tooltip')
+      expect(tooltip).toHaveClass('top-1/2', '-translate-y-1/2')
+    })
+
+    it('tooltip should have glass morphism styling', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const tooltip = screen.getByTestId('node-details-tooltip')
+      expect(tooltip).toHaveClass('bg-slate-800/80', 'backdrop-blur-md')
+    })
+
+    it('tooltip should have subtle border styling', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const tooltip = screen.getByTestId('node-details-tooltip')
+      expect(tooltip).toHaveClass('border', 'border-white/10')
+    })
+
+    it('connection count should be cyan colored', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const connectionCount = screen.getByText('0')
+      expect(connectionCount).toHaveClass('text-cyan-400')
+    })
+
+    it('tooltip should have role="tooltip" for accessibility', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const tooltip = screen.getByTestId('node-details-tooltip')
+      expect(tooltip).toHaveAttribute('role', 'tooltip')
+    })
+
+    it('tooltip should not interfere with pointer events', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const tooltip = screen.getByTestId('node-details-tooltip')
+      expect(tooltip).toHaveClass('pointer-events-none')
+    })
+  })
+
+  describe('Hover State Integration', () => {
+    it('should show both HOVERED badge and NODE DETAILS tooltip simultaneously', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      expect(screen.getByTestId('hovered-badge')).toBeInTheDocument()
+      expect(screen.getByTestId('node-details-tooltip')).toBeInTheDocument()
+    })
+
+    it('should hide both hover elements when hovering ends', () => {
+      const { rerender } = render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      expect(screen.getByTestId('hovered-badge')).toBeInTheDocument()
+      expect(screen.getByTestId('node-details-tooltip')).toBeInTheDocument()
+
+      rerender(<ConstellationNode {...defaultProps} isHovered={false} />)
+      expect(screen.queryByTestId('hovered-badge')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('node-details-tooltip')).not.toBeInTheDocument()
+    })
+
+    it('should apply glow effect to node when hovered', () => {
+      render(<ConstellationNode {...defaultProps} isHovered={true} />)
+      const nodeElement = screen.getByRole('button', { name: /Root Category/ })
+      expect(nodeElement).toHaveClass('glow-pulse')
+    })
+
+    it('should support large connection counts', () => {
+      const nodeWithManyConnections: TaxonomyNode = {
+        ...defaultNode,
+        connection_count: 9999
+      }
+      render(
+        <ConstellationNode
+          {...defaultProps}
+          node={nodeWithManyConnections}
+          isHovered={true}
+        />
+      )
+      expect(screen.getByText('9999')).toBeInTheDocument()
+    })
+  })
+
   describe('Interactivity', () => {
     it('should handle click events', async () => {
       const user = userEvent.setup()

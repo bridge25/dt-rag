@@ -19,30 +19,28 @@ vi.mock("@/hooks/useAgents", () => ({
       {
         agent_id: "agent-1",
         name: "Data Analyst",
-        character_description: "Analyzes data patterns",
-        level: 24,
-        rarity: "Legendary",
-        current_xp: 2400,
-        next_level_xp: 3000,
-        total_documents: 45,
-        total_queries: 156,
-        quality_score: 98,
+        robotImage: "/robots/analyst.png",
+        progress: 80,
+        stats: {
+          users: 1245,
+          robos: 1250,
+          revenue: 12500,
+          growth: 15,
+        },
         status: "active",
-        robot: "analyst",
       },
       {
         agent_id: "agent-2",
         name: "Code Helper",
-        character_description: "Assists with code",
-        level: 18,
-        rarity: "Epic",
-        current_xp: 1800,
-        next_level_xp: 2500,
-        total_documents: 32,
-        total_queries: 89,
-        quality_score: 95,
+        robotImage: "/robots/builder.png",
+        progress: 72,
+        stats: {
+          users: 890,
+          robos: 950,
+          revenue: 9500,
+          growth: 12,
+        },
         status: "active",
-        robot: "builder",
       },
     ],
     isLoading: false,
@@ -196,8 +194,8 @@ describe("AgentsPage", () => {
 
       expect(screen.getByText("Total Agents")).toBeInTheDocument()
       expect(screen.getByText("Active Now")).toBeInTheDocument()
-      expect(screen.getByText("Total Queries")).toBeInTheDocument()
-      expect(screen.getByText("Avg Quality")).toBeInTheDocument()
+      expect(screen.getByText("Total Users")).toBeInTheDocument()
+      expect(screen.getByText("Avg Growth")).toBeInTheDocument()
     })
 
     it("should display numeric stat values", () => {
@@ -239,12 +237,22 @@ describe("AgentsPage", () => {
     })
   })
 
-  describe("Empty State", () => {
-    it("should show appropriate content when agents are loaded", async () => {
-      renderPage()
+  describe("Agent Grid Loading", () => {
+    it("should render agent cards when agents are loaded", async () => {
+      const { container } = renderPage()
 
       await waitFor(() => {
-        expect(screen.getByText("Data Analyst")).toBeInTheDocument()
+        const agents = container.querySelectorAll("[data-agent-name]")
+        expect(agents.length).toBeGreaterThan(0)
+      })
+    })
+
+    it("should display Data Analyst agent card", async () => {
+      const { container } = renderPage()
+
+      await waitFor(() => {
+        const agentCard = container.querySelector("[data-agent-name='Data Analyst']")
+        expect(agentCard).toBeInTheDocument()
       })
     })
   })

@@ -8,10 +8,10 @@
  * @CODE:FRONTEND-REDESIGN-001-NODE
  */
 
-'use client'
+"use client"
 
-import { memo, forwardRef, useCallback } from 'react'
-import type { TaxonomyNode } from '@/lib/api/types'
+import { memo, forwardRef, useCallback } from "react"
+import type { TaxonomyNode } from "@/lib/api/types"
 
 interface Position {
   x: number
@@ -43,11 +43,11 @@ const ConstellationNode = forwardRef<HTMLDivElement, ConstellationNodeProps>(
     const getSizeClass = (level: number): string => {
       switch (level) {
         case 1:
-          return 'constellation-node-root'
+          return "constellation-node-root"
         case 2:
-          return 'constellation-node-branch'
+          return "constellation-node-branch"
         default:
-          return 'constellation-node-leaf'
+          return "constellation-node-leaf"
       }
     }
 
@@ -55,25 +55,25 @@ const ConstellationNode = forwardRef<HTMLDivElement, ConstellationNodeProps>(
 
     // Build class names
     const baseClasses = [
-      'constellation-node',
+      "constellation-node",
       sizeClass,
-      'rounded-full',
-      'flex items-center justify-center',
-      'cursor-pointer',
-      'transition-all duration-300',
-      'relative',
-      'backdrop-blur-lg',
-      'border border-white/20',
-      'bg-gradient-to-br from-white/20 to-white/5',
-      'z-10'
+      "rounded-full",
+      "flex items-center justify-center",
+      "cursor-pointer",
+      "transition-all duration-300",
+      "relative",
+      "backdrop-blur-lg",
+      "border border-white/20",
+      "bg-gradient-to-br from-white/20 to-white/5",
+      "z-10"
     ]
 
     if (isSelected) {
-      baseClasses.push('selected', 'border-cyan-400', 'ring-2', 'ring-cyan-400/50')
+      baseClasses.push("selected", "border-cyan-400", "ring-2", "ring-cyan-400/50")
     }
 
     if (isHovered) {
-      baseClasses.push('hovered', 'glow-pulse')
+      baseClasses.push("hovered", "glow-pulse")
     }
 
     const handleClick = useCallback(() => {
@@ -90,7 +90,7 @@ const ConstellationNode = forwardRef<HTMLDivElement, ConstellationNodeProps>(
 
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLDivElement>) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
           onClick?.(node)
         }
@@ -102,11 +102,11 @@ const ConstellationNode = forwardRef<HTMLDivElement, ConstellationNodeProps>(
     const getSizeDimensions = (level: number): string => {
       switch (level) {
         case 1:
-          return 'w-20 h-20'
+          return "w-20 h-20"
         case 2:
-          return 'w-16 h-16'
+          return "w-16 h-16"
         default:
-          return 'w-12 h-12'
+          return "w-12 h-12"
       }
     }
 
@@ -118,21 +118,53 @@ const ConstellationNode = forwardRef<HTMLDivElement, ConstellationNodeProps>(
     return (
       <div
         ref={ref}
-        role="button"
+        role="treeitem"
         tabIndex={0}
         aria-label={ariaLabel}
         aria-selected={isSelected}
-        className={`${baseClasses.join(' ')} ${sizeStyles}`}
+        className={`${baseClasses.join(" ")} ${sizeStyles} group`}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
-          position: 'absolute'
+          position: "absolute"
         }}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onKeyDown={handleKeyDown}
       >
+        {/* HOVERED Badge - Shows above node on hover */}
+        {isHovered && (
+          <div
+            className="absolute -top-8 left-1/2 -translate-x-1/2 px-3 py-1 rounded-md bg-cyan-500 text-white text-xs font-semibold uppercase whitespace-nowrap pointer-events-none z-20"
+            role="status"
+            aria-live="polite"
+            data-testid="hovered-badge"
+          >
+            HOVERED
+          </div>
+        )}
+
+        {/* NODE DETAILS Tooltip - Shows to the right of node on hover */}
+        {isHovered && (
+          <div
+            className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-slate-800/80 backdrop-blur-md border border-white/10 rounded-lg px-4 py-3 min-w-56 pointer-events-none z-20"
+            role="tooltip"
+            aria-hidden="false"
+            data-testid="node-details-tooltip"
+          >
+            <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">
+              NODE DETAILS:
+            </div>
+            <div className="text-sm text-white">
+              ACTIVE CONNECTIONS -{" "}
+              <span className="text-cyan-400 font-semibold">
+                {node.connection_count ?? 0}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Node Content */}
         <div className="flex flex-col items-center justify-center gap-1 text-center px-2 py-1">
           {/* Node Label */}

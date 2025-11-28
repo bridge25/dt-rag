@@ -1,7 +1,8 @@
 /**
  * Sidebar navigation component
+ * Phase 2: System submenu 적용
  *
- * @CODE:FRONTEND-001
+ * @CODE:FRONTEND-REDESIGN-001-SIDEBAR
  */
 
 "use client";
@@ -10,24 +11,33 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Search,
-  FileText,
+  MessageSquare,  // Chat 아이콘 (Search 대체)
   Network,
   Bot,
+  Plug,           // Connect 아이콘
   Workflow,
   Activity,
   UserCheck,
   User,
   LogOut,
+  Settings,       // System 서브메뉴 아이콘
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SidebarSubmenu } from "./SidebarSubmenu";
 
-const navigation = [
+// 메인 네비게이션 (이벤트 플로우 순서)
+// Phase 3: Documents를 Taxonomy의 Import Knowledge로 통합
+// Phase 4: Connect 페이지 추가
+const mainNavigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Search", href: "/search", icon: Search },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Taxonomy", href: "/taxonomy", icon: Network },
-  { name: "Agents", href: "/agents", icon: Bot },
+  { name: "Taxonomy", href: "/taxonomy", icon: Network },      // 시작점: 지식 구조화 (Import Knowledge FAB 포함)
+  { name: "Agents", href: "/agents", icon: Bot },               // 탄생: 에이전트
+  { name: "Chat", href: "/search", icon: MessageSquare },       // 대화: 채팅 인터페이스
+  { name: "Connect", href: "/connect", icon: Plug },            // 연결: 외부 통합
+];
+
+// System 서브메뉴 아이템
+const systemNavigation = [
   { name: "Pipeline", href: "/pipeline", icon: Workflow },
   { name: "HITL Review", href: "/hitl", icon: UserCheck },
   { name: "Monitoring", href: "/monitoring", icon: Activity },
@@ -58,7 +68,8 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 p-4 overflow-y-auto custom-scrollbar">
-        {navigation.map((item) => {
+        {/* 메인 네비게이션 */}
+        {mainNavigation.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
           return (
@@ -72,11 +83,22 @@ export function Sidebar() {
                   : "text-white/60 hover:bg-white/5 hover:text-white hover:pl-5"
               )}
             >
-              <Icon className={cn("h-5 w-5 transition-colors", isActive ? "text-blue-400" : "text-white/60 group-hover:text-white")} />
+              <Icon className={cn("h-5 w-5 transition-colors", isActive ? "text-cyan-400" : "text-white/60 group-hover:text-white")} />
               {item.name}
             </Link>
           );
         })}
+
+        {/* 구분선 */}
+        <div className="my-3 border-t border-white/5" />
+
+        {/* System 서브메뉴 */}
+        <SidebarSubmenu
+          title="System"
+          icon={Settings}
+          items={systemNavigation}
+          defaultOpen={false}
+        />
       </nav>
 
       <div className="border-t border-white/10 p-4">

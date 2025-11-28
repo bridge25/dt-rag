@@ -288,4 +288,100 @@
   ::-webkit-scrollbar-thumb {
     @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
   }
+
+  /* ============================================
+   * Gemini Glassmorphism Guide - Phase 1
+   * 복합 글로우 + 연결선 애니메이션
+   * ============================================ */
+
+  /* React Flow Edge 점선 애니메이션 */
+  @keyframes dashdraw {
+    from { stroke-dashoffset: 10; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  .react-flow__edge.animated .react-flow__edge-path {
+    stroke-dasharray: 5 5;
+    animation: dashdraw 0.8s linear infinite;
+  }
+
+  /* 복합 글로우 - 흰색 기본 + 시안 네온 */
+  .glow-node {
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.1),
+      0 0 15px rgba(0, 247, 255, 0.3);
+  }
+
+  .glow-node-hover {
+    box-shadow:
+      0 0 15px rgba(255, 255, 255, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.7);
+  }
+
+  .glow-card {
+    box-shadow:
+      0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .glow-card-hover {
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.8);
+  }
+
+  /* 아이콘/이미지 네온 글로우 */
+  .drop-glow-icon {
+    filter: drop-shadow(0 0 8px rgba(0, 247, 255, 0.7));
+  }
+
+  .drop-glow-image {
+    filter: drop-shadow(0 0 15px rgba(0, 247, 255, 0.5));
+  }
+
+  /* 텍스트 네온 글로우 */
+  .text-glow-neon {
+    text-shadow: 0 0 5px rgba(0, 247, 255, 0.7);
+  }
+
+  /* 하단 장식 바 그라데이션 */
+  .glow-bar {
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(0, 247, 255, 0.7),
+      transparent
+    );
+  }
+
+  /* Taxonomy 노드 - Gemini 가이드 적용 */
+  .taxonomy-node-glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/30 rounded-full;
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.1),
+      0 0 15px rgba(0, 247, 255, 0.3);
+    transition: all 0.3s ease-in-out;
+  }
+
+  .taxonomy-node-glass:hover,
+  .taxonomy-node-glass.hovered {
+    @apply border-cyan-400/60 bg-cyan-400/20;
+    box-shadow:
+      0 0 15px rgba(255, 255, 255, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.7);
+  }
+
+  /* Agent Card - Gemini 가이드 적용 */
+  .agent-card-glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl;
+    @apply relative overflow-hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out;
+  }
+
+  .agent-card-glass:hover {
+    @apply border-cyan-400/50;
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.8);
+  }
 }

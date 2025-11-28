@@ -8,7 +8,6 @@
 
 import { useState, useEffect } from "react"
 import { getHITLTasks, submitHITLReview, type HITLTask } from "@/lib/api"
-import { IconBadge } from "@/components/ui/icon-badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -81,19 +80,20 @@ export default function HITLPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-dark-navy relative overflow-hidden p-8">
-      {/* Ambient Background */}
-      <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-accent-glow-orange/5 blur-[100px] rounded-full pointer-events-none" />
+    <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden p-8">
+      {/* Ambient Background - Cyan Nebula */}
+      <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-purple-500/5 blur-[100px] rounded-full pointer-events-none" />
 
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md">
-                <ClipboardCheck className="w-6 h-6 text-accent-glow-orange" />
+              <div className="p-2 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(0,247,255,0.2)]">
+                <ClipboardCheck className="w-6 h-6 text-cyan-400" />
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-white">Decision Interface</h1>
+              <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(0,247,255,0.3)]">Decision Interface</h1>
             </div>
             <p className="text-gray-400 max-w-xl">
               Human-in-the-Loop review queue for low-confidence classifications.
@@ -114,15 +114,15 @@ export default function HITLPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
             <div className="relative">
-              <div className="absolute inset-0 bg-accent-glow-orange/20 blur-xl rounded-full" />
-              <RefreshCw className="relative h-12 w-12 text-accent-glow-orange animate-spin" />
+              <div className="absolute inset-0 bg-cyan-400/20 blur-xl rounded-full" />
+              <RefreshCw className="relative h-12 w-12 text-cyan-400 drop-shadow-[0_0_10px_rgba(0,247,255,0.6)] animate-spin" />
             </div>
             <p className="mt-6 text-lg font-medium text-white">Retrieving tasks...</p>
           </div>
         ) : tasks.length === 0 ? (
           <div className="text-center py-24 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
-            <div className="inline-flex p-6 rounded-full bg-accent-glow-green/10 border border-accent-glow-green/20 mb-6">
-              <CheckCircle2 className="h-12 w-12 text-accent-glow-green" />
+            <div className="inline-flex p-6 rounded-full bg-green-400/10 border border-green-400/20 mb-6 shadow-[0_0_20px_rgba(74,222,128,0.3)]">
+              <CheckCircle2 className="h-12 w-12 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
             </div>
             <h2 className="text-3xl font-bold text-white mb-2">Queue Cleared</h2>
             <p className="text-lg text-gray-400">All classification tasks have been processed.</p>
@@ -133,7 +133,7 @@ export default function HITLPage() {
             <div className="lg:col-span-1 space-y-4">
               <div className="flex items-center justify-between px-2">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Pending Reviews</h3>
-                <span className="px-2 py-0.5 rounded-full bg-accent-glow-orange/10 text-xs font-mono text-accent-glow-orange border border-accent-glow-orange/20">
+                <span className="px-2 py-0.5 rounded-full bg-cyan-400/10 text-xs font-mono text-cyan-400 border border-cyan-400/20 shadow-[0_0_8px_rgba(0,247,255,0.3)]">
                   {tasks.length} TASKS
                 </span>
               </div>
@@ -149,8 +149,8 @@ export default function HITLPage() {
                       className={cn(
                         "group relative p-4 rounded-xl border transition-all duration-300 cursor-pointer hover:-translate-y-0.5",
                         isSelected
-                          ? "bg-accent-glow-orange/10 border-accent-glow-orange/50 shadow-[0_0_20px_rgba(249,115,22,0.1)]"
-                          : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10"
+                          ? "bg-cyan-400/10 border-cyan-400/50 shadow-[0_0_20px_rgba(0,247,255,0.2)]"
+                          : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-cyan-400/30"
                       )}
                       onClick={() => {
                         setSelectedTask(task)
@@ -182,12 +182,12 @@ export default function HITLPage() {
                           <span className="text-[10px] text-gray-500 uppercase">Confidence</span>
                           <div className="h-1 w-16 bg-white/10 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-accent-glow-orange"
+                              className="h-full bg-cyan-400 shadow-[0_0_4px_rgba(0,247,255,0.5)]"
                               style={{ width: `${task.confidence * 100}%` }}
                             />
                           </div>
                         </div>
-                        <span className="text-xs font-mono text-accent-glow-orange">
+                        <span className="text-xs font-mono text-cyan-400 drop-shadow-[0_0_4px_rgba(0,247,255,0.5)]">
                           {(task.confidence * 100).toFixed(0)}%
                         </span>
                       </div>
@@ -204,8 +204,8 @@ export default function HITLPage() {
                   {/* Review Header */}
                   <div className="px-8 py-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-accent-glow-orange/10 border border-accent-glow-orange/20">
-                        <GitPullRequest className="w-5 h-5 text-accent-glow-orange" />
+                      <div className="p-2 rounded-lg bg-cyan-400/10 border border-cyan-400/20 shadow-[0_0_10px_rgba(0,247,255,0.2)]">
+                        <GitPullRequest className="w-5 h-5 text-cyan-400" />
                       </div>
                       <div>
                         <h2 className="text-lg font-bold text-white">Review Task</h2>
@@ -236,7 +236,7 @@ export default function HITLPage() {
                               {idx > 0 && <ArrowRight className="w-4 h-4 text-gray-600" />}
                               <span className={cn(
                                 "px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors",
-                                "bg-accent-glow-blue/10 text-accent-glow-blue border-accent-glow-blue/20"
+                                "bg-cyan-400/10 text-cyan-400 border-cyan-400/20 shadow-[0_0_6px_rgba(0,247,255,0.2)]"
                               )}>
                                 {part}
                               </span>
@@ -253,7 +253,7 @@ export default function HITLPage() {
                         <Textarea
                           value={reviewerNotes}
                           onChange={(e) => setReviewerNotes(e.target.value)}
-                          className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 min-h-[100px] focus:border-accent-glow-orange/50"
+                          className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 min-h-[100px] focus:border-cyan-400/50 focus:shadow-[0_0_10px_rgba(0,247,255,0.2)]"
                           placeholder="Add context for your decision..."
                         />
                       </div>
@@ -275,7 +275,7 @@ export default function HITLPage() {
                         <Button
                           onClick={handleSubmitReview}
                           disabled={submitting || selectedPath.length === 0}
-                          className="h-14 bg-accent-glow-orange hover:bg-accent-glow-orange/90 text-white shadow-lg shadow-accent-glow-orange/20"
+                          className="h-14 bg-gradient-to-r from-cyan-500 to-purple-500 hover:opacity-90 text-white shadow-lg shadow-cyan-500/20 hover:shadow-[0_0_20px_rgba(0,247,255,0.4)]"
                         >
                           {submitting ? (
                             <RefreshCw className="w-5 h-5 animate-spin mr-2" />

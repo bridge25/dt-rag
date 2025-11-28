@@ -14,15 +14,13 @@ import type { AgentCardData } from "./types"
 
 interface AgentCardGridProps {
   agents: AgentCardData[]
-  onView: (agent: AgentCardData) => void
-  onDelete: (agent: AgentCardData) => void
   className?: string
 }
 
 const AgentCardGridComponent = React.forwardRef<
   HTMLDivElement,
   AgentCardGridProps
->(({ agents, onView, onDelete, className }, ref) => {
+>(({ agents, className }, ref) => {
   const isEmpty = agents.length === 0
 
   return (
@@ -48,14 +46,15 @@ const AgentCardGridComponent = React.forwardRef<
           </div>
         </div>
       ) : (
-        // Agent cards grid
+        // Agent cards grid - 5 columns on desktop per design
         <div
           className={cn(
             "grid",
             "grid-cols-1",
             "sm:grid-cols-2",
-            "lg:grid-cols-3",
-            "xl:grid-cols-4",
+            "md:grid-cols-3",
+            "lg:grid-cols-4",
+            "xl:grid-cols-5",
             "gap-4",
             "w-full"
           )}
@@ -76,11 +75,7 @@ const AgentCardGridComponent = React.forwardRef<
                   opacity: 0,
                 }}
               >
-                <AgentCard
-                  agent={agent}
-                  onView={() => onView(agent)}
-                  onDelete={() => onDelete(agent)}
-                />
+                <AgentCard agent={agent} />
               </div>
             )
           })}
@@ -115,14 +110,14 @@ const arePropsEqual = (
     return false
   }
 
-  // Check if agent IDs are the same
-  const prevIds = prevProps.agents.map((a) => a.agent_id).join(",")
-  const nextIds = nextProps.agents.map((a) => a.agent_id).join(",")
-
-  return (
-    prevIds === nextIds &&
-    prevProps.className === nextProps.className
-  )
+  // Check if agent IDs and progress are the same
+  return prevProps.agents.every((agent, index) => {
+    const nextAgent = nextProps.agents[index]
+    return (
+      agent.agent_id === nextAgent.agent_id &&
+      agent.progress === nextAgent.progress
+    )
+  }) && prevProps.className === nextProps.className
 }
 
 export const AgentCardGrid = memo(AgentCardGridComponent, arePropsEqual)

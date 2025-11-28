@@ -20,9 +20,10 @@ interface LevelEvent {
 
 export function LevelUpTimeline({ agent }: LevelUpTimelineProps) {
   // Generate level events based on current level
-  const events: LevelEvent[] = Array.from({ length: agent.level }, (_, i) => ({
+  const agentLevel = agent.level ?? 1
+  const events: LevelEvent[] = Array.from({ length: agentLevel }, (_, i) => ({
     level: i + 1,
-    date: agent.created_at,
+    date: agent.created_at ?? new Date().toISOString(),
     xp: i * 100,
   }))
 

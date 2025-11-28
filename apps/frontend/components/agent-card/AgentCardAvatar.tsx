@@ -1,8 +1,8 @@
-import { memo } from "react"
+import { memo, useState } from "react"
+import Image from "next/image"
 import * as LucideIcons from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Rarity } from "./types"
-import { getDefaultAvatarIcon } from "./types"
 
 interface AgentCardAvatarProps {
   agentId: string
@@ -34,8 +34,16 @@ export const AgentCardAvatar = memo<AgentCardAvatarProps>(
     avatarUrl,
     className,
   }) {
-    // Use DiceBear as a high-quality fallback if no custom URL is provided
-    const displayUrl = avatarUrl || `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${agentId}&backgroundColor=transparent`
+    const [hasError, setHasError] = useState(false)
+
+    // Default fallback to local robot images based on rarity
+    const getFallbackImage = () => {
+      const rarityPath = rarity.toLowerCase()
+      const index = (parseInt(agentId.replace(/\D/g, ""), 10) % 4) + 1
+      return `/assets/agents/nobg/${rarityPath}/robot-${rarityPath}-0${index}.png`
+    }
+
+    const displayUrl = avatarUrl || getFallbackImage()
 
     return (
       <div
@@ -57,25 +65,22 @@ export const AgentCardAvatar = memo<AgentCardAvatarProps>(
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         <div className="relative h-full w-full p-4 flex items-center justify-center">
-          <img
-            src={displayUrl}
-            alt={`${agentName} character`}
-            className={cn(
-              "w-full h-full object-contain drop-shadow-2xl transition-transform duration-500",
-              "group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-            )}
-            loading="lazy"
-            onError={(e) => {
-              // Fallback to Lucide icon if image fails
-              e.currentTarget.style.display = "none"
-              e.currentTarget.nextElementSibling?.classList.remove("hidden")
-            }}
-          />
-
-          {/* Fallback Icon (Hidden by default, shown on error) */}
-          <div className="hidden absolute inset-0 flex items-center justify-center">
+          {!hasError ? (
+            <Image
+              src={displayUrl}
+              alt={`${agentName} character`}
+              fill
+              sizes="(max-width: 768px) 50vw, 192px"
+              className={cn(
+                "object-contain drop-shadow-2xl transition-transform duration-500",
+                "group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+              )}
+              onError={() => setHasError(true)}
+            />
+          ) : (
+            /* Fallback Icon when image fails to load */
             <LucideIcons.Bot className="w-20 h-20 text-white/20" />
-          </div>
+          )}
         </div>
       </div>
     )

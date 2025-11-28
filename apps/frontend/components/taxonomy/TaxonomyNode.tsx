@@ -29,8 +29,9 @@ const TaxonomyNode = forwardRef<HTMLDivElement, TaxonomyNodeProps>(
     return (
       <div
         ref={ref}
-        role="button"
+        role="treeitem"
         tabIndex={0}
+        aria-selected={selected}
         className={`
           min-w-[150px] rounded-lg border-2 bg-white px-4 py-3 shadow-md
           transition-all duration-200 hover:shadow-lg
@@ -38,7 +39,6 @@ const TaxonomyNode = forwardRef<HTMLDivElement, TaxonomyNodeProps>(
           ${selected ? "ring-2 ring-blue-500 border-blue-400" : "border-gray-300"}
         `}
         aria-label={`Taxonomy node: ${taxonomyNode.name}, Level ${taxonomyNode.level}, ${documentCount} documents`}
-        aria-selected={selected}
       >
         <Handle type="target" position={Position.Top} />
 
