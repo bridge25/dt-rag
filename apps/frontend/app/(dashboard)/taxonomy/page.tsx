@@ -29,12 +29,16 @@ import {
   useReactFlow,
   ReactFlowProvider,
   MarkerType,
+  type NodeMouseHandler,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
-import { Network, Loader2, Sparkles, ZoomIn, ZoomOut, Filter, Settings, ChevronRight, Upload } from "lucide-react";
+import { Network, Loader2, Sparkles, ZoomIn, ZoomOut, Filter, Settings, ChevronRight, Upload, Bot, X } from "lucide-react";
 import { ImportKnowledgeModal } from "@/components/taxonomy/ImportKnowledgeModal";
+import { TaxonomyVersionPanel } from "@/components/taxonomy/TaxonomyVersionPanel";
+import { AgentCreationModal } from "@/components/taxonomy/AgentCreationModal";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/context";
 
 import { getTaxonomyTree } from "@/lib/api";
 import { TaxonomyGraphNode, TaxonomyNodeData } from "@/components/taxonomy/TaxonomyGraphNode";
@@ -182,6 +186,7 @@ const transformDataToGraph = (data: any[]) => {
 
 // Control Panel Component (React Flow 함수 연결)
 function TaxonomyControlPanel() {
+  const { t } = useTranslation();
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   const [dataDensity, setDataDensity] = useState(50);
 
@@ -200,7 +205,7 @@ function TaxonomyControlPanel() {
         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-xs font-medium text-gray-200 uppercase tracking-wider hover:bg-white/10 transition-colors"
       >
         <ZoomIn size={18} className="opacity-80" />
-        <span className="flex-1 text-left">Zoom In</span>
+        <span className="flex-1 text-left">{t("taxonomy.zoomIn")}</span>
       </button>
 
       {/* Zoom Out */}
@@ -209,7 +214,7 @@ function TaxonomyControlPanel() {
         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-xs font-medium text-gray-200 uppercase tracking-wider hover:bg-white/10 transition-colors"
       >
         <ZoomOut size={18} className="opacity-80" />
-        <span className="flex-1 text-left">Zoom Out</span>
+        <span className="flex-1 text-left">{t("taxonomy.zoomOut")}</span>
       </button>
 
       {/* Filter */}
@@ -217,7 +222,7 @@ function TaxonomyControlPanel() {
         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-xs font-medium text-gray-200 uppercase tracking-wider hover:bg-white/10 transition-colors"
       >
         <Filter size={18} className="opacity-80" />
-        <span className="flex-1 text-left">Filter</span>
+        <span className="flex-1 text-left">{t("common.filter")}</span>
         <ChevronRight size={14} className="opacity-60" />
       </button>
 
@@ -226,7 +231,7 @@ function TaxonomyControlPanel() {
         className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-xs font-medium text-gray-200 uppercase tracking-wider hover:bg-white/10 transition-colors"
       >
         <Settings size={18} className="opacity-80" />
-        <span className="flex-1 text-left">Settings</span>
+        <span className="flex-1 text-left">{t("common.settings")}</span>
         <ChevronRight size={14} className="opacity-60" />
       </button>
 
@@ -236,7 +241,7 @@ function TaxonomyControlPanel() {
       {/* Data Density Slider */}
       <div className="space-y-2 pt-1">
         <label className="block text-xs font-medium text-gray-300 uppercase tracking-wider">
-          Data Density
+          {t("taxonomy.dataDensity")}
         </label>
         <input
           type="range"
@@ -255,7 +260,7 @@ function TaxonomyControlPanel() {
             "[&::-webkit-slider-thumb]:shadow-[0_0_5px_rgba(0,247,255,0.7)]"
           )}
         />
-        <div className="text-xs text-gray-400">Density: {dataDensity}%</div>
+        <div className="text-xs text-gray-400">{t("taxonomy.density")}: {dataDensity}%</div>
       </div>
 
       {/* Fit View Button */}
@@ -263,14 +268,21 @@ function TaxonomyControlPanel() {
         onClick={() => fitView({ duration: 500, padding: 0.2 })}
         className="w-full mt-2 px-3 py-2 rounded-lg text-xs font-medium text-cyan-400 uppercase tracking-wider hover:bg-cyan-400/10 border border-cyan-400/30 transition-colors"
       >
-        Fit to View
+        {t("taxonomy.fitToView")}
       </button>
     </div>
   );
 }
 
 // Main Taxonomy Flow Component
-function TaxonomyFlow({ initialNodes, initialEdges }: { initialNodes: Node[]; initialEdges: Edge[] }) {
+interface TaxonomyFlowProps {
+  initialNodes: Node[];
+  initialEdges: Edge[];
+  onNodeSelect?: (nodeId: string | null, nodePath: string[]) => void;
+  selectedNodeId?: string | null;
+}
+
+function TaxonomyFlow({ initialNodes, initialEdges, onNodeSelect, selectedNodeId }: TaxonomyFlowProps) {
   const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -279,13 +291,58 @@ function TaxonomyFlow({ initialNodes, initialEdges }: { initialNodes: Node[]; in
     [setEdges]
   );
 
+  // Build path from root to target node using edges
+  const buildPathToNode = useCallback((targetId: string): string[] => {
+    const path: string[] = [];
+    const nodeMap = new Map(initialNodes.map(n => [n.id, n]));
+
+    // Build parent map from edges
+    const parentMap = new Map<string, string>();
+    initialEdges.forEach(edge => {
+      parentMap.set(edge.target, edge.source);
+    });
+
+    // Traverse from target to root
+    let currentId: string | undefined = targetId;
+    while (currentId) {
+      const node = nodeMap.get(currentId);
+      if (node) {
+        path.unshift((node.data as TaxonomyNodeData).label);
+      }
+      currentId = parentMap.get(currentId);
+    }
+
+    return path;
+  }, [initialNodes, initialEdges]);
+
+  // Handle node click for selection
+  const onNodeClick: NodeMouseHandler = useCallback((event, node) => {
+    if (selectedNodeId === node.id) {
+      // Deselect if clicking the same node
+      onNodeSelect?.(null, []);
+    } else {
+      // Select new node and build path
+      const path = buildPathToNode(node.id);
+      onNodeSelect?.(node.id, path);
+    }
+  }, [selectedNodeId, onNodeSelect, buildPathToNode]);
+
+  // Update node selection state
+  const nodesWithSelection = useMemo(() => {
+    return nodes.map(node => ({
+      ...node,
+      selected: node.id === selectedNodeId,
+    }));
+  }, [nodes, selectedNodeId]);
+
   return (
     <ReactFlow
-      nodes={nodes}
+      nodes={nodesWithSelection}
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={onConnect}
+      onNodeClick={onNodeClick}
       nodeTypes={nodeTypes as any}
       fitView
       minZoom={0.1}
@@ -316,7 +373,41 @@ function TaxonomyFlow({ initialNodes, initialEdges }: { initialNodes: Node[]; in
 
 // Page Component
 export default function TaxonomyPage() {
+  const { t } = useTranslation();
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showAgentModal, setShowAgentModal] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState("1.8.1");
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodePath, setSelectedNodePath] = useState<string[]>([]);
+
+  // Handle taxonomy version rollback
+  const handleRollback = useCallback(async (version: string) => {
+    // TODO: Call API to rollback taxonomy version
+    console.log("Rolling back to version:", version);
+    setCurrentVersion(version);
+    // Trigger refetch of taxonomy data with the rolled back version
+  }, []);
+
+  // Handle node selection
+  const handleNodeSelect = useCallback((nodeId: string | null, nodePath: string[]) => {
+    setSelectedNodeId(nodeId);
+    setSelectedNodePath(nodePath);
+  }, []);
+
+  // Handle agent creation
+  const handleCreateAgent = useCallback(async (agent: {
+    name: string;
+    taxonomy_scope: string[];
+    rarity: string;
+    avatar: string;
+  }) => {
+    console.log("Creating agent:", agent);
+    // TODO: Call API to create agent
+    // After creation, navigate to agents page or show success toast
+    setShowAgentModal(false);
+    setSelectedNodeId(null);
+    setSelectedNodePath([]);
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["taxonomy"],
@@ -345,102 +436,174 @@ export default function TaxonomyPage() {
             <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-xl animate-pulse" />
             <Loader2 className="h-12 w-12 animate-spin text-cyan-400 relative z-10" />
           </div>
-          <p className="text-gray-400 animate-pulse">Mapping the constellation...</p>
+          <p className="text-gray-400 animate-pulse">{t("taxonomy.loadingMessage")}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] w-full relative overflow-hidden bg-[#050a15]">
-      {/* Space Nebula Background - 뉴디자인2 스타일 */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Deep space base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0f1a] via-[#0d1425] to-[#050a15]" />
+    <div className="h-[calc(100vh-4rem)] w-full flex overflow-hidden bg-[#050a15]">
+      {/* Main Content Area */}
+      <div className="flex-1 relative overflow-hidden">
+        {/* Space Nebula Background - 뉴디자인2 스타일 */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Deep space base gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0f1a] via-[#0d1425] to-[#050a15]" />
 
-        {/* Purple nebula - top right */}
-        <div
-          className="absolute -top-20 -right-20 w-[600px] h-[600px] rounded-full opacity-30 blur-3xl"
-          style={{ background: "radial-gradient(circle, rgba(139,92,246,0.4) 0%, rgba(139,92,246,0.1) 50%, transparent 70%)" }}
-        />
+          {/* Purple nebula - top right */}
+          <div
+            className="absolute -top-20 -right-20 w-[600px] h-[600px] rounded-full opacity-30 blur-3xl"
+            style={{ background: "radial-gradient(circle, rgba(139,92,246,0.4) 0%, rgba(139,92,246,0.1) 50%, transparent 70%)" }}
+          />
 
-        {/* Cyan nebula - bottom left */}
-        <div
-          className="absolute -bottom-40 -left-20 w-[500px] h-[500px] rounded-full opacity-25 blur-3xl"
-          style={{ background: "radial-gradient(circle, rgba(0,247,255,0.3) 0%, rgba(0,247,255,0.1) 50%, transparent 70%)" }}
-        />
+          {/* Cyan nebula - bottom left */}
+          <div
+            className="absolute -bottom-40 -left-20 w-[500px] h-[500px] rounded-full opacity-25 blur-3xl"
+            style={{ background: "radial-gradient(circle, rgba(0,247,255,0.3) 0%, rgba(0,247,255,0.1) 50%, transparent 70%)" }}
+          />
 
-        {/* Pink/magenta nebula - center */}
-        <div
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-15 blur-3xl"
-          style={{ background: "radial-gradient(ellipse, rgba(236,72,153,0.3) 0%, rgba(168,85,247,0.1) 50%, transparent 70%)" }}
-        />
+          {/* Pink/magenta nebula - center */}
+          <div
+            className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-15 blur-3xl"
+            style={{ background: "radial-gradient(ellipse, rgba(236,72,153,0.3) 0%, rgba(168,85,247,0.1) 50%, transparent 70%)" }}
+          />
 
-        {/* Stars layer - tiny dots */}
-        <div className="absolute inset-0 opacity-60"
-          style={{
-            backgroundImage: `
-              radial-gradient(1px 1px at 20px 30px, white, transparent),
-              radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
-              radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.6), transparent),
-              radial-gradient(1px 1px at 90px 40px, white, transparent),
-              radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.7), transparent),
-              radial-gradient(1.5px 1.5px at 160px 120px, rgba(0,247,255,0.9), transparent),
-              radial-gradient(1px 1px at 200px 150px, white, transparent),
-              radial-gradient(1.5px 1.5px at 250px 50px, rgba(139,92,246,0.9), transparent),
-              radial-gradient(1px 1px at 300px 100px, rgba(255,255,255,0.8), transparent),
-              radial-gradient(1px 1px at 350px 200px, white, transparent)
-            `,
-            backgroundSize: "400px 300px",
-          }}
-        />
-      </div>
+          {/* Stars layer - tiny dots */}
+          <div className="absolute inset-0 opacity-60"
+            style={{
+              backgroundImage: `
+                radial-gradient(1px 1px at 20px 30px, white, transparent),
+                radial-gradient(1px 1px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 50px 160px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 90px 40px, white, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1.5px 1.5px at 160px 120px, rgba(0,247,255,0.9), transparent),
+                radial-gradient(1px 1px at 200px 150px, white, transparent),
+                radial-gradient(1.5px 1.5px at 250px 50px, rgba(139,92,246,0.9), transparent),
+                radial-gradient(1px 1px at 300px 100px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 350px 200px, white, transparent)
+              `,
+              backgroundSize: "400px 300px",
+            }}
+          />
+        </div>
 
-      {/* Header Overlay */}
-      <div className="absolute top-6 left-8 z-20 pointer-events-none">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-slate-800/60 backdrop-blur-xl border border-white/10">
-            {/* Gemini Guide: 아이콘 네온 글로우 */}
-            <Network className="h-6 w-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,247,255,0.7)]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+        {/* Header Overlay */}
+        <div className="absolute top-6 left-8 right-8 z-20 flex items-start justify-between pointer-events-none">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-xl bg-slate-800/60 backdrop-blur-xl border border-white/10">
               {/* Gemini Guide: 아이콘 네온 글로우 */}
-              <Sparkles className="w-5 h-5 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
-              Taxonomy Constellation
-            </h1>
-            <p className="text-sm text-gray-400">
-              Interactive knowledge graph • {initialNodes.length} nodes • Scroll to zoom, drag to pan
-            </p>
+              <Network className="h-6 w-6 text-cyan-400 drop-shadow-[0_0_8px_rgba(0,247,255,0.7)]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                {/* Gemini Guide: 아이콘 네온 글로우 */}
+                <Sparkles className="w-5 h-5 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
+                {t("taxonomy.title")}
+              </h1>
+              <p className="text-sm text-gray-400">
+                {t("taxonomy.subtitle")} • {initialNodes.length} {t("taxonomy.nodes")} • v{currentVersion}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* React Flow Graph */}
+        <ReactFlowProvider>
+          <TaxonomyFlow
+            initialNodes={initialNodes}
+            initialEdges={initialEdges}
+            selectedNodeId={selectedNodeId}
+            onNodeSelect={handleNodeSelect}
+          />
+        </ReactFlowProvider>
+
+        {/* Ambient glow effect */}
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(11,17,33,0.6)_100%)]" />
+
+        {/* Selected Node Indicator & Create Agent Button - Bottom Right */}
+        <div className="absolute bottom-8 right-8 z-30 flex flex-col items-end gap-3">
+          {/* Selection Indicator */}
+          {selectedNodeId && selectedNodePath.length > 0 && (
+            <div
+              className={cn(
+                "flex items-center gap-3 px-4 py-3",
+                "bg-slate-800/90 backdrop-blur-xl",
+                "border border-cyan-400/30 rounded-xl",
+                "shadow-lg shadow-cyan-500/20",
+                "animate-in fade-in slide-in-from-bottom-2 duration-200"
+              )}
+            >
+              <div className="flex-1">
+                <div className="text-xs text-cyan-400 font-medium uppercase tracking-wider mb-1">
+                  {t("taxonomy.nodeSelected")}
+                </div>
+                <div className="text-sm text-white font-medium">
+                  /{selectedNodePath.join("/")}
+                </div>
+              </div>
+              <button
+                onClick={() => handleNodeSelect(null, [])}
+                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-white/60" />
+              </button>
+            </div>
+          )}
+
+          {/* FAB Buttons Row */}
+          <div className="flex items-center gap-3">
+            {/* Create Agent Button - Only visible when node selected */}
+            {selectedNodeId && (
+              <button
+                onClick={() => setShowAgentModal(true)}
+                className={cn(
+                  "flex items-center gap-2 px-5 py-3",
+                  "bg-gradient-to-r from-purple-500 to-pink-500",
+                  "text-white font-semibold text-sm",
+                  "rounded-full shadow-lg",
+                  "transition-all duration-300 ease-out",
+                  "hover:scale-105 hover:shadow-[0_0_25px_rgba(168,85,247,0.5)]",
+                  "active:scale-95",
+                  "animate-in fade-in slide-in-from-bottom-2 duration-200"
+                )}
+              >
+                <Bot className="w-5 h-5" />
+                {t("taxonomy.createAgent")}
+              </button>
+            )}
+
+            {/* Import Knowledge Button */}
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className={cn(
+                "flex items-center gap-2 px-5 py-3",
+                "bg-gradient-to-r from-cyan-500 to-purple-500",
+                "text-white font-semibold text-sm",
+                "rounded-full shadow-lg",
+                "transition-all duration-300 ease-out",
+                "hover:scale-105 hover:shadow-[0_0_25px_rgba(0,247,255,0.5)]",
+                "active:scale-95"
+              )}
+            >
+              <Upload className="w-5 h-5" />
+              {t("taxonomy.importKnowledge")}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* React Flow Graph */}
-      <ReactFlowProvider>
-        <TaxonomyFlow initialNodes={initialNodes} initialEdges={initialEdges} />
-      </ReactFlowProvider>
-
-      {/* Ambient glow effect */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,rgba(11,17,33,0.6)_100%)]" />
-
-      {/* FAB - Import Knowledge Button (우측 하단 고정) */}
-      <button
-        onClick={() => setShowUploadModal(true)}
-        className={cn(
-          "absolute bottom-8 right-8 z-30",
-          "flex items-center gap-2 px-5 py-3",
-          "bg-gradient-to-r from-cyan-500 to-purple-500",
-          "text-white font-semibold text-sm",
-          "rounded-full shadow-lg",
-          "transition-all duration-300 ease-out",
-          "hover:scale-105 hover:shadow-[0_0_25px_rgba(0,247,255,0.5)]",
-          "active:scale-95"
-        )}
-      >
-        <Upload className="w-5 h-5" />
-        Import Knowledge
-      </button>
+      {/* Version History Side Panel */}
+      <TaxonomyVersionPanel
+        currentVersion={currentVersion}
+        onVersionChange={(version) => {
+          setCurrentVersion(version);
+          // TODO: Trigger taxonomy data refetch with selected version
+        }}
+        onRollback={handleRollback}
+        className="h-full"
+      />
 
       {/* Import Knowledge Modal */}
       <ImportKnowledgeModal
@@ -450,6 +613,14 @@ export default function TaxonomyPage() {
           console.log("Upload completed:", results);
           // TODO: Trigger taxonomy refresh after upload
         }}
+      />
+
+      {/* Agent Creation Modal */}
+      <AgentCreationModal
+        isOpen={showAgentModal}
+        onClose={() => setShowAgentModal(false)}
+        taxonomyPath={selectedNodePath}
+        onCreateAgent={handleCreateAgent}
       />
     </div>
   );
