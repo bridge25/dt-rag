@@ -1,7 +1,8 @@
 /**
- * Application providers for React Query and theme management
+ * Application providers for React Query, theme management, and i18n
  *
  * @CODE:FRONTEND-001
+ * @CODE:FRONTEND-REDESIGN-001
  */
 
 "use client";
@@ -10,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
+import { I18nProvider } from "@/lib/i18n/context";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -29,8 +31,10 @@ export function Providers({ children }: { children: ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        {children}
-        <Toaster richColors position="top-right" />
+        <I18nProvider defaultLanguage="en">
+          {children}
+          <Toaster richColors position="top-right" />
+        </I18nProvider>
       </NextThemesProvider>
     </QueryClientProvider>
   );
