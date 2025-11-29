@@ -12,6 +12,7 @@ import { RobotAvatar } from "../robot-avatar"
 // Mock Next.js Image component
 vi.mock("next/image", () => ({
   default: ({ src, alt, ...props }: any) => (
+    // eslint-disable-next-line @next/next/no-img-element -- intentional mock for testing
     <img src={src} alt={alt} data-testid="robot-avatar-img" {...props} />
   ),
 }))

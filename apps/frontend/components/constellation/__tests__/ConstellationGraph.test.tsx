@@ -253,7 +253,7 @@ describe('ConstellationGraph', () => {
 
       // Should be back to identity transform (1, 0)
       const transform = container.style.transform
-      expect(transform).toMatch(/scale\(1\)/) || expect(transform).toBe('none')
+      expect(transform === 'none' || /scale\(1\)/.test(transform)).toBe(true)
     })
 
     it('should have zoom limits', async () => {
@@ -342,8 +342,8 @@ describe('ConstellationGraph', () => {
       const onNodeSelect = vi.fn()
       render(<ConstellationGraph {...defaultProps} onNodeSelect={onNodeSelect} />)
 
-      const rootButton = screen.getByText('Root').closest('[role="button"]')!
-      rootButton.focus()
+      const rootButton = screen.getByText('Root').closest('[role="button"]') as HTMLElement
+      rootButton?.focus()
 
       await user.keyboard('{ArrowDown}')
       // Should move to next node
@@ -354,8 +354,8 @@ describe('ConstellationGraph', () => {
       const user = userEvent.setup()
       render(<ConstellationGraph {...defaultProps} onNodeSelect={vi.fn()} />)
 
-      const rootButton = screen.getByText('Root').closest('[role="button"]')!
-      rootButton.focus()
+      const rootButton = screen.getByText('Root').closest('[role="button"]') as HTMLElement
+      rootButton?.focus()
 
       await user.keyboard('{Tab}')
       expect(document.activeElement).not.toBe(rootButton)
@@ -445,10 +445,10 @@ describe('ConstellationGraph', () => {
 
     it('should support keyboard-only navigation', async () => {
       const user = userEvent.setup()
-      const { container } = render(<ConstellationGraph {...defaultProps} onNodeSelect={vi.fn()} />)
+      render(<ConstellationGraph {...defaultProps} onNodeSelect={vi.fn()} />)
 
-      const rootButton = screen.getByText('Root').closest('[role="button"]')!
-      rootButton.focus()
+      const rootButton = screen.getByText('Root').closest('[role="button"]') as HTMLElement
+      rootButton?.focus()
 
       await user.keyboard('{Enter}')
       expect(rootButton).toHaveClass('selected')

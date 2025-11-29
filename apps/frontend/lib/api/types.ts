@@ -445,6 +445,8 @@ export const AgentCardDataSchema = z.object({
   stats: AgentStatsSchema,
   status: z.string().min(1).default("active"),
   created_at: z.string().optional(),
+  // Taxonomy scope for filtering search results
+  taxonomy_scope: z.array(z.string()).optional(),
   // Gamification fields (optional for backward compatibility)
   level: z.number().int().min(1).default(1).optional(),
   rarity: RaritySchema.default("Common").optional(),

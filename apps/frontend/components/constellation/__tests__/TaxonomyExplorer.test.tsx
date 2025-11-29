@@ -218,8 +218,9 @@ describe('TaxonomyExplorer', () => {
     it('should have accessible search input', () => {
       render(<TaxonomyExplorer {...defaultProps} />)
       const searchInput = screen.getByPlaceholderText(/search/i)
-      expect(searchInput).toHaveAttribute('aria-label') ||
-      expect(searchInput).toHaveAttribute('name')
+      const hasAriaLabel = searchInput.hasAttribute('aria-label')
+      const hasName = searchInput.hasAttribute('name')
+      expect(hasAriaLabel || hasName).toBe(true)
     })
 
     it('should have ARIA labels on buttons', () => {

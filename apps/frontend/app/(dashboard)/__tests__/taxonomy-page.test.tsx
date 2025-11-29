@@ -183,7 +183,7 @@ describe("TaxonomyPage", () => {
 
   describe("Accessibility", () => {
     it("should render without console errors", async () => {
-      const spy = vi.spyOn(console, "error").mockImplementation()
+      const spy = vi.spyOn(console, "error").mockImplementation(() => {})
 
       renderPage()
 

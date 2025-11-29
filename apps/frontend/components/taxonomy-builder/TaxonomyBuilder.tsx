@@ -63,6 +63,7 @@ export function TaxonomyBuilder({
       store.loadTaxonomy(taxonomyId)
     }
     return () => store.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zustand store is stable, adding it would cause infinite loops
   }, [taxonomyId])
 
   // Keyboard shortcuts
