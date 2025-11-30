@@ -256,3 +256,4 @@ ehthumbs.db
 !.moai/specs/
 # uv.lock
 .claude/skills/*/*/*token*
+.status.json
