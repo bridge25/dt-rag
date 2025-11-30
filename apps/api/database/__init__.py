@@ -1,5 +1,5 @@
 """
-Database Package - Modular database layer for dt-rag.
+Database Package - Modular database layer for Norade.
 
 This package provides a clean, modular structure for database operations:
 - connection: Database connection and type utilities

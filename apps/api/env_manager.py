@@ -1,5 +1,5 @@
 """
-Environment Manager for DT-RAG v1.8.1
+Environment Manager for Norade v1.8.1
 
 Handles environment-specific configuration management including environment detection,
 database configuration, security settings, and feature flags.
@@ -102,7 +102,7 @@ class EnvironmentManager:
 
     def get_database_config(self) -> Dict[str, Any]:
         """Get database configuration for current environment"""
-        database_url = os.getenv("DATABASE_URL", "sqlite:///./dt_rag.db")
+        database_url = os.getenv("DATABASE_URL", "sqlite:///./norade.db")
 
         config = {
             "url": database_url,
