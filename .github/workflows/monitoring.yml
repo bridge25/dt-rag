@@ -1,0 +1,261 @@
+# Health Check Monitoring Pipeline for Norade
+# Runs periodic health checks on production services
+# Tier 3 automation: Proactive monitoring and alerting
+
+name: Health Monitoring
+
+on:
+  schedule:
+    # Run every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      check_type:
+        description: 'Type of health check to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
+          - database
+
+env:
+  BACKEND_URL: https://norade-production.up.railway.app
+  FRONTEND_URL: https://norade.vercel.app
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Backend Health Check
+  # ─────────────────────────────────────────────────────────────────────────────
+  backend-health:
+    name: Backend Health Check
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'backend' || github.event_name == 'schedule' }}
+    outputs:
+      status: ${{ steps.health.outputs.status }}
+      response_time: ${{ steps.health.outputs.response_time }}
+
+    steps:
+      - name: Check API Health Endpoint
+        id: health
+        run: |
+          echo "Checking backend health at ${{ env.BACKEND_URL }}/health"
+
+          START_TIME=$(date +%s%3N)
+
+          HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 30 \
+            "${{ env.BACKEND_URL }}/health" || echo "000")
+
+          END_TIME=$(date +%s%3N)
+          RESPONSE_TIME=$((END_TIME - START_TIME))
+
+          echo "response_time=${RESPONSE_TIME}" >> $GITHUB_OUTPUT
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "status=healthy" >> $GITHUB_OUTPUT
+            echo "✅ Backend is healthy (${RESPONSE_TIME}ms)"
+            cat /tmp/response.json || true
+          else
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            echo "❌ Backend is unhealthy (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
+
+      - name: Check API Response Quality
+        if: success()
+        run: |
+          # Test search endpoint availability
+          curl -sf --connect-timeout 5 --max-time 15 \
+            "${{ env.BACKEND_URL }}/api/v1/search/" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"q": "test", "final_topk": 1}' \
+            -o /dev/null || echo "Search endpoint check skipped (may require auth)"
+
+          # Test docs endpoint
+          curl -sf --connect-timeout 5 --max-time 15 \
+            "${{ env.BACKEND_URL }}/docs" \
+            -o /dev/null && echo "✅ API docs accessible" || echo "⚠️ API docs not accessible"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Frontend Health Check
+  # ─────────────────────────────────────────────────────────────────────────────
+  frontend-health:
+    name: Frontend Health Check
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.check_type == 'all' || github.event.inputs.check_type == 'frontend' || github.event_name == 'schedule' }}
+    outputs:
+      status: ${{ steps.health.outputs.status }}
+      response_time: ${{ steps.health.outputs.response_time }}
+
+    steps:
+      - name: Check Frontend Availability
+        id: health
+        run: |
+          echo "Checking frontend at ${{ env.FRONTEND_URL }}"
+
+          START_TIME=$(date +%s%3N)
+
+          HTTP_STATUS=$(curl -s -o /tmp/frontend.html -w "%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 30 \
+            "${{ env.FRONTEND_URL }}" || echo "000")
+
+          END_TIME=$(date +%s%3N)
+          RESPONSE_TIME=$((END_TIME - START_TIME))
+
+          echo "response_time=${RESPONSE_TIME}" >> $GITHUB_OUTPUT
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "status=healthy" >> $GITHUB_OUTPUT
+            echo "✅ Frontend is healthy (${RESPONSE_TIME}ms)"
+          else
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            echo "❌ Frontend is unhealthy (HTTP $HTTP_STATUS)"
+            exit 1
+          fi
+
+      - name: Check Core Assets
+        if: success()
+        run: |
+          # Check if main JS bundle loads
+          curl -sf --connect-timeout 5 --max-time 15 \
+            "${{ env.FRONTEND_URL }}/_next/static/" \
+            -o /dev/null && echo "✅ Static assets accessible" || echo "⚠️ Static assets check skipped"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Performance Metrics Collection
+  # ─────────────────────────────────────────────────────────────────────────────
+  collect-metrics:
+    name: Collect Performance Metrics
+    runs-on: ubuntu-latest
+    needs: [backend-health, frontend-health]
+    if: always()
+
+    steps:
+      - name: Aggregate Health Status
+        run: |
+          echo "## Health Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status | Response Time |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|---------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.backend-health.outputs.status || 'skipped' }} | ${{ needs.backend-health.outputs.response_time || 'N/A' }}ms |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.frontend-health.outputs.status || 'skipped' }} | ${{ needs.frontend-health.outputs.response_time || 'N/A' }}ms |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for Performance Degradation
+        run: |
+          BACKEND_TIME="${{ needs.backend-health.outputs.response_time }}"
+          FRONTEND_TIME="${{ needs.frontend-health.outputs.response_time }}"
+
+          # Alert if response time > 5 seconds
+          if [ -n "$BACKEND_TIME" ] && [ "$BACKEND_TIME" -gt 5000 ]; then
+            echo "::warning::Backend response time is slow: ${BACKEND_TIME}ms"
+          fi
+
+          if [ -n "$FRONTEND_TIME" ] && [ "$FRONTEND_TIME" -gt 5000 ]; then
+            echo "::warning::Frontend response time is slow: ${FRONTEND_TIME}ms"
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Alert on Failure
+  # ─────────────────────────────────────────────────────────────────────────────
+  alert-on-failure:
+    name: Send Alert
+    runs-on: ubuntu-latest
+    needs: [backend-health, frontend-health]
+    if: failure()
+
+    steps:
+      - name: Determine Failed Services
+        id: failures
+        run: |
+          FAILED_SERVICES=""
+
+          if [ "${{ needs.backend-health.result }}" = "failure" ]; then
+            FAILED_SERVICES="${FAILED_SERVICES}Backend "
+          fi
+
+          if [ "${{ needs.frontend-health.result }}" = "failure" ]; then
+            FAILED_SERVICES="${FAILED_SERVICES}Frontend "
+          fi
+
+          echo "services=${FAILED_SERVICES}" >> $GITHUB_OUTPUT
+          echo "::error::Services down: ${FAILED_SERVICES}"
+
+      - name: Send Slack Alert
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "🚨 *Norade Service Alert*",
+              "attachments": [{
+                "color": "danger",
+                "fields": [{
+                  "title": "Failed Services",
+                  "value": "${{ steps.failures.outputs.services }}",
+                  "short": true
+                }, {
+                  "title": "Timestamp",
+                  "value": "'$(date -u '+%Y-%m-%d %H:%M:%S UTC')'",
+                  "short": true
+                }],
+                "footer": "GitHub Actions Health Monitor"
+              }]
+            }' \
+            "${{ env.SLACK_WEBHOOK_URL }}" || echo "Slack notification skipped"
+
+      - name: Create GitHub Issue for Outage
+        if: github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 Service Outage Detected - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            ## Service Health Alert
+
+            **Detected at:** ${new Date().toUTCString()}
+            **Failed Services:** ${{ steps.failures.outputs.services }}
+
+            ### Action Required
+            - [ ] Check Railway dashboard for backend status
+            - [ ] Check Vercel dashboard for frontend status
+            - [ ] Review recent deployments
+            - [ ] Check error logs
+
+            ### Links
+            - [Railway Dashboard](https://railway.app/dashboard)
+            - [Vercel Dashboard](https://vercel.com/dashboard)
+            - [GitHub Actions](https://github.com/${{ github.repository }}/actions)
+            `;
+
+            // Check if similar issue exists in last 24 hours
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'outage,automated'
+            });
+
+            const recentIssue = issues.data.find(issue => {
+              const created = new Date(issue.created_at);
+              const now = new Date();
+              return (now - created) < 24 * 60 * 60 * 1000;
+            });
+
+            if (!recentIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['outage', 'automated', 'urgent']
+              });
+            }
+        continue-on-error: true
