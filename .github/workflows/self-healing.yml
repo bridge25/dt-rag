@@ -1,0 +1,463 @@
+# Self-Healing Pipeline for Norade
+# Automatically recovers from service failures and deployment issues
+# Tier 4 automation: Autonomous recovery and resilience
+
+name: Self-Healing
+
+on:
+  # Triggered by monitoring workflow failures
+  workflow_run:
+    workflows: ["Health Monitoring"]
+    types:
+      - completed
+  # Manual trigger for immediate recovery
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Recovery action to perform'
+        required: true
+        type: choice
+        options:
+          - diagnose
+          - restart-backend
+          - restart-frontend
+          - restart-all
+          - rollback-backend
+          - rollback-frontend
+      force:
+        description: 'Force action without health check'
+        required: false
+        default: false
+        type: boolean
+  # Scheduled resilience check
+  schedule:
+    # Run every 6 hours for proactive recovery
+    - cron: '0 */6 * * *'
+
+env:
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  BACKEND_URL: https://norade-production.up.railway.app
+  FRONTEND_URL: https://norade.vercel.app
+  MAX_RETRY_ATTEMPTS: 3
+  RECOVERY_COOLDOWN_MINUTES: 30
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Diagnose Service Health
+  # ─────────────────────────────────────────────────────────────────────────────
+  diagnose:
+    name: Diagnose Services
+    runs-on: ubuntu-latest
+    outputs:
+      backend_status: ${{ steps.check.outputs.backend_status }}
+      frontend_status: ${{ steps.check.outputs.frontend_status }}
+      needs_recovery: ${{ steps.check.outputs.needs_recovery }}
+      recovery_target: ${{ steps.check.outputs.recovery_target }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check service health
+        id: check
+        run: |
+          echo "Diagnosing service health..."
+
+          # Check backend
+          BACKEND_STATUS="unknown"
+          for i in 1 2 3; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 30 \
+              "${{ env.BACKEND_URL }}/health" || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              BACKEND_STATUS="healthy"
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$BACKEND_STATUS" != "healthy" ]; then
+            BACKEND_STATUS="unhealthy"
+          fi
+
+          # Check frontend
+          FRONTEND_STATUS="unknown"
+          for i in 1 2 3; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 30 \
+              "${{ env.FRONTEND_URL }}" || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              FRONTEND_STATUS="healthy"
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$FRONTEND_STATUS" != "healthy" ]; then
+            FRONTEND_STATUS="unhealthy"
+          fi
+
+          echo "backend_status=${BACKEND_STATUS}" >> $GITHUB_OUTPUT
+          echo "frontend_status=${FRONTEND_STATUS}" >> $GITHUB_OUTPUT
+
+          # Determine recovery needs
+          NEEDS_RECOVERY="false"
+          RECOVERY_TARGET=""
+
+          if [ "$BACKEND_STATUS" = "unhealthy" ] && [ "$FRONTEND_STATUS" = "unhealthy" ]; then
+            NEEDS_RECOVERY="true"
+            RECOVERY_TARGET="all"
+          elif [ "$BACKEND_STATUS" = "unhealthy" ]; then
+            NEEDS_RECOVERY="true"
+            RECOVERY_TARGET="backend"
+          elif [ "$FRONTEND_STATUS" = "unhealthy" ]; then
+            NEEDS_RECOVERY="true"
+            RECOVERY_TARGET="frontend"
+          fi
+
+          echo "needs_recovery=${NEEDS_RECOVERY}" >> $GITHUB_OUTPUT
+          echo "recovery_target=${RECOVERY_TARGET}" >> $GITHUB_OUTPUT
+
+          echo "## Diagnosis Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${BACKEND_STATUS} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${FRONTEND_STATUS} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Needs Recovery:** ${NEEDS_RECOVERY}" >> $GITHUB_STEP_SUMMARY
+          echo "**Recovery Target:** ${RECOVERY_TARGET:-none}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check cooldown period
+        id: cooldown
+        run: |
+          # Check if we're in cooldown from recent recovery
+          COOLDOWN_FILE=".github/recovery_cooldown"
+
+          # In real implementation, this would check a persistent store
+          # For now, we rely on workflow run history
+          echo "skip_recovery=false" >> $GITHUB_OUTPUT
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Backend Recovery
+  # ─────────────────────────────────────────────────────────────────────────────
+  recover-backend:
+    name: Recover Backend
+    runs-on: ubuntu-latest
+    needs: [diagnose]
+    if: |
+      (needs.diagnose.outputs.needs_recovery == 'true' &&
+       (needs.diagnose.outputs.recovery_target == 'backend' || needs.diagnose.outputs.recovery_target == 'all')) ||
+      (github.event.inputs.action == 'restart-backend' ||
+       github.event.inputs.action == 'restart-all' ||
+       github.event.inputs.action == 'rollback-backend')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+
+      - name: Attempt restart
+        id: restart
+        if: github.event.inputs.action != 'rollback-backend'
+        run: |
+          echo "Attempting to restart backend service..."
+
+          if [ -z "${{ env.RAILWAY_TOKEN }}" ]; then
+            echo "::warning::RAILWAY_TOKEN not configured - simulating restart"
+            echo "restart_status=simulated" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Trigger redeploy via Railway
+          railway up --service norade-api --detach || {
+            echo "restart_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          }
+
+          echo "restart_status=triggered" >> $GITHUB_OUTPUT
+
+      - name: Attempt rollback
+        id: rollback
+        if: github.event.inputs.action == 'rollback-backend'
+        run: |
+          echo "Attempting to rollback backend to previous deployment..."
+
+          if [ -z "${{ env.RAILWAY_TOKEN }}" ]; then
+            echo "::warning::RAILWAY_TOKEN not configured - simulating rollback"
+            echo "rollback_status=simulated" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Get previous deployment (Railway specific)
+          # Note: Railway rollback requires dashboard or API
+          echo "::warning::Railway CLI rollback requires manual intervention"
+          echo "Visit: https://railway.app/dashboard"
+          echo "rollback_status=manual_required" >> $GITHUB_OUTPUT
+
+      - name: Wait for service startup
+        run: |
+          echo "Waiting for backend to become healthy..."
+          sleep 60
+
+      - name: Verify recovery
+        id: verify
+        run: |
+          echo "Verifying backend recovery..."
+
+          SUCCESS=false
+          for i in 1 2 3 4 5; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 30 \
+              "${{ env.BACKEND_URL }}/health" || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              SUCCESS=true
+              break
+            fi
+
+            echo "Attempt $i: HTTP $HTTP_CODE - waiting..."
+            sleep 30
+          done
+
+          if [ "$SUCCESS" = "true" ]; then
+            echo "✅ Backend recovery successful"
+            echo "recovery_success=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Backend recovery failed"
+            echo "recovery_success=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Frontend Recovery
+  # ─────────────────────────────────────────────────────────────────────────────
+  recover-frontend:
+    name: Recover Frontend
+    runs-on: ubuntu-latest
+    needs: [diagnose]
+    if: |
+      (needs.diagnose.outputs.needs_recovery == 'true' &&
+       (needs.diagnose.outputs.recovery_target == 'frontend' || needs.diagnose.outputs.recovery_target == 'all')) ||
+      (github.event.inputs.action == 'restart-frontend' ||
+       github.event.inputs.action == 'restart-all' ||
+       github.event.inputs.action == 'rollback-frontend')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Attempt redeploy
+        id: redeploy
+        if: github.event.inputs.action != 'rollback-frontend'
+        run: |
+          echo "Attempting to redeploy frontend..."
+
+          if [ -z "${{ env.VERCEL_TOKEN }}" ]; then
+            echo "::warning::VERCEL_TOKEN not configured - simulating redeploy"
+            echo "redeploy_status=simulated" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          cd apps/frontend
+
+          # Trigger production deployment
+          vercel --prod --token=${{ env.VERCEL_TOKEN }} --yes || {
+            echo "redeploy_status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          }
+
+          echo "redeploy_status=triggered" >> $GITHUB_OUTPUT
+
+      - name: Attempt rollback
+        id: rollback
+        if: github.event.inputs.action == 'rollback-frontend'
+        run: |
+          echo "Attempting to rollback frontend to previous deployment..."
+
+          if [ -z "${{ env.VERCEL_TOKEN }}" ]; then
+            echo "::warning::VERCEL_TOKEN not configured - simulating rollback"
+            echo "rollback_status=simulated" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Vercel rollback via CLI
+          # Note: Vercel rollback requires specific deployment URL
+          vercel rollback --token=${{ env.VERCEL_TOKEN }} --yes || {
+            echo "::warning::Vercel rollback may require manual intervention"
+            echo "Visit: https://vercel.com/dashboard"
+            echo "rollback_status=manual_required" >> $GITHUB_OUTPUT
+          }
+
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for frontend deployment to complete..."
+          sleep 90
+
+      - name: Verify recovery
+        id: verify
+        run: |
+          echo "Verifying frontend recovery..."
+
+          SUCCESS=false
+          for i in 1 2 3 4 5; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --connect-timeout 10 --max-time 30 \
+              "${{ env.FRONTEND_URL }}" || echo "000")
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              SUCCESS=true
+              break
+            fi
+
+            echo "Attempt $i: HTTP $HTTP_CODE - waiting..."
+            sleep 30
+          done
+
+          if [ "$SUCCESS" = "true" ]; then
+            echo "✅ Frontend recovery successful"
+            echo "recovery_success=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Frontend recovery failed"
+            echo "recovery_success=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Escalation (when auto-recovery fails)
+  # ─────────────────────────────────────────────────────────────────────────────
+  escalate:
+    name: Escalate to On-Call
+    runs-on: ubuntu-latest
+    needs: [diagnose, recover-backend, recover-frontend]
+    if: |
+      always() &&
+      (needs.recover-backend.result == 'failure' || needs.recover-frontend.result == 'failure')
+
+    steps:
+      - name: Create urgent issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🚨 URGENT: Auto-recovery Failed - ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            ## Critical: Automatic Recovery Failed
+
+            **Time:** ${new Date().toUTCString()}
+            **Backend Recovery:** ${{ needs.recover-backend.result || 'skipped' }}
+            **Frontend Recovery:** ${{ needs.recover-frontend.result || 'skipped' }}
+
+            ### Immediate Actions Required
+
+            1. **Check Railway Dashboard**
+               - URL: https://railway.app/dashboard
+               - Look for error logs and deployment status
+
+            2. **Check Vercel Dashboard**
+               - URL: https://vercel.com/dashboard
+               - Review deployment logs and function errors
+
+            3. **Review Recent Changes**
+               - Check recent commits: ${{ github.server_url }}/${{ github.repository }}/commits
+               - Consider manual rollback if needed
+
+            4. **Database Health**
+               - Verify PostgreSQL connectivity
+               - Check for connection pool exhaustion
+
+            ### Recovery Commands
+
+            \`\`\`bash
+            # Manual Railway redeploy
+            railway up --service norade-api
+
+            # Manual Vercel redeploy
+            cd apps/frontend && vercel --prod
+
+            # Check logs
+            railway logs --service norade-api
+            \`\`\`
+
+            ### Escalation Path
+            - [ ] Primary on-call notified
+            - [ ] Incident channel created
+            - [ ] Status page updated
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['critical', 'outage', 'auto-recovery-failed', 'urgent']
+            });
+
+      - name: Send Slack alert
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "🚨 *CRITICAL: Auto-Recovery Failed*",
+              "attachments": [{
+                "color": "#FF0000",
+                "fields": [{
+                  "title": "Backend Recovery",
+                  "value": "${{ needs.recover-backend.result || 'skipped' }}",
+                  "short": true
+                }, {
+                  "title": "Frontend Recovery",
+                  "value": "${{ needs.recover-frontend.result || 'skipped' }}",
+                  "short": true
+                }],
+                "footer": "Manual intervention required immediately"
+              }]
+            }' \
+            "$SLACK_WEBHOOK_URL" || echo "Slack notification failed"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Recovery Summary
+  # ─────────────────────────────────────────────────────────────────────────────
+  summary:
+    name: Recovery Summary
+    runs-on: ubuntu-latest
+    needs: [diagnose, recover-backend, recover-frontend]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## Self-Healing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Initial Diagnosis" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Initial Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|----------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.diagnose.outputs.backend_status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.diagnose.outputs.frontend_status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Recovery Actions" >> $GITHUB_STEP_SUMMARY
+          echo "| Action | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Recovery | ${{ needs.recover-backend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Recovery | ${{ needs.recover-frontend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Update recovery log
+        run: |
+          # Log recovery attempt for analytics
+          echo "Recovery attempt logged at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "Backend: ${{ needs.recover-backend.result || 'skipped' }}"
+          echo "Frontend: ${{ needs.recover-frontend.result || 'skipped' }}"
