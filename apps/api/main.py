@@ -1,7 +1,7 @@
 """
-Dynamic Taxonomy RAG API v1.8.1
+Norade API v1.8.1
 
-Comprehensive RESTful API for the Dynamic Taxonomy RAG system.
+Comprehensive RESTful API for the Norade system.
 Provides endpoints for taxonomy management, search, classification,
 orchestration, agent factory, and monitoring.
 
@@ -129,7 +129,7 @@ config = get_config()
 async def lifespan(app: FastAPI) -> Any:
     """Application startup and shutdown lifecycle"""
     # Startup
-    logger.info("🚀 Starting Dynamic Taxonomy RAG API v1.8.1")
+    logger.info("🚀 Starting Norade API v1.8.1")
     logger.info(f"Environment: {config.environment}")
     logger.info(f"Debug mode: {config.debug}")
 
@@ -228,7 +228,7 @@ async def lifespan(app: FastAPI) -> Any:
     yield
 
     # Shutdown
-    logger.info("🔥 Shutting down Dynamic Taxonomy RAG API")
+    logger.info("🔥 Shutting down Norade API")
 
     # Close rate limiter
     try:
@@ -251,9 +251,9 @@ async def lifespan(app: FastAPI) -> Any:
 
 # Create FastAPI application
 app = FastAPI(
-    title="Dynamic Taxonomy RAG API",
+    title="Norade API",
     description="""
-    RESTful API for the Dynamic Taxonomy RAG v1.8.1 system.
+    RESTful API for the Norade v1.8.1 system.
 
     This API provides comprehensive endpoints for:
 
@@ -633,9 +633,9 @@ async def root() -> Dict[str, Any]:
     db_status = await test_database_connection()
 
     return {
-        "name": "Dynamic Taxonomy RAG API",
+        "name": "Norade API",
         "version": "1.8.1",
-        "description": "RESTful API for dynamic taxonomy RAG system",
+        "description": "RESTful API for Norade knowledge platform",
         "team": "A",
         "spec": "OpenAPI v1.8.1",
         "schemas": "0.1.3",
@@ -691,7 +691,7 @@ async def root() -> Dict[str, Any]:
 if __name__ == "__main__":
     import uvicorn
 
-    print("🚀 Dynamic Taxonomy RAG API v1.8.1 서버 시작")
+    print("🚀 Norade API v1.8.1 서버 시작")
     print("📡 포트: 8000")
     print("🌍 환경:", config.environment)
     print("🔧 디버그 모드:", config.debug)

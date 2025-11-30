@@ -10,6 +10,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -68,10 +69,15 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col bg-glass border-r border-white/10 text-white backdrop-blur-xl">
-      <div className="flex items-center justify-center border-b border-white/10 p-6">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          DT-RAG
-        </h1>
+      <div className="flex items-center justify-center border-b border-white/10 p-4">
+        <Image
+          src="/norade-final-transparent.png"
+          alt="Norade"
+          width={180}
+          height={48}
+          className="object-contain"
+          priority
+        />
       </div>
 
       <div className="border-b border-white/10 p-6">

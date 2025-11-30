@@ -1,5 +1,5 @@
 """
-Sentry Monitoring Integration for Dynamic Taxonomy RAG v1.8.1
+Sentry Monitoring Integration for Norade v1.8.1
 
 Comprehensive error tracking and reporting following 바이브코딩 report format.
 Provides structured error reporting with 5-field format for all critical failures.

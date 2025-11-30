@@ -2,7 +2,7 @@
 
 /**
  * i18n Context and Provider
- * Lightweight internationalization solution for DT-RAG Frontend
+ * Lightweight internationalization solution for Norade Frontend
  *
  * @CODE:FRONTEND-REDESIGN-001-I18N
  */
@@ -51,7 +51,7 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | null>(null)
 
 // Storage key
-const LANGUAGE_STORAGE_KEY = "dt-rag-language"
+const LANGUAGE_STORAGE_KEY = "norade-language"
 
 // Get nested value from object by dot notation key
 function getNestedValue(obj: Record<string, unknown>, key: string): string | undefined {
@@ -81,30 +81,33 @@ export function I18nProvider({
   defaultLanguage = "en",
 }: I18nProviderProps) {
   const [language, setLanguageState] = useState<Language>(defaultLanguage)
-  const [isHydrated, setIsHydrated] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
-  // Load language from localStorage on mount
+  // Load language from localStorage on mount (client-side only)
   useEffect(() => {
+    setIsClient(true)
     const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language | null
     if (stored && (stored === "en" || stored === "ko")) {
       setLanguageState(stored)
     }
-    setIsHydrated(true)
   }, [])
 
   // Set language and persist to localStorage
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang)
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
-    // Update document language attribute
-    document.documentElement.lang = lang
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, lang)
+      document.documentElement.lang = lang
+    }
   }, [])
 
-  // Translation function
+  // Translation function - works in SSR with default language
   const t = useCallback(
     (key: string, params?: Record<string, string | number>): string => {
+      // Use current language (or default during SSR)
+      const currentLang = isClient ? language : defaultLanguage
       const translation = getNestedValue(
-        translations[language] as unknown as Record<string, unknown>,
+        translations[currentLang] as unknown as Record<string, unknown>,
         key
       )
 
@@ -115,7 +118,10 @@ export function I18nProvider({
           key
         )
         if (!fallback) {
-          console.warn(`Missing translation for key: ${key}`)
+          // Only warn on client to avoid SSR noise
+          if (isClient) {
+            console.warn(`Missing translation for key: ${key}`)
+          }
           return key
         }
         return interpolate(fallback, params)
@@ -123,14 +129,10 @@ export function I18nProvider({
 
       return interpolate(translation, params)
     },
-    [language]
+    [language, isClient, defaultLanguage]
   )
 
-  // Don't render until hydrated to avoid mismatch
-  if (!isHydrated) {
-    return null
-  }
-
+  // Always render children - use default language during SSR
   return (
     <I18nContext.Provider value={{ language, setLanguage, t }}>
       {children}

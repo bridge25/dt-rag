@@ -250,7 +250,7 @@ class APIConfig:
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
-    title: str = "Dynamic Taxonomy RAG API"
+    title: str = "Norade API"
     version: str = "1.8.1"
 
     # Paths
