@@ -1,0 +1,146 @@
+# Dependabot configuration for Norade
+# Automatically creates PRs for dependency updates
+
+version: 2
+updates:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Python Dependencies (Backend)
+  # ─────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(python)"
+    labels:
+      - "dependencies"
+      - "python"
+      - "automated"
+    reviewers:
+      - "gu-geonwoo"
+    groups:
+      # Group minor and patch updates together
+      python-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Ignore major version updates for critical packages (review manually)
+      - dependency-name: "sqlalchemy"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "fastapi"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pydantic"
+        update-types: ["version-update:semver-major"]
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # NPM Dependencies (Frontend)
+  # ─────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/apps/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(npm)"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "frontend"
+      - "automated"
+    reviewers:
+      - "gu-geonwoo"
+    groups:
+      # Group React ecosystem updates
+      react-ecosystem:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Next.js updates
+      nextjs:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group development tools
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "typescript"
+          - "eslint*"
+          - "prettier"
+          - "tailwindcss"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Ignore major version updates for critical packages
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # GitHub Actions
+  # ─────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps(actions)"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    reviewers:
+      - "gu-geonwoo"
+    groups:
+      # Group all GitHub Actions updates
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Docker (if Dockerfile exists)
+  # ─────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "deps(docker)"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automated"
+    reviewers:
+      - "gu-geonwoo"
