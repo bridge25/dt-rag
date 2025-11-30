@@ -490,6 +490,36 @@ class CoverageHistory(Base):
         return f"<CoverageHistory(id={self.history_id}, agent_id={self.agent_id}, coverage={self.overall_coverage:.2f}%, timestamp={self.timestamp})>"
 
 
+# @CODE:REFACTOR-PHASE-1-002 | Q-Table persistence model
+class QTableEntry(Base):
+    """
+    Persistent Q-Table storage for reinforcement learning weight optimization.
+
+    Previously Q-Table data was stored in-memory and lost on server restart.
+    This model provides PostgreSQL-backed persistence with JSON storage for Q-values.
+
+    Schema:
+    - id: Auto-increment primary key
+    - state_hash: 64-char hash uniquely identifying the state
+    - q_values: JSON array of 6 floats (Q-values for each action)
+    - updated_at: Last update timestamp
+    - access_count: Number of times this entry was accessed
+    """
+    __tablename__ = "q_table_entries"
+    __table_args__ = {'extend_existing': True}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    state_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    q_values: Mapped[dict] = mapped_column(JSON, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    access_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    def __repr__(self) -> str:
+        return f"<QTableEntry(hash={self.state_hash[:16]}..., access_count={self.access_count})>"
+
+
 # @IMPL:REFLECTION-001:0.3 - ExecutionLog indices optimization
 async def optimize_execution_log_indices(session: AsyncSession) -> Dict[str, Any]:
     """
@@ -1879,32 +1909,52 @@ class SearchMetrics:
 search_metrics = SearchMetrics()
 
 
-# Q-table 데이터 액세스 오브젝트
+# @CODE:REFACTOR-PHASE-1-002 | Q-Table persistence with Feature Flag support
+# Feature Flag for persistent Q-Table (set via environment variable)
+USE_PERSISTENT_QTABLE = os.getenv("USE_PERSISTENT_QTABLE", "false").lower() == "true"
+
+
 class QTableDAO:
     """
-    @CODE:SOFTQ-001:0.4 | Q-table 데이터 액세스
+    @CODE:SOFTQ-001:0.5 | Q-table 데이터 액세스 (Feature Flag 지원)
 
-    메모리 기반 Q-table 저장소 (Phase 1).
-    향후 PostgreSQL JSON 컬럼으로 마이그레이션 예정.
+    Supports two storage backends:
+    - Memory-based (default): Fast, but lost on restart
+    - PostgreSQL-based (USE_PERSISTENT_QTABLE=true): Persistent, survives restarts
+
+    The interface remains the same regardless of backend.
     """
 
-    def __init__(self) -> None:
-        """Q-table DAO 초기화"""
-        self.q_table_storage: Dict[str, List[float]] = {}
-        logger.info("QTableDAO initialized (memory-based storage)")
+    def __init__(self, use_persistent: Optional[bool] = None) -> None:
+        """
+        Q-table DAO 초기화
+
+        Args:
+            use_persistent: Override for persistent storage. If None, uses env var.
+        """
+        self._use_persistent = use_persistent if use_persistent is not None else USE_PERSISTENT_QTABLE
+        self._memory_storage: Dict[str, List[float]] = {}
+
+        if self._use_persistent:
+            logger.info("QTableDAO initialized (PostgreSQL persistent storage)")
+        else:
+            logger.info("QTableDAO initialized (memory-based storage)")
 
     async def save_q_table(self, state_hash: str, q_values: List[float]) -> None:
         """
         Q-table 저장
 
         Args:
-            state_hash: State hash string
+            state_hash: State hash string (64-char)
             q_values: Q-values 리스트 (6개)
         """
-        self.q_table_storage[state_hash] = q_values.copy()
-        logger.debug(
-            f"Saved Q-table: state={state_hash}, q_values={[round(q, 3) for q in q_values]}"
-        )
+        if self._use_persistent:
+            await self._save_persistent(state_hash, q_values)
+        else:
+            self._memory_storage[state_hash] = q_values.copy()
+            logger.debug(
+                f"Saved Q-table (memory): state={state_hash}, q_values={[round(q, 3) for q in q_values]}"
+            )
 
     async def load_q_table(self, state_hash: str) -> Optional[List[float]]:
         """
@@ -1916,10 +1966,110 @@ class QTableDAO:
         Returns:
             Q-values 리스트 (6개) 또는 None
         """
-        q_values = self.q_table_storage.get(state_hash)
-        if q_values:
-            logger.debug(f"Loaded Q-table: state={state_hash}")
-        return q_values
+        if self._use_persistent:
+            return await self._load_persistent(state_hash)
+        else:
+            q_values = self._memory_storage.get(state_hash)
+            if q_values:
+                logger.debug(f"Loaded Q-table (memory): state={state_hash}")
+            return q_values
+
+    async def _save_persistent(self, state_hash: str, q_values: List[float]) -> None:
+        """PostgreSQL에 Q-table 저장"""
+        from sqlalchemy import select
+
+        async with async_session() as session:
+            try:
+                # Check if entry exists
+                stmt = select(QTableEntry).where(QTableEntry.state_hash == state_hash)
+                result = await session.execute(stmt)
+                entry = result.scalar_one_or_none()
+
+                if entry:
+                    # Update existing entry
+                    entry.q_values = q_values
+                    entry.access_count += 1
+                    entry.updated_at = datetime.utcnow()
+                else:
+                    # Create new entry
+                    entry = QTableEntry(
+                        state_hash=state_hash,
+                        q_values=q_values,
+                        access_count=0,
+                    )
+                    session.add(entry)
+
+                await session.commit()
+                logger.debug(
+                    f"Saved Q-table (PostgreSQL): state={state_hash}, q_values={[round(q, 3) for q in q_values]}"
+                )
+            except Exception as e:
+                await session.rollback()
+                logger.error(f"Failed to save Q-table: {e}")
+                # Fallback to memory storage
+                self._memory_storage[state_hash] = q_values.copy()
+                logger.warning(f"Fell back to memory storage for state={state_hash}")
+
+    async def _load_persistent(self, state_hash: str) -> Optional[List[float]]:
+        """PostgreSQL에서 Q-table 로드"""
+        from sqlalchemy import select
+
+        async with async_session() as session:
+            try:
+                stmt = select(QTableEntry).where(QTableEntry.state_hash == state_hash)
+                result = await session.execute(stmt)
+                entry = result.scalar_one_or_none()
+
+                if entry:
+                    # Increment access count
+                    entry.access_count += 1
+                    await session.commit()
+                    logger.debug(f"Loaded Q-table (PostgreSQL): state={state_hash}")
+                    return list(entry.q_values)  # type: ignore[arg-type]
+                return None
+            except Exception as e:
+                logger.error(f"Failed to load Q-table: {e}")
+                # Fallback to memory storage
+                return self._memory_storage.get(state_hash)
+
+    async def get_statistics(self) -> Dict[str, Any]:
+        """
+        Q-Table 저장소 통계 반환
+
+        Returns:
+            Dict containing storage statistics
+        """
+        if self._use_persistent:
+            from sqlalchemy import func, select
+
+            async with async_session() as session:
+                try:
+                    count_stmt = select(func.count(QTableEntry.id))
+                    count_result = await session.execute(count_stmt)
+                    total_entries = count_result.scalar() or 0
+
+                    access_stmt = select(func.sum(QTableEntry.access_count))
+                    access_result = await session.execute(access_stmt)
+                    total_accesses = access_result.scalar() or 0
+
+                    return {
+                        "storage_type": "postgresql",
+                        "total_entries": total_entries,
+                        "total_accesses": total_accesses,
+                        "memory_fallback_entries": len(self._memory_storage),
+                    }
+                except Exception as e:
+                    logger.error(f"Failed to get Q-table statistics: {e}")
+                    return {
+                        "storage_type": "postgresql",
+                        "error": str(e),
+                        "memory_fallback_entries": len(self._memory_storage),
+                    }
+        else:
+            return {
+                "storage_type": "memory",
+                "total_entries": len(self._memory_storage),
+            }
 
 
 # FastAPI Dependency for database sessions

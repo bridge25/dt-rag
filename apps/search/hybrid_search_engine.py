@@ -266,11 +266,19 @@ class HybridScoreFusion:
 
 
 class HybridScoreReranker:
-    """Heuristic-based reranking using hybrid scores and quality signals"""
+    """Heuristic-based reranking using hybrid scores and quality signals.
+
+    This implementation fulfills SPEC-SEARCH-001 requirements:
+    - E-REQ-009: Fallback to heuristic reranking when cross-encoder unavailable
+    - E-REQ-010: Calculate term overlap, length penalty, and diversity bonus
+
+    Cross-Encoder support (U-REQ-005) is planned for v2.0.
+    Current heuristic approach provides good quality with low latency.
+    """
 
     def __init__(self) -> None:
-        """Initialize reranker (no model loading required)"""
-        logger.info("HybridScoreReranker initialized with heuristic scoring")
+        """Initialize reranker (no model loading required for heuristic mode)."""
+        logger.info("HybridScoreReranker initialized with heuristic scoring (SPEC-SEARCH-001 fallback mode)")
 
     def rerank(
         self, query: str, search_results: List[SearchResult], top_k: int = 5

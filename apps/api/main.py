@@ -240,7 +240,7 @@ async def lifespan(app: FastAPI) -> Any:
     # Cleanup monitoring resources
     if MONITORING_AVAILABLE:
         try:
-            from cache.redis_manager import get_redis_manager  # type: ignore[import-not-found]  # TODO: Fix cache import path
+            from apps.api.cache.redis_manager import get_redis_manager
 
             redis_manager = await get_redis_manager()
             await redis_manager.close()
@@ -337,9 +337,14 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
         # Track metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics  # TODO: Fix routers import path
-
-                await track_request_metrics(request, response_time_ms, status_code)
+                metrics_collector = get_metrics_collector()
+                labels = {
+                    "method": request.method,
+                    "endpoint": str(request.url.path),
+                    "status": str(status_code),
+                }
+                metrics_collector.record_latency("http_request", response_time_ms, labels)
+                metrics_collector.increment_counter("http_requests_total", labels)
             except Exception as e:
                 logger.warning(f"Failed to track request metrics: {e}")
 
@@ -357,9 +362,15 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
         # Track error metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics  # type: ignore[import-not-found]  # TODO: Fix routers import path
-
-                await track_request_metrics(request, response_time_ms, 500)
+                metrics_collector = get_metrics_collector()
+                labels = {
+                    "method": request.method,
+                    "endpoint": str(request.url.path),
+                    "status": "500",
+                }
+                metrics_collector.record_latency("http_request", response_time_ms, labels)
+                metrics_collector.increment_counter("http_requests_total", labels)
+                metrics_collector.increment_counter("http_errors_total", labels)
             except Exception as metric_e:
                 logger.warning(f"Failed to track error metrics: {metric_e}")
 
