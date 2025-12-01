@@ -22,6 +22,11 @@ from ..domain.usecases.search import (
     ClassifyTextUseCase,
 )
 
+# Import ReflectionEngine for mentor memory learning loop
+from ..orchestration.reflection_engine import ReflectionEngine
+import asyncio
+from datetime import datetime
+
 logger = logging.getLogger(__name__)
 
 
@@ -413,10 +418,44 @@ class SearchService:
                 category_path=category_path,
                 quality=quality,
             )
+
+            # 🧠 MENTOR MEMORY: Trigger ReflectionEngine for learning
+            await self._trigger_learning_cycle()
+
             return str(entry_id)
         except Exception as e:
             logger.error(f"Failed to add to CaseBank: {e}")
             raise
+
+    async def _trigger_learning_cycle(self):
+        """
+        Trigger ReflectionEngine to analyze and learn from stored cases.
+        This runs in the background to avoid blocking search operations.
+        """
+        try:
+            # Run ReflectionEngine in background to avoid blocking
+            asyncio.create_task(self._run_reflection_batch())
+            logger.debug("🧠 ReflectionEngine batch cycle triggered")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to trigger reflection cycle: {e}")
+
+    async def _run_reflection_batch(self):
+        """
+        Run ReflectionEngine batch processing for learning and improvement.
+        """
+        try:
+            reflection_engine = ReflectionEngine()
+
+            # Run batch reflection on all stored cases
+            result = await reflection_engine.run_reflection_batch()
+
+            if result.success:
+                logger.info(f"✅ ReflectionEngine batch completed: {result.summary}")
+            else:
+                logger.warning(f"⚠️ ReflectionEngine batch issues: {result.issues}")
+
+        except Exception as e:
+            logger.error(f"❌ ReflectionEngine batch failed: {e}")
 
     # Helper Methods
 

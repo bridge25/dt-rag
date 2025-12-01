@@ -29,6 +29,12 @@ from ..security.api_key_storage import APIKeyInfo
 # Import metrics tracking
 from ..monitoring.metrics import get_metrics_collector
 
+# Import CaseBank and ExecutionLog for mentor memory system
+from ..services.search_service import SearchService
+from ..database.models.casebank import CaseBank, ExecutionLog
+from ..domain.repositories.search_repository import SearchRepository
+from ..database.repositories.casebank_repository import CaseBankRepository
+
 # Import common schemas
 import sys
 from pathlib import Path as PathLib
@@ -583,6 +589,37 @@ async def search_documents(
         # Perform search with correlation tracking
         result = await handler.search(search_request, correlation_id=correlation_id)
 
+        # ✅ MENTOR MEMORY SYSTEM: Store successful search in CaseBank
+        casebank_stored = False
+        execution_log_id = None
+
+        try:
+            # Initialize search service for CaseBank operations
+            search_service = SearchService()
+
+            # Store query-response pair in CaseBank for learning
+            casebank_id = await search_service.add_to_casebank(
+                query=search_request.q,
+                answer=result.dict(),  # Store the complete search result
+                sources=[hit.chunk_id for hit in result.hits[:5]],  # Top 5 sources
+                metadata={
+                    "correlation_id": correlation_id,
+                    "search_type": "hybrid",
+                    "total_results": len(result.hits),
+                    "latency_ms": result.latency,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            casebank_stored = True
+            execution_log_id = casebank_id
+
+            logger.info(f"✅ CaseBank storage successful: {casebank_id} for query: {search_request.q[:50]}...")
+
+        except Exception as e:
+            logger.error(f"❌ CaseBank storage failed: {e}")
+            # Continue with search response even if CaseBank storage fails
+            # This ensures search functionality is not broken by memory system issues
+
         # Record latency metrics
         latency_ms = (time.time() - start_time) * 1000
         metrics_collector.record_latency(
@@ -597,13 +634,16 @@ async def search_documents(
         # Get p95 latency
         latency_stats = metrics_collector.latency_tracker.get_percentiles()
 
-        # Add response headers for monitoring
+        # Add response headers for monitoring and mentor memory status
         headers = {
             "X-Correlation-ID": correlation_id,
             "X-Search-Latency": str(result.latency),
             "X-Request-ID": result.request_id,
             "X-Total-Candidates": str(result.total_candidates or 0),
             "X-P95-Latency": str(latency_stats["p95"]),
+            # 🧠 Mentor Memory System Status Headers
+            "X-CaseBank-Stored": str(casebank_stored).lower(),
+            "X-Execution-Log-ID": execution_log_id or "",
         }
 
         return JSONResponse(content=result.dict(), headers=headers)

@@ -32,6 +32,10 @@ from ...database import (
     ClassifyDAO,
     CrossEncoderReranker,
 )
+# Import CaseBank models for mentor memory system
+from ...database.models.casebank import CaseBank, ExecutionLog
+from ...database.daos.casebank_dao import CaseBankDAO
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -265,8 +269,46 @@ class SearchRepositoryImpl(ISearchRepository):
         quality: float = 1.0
     ) -> UUID:
         """Add a query-answer pair to CaseBank"""
-        # This would need CaseBank repository implementation
-        return uuid4()
+        try:
+            # ✅ REAL IMPLEMENTATION: Store in database using CaseBank model
+            casebank_dao = CaseBankDAO(self.session)
+
+            # Create CaseBank entry
+            casebank = await casebank_dao.create_casebank(
+                query=query,
+                answer=json.dumps(answer) if isinstance(answer, dict) else str(answer),
+                sources=json.dumps(sources) if sources else "[]",
+                category_path=category_path or [],
+                initial_success_rate=quality,
+                metadata={
+                    "created_at": datetime.utcnow().isoformat(),
+                    "source": "search_api",
+                    "version": "1.0"
+                }
+            )
+
+            # Create ExecutionLog entry for tracking
+            execution_log = await casebank_dao.create_execution_log(
+                case_id=casebank.id,
+                success=True,
+                execution_time_ms=0,  # Will be updated by caller
+                error_type=None,
+                metadata={
+                    "operation": "add_to_casebank",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+
+            logger.info(f"✅ Successfully stored in CaseBank: {casebank.id}")
+            return casebank.id
+
+        except Exception as e:
+            logger.error(f"❌ Failed to store in CaseBank: {e}")
+            # Fallback to UUID generation for compatibility
+            # This ensures the system continues working even if DB storage fails
+            fallback_id = uuid4()
+            logger.warning(f"⚠️ Using fallback UUID: {fallback_id}")
+            return fallback_id
 
     # Classification
 

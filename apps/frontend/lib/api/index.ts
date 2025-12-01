@@ -51,6 +51,9 @@ import {
   type HITLTask,
   type HITLReviewRequest,
   type HITLReviewResponse,
+  type FeedbackRequest,
+  type FeedbackResponse,
+  type AgentStats,
 } from "./types"
 
 export async function search(request: SearchRequest): Promise<SearchResponse> {
@@ -146,6 +149,21 @@ export async function submitHITLReview(request: HITLReviewRequest): Promise<HITL
   const validated = HITLReviewRequestSchema.parse(request)
   const response = await apiClient.post("/classify/hitl/review", validated)
   return HITLReviewResponseSchema.parse(response.data)
+}
+
+// ============================================================================
+// MENTOR MEMORY FEEDBACK FUNCTIONS
+// ============================================================================
+
+export async function submitFeedback(request: FeedbackRequest): Promise<FeedbackResponse> {
+  const validated = FeedbackRequestSchema.parse(request)
+  const response = await apiClient.post("/feedback", validated)
+  return FeedbackResponseSchema.parse(response.data)
+}
+
+export async function getAgentStats(agentId: string): Promise<AgentStats> {
+  const response = await apiClient.get(`/agents/${agentId}/stats`)
+  return AgentStatsSchema.parse(response.data)
 }
 
 export * from "./types"

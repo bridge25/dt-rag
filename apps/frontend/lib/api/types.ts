@@ -496,3 +496,36 @@ export const CoverageResponseSchema = z.object({
 })
 
 export type CoverageResponse = z.infer<typeof CoverageResponseSchema>
+
+// ============================================================================
+// MENTOR MEMORY FEEDBACK TYPES
+// ============================================================================
+
+export const FeedbackRequestSchema = z.object({
+  search_result_id: z.string(),
+  rating: z.number().min(1).max(5),
+  helpful: z.boolean(),
+  comment: z.string().optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
+})
+
+export const FeedbackResponseSchema = z.object({
+  feedback_id: z.string(),
+  success: z.boolean(),
+  message: z.string(),
+  timestamp: z.string(),
+})
+
+export const AgentStatsSchema = z.object({
+  agent_id: z.string(),
+  total_queries: z.number(),
+  success_rate: z.number(),
+  avg_response_time: z.number(),
+  user_satisfaction_score: z.number().optional(),
+  growth_percentage: z.number(),
+  learning_active: z.boolean(),
+})
+
+export type FeedbackRequest = z.infer<typeof FeedbackRequestSchema>
+export type FeedbackResponse = z.infer<typeof FeedbackResponseSchema>
+export type AgentStats = z.infer<typeof AgentStatsSchema>

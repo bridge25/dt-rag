@@ -25,6 +25,8 @@ import { useTranslation } from "@/lib/i18n/context";
 import { AgentSelector } from "@/components/chat/AgentSelector";
 import { useAgents } from "@/hooks/useAgents";
 import type { AgentCardData } from "@/components/agent-card/types";
+import { submitFeedback, type FeedbackRequest } from "@/lib/api";
+import { ThumbsUp, ThumbsDown, Star, Send } from "lucide-react";
 
 export default function SearchPage() {
   const { t } = useTranslation()
@@ -37,6 +39,16 @@ export default function SearchPage() {
   const [useHybrid, setUseHybrid] = useState(true)
   const [isFocused, setIsFocused] = useState(false)
   const [selectedAgent, setSelectedAgent] = useState<AgentCardData | null>(null)
+
+  // 🧠 Mentor Memory: Feedback state management
+  const [feedbackStates, setFeedbackStates] = useState<Record<string, {
+    rating: number
+    helpful: boolean | null
+    comment: string
+    submitted: boolean
+  }>>({})
+
+  const [submittingFeedback, setSubmittingFeedback] = useState<Record<string, boolean>>({})
 
   // Sync selectedAgent with URL query parameter ?agent=xxx
   useEffect(() => {
@@ -57,6 +69,89 @@ export default function SearchPage() {
       router.push(`/chat?agent=${agent.agent_id}`, { scroll: false })
     } else {
       router.push("/chat", { scroll: false })
+    }
+  }
+
+  // 🧠 Mentor Memory: Feedback handlers
+  const handleRatingChange = (chunkId: string, rating: number) => {
+    setFeedbackStates(prev => ({
+      ...prev,
+      [chunkId]: {
+        ...prev[chunkId],
+        rating,
+        submitted: false
+      }
+    }))
+  }
+
+  const handleHelpfulClick = (chunkId: string, helpful: boolean) => {
+    setFeedbackStates(prev => ({
+      ...prev,
+      [chunkId]: {
+        ...prev[chunkId],
+        helpful,
+        submitted: false
+      }
+    }))
+  }
+
+  const handleCommentChange = (chunkId: string, comment: string) => {
+    setFeedbackStates(prev => ({
+      ...prev,
+      [chunkId]: {
+        ...prev[chunkId],
+        comment,
+        submitted: false
+      }
+    }))
+  }
+
+  const submitFeedbackHandler = async (chunkId: string) => {
+    const feedback = feedbackStates[chunkId]
+    if (!feedback || feedback.submitted) return
+
+    setSubmittingFeedback(prev => ({ ...prev, [chunkId]: true }))
+
+    try {
+      const feedbackRequest: FeedbackRequest = {
+        search_result_id: chunkId,
+        rating: feedback.rating,
+        helpful: feedback.helpful || false,
+        comment: feedback.comment.trim() || undefined,
+        metadata: {
+          agent_id: selectedAgent?.agent_id,
+          query: query,
+          timestamp: new Date().toISOString()
+        }
+      }
+
+      await submitFeedback(feedbackRequest)
+
+      setFeedbackStates(prev => ({
+        ...prev,
+        [chunkId]: {
+          ...prev[chunkId],
+          submitted: true
+        }
+      }))
+
+      // Reset feedback form after successful submission
+      setTimeout(() => {
+        setFeedbackStates(prev => ({
+          ...prev,
+          [chunkId]: {
+            rating: 0,
+            helpful: null,
+            comment: "",
+            submitted: false
+          }
+        }))
+      }, 3000)
+
+    } catch (error) {
+      console.error("Failed to submit feedback:", error)
+    } finally {
+      setSubmittingFeedback(prev => ({ ...prev, [chunkId]: false }))
     }
   }
 
@@ -305,6 +400,106 @@ export default function SearchPage() {
                               </details>
                             </div>
                           )}
+                        </div>
+                      </div>
+
+                      {/* 🧠 Mentor Memory: Feedback Section */}
+                      <div className="mt-4 pt-4 border-t border-white/10">
+                        <div className="space-y-3">
+                          {/* Rating Stars */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-gray-500">Rate this result:</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => handleRatingChange(result.chunk_id, star)}
+                                  className="transition-all duration-200 hover:scale-110"
+                                  disabled={feedbackStates[result.chunk_id]?.submitted}
+                                >
+                                  <Star
+                                    className={`w-4 h-4 ${
+                                      star <= (feedbackStates[result.chunk_id]?.rating || 0)
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-600 hover:text-yellow-300'
+                                    } ${feedbackStates[result.chunk_id]?.submitted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Helpful Buttons */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-gray-500">Was this helpful?</span>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleHelpfulClick(result.chunk_id, true)}
+                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                                  feedbackStates[result.chunk_id]?.helpful === true
+                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-green-400'
+                                } ${feedbackStates[result.chunk_id]?.submitted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                disabled={feedbackStates[result.chunk_id]?.submitted}
+                              >
+                                <ThumbsUp className="w-3 h-3" />
+                                Yes
+                              </button>
+                              <button
+                                onClick={() => handleHelpfulClick(result.chunk_id, false)}
+                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 ${
+                                  feedbackStates[result.chunk_id]?.helpful === false
+                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                    : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-red-400'
+                                } ${feedbackStates[result.chunk_id]?.submitted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                disabled={feedbackStates[result.chunk_id]?.submitted}
+                              >
+                                <ThumbsDown className="w-3 h-3" />
+                                No
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Comment Input */}
+                          <div className="space-y-2">
+                            <textarea
+                              placeholder="Optional feedback comment..."
+                              value={feedbackStates[result.chunk_id]?.comment || ''}
+                              onChange={(e) => handleCommentChange(result.chunk_id, e.target.value)}
+                              className="w-full px-3 py-2 text-xs bg-white/5 border border-white/10 rounded-lg text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/30 resize-none"
+                              rows={2}
+                              disabled={feedbackStates[result.chunk_id]?.submitted}
+                            />
+                          </div>
+
+                          {/* Submit Button */}
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs ${feedbackStates[result.chunk_id]?.submitted ? 'text-green-400' : 'text-gray-500'}`}>
+                              {feedbackStates[result.chunk_id]?.submitted
+                                ? '✅ Thank you for your feedback!'
+                                : 'Help us improve our AI mentor'}
+                            </span>
+                            {!feedbackStates[result.chunk_id]?.submitted && (
+                              <button
+                                onClick={() => submitFeedbackHandler(result.chunk_id)}
+                                disabled={
+                                  submittingFeedback[result.chunk_id] ||
+                                  !feedbackStates[result.chunk_id]?.rating ||
+                                  feedbackStates[result.chunk_id]?.rating === 0
+                                }
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                                  submittingFeedback[result.chunk_id] ||
+                                  !feedbackStates[result.chunk_id]?.rating ||
+                                  feedbackStates[result.chunk_id]?.rating === 0
+                                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                    : 'bg-cyan-500 text-white hover:bg-cyan-600 hover:shadow-[0_0_15px_rgba(0,247,255,0.5)]'
+                                }`}
+                              >
+                                <Send className="w-3 h-3" />
+                                {submittingFeedback[result.chunk_id] ? 'Submitting...' : 'Submit Feedback'}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
