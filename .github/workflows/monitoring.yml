@@ -42,14 +42,14 @@ jobs:
       - name: Check API Health Endpoint
         id: health
         run: |
-          echo "Checking backend health at ${{ env.BACKEND_URL }}/health"
+          echo "Checking backend health at ${{ env.BACKEND_URL }}/healthz"
 
           START_TIME=$(date +%s%3N)
 
           HTTP_STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
             --connect-timeout 10 \
             --max-time 30 \
-            "${{ env.BACKEND_URL }}/health" || echo "000")
+            "${{ env.BACKEND_URL }}/healthz" || echo "000")
 
           END_TIME=$(date +%s%3N)
           RESPONSE_TIME=$((END_TIME - START_TIME))

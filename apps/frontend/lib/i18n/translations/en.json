@@ -30,8 +30,8 @@
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Welcome to your AI-powered knowledge management system",
-    "missionControl": "Mission Control",
-    "systemOverview": "System Overview & Status",
+    "missionControl": "Norade Intelligence Hub",
+    "systemOverview": "AI-Powered Knowledge Management Platform",
     "welcomeTitle": "Welcome to Ethereal Glass UI",
     "welcomeDescription": "Your specialized AI workforce with redesigned Ethereal Glass aesthetics. Manage agents, explore taxonomies, and monitor system performance in real-time.",
     "systemHealthy": "System Healthy",

@@ -222,8 +222,14 @@ async def list_agents(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to list agents: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Failed to list agents: {e}")
+        # Return empty list in fallback mode (when database is unavailable)
+        logger.warning("Returning empty agent list (fallback mode)")
+        return AgentListResponse(
+            agents=[],
+            total=0,
+            filters_applied={},
+        )
 
 
 @router.get(

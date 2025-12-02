@@ -71,7 +71,7 @@ export function Sidebar() {
     <div className="flex h-full w-64 flex-col bg-glass border-r border-white/10 text-white backdrop-blur-xl">
       <div className="flex items-center justify-center border-b border-white/10 p-4">
         <Image
-          src="/norade-final-transparent.png"
+          src="/logo-transparent.png"
           alt="Norade"
           width={180}
           height={48}

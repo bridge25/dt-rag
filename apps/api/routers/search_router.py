@@ -32,8 +32,8 @@ from ..monitoring.metrics import get_metrics_collector
 # Import CaseBank and ExecutionLog for mentor memory system
 from ..services.search_service import SearchService
 from ..database.models.casebank import CaseBank, ExecutionLog
-from ..domain.repositories.search_repository import SearchRepository
-from ..database.repositories.casebank_repository import CaseBankRepository
+from ..data.repositories.search_repository_impl import SearchRepositoryImpl
+from ..database.daos.casebank_dao import CaseBankDAO
 
 # Import common schemas
 import sys

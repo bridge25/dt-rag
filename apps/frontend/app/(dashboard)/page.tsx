@@ -26,10 +26,12 @@ import { useAgents } from "@/hooks/useAgents"
 import { GlassCard } from "@/components/ui/glass-card"
 import { AgentCard } from "@/components/agent-card/AgentCard"
 import type { AgentCardData } from "@/components/agent-card/types"
+import { useTranslation } from "@/lib/i18n"
 
 export default function HomePage() {
   const router = useRouter()
   const { agents, isLoading } = useAgents()
+  const { t } = useTranslation()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function HomePage() {
   // Ethereal Glass Theme: 시안 네온 글로우 중심으로 통일
   const stats = [
     {
-      label: "System Health",
+      labelKey: "dashboard.systemHealth",
       value: "98.5%",
       trend: "+0.5%",
       icon: Activity,
@@ -57,7 +59,7 @@ export default function HomePage() {
       glow: "shadow-[0_0_15px_rgba(0,247,255,0.3)]"
     },
     {
-      label: "Active Agents",
+      labelKey: "dashboard.activeAgents",
       value: agents.length.toString(),
       trend: "+2",
       icon: Users,
@@ -65,7 +67,7 @@ export default function HomePage() {
       glow: "shadow-[0_0_15px_rgba(0,247,255,0.3)]"
     },
     {
-      label: "Documents Processed",
+      labelKey: "dashboard.documentsProcessed",
       value: "12,450",
       trend: "+150",
       icon: FileText,
@@ -73,7 +75,7 @@ export default function HomePage() {
       glow: "shadow-[0_0_15px_rgba(188,19,254,0.3)]"
     },
     {
-      label: "Total Queries",
+      labelKey: "dashboard.totalQueries",
       value: "45.2k",
       trend: "+1.2k",
       icon: MessageSquare,
@@ -96,9 +98,9 @@ export default function HomePage() {
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
             <Sparkles className="w-8 h-8 text-amber-400" />
-            Mission Control
+            {t("dashboard.missionControl")}
           </h1>
-          <p className="text-white/60 mt-1">System Overview & Status</p>
+          <p className="text-white/60 mt-1">{t("dashboard.systemOverview")}</p>
         </div>
         <div className="flex gap-4">
           <button
@@ -106,7 +108,7 @@ export default function HomePage() {
             className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/30 rounded-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
           >
             <Plus className="w-4 h-4" />
-            View All Agents
+            {t("dashboard.viewAllAgents")}
           </button>
         </div>
       </div>
@@ -115,17 +117,17 @@ export default function HomePage() {
       <GlassCard className="p-8 bg-gradient-to-r from-cyan-500/5 to-purple-500/5 border border-cyan-500/20 mb-8">
         <div className="flex items-start gap-6">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-white mb-2">Welcome to Ethereal Glass UI</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">{t("dashboard.welcomeTitle")}</h2>
             <p className="text-white/70 mb-4">
-              Your specialized AI workforce with redesigned Ethereal Glass aesthetics. Manage agents, explore taxonomies, and monitor system performance in real-time.
+              {t("dashboard.welcomeDescription")}
             </p>
             <div className="flex items-center gap-3 text-sm">
               <span className="flex items-center gap-1 text-cyan-300">
-                <Sparkles className="w-4 h-4" /> {agents.length} Active Agents
+                <Sparkles className="w-4 h-4" /> {agents.length} {t("dashboard.activeAgents")}
               </span>
               <span className="text-white/40">•</span>
               <span className="flex items-center gap-1 text-cyan-300">
-                <Activity className="w-4 h-4" /> System Healthy
+                <Activity className="w-4 h-4" /> {t("dashboard.systemHealthy")}
               </span>
             </div>
           </div>
@@ -162,7 +164,7 @@ export default function HomePage() {
 
             <div className="mt-4 relative z-10">
               <h3 className={cn("text-3xl font-bold tracking-tight", stat.color, "drop-shadow-[0_0_10px_currentColor]")}>{stat.value}</h3>
-              <p className="text-sm text-white/60 mt-1">{stat.label}</p>
+              <p className="text-sm text-white/60 mt-1">{t(stat.labelKey)}</p>
             </div>
 
             {/* Bottom glow bar on hover */}
@@ -175,12 +177,12 @@ export default function HomePage() {
         {/* Active Agents Column with AgentCardGrid */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">Featured Agents</h2>
+            <h2 className="text-xl font-semibold text-white">{t("dashboard.featuredAgents")}</h2>
             <button
               onClick={() => router.push("/agents")}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              View All
+              {t("dashboard.viewAll")}
             </button>
           </div>
 
@@ -205,14 +207,14 @@ export default function HomePage() {
             </div>
           ) : (
             <GlassCard className="text-center py-8">
-              <p className="text-gray-400">No agents available yet</p>
+              <p className="text-gray-400">{t("dashboard.noAgents")}</p>
             </GlassCard>
           )}
         </div>
 
         {/* Recent Activity Column - Ethereal Glass */}
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-white">Recent Activity</h2>
+          <h2 className="text-xl font-semibold text-white">{t("dashboard.recentActivity")}</h2>
           <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg p-6 space-y-6 hover:border-cyan-400/20 transition-colors duration-300">
             {recentActivity.map((item) => (
               <div key={item.id} className="relative pl-6 border-l border-cyan-400/20 last:border-0 pb-6 last:pb-0">
