@@ -6,7 +6,7 @@ Transforms between SQLAlchemy Agent model and Domain Agent entity.
 @CODE:CLEAN-ARCHITECTURE-AGENT-MAPPER
 """
 
-from typing import Optional, Any
+from typing import Any
 from uuid import UUID
 from datetime import datetime
 

@@ -26,6 +26,7 @@ import {
   AgentStatusSchema,
   AgentUpdateRequestSchema,
   AgentMetricsSchema,
+  AgentStatsSchema,
   HITLTaskSchema,
   HITLReviewRequestSchema,
   HITLReviewResponseSchema,

@@ -6,7 +6,7 @@ Transforms between SQLAlchemy Document/Chunk models and Domain entities.
 @CODE:CLEAN-ARCHITECTURE-DOCUMENT-MAPPER
 """
 
-from typing import Any, List, Optional
+from typing import Any
 from uuid import UUID
 from datetime import datetime
 
