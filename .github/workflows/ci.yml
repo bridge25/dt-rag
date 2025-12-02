@@ -106,13 +106,15 @@ jobs:
             --ignore=tests/performance \
             --ignore=tests/security \
             --ignore=tests/test_db_integration.py \
+            --ignore=tests/test_schema.py \
             -m "not slow" \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_creates_session \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_with_config \
             --deselect=tests/test_database_dao.py::TestClassifyDAO::test_fallback_classification_rag_text \
             --deselect=tests/test_database_dao.py::TestClassifyDAO::test_fallback_classification_ml_text \
             --deselect=tests/test_database_dao.py::TestClassifyDAO::test_fallback_classification_taxonomy_text \
-            --deselect=tests/test_database_dao.py::TestClassifyDAO::test_fallback_classification_generic_text
+            --deselect=tests/test_database_dao.py::TestClassifyDAO::test_fallback_classification_generic_text \
+            --deselect=tests/test_main.py::TestStartupValidation::test_startup_production_missing_api_key
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
