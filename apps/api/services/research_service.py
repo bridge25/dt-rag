@@ -181,7 +181,7 @@ class ResearchService:
             )
 
         # Update session with imported documents
-        updated_documents = (session.documents or []) + documents_to_add
+        # updated_documents = (session.documents or []) + documents_to_add
 
         # Update session to COMPLETED stage
         # updated_session = await self.session_manager.update_session(
