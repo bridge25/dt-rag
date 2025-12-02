@@ -17,12 +17,15 @@ from datetime import datetime
 # Import the modules under test
 from apps.api.routers.search_router import (
     search_router,
-    SearchService,
+    ProductionSearchHandler,
     SearchAnalytics,
     SearchConfig,
     ReindexRequest,
-    get_search_service,
+    get_search_handler,
 )
+# Alias for backward compatibility with test naming
+SearchService = ProductionSearchHandler
+get_search_service = get_search_handler
 
 # Import common schemas
 import sys
