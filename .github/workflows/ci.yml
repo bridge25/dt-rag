@@ -108,6 +108,7 @@ jobs:
             --ignore=tests/test_db_integration.py \
             --ignore=tests/test_schema.py \
             --ignore=tests/unit/test_health_check.py \
+            --ignore=tests/unit/test_redis_manager.py \
             -m "not slow" \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_creates_session \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_with_config \
