@@ -29,6 +29,8 @@ import {
   HITLTaskSchema,
   HITLReviewRequestSchema,
   HITLReviewResponseSchema,
+  FeedbackRequestSchema,
+  FeedbackResponseSchema,
   type SearchRequest,
   type SearchResponse,
   type ClassifyRequest,

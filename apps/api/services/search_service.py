@@ -22,8 +22,14 @@ from ..domain.usecases.search import (
     ClassifyTextUseCase,
 )
 
-# Import ReflectionEngine for mentor memory learning loop
-from ..orchestration.reflection_engine import ReflectionEngine
+# Import ReflectionEngine for mentor memory learning loop (optional)
+try:
+    from ..orchestration.reflection_engine import ReflectionEngine
+    HAS_REFLECTION_ENGINE = True
+except ImportError:
+    ReflectionEngine = None  # type: ignore
+    HAS_REFLECTION_ENGINE = False
+
 import asyncio
 from datetime import datetime
 

@@ -516,7 +516,7 @@ export const FeedbackResponseSchema = z.object({
   timestamp: z.string(),
 })
 
-export const AgentStatsSchema = z.object({
+export const MentorAgentStatsSchema = z.object({
   agent_id: z.string(),
   total_queries: z.number(),
   success_rate: z.number(),
@@ -528,4 +528,4 @@ export const AgentStatsSchema = z.object({
 
 export type FeedbackRequest = z.infer<typeof FeedbackRequestSchema>
 export type FeedbackResponse = z.infer<typeof FeedbackResponseSchema>
-export type AgentStats = z.infer<typeof AgentStatsSchema>
+export type MentorAgentStats = z.infer<typeof MentorAgentStatsSchema>
