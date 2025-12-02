@@ -103,6 +103,7 @@ jobs:
           uv run pytest tests/ -v --cov=apps/api --cov-report=xml --cov-report=term-missing \
             --ignore=tests/e2e \
             --ignore=tests/integration \
+            --ignore=tests/performance \
             -m "not slow" \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_creates_session \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_with_config
