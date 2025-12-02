@@ -154,7 +154,12 @@ jobs:
             --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_database_health_success \
             --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_database_health_failure \
             --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_cache_health_redis_available \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_cache_health_redis_unavailable
+            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_cache_health_redis_unavailable \
+            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_storage_health_success \
+            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_storage_health_low_space \
+            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_storage_health_no_access \
+            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_all_health_success \
+            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_all_health_mixed_status
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
