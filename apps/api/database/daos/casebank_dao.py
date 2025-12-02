@@ -190,7 +190,7 @@ class CaseBankDAO:
             successful_executions = int(success_result.scalar() or 0)
 
             # Failed executions count
-            fail_stmt = select(func.count(ExecutionLog.log_id)).where(ExecutionLog.not success)
+            fail_stmt = select(func.count(ExecutionLog.log_id)).where(~ExecutionLog.success)
             fail_result = await self.session.execute(fail_stmt)
             failed_executions = int(fail_result.scalar() or 0)
 

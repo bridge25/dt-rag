@@ -323,7 +323,7 @@ class AdvancedClusteringService:
         # Group docs by cluster
         children = []
         for cluster_id in set(labels):
-            cluster_mask = [l_ == cluster_id for l in labels]
+            cluster_mask = [label == cluster_id for label in labels]
             cluster_doc_ids = [doc_ids[i] for i, m in enumerate(cluster_mask) if m]
             cluster_texts = [texts[i] for i, m in enumerate(cluster_mask) if m]
 
