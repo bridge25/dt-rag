@@ -12,7 +12,7 @@ from datetime import datetime
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, text
+from sqlalchemy import select, text
 
 from ...domain.entities.taxonomy import TaxonomyNode, TaxonomyEdge, TaxonomyTree, TaxonomyMigration
 from ...domain.repositories.taxonomy_repository import (

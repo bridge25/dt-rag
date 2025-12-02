@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, and_, or_
+from sqlalchemy import select, update, and_
 
 from ..models.casebank import CaseBank, ExecutionLog
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import Any, Optional, List
+from typing import Any, Optional
 
 from sqlalchemy import String, Float, text
 from sqlalchemy.types import TypeDecorator, TEXT
@@ -41,7 +41,6 @@ __all__ = [
 
 # pgvector availability check
 try:
-    from pgvector.sqlalchemy import Vector
     PGVECTOR_AVAILABLE = True
 except ImportError:
     PGVECTOR_AVAILABLE = False

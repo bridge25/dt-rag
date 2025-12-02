@@ -33,7 +33,6 @@ from ...database import (
     CrossEncoderReranker,
 )
 # Import CaseBank models for mentor memory system
-from ...database.models.casebank import CaseBank, ExecutionLog
 from ...database.daos.casebank_dao import CaseBankDAO
 import json
 

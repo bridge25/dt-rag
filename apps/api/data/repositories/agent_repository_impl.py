@@ -12,8 +12,7 @@ from datetime import datetime
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func, and_
 
 from ...domain.entities.agent import Agent
 from ...domain.repositories.agent_repository import (

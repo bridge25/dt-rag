@@ -8,7 +8,6 @@ Transforms between SQLAlchemy Document/Chunk models and Domain entities.
 
 from typing import Any
 from uuid import UUID
-from datetime import datetime
 
 from ...domain.entities.document import Document, DocumentChunk
 # Import from existing database module
