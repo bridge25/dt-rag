@@ -7,7 +7,15 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useResearchStore } from "../researchStore";
-import type { ResearchStage, DiscoveredDocument } from "@/types/research";
+import type { ResearchStage, DiscoveredDocument, SourceInfo } from "@/types/research";
+
+// Helper function to create test source info
+const createTestSource = (type: "web" | "pdf" | "api" | "database" = "web"): SourceInfo => ({
+  id: `source-${type}`,
+  name: `Test ${type} Source`,
+  type,
+  reliability: "high",
+});
 
 // Reset store before each test
 beforeEach(() => {
@@ -381,11 +389,10 @@ describe("researchStore", () => {
       const doc: DiscoveredDocument = {
         id: "doc-1",
         title: "Test Document",
-        url: "https://example.com",
+        source: createTestSource("web"),
         snippet: "Test snippet",
-        source: "web",
-        confidence: 0.9,
-        discoveredAt: new Date(),
+        relevanceScore: 0.9,
+        collectedAt: new Date(),
       };
       addDocument(doc);
 
@@ -401,11 +408,10 @@ describe("researchStore", () => {
       const doc: DiscoveredDocument = {
         id: "doc-1",
         title: "Test Document",
-        url: "https://example.com",
+        source: createTestSource("web"),
         snippet: "Test snippet",
-        source: "web",
-        confidence: 0.9,
-        discoveredAt: new Date(),
+        relevanceScore: 0.9,
+        collectedAt: new Date(),
       };
       addDocument(doc);
 
@@ -439,20 +445,18 @@ describe("researchStore", () => {
       addDocument({
         id: "doc-1",
         title: "Doc 1",
-        url: "https://example.com/1",
+        source: createTestSource("web"),
         snippet: "Snippet 1",
-        source: "web",
-        confidence: 0.9,
-        discoveredAt: new Date(),
+        relevanceScore: 0.9,
+        collectedAt: new Date(),
       });
       addDocument({
         id: "doc-2",
         title: "Doc 2",
-        url: "https://example.com/2",
+        source: createTestSource("web"),
         snippet: "Snippet 2",
-        source: "web",
-        confidence: 0.8,
-        discoveredAt: new Date(),
+        relevanceScore: 0.8,
+        collectedAt: new Date(),
       });
 
       selectAllDocuments();
