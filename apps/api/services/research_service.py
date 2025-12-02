@@ -82,11 +82,11 @@ class ResearchService:
 
         # Create session in Redis
         # session = await self.session_manager.create_session(
-            session_id=session_id,
-            user_id=user_id,
-            query=query,
-            config=research_config,
-        )
+        #     session_id=session_id,
+        #     user_id=user_id,
+        #     query=query,
+        #     config=research_config,
+        # )
 
         logger.info(f"Created research session {session_id} for user {user_id}")
 
@@ -185,11 +185,11 @@ class ResearchService:
 
         # Update session to COMPLETED stage
         # updated_session = await self.session_manager.update_session(
-            session_id=session_id,
-            stage=ResearchStage.COMPLETED,
-            progress=1.0,
-            documents=updated_documents,
-        )
+        #     session_id=session_id,
+        #     stage=ResearchStage.COMPLETED,
+        #     progress=1.0,
+        #     documents=updated_documents,
+        # )
 
         # Record metrics
         metrics.record_documents_found(len(document_ids))

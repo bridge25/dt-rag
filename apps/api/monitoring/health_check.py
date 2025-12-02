@@ -13,7 +13,6 @@ from datetime import datetime
 from enum import Enum
 import aiohttp
 import psutil
-from sqlalchemy import Row
 
 logger = logging.getLogger(__name__)
 
