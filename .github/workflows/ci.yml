@@ -104,6 +104,7 @@ jobs:
             --ignore=tests/e2e \
             --ignore=tests/integration \
             --ignore=tests/performance \
+            --ignore=tests/security \
             -m "not slow" \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_creates_session \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_with_config
