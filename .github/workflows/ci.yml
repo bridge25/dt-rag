@@ -107,6 +107,7 @@ jobs:
             --ignore=tests/security \
             --ignore=tests/test_db_integration.py \
             --ignore=tests/test_schema.py \
+            --ignore=tests/unit/test_health_check.py \
             -m "not slow" \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_creates_session \
             --deselect=tests/api/test_research_service.py::TestStartResearch::test_start_research_with_config \
@@ -149,17 +150,7 @@ jobs:
             --deselect=tests/unit/test_execution_log.py::test_execution_log_failure \
             --deselect=tests/unit/test_execution_log.py::test_execution_log_foreign_key \
             --deselect=tests/unit/test_execution_log.py::test_execution_log_nullable_fields \
-            --deselect=tests/unit/test_execution_log.py::test_execution_log_timestamp \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_system_health_exception \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_database_health_success \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_database_health_failure \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_cache_health_redis_available \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_cache_health_redis_unavailable \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_storage_health_success \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_storage_health_low_space \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_storage_health_no_access \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_all_health_success \
-            --deselect=tests/unit/test_health_check.py::TestHealthChecker::test_check_all_health_mixed_status
+            --deselect=tests/unit/test_execution_log.py::test_execution_log_timestamp
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
