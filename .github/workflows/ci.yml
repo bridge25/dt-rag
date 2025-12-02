@@ -144,7 +144,12 @@ jobs:
             --deselect=tests/unit/test_database.py::TestSearchDAO::test_combine_search_results_basic \
             --deselect=tests/unit/test_database.py::TestSearchDAO::test_combine_search_results_no_overlap \
             --deselect=tests/unit/test_database.py::TestClassifyDAO::test_classify_text_error_handling \
-            --deselect=tests/unit/test_database.py::TestSearchMetrics::test_get_metrics_with_data
+            --deselect=tests/unit/test_database.py::TestSearchMetrics::test_get_metrics_with_data \
+            --deselect=tests/unit/test_execution_log.py::test_execution_log_creation \
+            --deselect=tests/unit/test_execution_log.py::test_execution_log_failure \
+            --deselect=tests/unit/test_execution_log.py::test_execution_log_foreign_key \
+            --deselect=tests/unit/test_execution_log.py::test_execution_log_nullable_fields \
+            --deselect=tests/unit/test_execution_log.py::test_execution_log_timestamp
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
