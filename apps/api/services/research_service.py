@@ -81,7 +81,7 @@ class ResearchService:
         session_id = str(uuid.uuid4())
 
         # Create session in Redis
-        session = await self.session_manager.create_session(
+        # session = await self.session_manager.create_session(
             session_id=session_id,
             user_id=user_id,
             query=query,
@@ -184,7 +184,7 @@ class ResearchService:
         updated_documents = (session.documents or []) + documents_to_add
 
         # Update session to COMPLETED stage
-        updated_session = await self.session_manager.update_session(
+        # updated_session = await self.session_manager.update_session(
             session_id=session_id,
             stage=ResearchStage.COMPLETED,
             progress=1.0,

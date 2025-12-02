@@ -162,7 +162,7 @@ class HealthChecker:
                 async with db_manager.async_session() as session:
                     # 간단한 쿼리 실행
                     result = await session.execute(text("SELECT 1"))
-                    row: Optional[Row[Any]] = result.fetchone()
+                    result.fetchone()  # Check connection
 
                 response_time = (time.time() - start_time) * 1000
 

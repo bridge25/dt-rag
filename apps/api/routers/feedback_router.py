@@ -80,7 +80,7 @@ async def submit_feedback(
             casebank_dao = CaseBankDAO(session)
 
             # Record feedback as an execution log entry
-            feedback_log = await casebank_dao.create_execution_log(
+            await casebank_dao.create_execution_log(
                 case_id=result_uuid,
                 success=request.helpful,
                 execution_time_ms=0,

@@ -287,7 +287,7 @@ class SearchRepositoryImpl(ISearchRepository):
             )
 
             # Create ExecutionLog entry for tracking
-            execution_log = await casebank_dao.create_execution_log(
+            await casebank_dao.create_execution_log(
                 case_id=casebank.id,
                 success=True,
                 execution_time_ms=0,  # Will be updated by caller

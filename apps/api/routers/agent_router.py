@@ -276,7 +276,7 @@ async def get_agent_coverage(
         # but implementation uses Dict[str, Dict[str, int]]
         for node_id, coverage_data in coverage_result.node_coverage.items():
             doc_count = coverage_data.get("document_count", 0)  # type: ignore[attr-defined]
-            chunk_count = coverage_data.get("chunk_count", 0)  # type: ignore[attr-defined]
+            _ = coverage_data.get("chunk_count", 0)  # type: ignore[attr-defined] # noqa: F841
             target_count = max(doc_count, 10)
 
             node_coverage[node_id] = (
