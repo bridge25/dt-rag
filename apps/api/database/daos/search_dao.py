@@ -14,7 +14,7 @@ from typing import Dict, Any, List, Optional, cast
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..connection import DATABASE_URL, async_session
+from ..connection import DATABASE_URL
 from ..utils.embedding_service import EmbeddingService
 from ..utils.reranker import CrossEncoderReranker, BM25_WEIGHT, VECTOR_WEIGHT
 from .database_manager import db_manager

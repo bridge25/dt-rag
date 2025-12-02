@@ -11,7 +11,6 @@ import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Set
-import re
 
 from ..models.metrics_models import (
     EventType,

@@ -25,13 +25,11 @@ logger = logging.getLogger(__name__)
 class NeuralSearchTimeoutError(Exception):
     """Raised when vector search exceeds timeout"""
 
-    pass
 
 
 class EmbeddingGenerationError(Exception):
     """Raised when embedding generation fails"""
 
-    pass
 
 
 # @IMPL:NEURAL-001:0.1

@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from uuid import UUID
 
-from ..entities.agent import Agent, AgentStats, AgentConfig
+from ..entities.agent import Agent
 
 
 @dataclass
@@ -108,7 +108,6 @@ class IAgentRepository(ABC):
         Returns:
             Agent if found, None otherwise
         """
-        pass
 
     @abstractmethod
     async def get_all(self, params: Optional[AgentFilterParams] = None) -> List[Agent]:
@@ -121,7 +120,6 @@ class IAgentRepository(ABC):
         Returns:
             List of agents matching filters
         """
-        pass
 
     @abstractmethod
     async def search(self, query: str, max_results: int = 50) -> List[Agent]:
@@ -135,7 +133,6 @@ class IAgentRepository(ABC):
         Returns:
             List of matching agents
         """
-        pass
 
     @abstractmethod
     async def create(self, params: CreateAgentParams) -> Agent:
@@ -148,7 +145,6 @@ class IAgentRepository(ABC):
         Returns:
             Created agent entity
         """
-        pass
 
     @abstractmethod
     async def update(self, agent_id: UUID, params: UpdateAgentParams) -> Agent:
@@ -165,7 +161,6 @@ class IAgentRepository(ABC):
         Raises:
             ValueError: If agent not found
         """
-        pass
 
     @abstractmethod
     async def delete(self, agent_id: UUID) -> bool:
@@ -178,7 +173,6 @@ class IAgentRepository(ABC):
         Returns:
             True if deleted, False if not found
         """
-        pass
 
     @abstractmethod
     async def get_metrics(self, agent_id: UUID) -> AgentMetrics:
@@ -194,7 +188,6 @@ class IAgentRepository(ABC):
         Raises:
             ValueError: If agent not found
         """
-        pass
 
     @abstractmethod
     async def get_coverage(self, agent_id: UUID) -> AgentCoverage:
@@ -210,7 +203,6 @@ class IAgentRepository(ABC):
         Raises:
             ValueError: If agent not found
         """
-        pass
 
     @abstractmethod
     async def increment_query_count(
@@ -229,7 +221,6 @@ class IAgentRepository(ABC):
             latency_ms: Query latency in milliseconds
             faithfulness: Faithfulness score (0-1)
         """
-        pass
 
     @abstractmethod
     async def update_xp_and_level(
@@ -249,7 +240,6 @@ class IAgentRepository(ABC):
         Returns:
             Updated agent
         """
-        pass
 
     @abstractmethod
     async def count(self, params: Optional[AgentFilterParams] = None) -> int:
@@ -262,4 +252,3 @@ class IAgentRepository(ABC):
         Returns:
             Number of matching agents
         """
-        pass

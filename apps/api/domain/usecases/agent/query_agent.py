@@ -8,11 +8,10 @@ Business logic for querying an agent's knowledge scope.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from uuid import UUID
 import time
 
-from ...entities.agent import Agent
 from ...entities.search import SearchResult, SearchStrategy
 from ...repositories.agent_repository import IAgentRepository
 from ...repositories.search_repository import ISearchRepository, SearchParams

@@ -66,19 +66,16 @@ class ITaxonomyRepository(ABC):
         offset: int = 0
     ) -> List[TaxonomyVersionInfo]:
         """List all taxonomy versions"""
-        pass
 
     @abstractmethod
     async def get_latest_version(self) -> Optional[str]:
         """Get the latest taxonomy version string"""
-        pass
 
     # Tree Operations
 
     @abstractmethod
     async def get_tree(self, version: str) -> TaxonomyTree:
         """Get complete taxonomy tree for a version"""
-        pass
 
     @abstractmethod
     async def get_node_by_id(
@@ -87,7 +84,6 @@ class ITaxonomyRepository(ABC):
         version: Optional[str] = None
     ) -> Optional[TaxonomyNode]:
         """Get a specific node by ID"""
-        pass
 
     @abstractmethod
     async def get_nodes_by_path(
@@ -96,7 +92,6 @@ class ITaxonomyRepository(ABC):
         version: str
     ) -> List[TaxonomyNode]:
         """Get nodes matching a canonical path"""
-        pass
 
     @abstractmethod
     async def get_children(
@@ -105,7 +100,6 @@ class ITaxonomyRepository(ABC):
         version: str
     ) -> List[TaxonomyNode]:
         """Get direct children of a node"""
-        pass
 
     @abstractmethod
     async def get_ancestors(
@@ -114,14 +108,12 @@ class ITaxonomyRepository(ABC):
         version: str
     ) -> List[TaxonomyNode]:
         """Get all ancestors of a node (path to root)"""
-        pass
 
     # Node CRUD
 
     @abstractmethod
     async def create_node(self, params: CreateNodeParams) -> TaxonomyNode:
         """Create a new taxonomy node"""
-        pass
 
     @abstractmethod
     async def create_nodes_batch(
@@ -129,7 +121,6 @@ class ITaxonomyRepository(ABC):
         nodes: List[CreateNodeParams]
     ) -> List[TaxonomyNode]:
         """Create multiple nodes in batch"""
-        pass
 
     @abstractmethod
     async def update_node(
@@ -141,12 +132,10 @@ class ITaxonomyRepository(ABC):
         metadata: Optional[Dict[str, Any]] = None
     ) -> TaxonomyNode:
         """Update a taxonomy node"""
-        pass
 
     @abstractmethod
     async def delete_node(self, node_id: UUID) -> bool:
         """Delete a taxonomy node"""
-        pass
 
     # Edge Operations
 
@@ -158,7 +147,6 @@ class ITaxonomyRepository(ABC):
         version: str
     ) -> TaxonomyEdge:
         """Create an edge between nodes"""
-        pass
 
     @abstractmethod
     async def delete_edge(
@@ -168,7 +156,6 @@ class ITaxonomyRepository(ABC):
         version: str
     ) -> bool:
         """Delete an edge between nodes"""
-        pass
 
     # Version Management
 
@@ -181,7 +168,6 @@ class ITaxonomyRepository(ABC):
         parent_version: Optional[str] = None
     ) -> TaxonomyVersionInfo:
         """Create a new taxonomy version"""
-        pass
 
     @abstractmethod
     async def compare_versions(
@@ -190,7 +176,6 @@ class ITaxonomyRepository(ABC):
         target_version: str
     ) -> TaxonomyComparison:
         """Compare two taxonomy versions"""
-        pass
 
     # Migration
 
@@ -202,7 +187,6 @@ class ITaxonomyRepository(ABC):
         limit: int = 100
     ) -> List[TaxonomyMigration]:
         """Get migration records"""
-        pass
 
     @abstractmethod
     async def create_migration(
@@ -214,7 +198,6 @@ class ITaxonomyRepository(ABC):
         rationale: Optional[str] = None
     ) -> TaxonomyMigration:
         """Record a migration"""
-        pass
 
     # Statistics
 
@@ -231,7 +214,6 @@ class ITaxonomyRepository(ABC):
         - avg_depth: float
         - categories_distribution: Dict[str, int]
         """
-        pass
 
     # Validation
 
@@ -246,4 +228,3 @@ class ITaxonomyRepository(ABC):
         - warnings: List[str]
         - suggestions: List[str]
         """
-        pass

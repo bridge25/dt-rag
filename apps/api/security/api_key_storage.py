@@ -11,7 +11,7 @@ including proper hashing, rate limiting, and audit logging.
 import hashlib
 import logging
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List, cast, Any
+from typing import Optional, List, Any
 from sqlalchemy import (
     Integer,
     String,
@@ -25,7 +25,7 @@ from sqlalchemy import (
     func,
     desc,
 )
-from sqlalchemy.engine import CursorResult, Result
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from dataclasses import dataclass

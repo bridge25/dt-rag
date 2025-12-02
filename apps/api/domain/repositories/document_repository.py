@@ -79,7 +79,6 @@ class IDocumentRepository(ABC):
     @abstractmethod
     async def get_document_by_id(self, doc_id: UUID) -> Optional[Document]:
         """Get document by ID"""
-        pass
 
     @abstractmethod
     async def get_all_documents(
@@ -87,22 +86,18 @@ class IDocumentRepository(ABC):
         params: Optional[DocumentFilterParams] = None
     ) -> List[Document]:
         """Get all documents with optional filtering"""
-        pass
 
     @abstractmethod
     async def create_document(self, params: CreateDocumentParams) -> Document:
         """Create a new document"""
-        pass
 
     @abstractmethod
     async def delete_document(self, doc_id: UUID) -> bool:
         """Delete a document and all its chunks"""
-        pass
 
     @abstractmethod
     async def get_document_by_checksum(self, checksum: str) -> Optional[Document]:
         """Find document by content checksum (for deduplication)"""
-        pass
 
     @abstractmethod
     async def count_documents(
@@ -110,19 +105,16 @@ class IDocumentRepository(ABC):
         params: Optional[DocumentFilterParams] = None
     ) -> int:
         """Count documents matching filters"""
-        pass
 
     # Chunk Operations
 
     @abstractmethod
     async def get_chunk_by_id(self, chunk_id: UUID) -> Optional[DocumentChunk]:
         """Get chunk by ID"""
-        pass
 
     @abstractmethod
     async def get_chunks_by_doc_id(self, doc_id: UUID) -> List[DocumentChunk]:
         """Get all chunks for a document"""
-        pass
 
     @abstractmethod
     async def get_chunks(
@@ -130,12 +122,10 @@ class IDocumentRepository(ABC):
         params: Optional[ChunkFilterParams] = None
     ) -> List[DocumentChunk]:
         """Get chunks with optional filtering"""
-        pass
 
     @abstractmethod
     async def create_chunk(self, params: CreateChunkParams) -> DocumentChunk:
         """Create a new chunk"""
-        pass
 
     @abstractmethod
     async def create_chunks_batch(
@@ -143,7 +133,6 @@ class IDocumentRepository(ABC):
         chunks: List[CreateChunkParams]
     ) -> List[DocumentChunk]:
         """Create multiple chunks in batch"""
-        pass
 
     @abstractmethod
     async def update_chunk_embedding(
@@ -152,7 +141,6 @@ class IDocumentRepository(ABC):
         embedding: List[float]
     ) -> DocumentChunk:
         """Update chunk embedding vector"""
-        pass
 
     @abstractmethod
     async def count_chunks(
@@ -160,7 +148,6 @@ class IDocumentRepository(ABC):
         params: Optional[ChunkFilterParams] = None
     ) -> int:
         """Count chunks matching filters"""
-        pass
 
     # Combined Operations
 
@@ -170,7 +157,6 @@ class IDocumentRepository(ABC):
         doc_id: UUID
     ) -> Optional[DocumentWithChunks]:
         """Get document with all its chunks"""
-        pass
 
     @abstractmethod
     async def get_chunks_without_embeddings(
@@ -178,7 +164,6 @@ class IDocumentRepository(ABC):
         limit: int = 100
     ) -> List[DocumentChunk]:
         """Get chunks that need embedding generation"""
-        pass
 
     # Statistics
 
@@ -194,4 +179,3 @@ class IDocumentRepository(ABC):
         - total_tokens: int
         - embedding_coverage: float (0-100)
         """
-        pass

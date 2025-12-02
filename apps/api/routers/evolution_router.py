@@ -8,24 +8,19 @@ and analytics.
 """
 
 import logging
-from datetime import datetime
 from typing import Dict, Any, List, Optional
 from enum import Enum
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query
 
 from ..models.evolution_models import (
     GenerateRequest,
     GeneratorConfig,
-    GenerationAlgorithm,
-    Granularity,
     ProposalStatus,
-    SuggestionType,
     ProposedCategory,
     TaxonomyProposal,
     TaxonomyProposalResponse,
     ProposedCategoryResponse,
-    GenerateStatusResponse,
     EvolutionSuggestion,
     EvolutionSuggestionResponse,
     SuggestionsListResponse,
@@ -35,7 +30,6 @@ from ..models.evolution_models import (
     AnalyticsResponse,
 )
 from ..services.taxonomy_evolution_service import (
-    TaxonomyEvolutionService,
     get_evolution_service,
 )
 from ..embedding_service import embedding_service

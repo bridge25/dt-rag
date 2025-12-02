@@ -7,7 +7,6 @@ keyword extraction, and semantic analysis.
 @CODE:TAXONOMY-EVOLUTION-001
 """
 
-import asyncio
 import logging
 import re
 import time

@@ -11,7 +11,7 @@ from uuid import UUID
 from datetime import datetime
 import logging
 
-from ..domain.entities.document import Document, DocumentChunk, DocumentWithChunks
+from ..domain.entities.document import Document, DocumentChunk
 from ..domain.repositories.document_repository import (
     IDocumentRepository,
     DocumentFilterParams,

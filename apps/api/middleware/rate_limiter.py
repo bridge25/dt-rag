@@ -75,7 +75,7 @@ class RedisRateLimiter:
                 f"Rate limiter initialized with Redis at {redis_source}"
             )
         except asyncio.TimeoutError:
-            logger.warning(f"Redis connection timeout - rate limiting disabled")
+            logger.warning("Redis connection timeout - rate limiting disabled")
             self.enabled = False
         except Exception as e:
             logger.error(f"Failed to connect to Redis for rate limiting: {e}")

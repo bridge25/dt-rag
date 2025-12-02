@@ -6,7 +6,6 @@ Business logic for retrieving a single agent.
 @CODE:CLEAN-ARCHITECTURE-GET-AGENT-BY-ID
 """
 
-from typing import Optional
 from uuid import UUID
 
 from ...entities.agent import Agent, get_recommended_actions

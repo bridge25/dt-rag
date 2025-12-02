@@ -105,12 +105,10 @@ def create_default_admin_key() -> None:
 
     # This would be called after the migration to create an initial admin key
     # Implementation would depend on your specific database setup
-    pass
 
 def migrate_existing_api_keys() -> None:
     """Migrate any existing API keys to the new secure format"""
     # If you have existing API keys in a different format, migrate them here
-    pass
 
 # Security validation functions
 def validate_migration() -> None:

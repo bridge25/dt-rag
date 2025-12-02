@@ -22,9 +22,7 @@ from ..security.api_key_storage import APIKeyInfo
 
 # Import database and models
 from ..database.daos.casebank_dao import CaseBankDAO
-from ..database.daos.search_dao import SearchDAO
 from ..database.connection import get_async_session
-from ..database.models.casebank import ExecutionLog
 
 # Import metrics tracking
 from ..monitoring.metrics import get_metrics_collector

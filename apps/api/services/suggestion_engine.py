@@ -10,8 +10,7 @@ Detects overlaps, proposes merges/splits, and suggests new categories.
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
-from collections import defaultdict
+from typing import List, Dict, Any, Optional
 
 from ..models.evolution_models import (
     SuggestionType,

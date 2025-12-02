@@ -6,7 +6,7 @@ import logging
 import time
 import json
 import asyncio
-from typing import Any, Optional, List, Dict, cast
+from typing import Any, Optional, List, Dict
 from uuid import UUID
 from datetime import datetime
 

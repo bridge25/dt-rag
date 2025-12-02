@@ -12,11 +12,9 @@ Supports both built-in metrics and optional Prometheus export.
 
 import logging
 import time
-import asyncio
 from typing import Dict, Any, Optional, List
 from contextlib import asynccontextmanager
 from dataclasses import field, dataclass
-from collections import deque
 
 logger = logging.getLogger(__name__)
 

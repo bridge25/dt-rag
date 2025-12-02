@@ -6,15 +6,13 @@ Business logic for performing hybrid search.
 @CODE:CLEAN-ARCHITECTURE-HYBRID-SEARCH
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from ...entities.search import (
-    SearchResult,
     SearchResponse,
     SearchStrategy,
-    filter_results_by_taxonomy,
     calculate_result_diversity,
 )
 from ...repositories.search_repository import ISearchRepository, SearchParams

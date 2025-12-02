@@ -7,11 +7,10 @@ Orchestrates search-related use cases and handles cross-cutting concerns.
 """
 
 from typing import Optional, List, Dict, Any
-from uuid import UUID
 import logging
 import time
 
-from ..domain.entities.search import SearchResult, SearchResponse
+from ..domain.entities.search import SearchResult
 from ..domain.repositories.search_repository import (
     ISearchRepository,
     SearchParams,
@@ -31,7 +30,6 @@ except ImportError:
     HAS_REFLECTION_ENGINE = False
 
 import asyncio
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

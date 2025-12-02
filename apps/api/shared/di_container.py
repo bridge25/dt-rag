@@ -7,7 +7,7 @@ Inversion of Control (IoC) and Dependency Injection patterns.
 @CODE:CLEAN-ARCHITECTURE-DI-CONTAINER
 """
 
-from typing import Optional, TypeVar, Type, Dict, Any
+from typing import Optional, TypeVar, Dict, Any
 from functools import lru_cache
 import logging
 

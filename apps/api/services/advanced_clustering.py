@@ -9,19 +9,17 @@ streaming clustering, and confidence calibration.
 
 import logging
 import uuid
-from typing import List, Dict, Any, Optional, Tuple, Union
-from collections import Counter
+from typing import List, Dict, Any, Optional
 import numpy as np
 
 try:
     from sklearn.cluster import (
         KMeans,
-        AgglomerativeClustering,
         MiniBatchKMeans,
     )
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics import silhouette_score, davies_bouldin_score
-    from scipy.cluster.hierarchy import linkage, fcluster, dendrogram
+    from scipy.cluster.hierarchy import linkage, fcluster
     from scipy.special import softmax
     SKLEARN_AVAILABLE = True
 except ImportError:
@@ -325,7 +323,7 @@ class AdvancedClusteringService:
         # Group docs by cluster
         children = []
         for cluster_id in set(labels):
-            cluster_mask = [l == cluster_id for l in labels]
+            cluster_mask = [l_ == cluster_id for l in labels]
             cluster_doc_ids = [doc_ids[i] for i, m in enumerate(cluster_mask) if m]
             cluster_texts = [texts[i] for i, m in enumerate(cluster_mask) if m]
 
@@ -775,10 +773,10 @@ class AdvancedClusteringService:
             Davies-Bouldin index (lower is better)
         """
         if not SKLEARN_AVAILABLE:
-            return float("inf")
+            return float("in")
 
         if len(set(labels)) < 2:
-            return float("inf")
+            return float("in")
 
         return davies_bouldin_score(embeddings, labels)
 
@@ -805,7 +803,7 @@ class AdvancedClusteringService:
             return {"n_clusters": min_clusters, "score": 0}
 
         best_n = min_clusters
-        best_score = -1 if method == "silhouette" else float("inf")
+        best_score = -1 if method == "silhouette" else float("in")
 
         for n in range(min_clusters, min(max_clusters + 1, len(embeddings))):
             kmeans = KMeans(n_clusters=n, random_state=42, n_init=10)

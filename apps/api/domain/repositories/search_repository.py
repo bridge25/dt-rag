@@ -14,8 +14,6 @@ from uuid import UUID
 
 from ..entities.search import (
     SearchResult,
-    SearchResponse,
-    SearchQuery,
     SearchStrategy,
 )
 
@@ -88,7 +86,6 @@ class ISearchRepository(ABC):
         Returns:
             List of search results ranked by relevance
         """
-        pass
 
     @abstractmethod
     async def bm25_search(self, params: SearchParams) -> List[SearchResult]:
@@ -101,7 +98,6 @@ class ISearchRepository(ABC):
         Returns:
             List of search results
         """
-        pass
 
     @abstractmethod
     async def vector_search(self, params: SearchParams) -> List[SearchResult]:
@@ -114,7 +110,6 @@ class ISearchRepository(ABC):
         Returns:
             List of search results
         """
-        pass
 
     @abstractmethod
     async def rerank_results(
@@ -134,7 +129,6 @@ class ISearchRepository(ABC):
         Returns:
             Reranked results
         """
-        pass
 
     # Embedding Operations
 
@@ -149,7 +143,6 @@ class ISearchRepository(ABC):
         Returns:
             Embedding vector
         """
-        pass
 
     @abstractmethod
     async def generate_batch_embeddings(
@@ -167,7 +160,6 @@ class ISearchRepository(ABC):
         Returns:
             List of embedding vectors
         """
-        pass
 
     # Index Operations
 
@@ -179,17 +171,14 @@ class ISearchRepository(ABC):
         Returns:
             Optimization result with created/updated indices
         """
-        pass
 
     @abstractmethod
     async def rebuild_bm25_index(self) -> bool:
         """Rebuild BM25 full-text search index"""
-        pass
 
     @abstractmethod
     async def rebuild_vector_index(self) -> bool:
         """Rebuild vector similarity index"""
-        pass
 
     # Analytics
 
@@ -201,7 +190,6 @@ class ISearchRepository(ABC):
         Returns:
             Analytics data including readiness and coverage
         """
-        pass
 
     @abstractmethod
     async def get_performance_metrics(self) -> Dict[str, Any]:
@@ -215,7 +203,6 @@ class ISearchRepository(ABC):
         - error_rate: float
         - cache_hit_rate: float
         """
-        pass
 
     # CaseBank Operations (Optional)
 
@@ -235,7 +222,6 @@ class ISearchRepository(ABC):
         Returns:
             List of matching cases
         """
-        pass
 
     @abstractmethod
     async def add_to_casebank(
@@ -259,7 +245,6 @@ class ISearchRepository(ABC):
         Returns:
             Case ID
         """
-        pass
 
     # Classification
 
@@ -279,4 +264,3 @@ class ISearchRepository(ABC):
         Returns:
             Classification result with canonical path and confidence
         """
-        pass

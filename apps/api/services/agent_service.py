@@ -8,17 +8,13 @@ Orchestrates agent-related use cases and handles cross-cutting concerns.
 
 from typing import Optional, List, Dict, Any
 from uuid import UUID
-from datetime import datetime
 import logging
 
 from ..domain.entities.agent import Agent
 from ..domain.repositories.agent_repository import (
     IAgentRepository,
-    AgentFilterParams,
     CreateAgentParams,
     UpdateAgentParams,
-    AgentMetrics,
-    AgentCoverage,
 )
 from ..domain.usecases.agent import (
     GetAgentsUseCase,

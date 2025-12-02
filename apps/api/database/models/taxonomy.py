@@ -13,7 +13,7 @@ from typing import List, Optional
 from sqlalchemy import Integer, Float, DateTime, Text, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ..connection import Base, get_array_type, get_uuid_type, DATABASE_URL
+from ..connection import Base, get_array_type, get_uuid_type
 
 __all__ = ["TaxonomyNode", "TaxonomyEdge", "TaxonomyMigration"]
 

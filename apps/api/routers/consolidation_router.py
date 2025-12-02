@@ -29,7 +29,7 @@ orchestration_src = os.path.abspath(
 if orchestration_src not in sys.path:
     sys.path.insert(0, orchestration_src)
 
-from consolidation_policy import ConsolidationPolicy  # type: ignore[import-not-found]
+from consolidation_policy import ConsolidationPolicy  # type: ignore[import-not-found] # noqa: E402
 
 logger = logging.getLogger(__name__)
 
