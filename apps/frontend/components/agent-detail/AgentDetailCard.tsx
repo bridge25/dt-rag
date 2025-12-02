@@ -39,9 +39,9 @@ export function AgentDetailCard({ agent }: AgentDetailCardProps) {
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">{agent.name}</h1>
-          <p className="text-xl text-gray-600">Level {agent.level}</p>
+          <p className="text-xl text-gray-600">Level {agent.level ?? 1}</p>
         </div>
-        <RarityBadge rarity={agent.rarity} className="text-xl px-4 py-2" />
+        <RarityBadge rarity={agent.rarity ?? "Common"} className="text-xl px-4 py-2" />
       </div>
 
       <div className="mb-8">
@@ -49,9 +49,9 @@ export function AgentDetailCard({ agent }: AgentDetailCardProps) {
           Experience Progress
         </h2>
         <ProgressBar
-          current={agent.current_xp}
-          max={agent.next_level_xp || agent.current_xp}
-          label={`${agent.current_xp} / ${agent.next_level_xp || "MAX"} XP`}
+          current={agent.current_xp ?? 0}
+          max={agent.next_level_xp ?? agent.current_xp ?? 100}
+          label={`${agent.current_xp ?? 0} / ${agent.next_level_xp ?? "MAX"} XP`}
           ariaLabel="Experience progress"
           className="h-8"
         />
@@ -61,21 +61,21 @@ export function AgentDetailCard({ agent }: AgentDetailCardProps) {
         <div className="bg-gray-50 rounded-lg p-4">
           <StatDisplay
             label="Total Documents"
-            value={agent.total_documents}
+            value={agent.total_documents ?? 0}
             layout="horizontal"
           />
         </div>
         <div className="bg-gray-50 rounded-lg p-4">
           <StatDisplay
             label="Total Queries"
-            value={agent.total_queries}
+            value={agent.total_queries ?? 0}
             layout="horizontal"
           />
         </div>
         <div className="bg-gray-50 rounded-lg p-4">
           <StatDisplay
             label="Quality Score"
-            value={agent.quality_score}
+            value={agent.quality_score ?? 0}
             layout="horizontal"
             variant="success"
           />
@@ -132,12 +132,14 @@ export function AgentDetailCard({ agent }: AgentDetailCardProps) {
             <span className="font-medium text-gray-600">Status:</span>
             <span className="ml-2 text-gray-800">{agent.status}</span>
           </div>
+          {agent.created_at && (
           <div>
             <span className="font-medium text-gray-600">Created At:</span>
             <span className="ml-2 text-gray-800">
               {new Date(agent.created_at).toLocaleString()}
             </span>
           </div>
+          )}
           {agent.last_used && (
             <div>
               <span className="font-medium text-gray-600">Last Used:</span>

@@ -46,6 +46,12 @@ const config: Config = {
         'glow-purple': '0 0 20px rgba(188, 19, 254, 0.15)',
         'neon-blue': '0 0 10px rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.3)',
         'neon-purple': '0 0 10px rgba(188, 19, 254, 0.5), 0 0 20px rgba(188, 19, 254, 0.3)',
+        // Ethereal Glass shadows
+        'ethereal-sm': '0 0 10px rgba(0, 247, 255, 0.15)',
+        'ethereal-md': '0 0 20px rgba(0, 247, 255, 0.25)',
+        'ethereal-lg': '0 0 40px rgba(0, 247, 255, 0.35)',
+        'ethereal-gold': '0 0 30px rgba(255, 215, 0, 0.4)',
+        'ethereal-purple': '0 0 25px rgba(188, 19, 254, 0.3)',
       },
       animation: {
         'fade-in': 'fadeIn 250ms ease-in-out',
@@ -55,6 +61,8 @@ const config: Config = {
         'confetti': 'confetti 500ms ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'float': 'float 6s ease-in-out infinite',
+        'glow-pulse': 'glowPulse 2s ease-in-out infinite',
+        'energy-beam': 'energyBeam 2s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -80,7 +88,16 @@ const config: Config = {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-10px)' },
-        }
+        },
+        glowPulse: {
+          '0%, 100%': { opacity: '0.6', boxShadow: '0 0 20px rgba(0, 247, 255, 0.3)' },
+          '50%': { opacity: '1', boxShadow: '0 0 40px rgba(0, 247, 255, 0.6)' },
+        },
+        energyBeam: {
+          '0%': { opacity: '0.4', strokeDashoffset: '1000' },
+          '50%': { opacity: '1' },
+          '100%': { opacity: '0.4', strokeDashoffset: '0' },
+        },
       },
       transitionDuration: {
         'fast': '200ms',
@@ -135,7 +152,19 @@ const config: Config = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))'
         },
-        // Cyberpunk Glass Custom Colors
+        // Ethereal Glass Color Palette
+        space: {
+          DEFAULT: '#0b1121',
+          light: '#0f172a',
+        },
+        ethereal: {
+          cyan: '#00f7ff',
+          blue: '#00f3ff',
+          purple: '#bc13fe',
+          gold: '#ffd700',
+          green: '#0aff0a',
+        },
+        // Cyberpunk Glass Custom Colors (legacy)
         neon: {
           blue: '#00f3ff',
           purple: '#bc13fe',

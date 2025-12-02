@@ -1,0 +1,114 @@
+{
+  "Analyst": {
+    "file": "analyst.svg",
+    "personality": "Logical",
+    "role": "Data Analyzer",
+    "rarity": "common",
+    "color_scheme": "#a0a0a0"
+  },
+  "Builder": {
+    "file": "builder.svg",
+    "personality": "Creative",
+    "role": "Constructor",
+    "rarity": "common",
+    "color_scheme": "#b0b0b0"
+  },
+  "Explorer": {
+    "file": "explorer.svg",
+    "personality": "Curious",
+    "role": "Navigator",
+    "rarity": "common",
+    "color_scheme": "#9a9a9a"
+  },
+  "Guardian": {
+    "file": "guardian.svg",
+    "personality": "Protective",
+    "role": "Defender",
+    "rarity": "common",
+    "color_scheme": "#aaaaaa"
+  },
+  "Innovator": {
+    "file": "innovator.svg",
+    "personality": "Bold",
+    "role": "Innovator",
+    "rarity": "rare",
+    "color_scheme": "#00d9ff"
+  },
+  "Mentor": {
+    "file": "mentor.svg",
+    "personality": "Wise",
+    "role": "Guide",
+    "rarity": "rare",
+    "color_scheme": "#00bfff"
+  },
+  "Optimizer": {
+    "file": "optimizer.svg",
+    "personality": "Efficient",
+    "role": "Improver",
+    "rarity": "rare",
+    "color_scheme": "#00e5ff"
+  },
+  "Pioneer": {
+    "file": "pioneer.svg",
+    "personality": "Adventurous",
+    "role": "Explorer",
+    "rarity": "rare",
+    "color_scheme": "#00d4ff"
+  },
+  "Researcher": {
+    "file": "researcher.svg",
+    "personality": "Intellectual",
+    "role": "Scholar",
+    "rarity": "epic",
+    "color_scheme": "#b366ff"
+  },
+  "Strategist": {
+    "file": "strategist.svg",
+    "personality": "Calculating",
+    "role": "Planner",
+    "rarity": "epic",
+    "color_scheme": "#9d5eff"
+  },
+  "Synthesizer": {
+    "file": "synthesizer.svg",
+    "personality": "Harmonious",
+    "role": "Integrator",
+    "rarity": "epic",
+    "color_scheme": "#a855ff"
+  },
+  "Tracker": {
+    "file": "tracker.svg",
+    "personality": "Precise",
+    "role": "Monitor",
+    "rarity": "epic",
+    "color_scheme": "#c77dff"
+  },
+  "Validator": {
+    "file": "validator.svg",
+    "personality": "Critical",
+    "role": "Verifier",
+    "rarity": "legendary",
+    "color_scheme": "#ffd700"
+  },
+  "Visionary": {
+    "file": "visionary.svg",
+    "personality": "Ambitious",
+    "role": "Dreamer",
+    "rarity": "legendary",
+    "color_scheme": "#ffed4e"
+  },
+  "Warden": {
+    "file": "warden.svg",
+    "personality": "Authoritative",
+    "role": "Overseer",
+    "rarity": "legendary",
+    "color_scheme": "#ffc700"
+  },
+  "Wizard": {
+    "file": "wizard.svg",
+    "personality": "Mysterious",
+    "role": "Enchanter",
+    "rarity": "legendary",
+    "color_scheme": "#ffde59"
+  }
+}

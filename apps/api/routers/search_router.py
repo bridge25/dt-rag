@@ -29,6 +29,12 @@ from ..security.api_key_storage import APIKeyInfo
 # Import metrics tracking
 from ..monitoring.metrics import get_metrics_collector
 
+# Import CaseBank and ExecutionLog for mentor memory system
+from ..services.search_service import SearchService
+from ..database.models.casebank import CaseBank, ExecutionLog
+from ..domain.repositories.search_repository import SearchRepository
+from ..database.repositories.casebank_repository import CaseBankRepository
+
 # Import common schemas
 import sys
 from pathlib import Path as PathLib
@@ -103,9 +109,14 @@ except ImportError as e:
     HYBRID_SEARCH_AVAILABLE = False
 
 
-# Real search service implementation
-class SearchService:
-    """Production search service with hybrid BM25 + vector search"""
+# Real search handler implementation
+class ProductionSearchHandler:
+    """Production search request handler with hybrid BM25 + vector search
+
+    Note: This is a request handler, not a service. The actual SearchService
+    lives in apps/api/services/search_service.py and follows Clean Architecture.
+    This handler is router-local and manages endpoint-specific concerns.
+    """
 
     async def search(
         self, request: SearchRequest, correlation_id: Optional[str] = None
@@ -525,9 +536,9 @@ class SearchService:
 
 
 # Dependency injection
-async def get_search_service() -> SearchService:
-    """Get search service instance"""
-    return SearchService()
+async def get_search_handler() -> ProductionSearchHandler:
+    """Get search handler instance"""
+    return ProductionSearchHandler()
 
 
 # API Endpoints
@@ -538,7 +549,7 @@ async def get_search_service() -> SearchService:
 async def search_documents(
     request: Request,
     search_request: SearchRequest,
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> JSONResponse:
     """
@@ -576,7 +587,38 @@ async def search_documents(
             )
 
         # Perform search with correlation tracking
-        result = await service.search(search_request, correlation_id=correlation_id)
+        result = await handler.search(search_request, correlation_id=correlation_id)
+
+        # ✅ MENTOR MEMORY SYSTEM: Store successful search in CaseBank
+        casebank_stored = False
+        execution_log_id = None
+
+        try:
+            # Initialize search service for CaseBank operations
+            search_service = SearchService()
+
+            # Store query-response pair in CaseBank for learning
+            casebank_id = await search_service.add_to_casebank(
+                query=search_request.q,
+                answer=result.dict(),  # Store the complete search result
+                sources=[hit.chunk_id for hit in result.hits[:5]],  # Top 5 sources
+                metadata={
+                    "correlation_id": correlation_id,
+                    "search_type": "hybrid",
+                    "total_results": len(result.hits),
+                    "latency_ms": result.latency,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+            casebank_stored = True
+            execution_log_id = casebank_id
+
+            logger.info(f"✅ CaseBank storage successful: {casebank_id} for query: {search_request.q[:50]}...")
+
+        except Exception as e:
+            logger.error(f"❌ CaseBank storage failed: {e}")
+            # Continue with search response even if CaseBank storage fails
+            # This ensures search functionality is not broken by memory system issues
 
         # Record latency metrics
         latency_ms = (time.time() - start_time) * 1000
@@ -592,13 +634,16 @@ async def search_documents(
         # Get p95 latency
         latency_stats = metrics_collector.latency_tracker.get_percentiles()
 
-        # Add response headers for monitoring
+        # Add response headers for monitoring and mentor memory status
         headers = {
             "X-Correlation-ID": correlation_id,
             "X-Search-Latency": str(result.latency),
             "X-Request-ID": result.request_id,
             "X-Total-Candidates": str(result.total_candidates or 0),
             "X-P95-Latency": str(latency_stats["p95"]),
+            # 🧠 Mentor Memory System Status Headers
+            "X-CaseBank-Stored": str(casebank_stored).lower(),
+            "X-Execution-Log-ID": execution_log_id or "",
         }
 
         return JSONResponse(content=result.dict(), headers=headers)
@@ -617,7 +662,7 @@ async def search_documents(
 @search_router.get("/analytics", response_model=SearchAnalytics)
 async def get_search_analytics(
     request: Request,
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> SearchAnalytics:
     """
@@ -630,7 +675,7 @@ async def get_search_analytics(
     - Usage by taxonomy category
     """
     try:
-        analytics = await service.get_analytics()
+        analytics = await handler.get_analytics()
         return analytics
 
     except Exception as e:
@@ -645,7 +690,7 @@ async def get_search_analytics(
 @search_router.get("/config", response_model=SearchConfig)
 async def get_search_config(
     request: Request,
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> SearchConfig:
     """
@@ -657,7 +702,7 @@ async def get_search_config(
     - Model specifications
     """
     try:
-        config = await service.get_config()
+        config = await handler.get_config()
         return config
 
     except Exception as e:
@@ -673,7 +718,7 @@ async def get_search_config(
 async def update_search_config(
     request: Request,
     config: SearchConfig,
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> SearchConfig:
     """
@@ -692,7 +737,7 @@ async def update_search_config(
                 detail="BM25 and vector weights must sum to 1.0",
             )
 
-        updated_config = await service.update_config(config)
+        updated_config = await handler.update_config(config)
         return updated_config
 
     except HTTPException:
@@ -710,7 +755,7 @@ async def update_search_config(
 async def reindex_search_corpus(
     request: Request,
     reindex_request: ReindexRequest,
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> Dict[str, Any]:
     """
@@ -722,7 +767,7 @@ async def reindex_search_corpus(
     - Force rebuild even if recent
     """
     try:
-        result = await service.reindex(reindex_request)
+        result = await handler.reindex(reindex_request)
         return result
 
     except Exception as e:
@@ -786,7 +831,7 @@ async def search_suggestions(
     request: Request,
     query: str = Query(..., min_length=1, description="Partial query for suggestions"),
     limit: int = Query(5, ge=1, le=20, description="Maximum suggestions"),
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> Dict[str, Any]:
     """
@@ -825,7 +870,7 @@ async def search_suggestions(
 async def search_documents_keyword_only(
     request: Request,
     search_request: SearchRequest,
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> SearchResponse:
     """
@@ -846,7 +891,7 @@ async def search_documents_keyword_only(
 
         if HYBRID_SEARCH_AVAILABLE:
             # Prepare search filters
-            search_filters = service._prepare_filters(search_request)
+            search_filters = handler._prepare_filters(search_request)
 
             # Perform keyword-only search
             search_results, search_metrics = await keyword_search(
@@ -913,7 +958,7 @@ async def search_documents_keyword_only(
 async def search_documents_vector_only(
     request: Request,
     search_request: SearchRequest,
-    service: SearchService = Depends(get_search_service),
+    handler: ProductionSearchHandler = Depends(get_search_handler),
     api_key: APIKeyInfo = Depends(verify_api_key),
 ) -> SearchResponse:
     """
@@ -934,7 +979,7 @@ async def search_documents_vector_only(
 
         if HYBRID_SEARCH_AVAILABLE:
             # Prepare search filters
-            search_filters = service._prepare_filters(search_request)
+            search_filters = handler._prepare_filters(search_request)
 
             # Perform vector-only search
             search_results, search_metrics = await vector_search(

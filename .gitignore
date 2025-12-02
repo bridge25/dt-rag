@@ -157,3 +157,103 @@ dt-rag/
 dt-rag*.md
 packages/common-schemas/
 apps/api/routers/_legacy/
+.aws/credentials
+.#*
+.TemporaryItems
+*.njsproj
+.moai/cache/
+*.sln
+.moai/scripts/sync-*.sh
+!.moai/config/
+.env.*
+*.pem
+# CI/CD
+.moai/archive/
+# OS Files
+# Virtual Environments
+# Python Cache & Database
+.claude/skills/*/*/*secret*
+.moai/reports/
+.moai/error_logs/
+# Purpose: Essential patterns for user projects
+.github/workflows/*.yml.bak
+.LSOverride
+# IDE & Editors
+# Logs & Temporary Files
+*.key
+# Test Coverage
+*.sublime-workspace
+# Version: 0.28.0
+# Windows
+*.pyd
+.moai/docs/
+.moai/learning/
+# uv.lock is intentionally included for reproducible builds
+*_secret=*
+.aws/config
+.moai/*
+!.moai/scripts/
+.DocumentRevisions-V100
+*.rdb
+# MoAI-ADK Package Distribution .gitignore
+# Environment Variables & Secrets
+.moai/analytics/
+.moai/scripts/*sync*.sh
+.claude/skills/*/.env*
+.uv_cache/
+[Dd]esktop.ini
+.moai/scripts/phase*.py
+# .moai local-only directories (user projects only)
+.AppleDouble
+.Spotlight-V100
+ehthumbs.db
+.VolumeIcon.icns
+.directory
+.fseventsd
+!.moai/scripts/**
+.Trashes
+.claude/skills/*/secrets/
+.moai/work/
+*secret*
+# Claude Code Skills Secrets
+*key*
+# Node.js (for docs/Nextra)
+# MoAI Directory Management
+.moai/indexes/
+*.dbm
+# ---------------------------------------------
+.moai/archived-skills/
+# Package Distribution
+# User-generated content: logs/, cache/, reports/, etc.
+*.sublime-project
+# Linux
+.uv-cache/
+*.pfx
+.claude/skills/*/*/*key*
+.cursor/
+*_token=*
+!.moai/specs/**
+.moai/scripts/phase*.sh
+# .moai local development scripts (not distributed)
+# Tracked in git: config/, memory/, scripts/, specs/
+# ============================================
+*.jks
+.moai/scripts/sync-*.py
+.claude/local/
+*.suo
+*.p12
+# Mac
+# Build Artifacts
+!.moai/config/**
+# Claude Code Local Configuration
+.moai/backups/
+*.sw?
+# Add to .gitignore if needed per project
+.moai/scripts/__pycache__/
+.gitlab-ci.yml.bak
+!.moai/memory/
+!.moai/memory/**
+!.moai/specs/
+# uv.lock
+.claude/skills/*/*/*token*
+.status.json

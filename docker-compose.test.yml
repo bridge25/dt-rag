@@ -1,5 +1,59 @@
+# docker-compose.test.yml
+# Isolated test environment for PostgreSQL-based testing
+# Usage: docker-compose -f docker-compose.test.yml up -d
+#
+# This creates an isolated test environment that:
+# - Uses port 5433 for PostgreSQL (avoids conflict with dev on 5432)
+# - Uses port 6380 for Redis (avoids conflict with dev on 6379)
+# - Auto-initializes pgvector extension
+# - Includes healthchecks for test reliability
+
 services:
-  test:
-    image: nginx:alpine
+  # PostgreSQL Test Database with pgvector
+  postgres_test:
+    image: pgvector/pgvector:pg16
+    container_name: norade_postgres_test
+    environment:
+      POSTGRES_DB: dt_rag_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Enable pgvector extension on startup
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
-      - "9999:80"
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./init-test.sql:/docker-entrypoint-initdb.d/init-test.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dt_rag_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    tmpfs:
+      - /var/lib/postgresql/data  # Use tmpfs for faster test execution
+    networks:
+      - test_network
+
+  # Redis Test Cache
+  redis_test:
+    image: redis:7-alpine
+    container_name: norade_redis_test
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly no --save ""  # Disable persistence for speed
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test_network
+
+volumes:
+  postgres_test_data:
+    driver: local
+
+networks:
+  test_network:
+    driver: bridge

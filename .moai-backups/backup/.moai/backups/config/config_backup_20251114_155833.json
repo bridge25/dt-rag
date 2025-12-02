@@ -1,0 +1,20 @@
+{
+  "project": {
+    "name": "dt-rag-standalone",
+    "mode": "personal",
+    "locale": "ko",
+    "language": "python",
+    "language_detection": {
+      "detected_language": "python",
+      "detection_method": "cli_default",
+      "confidence": null,
+      "markers": [],
+      "confirmed_by": null
+    },
+    "optimized": false
+  },
+  "language": {
+    "conversation_language": "en",
+    "conversation_language_name": "English"
+  }
+}

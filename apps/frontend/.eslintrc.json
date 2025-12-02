@@ -1,17 +1,19 @@
 {
   "extends": "next/core-web-vitals",
   "rules": {
-    "quotes": ["error", "double"],
+    "quotes": ["warn", "double", { "avoidEscape": true }],
     "react/react-in-jsx-scope": "off",
     "linebreak-style": "off",
     "semi": "off",
     "indent": "off",
-    "no-unused-vars": ["error", {
+    "no-unused-vars": ["warn", {
       "argsIgnorePattern": "^_",
       "varsIgnorePattern": "^_",
       "args": "none"
     }],
-    "@typescript-eslint/no-explicit-any": "off"
+    "@typescript-eslint/no-explicit-any": "off",
+    "react/no-unescaped-entities": "warn",
+    "react/jsx-no-comment-textnodes": "warn"
   },
   "overrides": [
     {

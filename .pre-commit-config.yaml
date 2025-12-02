@@ -1,0 +1,79 @@
+# Pre-commit hooks configuration for Norade
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+default_language_version:
+  python: python3.11
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(.*\.md|.*\.svg)$
+      - id: end-of-file-fixer
+        exclude: ^(.*\.svg)$
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: detect-private-key
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-symlinks
+
+  # Python linting and formatting with Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-requests
+          - types-PyYAML
+          - pydantic
+        args: [--ignore-missing-imports, --no-error-summary]
+        exclude: ^(tests/|apps/frontend/)
+
+  # Security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml", "-r", "apps/api"]
+        additional_dependencies: ["bandit[toml]"]
+        exclude: ^tests/
+
+  # Local hooks
+  - repo: local
+    hooks:
+      # Quick pytest check (unit tests only)
+      - id: pytest-check
+        name: pytest-check
+        entry: bash -c 'cd /Volumes/d/users/tony/Desktop/projects/dt-rag && python -m pytest apps/api -x -q --tb=line -m "not slow and not integration" 2>/dev/null || true'
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [commit]
+
+# CI configuration hints
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [pytest-check]  # Skip pytest in CI (handled by GitHub Actions)
+  submodules: false

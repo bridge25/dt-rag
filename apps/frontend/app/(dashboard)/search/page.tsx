@@ -1,7 +1,9 @@
 /**
- * Search page - Holographic Command Center
+ * Chat page - Neural Chat Interface
+ * Ethereal Glass Theme Applied
+ * (Rebranded from Search → Chat in Phase 1)
  *
- * @CODE:FRONTEND-MIGRATION-003
+ * @CODE:FRONTEND-REDESIGN-001-CHAT
  */
 
 "use client";
@@ -38,33 +40,33 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-dark-navy relative overflow-hidden p-8">
-      {/* Ambient Background Effects */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-accent-glow-blue/10 blur-[120px] rounded-full pointer-events-none" />
+    <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden p-8">
+      {/* Ambient Background Effects - Cyan Nebula */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-5xl mx-auto space-y-12 relative z-10">
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 mb-4 shadow-glass">
+          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 mb-4 shadow-[0_0_20px_rgba(0,247,255,0.15)]">
             <IconBadge icon={Command} color="blue" size="lg" className="bg-transparent" />
           </div>
-          <h1 className="text-5xl font-bold tracking-tight text-white drop-shadow-lg">
-            Command Center
+          <h1 className="text-5xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(0,247,255,0.3)]">
+            Neural Chat
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Access the neural network of your knowledge base with holographic search.
+            Engage with your intelligent agents powered by your knowledge universe.
           </p>
         </div>
 
         {/* Search Interface */}
         <div className={cn(
           "relative transition-all duration-500 ease-out",
-          isFocused ? "scale-105" : "scale-100"
+          isFocused ? "scale-[1.02]" : "scale-100"
         )}>
-          <div className="absolute -inset-1 bg-gradient-to-r from-accent-glow-blue via-accent-glow-purple to-accent-glow-blue opacity-30 blur-xl rounded-[2rem] transition-opacity duration-500"
+          <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 via-purple-500/20 to-cyan-500/30 opacity-30 blur-xl rounded-[2rem] transition-opacity duration-500"
             style={{ opacity: isFocused ? 0.5 : 0.2 }} />
 
-          <div className="relative bg-glass backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-glass overflow-hidden">
+          <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-[0_4px_15px_rgba(0,0,0,0.2)] overflow-hidden hover:shadow-[0_0_25px_rgba(0,247,255,0.3)] transition-shadow duration-300">
             {/* Decorative Grid */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
@@ -73,7 +75,7 @@ export default function SearchPage() {
                 <div className="relative group">
                   <SearchIcon className={cn(
                     "absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 transition-colors duration-300",
-                    isFocused ? "text-accent-glow-blue" : "text-gray-400"
+                    isFocused ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(0,247,255,0.7)]" : "text-gray-400"
                   )} />
                   <Input
                     id="query"
@@ -81,13 +83,13 @@ export default function SearchPage() {
                     onChange={(e) => setQuery(e.target.value)}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
-                    placeholder="Initiate search sequence..."
-                    className="w-full h-16 pl-16 pr-6 bg-white/5 border-white/10 text-xl text-white placeholder:text-gray-500 rounded-2xl focus:ring-0 focus:border-accent-glow-blue/50 transition-all duration-300"
+                    placeholder="Ask your question..."
+                    className="w-full h-16 pl-16 pr-6 bg-white/5 border-white/10 text-xl text-white placeholder:text-gray-500 rounded-2xl focus:ring-0 focus:border-cyan-400/50 focus:shadow-[0_0_15px_rgba(0,247,255,0.3)] transition-all duration-300"
                     required
                   />
                   {/* Animated Scan Line */}
                   <div className={cn(
-                    "absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-accent-glow-blue to-transparent transition-all duration-1000 ease-in-out",
+                    "absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent transition-all duration-1000 ease-in-out",
                     isFocused ? "w-full opacity-100" : "w-0 opacity-0"
                   )} />
                 </div>
@@ -96,7 +98,7 @@ export default function SearchPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
                 <div className="space-y-3">
                   <Label htmlFor="topK" className="text-gray-300 text-sm font-medium uppercase tracking-wider flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-accent-glow-green" />
+                    <TrendingUp className="w-4 h-4 text-cyan-400" />
                     Result Density (Top K)
                   </Label>
                   <div className="relative">
@@ -107,21 +109,21 @@ export default function SearchPage() {
                       onChange={(e) => setTopK(Number(e.target.value))}
                       min={1}
                       max={100}
-                      className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-accent-glow-green/50"
+                      className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:border-cyan-400/50 focus:shadow-[0_0_10px_rgba(0,247,255,0.2)]"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-400/30 transition-colors">
                   <div className="flex items-center space-x-3">
                     <Checkbox
                       id="useHybrid"
                       checked={useHybrid}
                       onCheckedChange={(checked) => setUseHybrid(checked === true)}
-                      className="border-white/20 data-[state=checked]:bg-accent-glow-purple data-[state=checked]:border-accent-glow-purple"
+                      className="border-white/20 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
                     />
                     <Label htmlFor="useHybrid" className="cursor-pointer text-gray-300 font-medium select-none flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-accent-glow-purple" />
+                      <Zap className="w-4 h-4 text-purple-400" />
                       Hybrid Search Protocol
                     </Label>
                   </div>
@@ -132,7 +134,7 @@ export default function SearchPage() {
               <Button
                 type="submit"
                 disabled={mutation.isPending}
-                className="w-full h-14 text-lg font-bold tracking-wide bg-gradient-to-r from-accent-glow-blue to-accent-glow-purple hover:opacity-90 text-white rounded-xl shadow-lg shadow-accent-glow-blue/20 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
+                className="w-full h-14 text-lg font-bold tracking-wide bg-gradient-to-r from-cyan-500 to-purple-500 hover:opacity-90 text-white rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_0_25px_rgba(0,247,255,0.4)] active:scale-[0.99]"
               >
                 {mutation.isPending ? (
                   <span className="flex items-center gap-2">
@@ -140,7 +142,7 @@ export default function SearchPage() {
                     PROCESSING REQUEST...
                   </span>
                 ) : (
-                  "EXECUTE SEARCH"
+                  "SEND MESSAGE"
                 )}
               </Button>
             </form>
@@ -169,9 +171,9 @@ export default function SearchPage() {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
               <div className="flex items-center justify-between px-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-1 bg-accent-glow-green rounded-full" />
+                  <div className="h-8 w-1 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(0,247,255,0.6)]" />
                   <div>
-                    <h2 className="text-3xl font-bold text-white">
+                    <h2 className="text-3xl font-bold text-cyan-400 drop-shadow-[0_0_10px_rgba(0,247,255,0.5)]">
                       {mutation.data.hits.length}
                     </h2>
                     <p className="text-sm text-gray-400 font-medium uppercase tracking-wider">
@@ -197,12 +199,12 @@ export default function SearchPage() {
                   {mutation.data.hits.map((result, index) => (
                     <div
                       key={result.chunk_id}
-                      className="group relative p-6 rounded-2xl bg-glass border border-white/5 hover:border-accent-glow-blue/30 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-glass-hover"
+                      className="group relative p-6 rounded-2xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-cyan-400/30 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(0,247,255,0.3)]"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="flex items-start gap-5">
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/10 group-hover:border-accent-glow-blue/30 transition-colors">
-                          <FileText className="w-6 h-6 text-accent-glow-blue" />
+                        <div className="p-3 rounded-xl bg-white/5 border border-white/10 group-hover:border-cyan-400/30 transition-colors">
+                          <FileText className="w-6 h-6 text-cyan-400" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-3">
@@ -211,27 +213,27 @@ export default function SearchPage() {
                                 <span className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-mono text-gray-400 border border-white/5">
                                   ID: {result.chunk_id.slice(0, 8)}...
                                 </span>
-                                <span className="px-2 py-0.5 rounded bg-accent-glow-blue/10 text-[10px] font-mono text-accent-glow-blue border border-accent-glow-blue/20">
+                                <span className="px-2 py-0.5 rounded bg-cyan-400/10 text-[10px] font-mono text-cyan-400 border border-cyan-400/20">
                                   MATCH #{index + 1}
                                 </span>
                               </div>
                             </div>
                             <div className="flex flex-col items-end">
-                              <span className="text-2xl font-bold text-white leading-none">
+                              <span className="text-2xl font-bold text-cyan-400 leading-none drop-shadow-[0_0_8px_rgba(0,247,255,0.5)]">
                                 {(result.score * 100).toFixed(1)}%
                               </span>
                               <span className="text-[10px] text-gray-500 uppercase tracking-wider mt-1">Relevance</span>
                             </div>
                           </div>
 
-                          <p className="text-gray-300 leading-relaxed text-lg font-light border-l-2 border-white/10 pl-4 py-1 group-hover:border-accent-glow-blue/50 transition-colors">
+                          <p className="text-gray-300 leading-relaxed text-lg font-light border-l-2 border-white/10 pl-4 py-1 group-hover:border-cyan-400/50 transition-colors">
                             {result.text}
                           </p>
 
                           {result.metadata && Object.keys(result.metadata).length > 0 && (
                             <div className="mt-4 pt-4 border-t border-white/5">
                               <details className="group/details">
-                                <summary className="cursor-pointer text-xs font-medium text-gray-500 hover:text-accent-glow-blue transition-colors flex items-center gap-2 select-none">
+                                <summary className="cursor-pointer text-xs font-medium text-gray-500 hover:text-cyan-400 transition-colors flex items-center gap-2 select-none">
                                   <Cpu className="w-3 h-3" />
                                   VIEW METADATA
                                 </summary>
@@ -243,6 +245,9 @@ export default function SearchPage() {
                           )}
                         </div>
                       </div>
+
+                      {/* Bottom glow bar */}
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   ))}
                 </div>

@@ -1,0 +1,261 @@
+================================================================================
+ETHEREAL GLASS ROBOT AVATARS - COMPLETE MANIFEST
+================================================================================
+
+SPEC: SPEC-FRONTEND-REDESIGN-001 (Phase 2)
+GENERATED: 2025-11-28
+LOCATION: /apps/frontend/public/avatars/robots/
+
+================================================================================
+ROBOT LISTING (16 total)
+================================================================================
+
+COMMON TIER (Gray/Silver - #808080-#c0c0c0)
+─────────────────────────────────────────────────────────────────────────────
+1. Analyst
+   File: analyst.svg
+   Personality: Logical
+   Role: Data Analyzer
+   Color: #a0a0a0 (Gray)
+
+2. Builder
+   File: builder.svg
+   Personality: Creative
+   Role: Constructor
+   Color: #b0b0b0 (Light Gray)
+
+3. Explorer
+   File: explorer.svg
+   Personality: Curious
+   Role: Navigator
+   Color: #9a9a9a (Dark Gray)
+
+4. Guardian
+   File: guardian.svg
+   Personality: Protective
+   Role: Defender
+   Color: #aaaaaa (Medium Gray)
+
+
+RARE TIER (Cyan/Blue - #0099cc-#00d9ff)
+─────────────────────────────────────────────────────────────────────────────
+5. Innovator
+   File: innovator.svg
+   Personality: Bold
+   Role: Innovator
+   Color: #00d9ff (Bright Cyan)
+
+6. Mentor
+   File: mentor.svg
+   Personality: Wise
+   Role: Guide
+   Color: #00bfff (Sky Blue)
+
+7. Optimizer
+   File: optimizer.svg
+   Personality: Efficient
+   Role: Improver
+   Color: #00e5ff (Cyan)
+
+8. Pioneer
+   File: pioneer.svg
+   Personality: Adventurous
+   Role: Explorer
+   Color: #00d4ff (Cyan Blue)
+
+
+EPIC TIER (Purple - #6600cc-#b366ff)
+─────────────────────────────────────────────────────────────────────────────
+9. Researcher
+   File: researcher.svg
+   Personality: Intellectual
+   Role: Scholar
+   Color: #b366ff (Light Purple)
+
+10. Strategist
+    File: strategist.svg
+    Personality: Calculating
+    Role: Planner
+    Color: #9d5eff (Purple)
+
+11. Synthesizer
+    File: synthesizer.svg
+    Personality: Harmonious
+    Role: Integrator
+    Color: #a855ff (Purple)
+
+12. Tracker
+    File: tracker.svg
+    Personality: Precise
+    Role: Monitor
+    Color: #c77dff (Light Purple)
+
+
+LEGENDARY TIER (Gold - #cc9900-#ffed4e)
+─────────────────────────────────────────────────────────────────────────────
+13. Validator
+    File: validator.svg
+    Personality: Critical
+    Role: Verifier
+    Color: #ffd700 (Bright Gold)
+
+14. Visionary
+    File: visionary.svg
+    Personality: Ambitious
+    Role: Dreamer
+    Color: #ffed4e (Golden Yellow)
+
+15. Warden
+    File: warden.svg
+    Personality: Authoritative
+    Role: Overseer
+    Color: #ffc700 (Dark Gold)
+
+16. Wizard
+    File: wizard.svg
+    Personality: Mysterious
+    Role: Enchanter
+    Color: #ffde59 (Golden)
+
+
+================================================================================
+SUPPORTING FILES
+================================================================================
+
+robots_index.json
+  - Complete metadata index for all 16 robots
+  - Contains: file, personality, role, rarity, color_scheme
+  - Format: JSON
+  - Size: 2.5 KB
+
+NANOBANANA_PROMPTS.md
+  - 16 detailed prompts for PNG generation via Gemini API
+  - Each prompt optimized for image generation
+  - Includes setup instructions and API configuration
+  - Size: 11 KB
+
+README.md
+  - Quick reference guide
+  - Usage examples and integration patterns
+  - TypeScript interfaces
+  - React component templates
+  - CSS styling guidelines
+
+================================================================================
+DOCUMENTATION
+================================================================================
+
+In .moai/reports/:
+
+NANOBANANA-ROBOT-AVATARS-GENERATION-REPORT.md
+  - Complete generation report
+  - Design features and specifications
+  - PNG generation instructions
+  - Web implementation guide
+  - Quality checklist
+
+PHASE2-SUMMARY.md
+  - Phase 2 completion summary
+  - Deliverables list
+  - Integration roadmap
+  - Phase 3 next steps
+
+================================================================================
+QUICK START
+================================================================================
+
+1. Import metadata:
+   import robotsIndex from '@/public/avatars/robots/robots_index.json'
+
+2. Display robot:
+   <img src={`/avatars/robots/${robot.file}`} className={`rarity-${robot.rarity}`} />
+
+3. Style with CSS classes:
+   .rarity-common { /* Gray theme */ }
+   .rarity-rare { /* Cyan theme */ }
+   .rarity-epic { /* Purple theme */ }
+   .rarity-legendary { /* Gold theme */ }
+
+================================================================================
+TECHNICAL SPECIFICATIONS
+================================================================================
+
+Format: SVG (Scalable Vector Graphics)
+Dimensions: 512x512 viewport
+Transparency: Yes (PNG background)
+Scalability: Unlimited (vector format)
+File Size: 3.5-3.6 KB per robot (SVG)
+Total Assets: 18 files (~60 KB)
+
+Color System:
+  Common: Gray/Silver (#808080-#c0c0c0)
+  Rare: Cyan/Blue (#0099cc-#00d9ff)
+  Epic: Purple (#6600cc-#b366ff)
+  Legendary: Gold (#cc9900-#ffed4e)
+
+Visual Effects:
+  - Radial gradient backgrounds (glow)
+  - Linear glass gradients (depth)
+  - Gaussian blur filters (soft edges)
+  - Opacity layers (transparency)
+  - Character expressions
+  - Rarity badges
+
+================================================================================
+PNG GENERATION
+================================================================================
+
+To generate PNG versions using Google's Gemini API:
+
+1. Set API key:
+   export GOOGLE_API_KEY="your-key-here"
+
+2. Use prompts from NANOBANANA_PROMPTS.md:
+   gemini "/generate '[robot-specific-prompt]'"
+
+3. Move generated files:
+   mv nanobanana-output/*.png apps/frontend/public/avatars/robots/
+
+Alternatively, convert SVGs to PNG:
+   convert -density 150 -background none *.svg *.png
+
+================================================================================
+DESIGN REFERENCES
+================================================================================
+
+Visual references used:
+  - 뉴디자인1.png (Agent card layout)
+  - 뉴디자인2.png (Constellation explorer)
+  - SPEC-FRONTEND-REDESIGN-001 (Design specification)
+
+Aesthetic: Ethereal Glass
+  - Sleek, futuristic robot design
+  - Glowing glass-like components
+  - Holographic effects
+  - Professional quality
+
+================================================================================
+PHASE STATUS
+================================================================================
+
+Phase 1: Design System (Complete)
+Phase 2: Asset Generation (COMPLETE - THIS PHASE)
+Phase 3: Frontend Integration (Next)
+Phase 4: Testing & Optimization (Planned)
+
+Current Status: READY FOR PHASE 3 INTEGRATION
+
+================================================================================
+CONTACTS & REFERENCES
+================================================================================
+
+SPEC: SPEC-FRONTEND-REDESIGN-001
+Agent: Nanobanana Designer Agent
+Generated: 2025-11-28 03:18 UTC
+
+For questions or modifications, refer to:
+  - NANOBANANA-ROBOT-AVATARS-GENERATION-REPORT.md
+  - PHASE2-SUMMARY.md
+  - apps/frontend/public/avatars/robots/README.md
+
+================================================================================

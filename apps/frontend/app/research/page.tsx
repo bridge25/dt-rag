@@ -28,7 +28,7 @@ import {
   type ResearchAPICallbacks,
 } from "@/lib/api/research";
 import type { ResearchStage } from "@/types/research";
-import { AlertTriangle, WifiOff } from "lucide-react";
+import { WifiOff } from "lucide-react";
 
 // ============================================================================
 // Configuration

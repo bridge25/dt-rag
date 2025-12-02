@@ -24,7 +24,7 @@ import {
 } from "@xyflow/react"
 import { memo } from "react"
 import { cn } from "@/lib/utils"
-import { Folder, Database, Globe, FileText, Sparkles } from "lucide-react"
+import { Folder, Database, Sparkles } from "lucide-react"
 import dagre from "dagre"
 import type { TaxonomyNode } from "./types"
 import "@xyflow/react/dist/style.css"

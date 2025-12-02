@@ -1,7 +1,7 @@
 """
-API Configuration for DT-RAG v1.8.1
+API Configuration for Norade v1.8.1
 
-Configuration management for the DT-RAG API including environment-specific settings,
+Configuration management for the Norade API including environment-specific settings,
 security configuration, rate limiting, and performance tuning.
 
 This module integrates with the new environment management and LLM configuration systems
@@ -250,7 +250,7 @@ class APIConfig:
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
-    title: str = "Dynamic Taxonomy RAG API"
+    title: str = "Norade API"
     version: str = "1.8.1"
 
     # Paths
@@ -450,11 +450,11 @@ def get_api_config() -> APIConfig:
 
     # Environment-specific settings
     if env_manager.current_env == Environment.PRODUCTION:
-        config.allowed_hosts = ["api.dt-rag.com", "dt-rag.com"]
+        config.allowed_hosts = ["api.norade.ai", "norade.ai"]
 
         # Secure production CORS settings (only if not overridden by env vars)
         if not os.getenv("CORS_ORIGINS"):
-            config.cors.allow_origins = ["https://dt-rag.com", "https://app.dt-rag.com"]
+            config.cors.allow_origins = ["https://norade.ai", "https://app.norade.ai"]
 
         # More restrictive CORS in production
         config.cors.allow_credentials = True
@@ -464,13 +464,13 @@ def get_api_config() -> APIConfig:
         config.performance.worker_processes = env_manager.config.worker_processes
 
     elif env_manager.current_env == Environment.STAGING:
-        config.allowed_hosts = ["staging-api.dt-rag.com"]
+        config.allowed_hosts = ["staging-api.norade.ai"]
 
         # Staging CORS settings (only if not overridden by env vars)
         if not os.getenv("CORS_ORIGINS"):
             config.cors.allow_origins = [
-                "https://staging.dt-rag.com",
-                "https://staging-app.dt-rag.com",
+                "https://staging.norade.ai",
+                "https://staging-app.norade.ai",
             ]
 
         config.cors.max_age = 1800  # 30 minutes cache for staging
@@ -483,9 +483,11 @@ def get_api_config() -> APIConfig:
             config.cors.allow_origins = [
                 "http://localhost:3000",
                 "http://localhost:3001",
+                "http://localhost:3002",
                 "http://localhost:8080",
                 "http://localhost:8081",
                 "http://127.0.0.1:3000",
+                "http://127.0.0.1:3002",
                 "http://127.0.0.1:8080",
             ]
         config.cors.max_age = 300  # 5 minutes cache for development

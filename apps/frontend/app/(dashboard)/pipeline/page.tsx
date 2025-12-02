@@ -7,7 +7,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { IconBadge } from "@/components/ui/icon-badge"
 import {
   Network,
   Search,
@@ -17,12 +16,9 @@ import {
   Sparkles,
   Link2,
   CheckCircle2,
-  Clock,
-  ArrowRight,
   Activity,
   Terminal,
   Cpu,
-  Zap,
   GitCommit
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -156,19 +152,19 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-dark-navy relative overflow-hidden p-8">
-      {/* Ambient Background */}
-      <div className="absolute bottom-0 left-0 w-[1000px] h-[600px] bg-accent-glow-green/5 blur-[120px] rounded-full pointer-events-none" />
+    <div className="min-h-[calc(100vh-4rem)] relative overflow-hidden p-8">
+      {/* Ambient Background - Cyan Nebula */}
+      <div className="absolute bottom-0 left-0 w-[1000px] h-[600px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto space-y-8 relative z-10">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md">
-                <Activity className="w-6 h-6 text-accent-glow-green" />
+              <div className="p-2 rounded-lg bg-white/5 border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(0,247,255,0.2)]">
+                <Activity className="w-6 h-6 text-cyan-400" />
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-white">System Flow</h1>
+              <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_10px_rgba(0,247,255,0.3)]">System Flow</h1>
             </div>
             <p className="text-gray-400 max-w-xl">
               Real-time visualization of the RAG inference pipeline.
@@ -183,8 +179,8 @@ export default function PipelinePage() {
             <div className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md flex flex-col items-end">
               <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">Status</span>
               <div className="flex items-center gap-2 mt-1">
-                <div className="w-2 h-2 rounded-full bg-accent-glow-green animate-pulse" />
-                <span className="text-lg font-bold text-accent-glow-green">ACTIVE</span>
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_10px_rgba(0,247,255,0.6)]" />
+                <span className="text-lg font-bold text-cyan-400">ACTIVE</span>
               </div>
             </div>
           </div>
@@ -195,12 +191,12 @@ export default function PipelinePage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="relative">
               {/* Connecting Line */}
-              <div className="absolute left-8 top-8 bottom-8 w-0.5 bg-gradient-to-b from-accent-glow-blue/20 via-accent-glow-purple/20 to-accent-glow-green/20" />
+              <div className="absolute left-8 top-8 bottom-8 w-0.5 bg-gradient-to-b from-cyan-400/20 via-purple-400/20 to-green-400/20" />
 
               <div className="space-y-6">
                 {pipelineSteps.map((step, index) => {
                   const isSelected = selectedStep === step.id
-                  const isRunning = step.status === 'running'
+                  const isRunning = step.status === "running"
 
                   return (
                     <div
@@ -214,36 +210,36 @@ export default function PipelinePage() {
                       {/* Node Connector */}
                       <div className={cn(
                         "absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 transition-all duration-300 z-10",
-                        step.status === 'completed' ? "bg-dark-navy border-accent-glow-green shadow-[0_0_10px_rgba(74,222,128,0.5)]" :
-                          step.status === 'running' ? "bg-dark-navy border-accent-glow-blue shadow-[0_0_15px_rgba(96,165,250,0.8)] animate-pulse" :
-                            "bg-dark-navy border-gray-600"
+                        step.status === "completed" ? "bg-black/50 border-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]" :
+                          step.status === "running" ? "bg-black/50 border-cyan-400 shadow-[0_0_15px_rgba(0,247,255,0.8)] animate-pulse" :
+                            "bg-black/50 border-gray-600"
                       )} />
 
                       {/* Horizontal Line */}
                       <div className={cn(
                         "absolute left-10 top-1/2 -translate-y-1/2 h-0.5 w-10 transition-colors duration-300",
-                        isSelected ? "bg-accent-glow-blue" : "bg-white/10"
+                        isSelected ? "bg-cyan-400 shadow-[0_0_8px_rgba(0,247,255,0.5)]" : "bg-white/10"
                       )} />
 
                       <div className={cn(
                         "group relative overflow-hidden rounded-2xl border backdrop-blur-md transition-all duration-300 cursor-pointer",
                         isSelected
-                          ? "bg-white/10 border-accent-glow-blue/50 shadow-glass"
-                          : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10"
+                          ? "bg-white/10 border-cyan-400/50 shadow-[0_0_20px_rgba(0,247,255,0.3)]"
+                          : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-cyan-400/30"
                       )}>
                         {/* Progress Bar Background */}
                         {isRunning && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent-glow-blue/5 to-transparent -skew-x-12 animate-shimmer" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent -skew-x-12 animate-shimmer" />
                         )}
 
                         <div className="p-5 flex items-start gap-5 relative z-10">
                           <div className={cn(
                             "p-3 rounded-xl border transition-colors duration-300",
-                            isSelected ? "bg-accent-glow-blue/20 border-accent-glow-blue/30" : "bg-white/5 border-white/10"
+                            isSelected ? "bg-cyan-400/20 border-cyan-400/30 shadow-[0_0_10px_rgba(0,247,255,0.3)]" : "bg-white/5 border-white/10"
                           )}>
                             <step.icon className={cn(
                               "w-6 h-6",
-                              isSelected ? "text-accent-glow-blue" : "text-gray-400"
+                              isSelected ? "text-cyan-400 drop-shadow-[0_0_6px_rgba(0,247,255,0.6)]" : "text-gray-400"
                             )} />
                           </div>
 
@@ -261,8 +257,8 @@ export default function PipelinePage() {
                                     {step.duration}ms
                                   </span>
                                 )}
-                                {step.status === 'completed' && <CheckCircle2 className="w-5 h-5 text-accent-glow-green" />}
-                                {step.status === 'running' && <Cpu className="w-5 h-5 text-accent-glow-blue animate-spin" />}
+                                {step.status === "completed" && <CheckCircle2 className="w-5 h-5 text-green-400 drop-shadow-[0_0_6px_rgba(74,222,128,0.6)]" />}
+                                {step.status === "running" && <Cpu className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_6px_rgba(0,247,255,0.6)] animate-spin" />}
                               </div>
                             </div>
 
@@ -277,8 +273,8 @@ export default function PipelinePage() {
                                   key={i}
                                   className={cn(
                                     "flex-1 transition-all duration-300",
-                                    step.status === 'completed' ? "bg-accent-glow-green/50" :
-                                      step.status === 'running' && i <= activePulse ? "bg-accent-glow-blue" :
+                                    step.status === "completed" ? "bg-green-400/50" :
+                                      step.status === "running" && i <= activePulse ? "bg-cyan-400 shadow-[0_0_6px_rgba(0,247,255,0.5)]" :
                                         "bg-white/5"
                                   )}
                                 />
@@ -314,7 +310,7 @@ export default function PipelinePage() {
                   {selectedStep ? (
                     <div className="animate-in fade-in duration-300">
                       <div className="mb-4 pb-4 border-b border-white/5">
-                        <span className="text-accent-glow-blue"># Viewing logs for: </span>
+                        <span className="text-cyan-400 drop-shadow-[0_0_4px_rgba(0,247,255,0.5)]"># Viewing logs for: </span>
                         <span className="text-white font-bold">{pipelineSteps.find(s => s.id === selectedStep)?.name}</span>
                       </div>
                       {pipelineSteps.find(s => s.id === selectedStep)?.logs?.map((log, i) => (
@@ -322,7 +318,7 @@ export default function PipelinePage() {
                           <span className="text-gray-600 mr-2">{new Date().toLocaleTimeString()}</span>
                           {log}
                         </div>
-                      )) || <span className="text-gray-500 italic">// No logs available for this step</span>}
+                      )) || <span className="text-gray-500 italic">{/* No logs available */} No logs available for this step</span>}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-[300px] text-gray-500 gap-4">
@@ -332,7 +328,7 @@ export default function PipelinePage() {
                   )}
 
                   {/* Blinking Cursor */}
-                  <div className="w-2 h-4 bg-accent-glow-green animate-pulse mt-4" />
+                  <div className="w-2 h-4 bg-green-400 animate-pulse mt-4 shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
                 </div>
               </div>
             </div>

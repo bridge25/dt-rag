@@ -1,7 +1,7 @@
 """
-Dynamic Taxonomy RAG API v1.8.1
+Norade API v1.8.1
 
-Comprehensive RESTful API for the Dynamic Taxonomy RAG system.
+Comprehensive RESTful API for the Norade system.
 Provides endpoints for taxonomy management, search, classification,
 orchestration, agent factory, and monitoring.
 
@@ -48,6 +48,7 @@ from apps.api.routers.orchestration_router import orchestration_router
 from apps.api.routers.agent_factory_router import agent_factory_router
 from apps.api.routers.agent_router import router as agent_router
 from apps.api.routers.monitoring_router import router as monitoring_router
+from apps.api.routers.feedback_router import feedback_router
 from apps.api.routers.embedding_router import router as embedding_router
 from apps.api.routers.evolution_router import router as evolution_router
 from apps.api.routers.research_router import research_router
@@ -129,7 +130,7 @@ config = get_config()
 async def lifespan(app: FastAPI) -> Any:
     """Application startup and shutdown lifecycle"""
     # Startup
-    logger.info("🚀 Starting Dynamic Taxonomy RAG API v1.8.1")
+    logger.info("🚀 Starting Norade API v1.8.1")
     logger.info(f"Environment: {config.environment}")
     logger.info(f"Debug mode: {config.debug}")
 
@@ -228,7 +229,7 @@ async def lifespan(app: FastAPI) -> Any:
     yield
 
     # Shutdown
-    logger.info("🔥 Shutting down Dynamic Taxonomy RAG API")
+    logger.info("🔥 Shutting down Norade API")
 
     # Close rate limiter
     try:
@@ -240,7 +241,7 @@ async def lifespan(app: FastAPI) -> Any:
     # Cleanup monitoring resources
     if MONITORING_AVAILABLE:
         try:
-            from cache.redis_manager import get_redis_manager  # type: ignore[import-not-found]  # TODO: Fix cache import path
+            from apps.api.cache.redis_manager import get_redis_manager
 
             redis_manager = await get_redis_manager()
             await redis_manager.close()
@@ -251,9 +252,9 @@ async def lifespan(app: FastAPI) -> Any:
 
 # Create FastAPI application
 app = FastAPI(
-    title="Dynamic Taxonomy RAG API",
+    title="Norade API",
     description="""
-    RESTful API for the Dynamic Taxonomy RAG v1.8.1 system.
+    RESTful API for the Norade v1.8.1 system.
 
     This API provides comprehensive endpoints for:
 
@@ -337,9 +338,14 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
         # Track metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics  # TODO: Fix routers import path
-
-                await track_request_metrics(request, response_time_ms, status_code)
+                metrics_collector = get_metrics_collector()
+                labels = {
+                    "method": request.method,
+                    "endpoint": str(request.url.path),
+                    "status": str(status_code),
+                }
+                metrics_collector.record_latency("http_request", response_time_ms, labels)
+                metrics_collector.increment_counter("http_requests_total", labels)
             except Exception as e:
                 logger.warning(f"Failed to track request metrics: {e}")
 
@@ -357,9 +363,15 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
         # Track error metrics if monitoring is available
         if MONITORING_AVAILABLE:
             try:
-                from routers.monitoring import track_request_metrics  # type: ignore[import-not-found]  # TODO: Fix routers import path
-
-                await track_request_metrics(request, response_time_ms, 500)
+                metrics_collector = get_metrics_collector()
+                labels = {
+                    "method": request.method,
+                    "endpoint": str(request.url.path),
+                    "status": "500",
+                }
+                metrics_collector.record_latency("http_request", response_time_ms, labels)
+                metrics_collector.increment_counter("http_requests_total", labels)
+                metrics_collector.increment_counter("http_errors_total", labels)
             except Exception as metric_e:
                 logger.warning(f"Failed to track error metrics: {metric_e}")
 
@@ -533,6 +545,8 @@ app.include_router(agent_factory_router, prefix="/api/v1", tags=["Agent Factory"
 
 app.include_router(agent_router, prefix="/api/v1", tags=["Agents"])
 
+app.include_router(feedback_router, prefix="/api/v1", tags=["Feedback"])
+
 app.include_router(research_router, tags=["Research"])
 
 # Include monitoring router if available
@@ -633,9 +647,9 @@ async def root() -> Dict[str, Any]:
     db_status = await test_database_connection()
 
     return {
-        "name": "Dynamic Taxonomy RAG API",
+        "name": "Norade API",
         "version": "1.8.1",
-        "description": "RESTful API for dynamic taxonomy RAG system",
+        "description": "RESTful API for Norade knowledge platform",
         "team": "A",
         "spec": "OpenAPI v1.8.1",
         "schemas": "0.1.3",
@@ -691,7 +705,7 @@ async def root() -> Dict[str, Any]:
 if __name__ == "__main__":
     import uvicorn
 
-    print("🚀 Dynamic Taxonomy RAG API v1.8.1 서버 시작")
+    print("🚀 Norade API v1.8.1 서버 시작")
     print("📡 포트: 8000")
     print("🌍 환경:", config.environment)
     print("🔧 디버그 모드:", config.debug)

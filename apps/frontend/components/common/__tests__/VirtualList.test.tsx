@@ -3,16 +3,19 @@
  * @TEST:FRONTEND-MIGRATION-001
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { render } from "@testing-library/react"
-import { VirtualList, type VirtualListAgent } from "../VirtualList"
+import { VirtualList } from "../VirtualList"
+import type { AgentCardData } from "@/lib/api/types"
 
-const mockAgents: VirtualListAgent[] = [
+const mockAgents: AgentCardData[] = [
   {
     agent_id: "1",
     name: "Agent Alpha",
+    progress: 75,
+    stats: { users: 100, robos: 50, revenue: 1000, growth: 10 },
+    status: "active",
     level: 5,
-    xp: 1500,
     rarity: "Rare",
     quality_score: 85,
     created_at: "2024-01-01",
@@ -20,8 +23,10 @@ const mockAgents: VirtualListAgent[] = [
   {
     agent_id: "2",
     name: "Agent Beta",
+    progress: 50,
+    stats: { users: 50, robos: 25, revenue: 500, growth: 5 },
+    status: "active",
     level: 3,
-    xp: 450,
     rarity: "Common",
     quality_score: 60,
     created_at: "2024-01-02",
@@ -29,6 +34,9 @@ const mockAgents: VirtualListAgent[] = [
 ]
 
 describe("VirtualList", () => {
+  const mockOnView = vi.fn()
+  const mockOnDelete = vi.fn()
+
   const defaultProps = {
     agents: mockAgents,
     columnCount: 2,
@@ -36,9 +44,8 @@ describe("VirtualList", () => {
     rowHeight: 350,
     height: 600,
     width: 800,
-    renderItem: (agent: VirtualListAgent) => (
-      <div data-testid={`agent-${agent.agent_id}`}>{agent.name}</div>
-    ),
+    onView: mockOnView,
+    onDelete: mockOnDelete,
   }
 
   it("renders without crashing", () => {

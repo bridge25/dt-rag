@@ -14,8 +14,12 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "DT-RAG Frontend",
-  description: "RAG System Admin Dashboard",
+  title: "Norade",
+  description: "AI-Powered Knowledge Management Platform",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

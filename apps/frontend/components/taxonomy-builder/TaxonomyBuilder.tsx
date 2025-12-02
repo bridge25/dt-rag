@@ -63,6 +63,7 @@ export function TaxonomyBuilder({
       store.loadTaxonomy(taxonomyId)
     }
     return () => store.reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- zustand store is stable, adding it would cause infinite loops
   }, [taxonomyId])
 
   // Keyboard shortcuts
@@ -341,7 +342,7 @@ export function TaxonomyBuilder({
                     No taxonomy nodes yet
                   </h3>
                   <p className="text-sm text-white/60 mb-6">
-                    Click "Add Node" to create your first category
+                    Click &quot;Add Node&quot; to create your first category
                   </p>
                   {!readOnly && (
                     <button

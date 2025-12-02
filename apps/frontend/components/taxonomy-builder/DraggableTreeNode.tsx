@@ -73,7 +73,7 @@ export const DraggableTreeNode = memo<DraggableTreeNodeProps>(
       <div ref={setDropRef}>
         <div
           ref={setDragRef}
-          role="button"
+          role="treeitem"
           tabIndex={0}
           onClick={onSelect}
           onDoubleClick={() => hasChildren && onToggleExpand()}

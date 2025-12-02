@@ -60,14 +60,94 @@
 
   body {
     @apply bg-dark-navy text-foreground antialiased;
+    /* Ethereal Space Background - 뉴디자인2 inspired */
+    background-color: #0b1121;
     background-image:
-      radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+      /* Star particles */
+      radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.15), transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.1), transparent),
+      radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.12), transparent),
+      radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.08), transparent),
+      radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.15), transparent),
+      radial-gradient(1.5px 1.5px at 200px 50px, rgba(56,189,248,0.2), transparent),
+      radial-gradient(1px 1px at 250px 150px, rgba(255,255,255,0.1), transparent),
+      radial-gradient(2px 2px at 300px 100px, rgba(168,85,247,0.15), transparent),
+      /* Nebula glow effects */
+      radial-gradient(ellipse at 10% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 60%);
+    background-size: 350px 350px, 350px 350px, 350px 350px, 350px 350px, 350px 350px, 350px 350px, 350px 350px, 350px 350px, 100% 100%, 100% 100%, 100% 100%;
     background-attachment: fixed;
   }
 }
 
 @layer utilities {
+  /* Ethereal Glass Card - Base */
+  .ethereal-card {
+    @apply bg-glass-surface backdrop-blur-xl
+           border border-glass-border rounded-2xl
+           transition-all duration-300;
+  }
+
+  .ethereal-card:hover {
+    @apply border-ethereal-cyan/30
+           -translate-y-1;
+    box-shadow: 0 8px 32px rgba(0, 247, 255, 0.15);
+  }
+
+  /* Rarity-based Glow Colors */
+  .rarity-common {
+    --glow-color: rgba(156, 163, 175, 0.3);
+  }
+
+  .rarity-rare {
+    --glow-color: rgba(0, 247, 255, 0.4);
+  }
+
+  .rarity-epic {
+    --glow-color: rgba(188, 19, 254, 0.4);
+  }
+
+  .rarity-legendary {
+    --glow-color: rgba(255, 215, 0, 0.5);
+  }
+
+  /* Space Background with Nebula & Stars */
+  .space-background {
+    background-color: #0b1121;
+    background-image:
+      /* Nebula layers */
+      radial-gradient(ellipse at 15% 25%, rgba(0, 247, 255, 0.06), transparent 50%),
+      radial-gradient(ellipse at 85% 75%, rgba(188, 19, 254, 0.04), transparent 50%),
+      /* Star particles */
+      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.2), transparent),
+      radial-gradient(2px 2px at 40% 70%, rgba(255,255,255,0.15), transparent),
+      radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.1), transparent),
+      radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,0.12), transparent);
+    background-attachment: fixed;
+  }
+
+  /* Glass Card with Shine Effect */
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-md border border-white/10 rounded-2xl;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.08) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+
+  .glass-card:hover::before {
+    transform: translateX(100%);
+  }
+
+  /* Glass Morphism Base */
   .bg-glass {
     @apply bg-white/[0.03] backdrop-blur-md border border-white/10;
   }
@@ -88,6 +168,113 @@
     box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
   }
 
+  /* Constellation Node Styles - 뉴디자인2 */
+  .constellation-node {
+    @apply rounded-full bg-gradient-to-br from-white/20 to-white/5;
+    @apply border border-white/20 backdrop-blur-lg;
+    @apply shadow-[0_0_30px_rgba(56,189,248,0.3)];
+    transition: all 0.3s ease;
+  }
+
+  .constellation-node:hover {
+    @apply border-cyan-400/50;
+    box-shadow:
+      0 0 40px rgba(56, 189, 248, 0.4),
+      0 0 80px rgba(56, 189, 248, 0.2),
+      inset 0 0 20px rgba(56, 189, 248, 0.1);
+  }
+
+  .constellation-node.selected {
+    @apply border-cyan-400;
+    box-shadow:
+      0 0 50px rgba(56, 189, 248, 0.5),
+      0 0 100px rgba(56, 189, 248, 0.3),
+      inset 0 0 30px rgba(56, 189, 248, 0.15);
+  }
+
+  /* Energy beam connection lines */
+  .energy-beam {
+    stroke: url(#energyGradient);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.5));
+    animation: energyPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes energyPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Floating animation for nodes */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  /* Glow Pulse Animation */
+  .glow-pulse {
+    animation: glowPulseAnim 2s ease-in-out infinite;
+  }
+
+  @keyframes glowPulseAnim {
+    0%, 100% {
+      opacity: 0.6;
+      box-shadow: 0 0 20px rgba(0, 247, 255, 0.3);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 40px rgba(0, 247, 255, 0.6);
+    }
+  }
+
+  /* Neon Glow Effects */
+  .neon-glow-cyan {
+    text-shadow: 0 0 10px rgba(0, 247, 255, 0.8);
+  }
+
+  .neon-glow-purple {
+    text-shadow: 0 0 10px rgba(188, 19, 254, 0.8);
+  }
+
+  .neon-glow-gold {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  }
+
+  .neon-glow-green {
+    text-shadow: 0 0 10px rgba(10, 255, 10, 0.8);
+  }
+
+  /* Glass panel toolbar */
+  .glass-toolbar {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+    @apply shadow-[0_8px_32px_rgba(0,0,0,0.3)];
+  }
+
+  /* Glow Button Hover Effect */
+  .glow-button {
+    @apply transition-all duration-300 relative;
+  }
+
+  .glow-button:hover {
+    filter: brightness(1.2);
+  }
+
+  .glow-button.glow-cyan:hover {
+    box-shadow: 0 0 20px rgba(0, 247, 255, 0.6), inset 0 0 10px rgba(0, 247, 255, 0.2);
+  }
+
+  .glow-button.glow-purple:hover {
+    box-shadow: 0 0 20px rgba(188, 19, 254, 0.6), inset 0 0 10px rgba(188, 19, 254, 0.2);
+  }
+
+  .glow-button.glow-gold:hover {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(255, 215, 0, 0.2);
+  }
+
   /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
@@ -100,5 +287,101 @@
 
   ::-webkit-scrollbar-thumb {
     @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+  }
+
+  /* ============================================
+   * Gemini Glassmorphism Guide - Phase 1
+   * 복합 글로우 + 연결선 애니메이션
+   * ============================================ */
+
+  /* React Flow Edge 점선 애니메이션 */
+  @keyframes dashdraw {
+    from { stroke-dashoffset: 10; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  .react-flow__edge.animated .react-flow__edge-path {
+    stroke-dasharray: 5 5;
+    animation: dashdraw 0.8s linear infinite;
+  }
+
+  /* 복합 글로우 - 흰색 기본 + 시안 네온 */
+  .glow-node {
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.1),
+      0 0 15px rgba(0, 247, 255, 0.3);
+  }
+
+  .glow-node-hover {
+    box-shadow:
+      0 0 15px rgba(255, 255, 255, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.7);
+  }
+
+  .glow-card {
+    box-shadow:
+      0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .glow-card-hover {
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.8);
+  }
+
+  /* 아이콘/이미지 네온 글로우 */
+  .drop-glow-icon {
+    filter: drop-shadow(0 0 8px rgba(0, 247, 255, 0.7));
+  }
+
+  .drop-glow-image {
+    filter: drop-shadow(0 0 15px rgba(0, 247, 255, 0.5));
+  }
+
+  /* 텍스트 네온 글로우 */
+  .text-glow-neon {
+    text-shadow: 0 0 5px rgba(0, 247, 255, 0.7);
+  }
+
+  /* 하단 장식 바 그라데이션 */
+  .glow-bar {
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgba(0, 247, 255, 0.7),
+      transparent
+    );
+  }
+
+  /* Taxonomy 노드 - Gemini 가이드 적용 */
+  .taxonomy-node-glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/30 rounded-full;
+    box-shadow:
+      0 0 10px rgba(255, 255, 255, 0.1),
+      0 0 15px rgba(0, 247, 255, 0.3);
+    transition: all 0.3s ease-in-out;
+  }
+
+  .taxonomy-node-glass:hover,
+  .taxonomy-node-glass.hovered {
+    @apply border-cyan-400/60 bg-cyan-400/20;
+    box-shadow:
+      0 0 15px rgba(255, 255, 255, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.7);
+  }
+
+  /* Agent Card - Gemini 가이드 적용 */
+  .agent-card-glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl;
+    @apply relative overflow-hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out;
+  }
+
+  .agent-card-glass:hover {
+    @apply border-cyan-400/50;
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.3),
+      0 0 25px rgba(0, 247, 255, 0.8);
   }
 }
