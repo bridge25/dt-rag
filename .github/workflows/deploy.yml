@@ -1,5 +1,13 @@
 # Continuous Deployment Pipeline for Norade
 # Deploys to Railway (backend) and Vercel (frontend)
+#
+# URLs:
+#   Backend: https://dt-rag-production.up.railway.app
+#   Frontend: Vercel auto-generated URL (check deployment output)
+#             Custom domain: norade.vercel.app (requires Vercel domain setup)
+#
+# IMPORTANT: If frontend returns 401, disable Deployment Protection in Vercel:
+#   Settings > Deployment Protection > Vercel Authentication > OFF
 
 name: CD
 
@@ -207,8 +215,31 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel
+        id: vercel-deploy
         working-directory: apps/frontend
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tail -1)
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "::notice::Deployed to: $DEPLOY_URL"
+          echo "## Frontend Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "**Production URL:** $DEPLOY_URL" >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify deployment
+        continue-on-error: true
+        run: |
+          echo "Verifying deployment..."
+          DEPLOY_URL="${{ steps.vercel-deploy.outputs.deploy_url }}"
+          if [ -n "$DEPLOY_URL" ]; then
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL" || echo "000")
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Frontend accessible (HTTP $HTTP_STATUS)"
+            elif [ "$HTTP_STATUS" = "401" ]; then
+              echo "⚠️ Frontend returns 401 - Deployment Protection may be enabled"
+              echo "   Disable in Vercel: Settings > Deployment Protection > OFF"
+            else
+              echo "⚠️ Frontend returned HTTP $HTTP_STATUS"
+            fi
+          fi
 
       - name: Notify on failure
         if: failure()
