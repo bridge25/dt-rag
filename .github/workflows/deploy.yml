@@ -39,7 +39,7 @@ on:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: false  # Don't cancel ongoing deployments
+  cancel-in-progress: true  # Cancel previous deployments when new one starts
 
 env:
   RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -273,13 +273,14 @@ jobs:
           echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Run E2E smoke test
+        timeout-minutes: 2
         run: |
-          # Basic health checks
+          # Basic health checks with timeout to prevent hanging
           echo "Checking backend health..."
-          curl -sf https://dt-rag-production.up.railway.app/health || echo "Backend health check skipped"
+          curl -sf --connect-timeout 10 --max-time 30 https://dt-rag-production.up.railway.app/health || echo "Backend health check skipped"
 
           echo "Checking frontend..."
-          curl -sf https://norade.vercel.app || echo "Frontend check skipped"
+          curl -sf --connect-timeout 10 --max-time 30 https://norade.vercel.app || echo "Frontend check skipped"
 
       - name: Create Git tag for deployment
         if: success()
