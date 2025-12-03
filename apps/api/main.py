@@ -228,10 +228,13 @@ async def lifespan(app: FastAPI) -> Any:
 
     # Pre-warm JobOrchestrator to avoid cold-start timeout on first /ingestion/upload
     # This is critical for Railway deployment where first request would otherwise timeout
+    # Use 10-second timeout to prevent blocking server startup indefinitely
     try:
-        logger.info("Pre-warming JobOrchestrator...")
-        orchestrator = await get_job_orchestrator()
+        logger.info("Pre-warming JobOrchestrator (10s timeout)...")
+        orchestrator = await asyncio.wait_for(get_job_orchestrator(), timeout=10.0)
         logger.info("✅ JobOrchestrator pre-warmed successfully")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ JobOrchestrator pre-warming timed out (10s) - will initialize on first request")
     except Exception as e:
         logger.warning(f"⚠️ JobOrchestrator pre-warming failed (will initialize on first request): {e}")
 
