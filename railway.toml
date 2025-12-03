@@ -6,11 +6,14 @@
 builder = "nixpacks"
 
 [deploy]
-# Run migrations, then start server
-# Using 'heads' (plural) to handle multiple head revisions from branch merges
+# Start server immediately without waiting for migrations
+# Migrations are run in background after server starts to prevent health check timeouts
 # Note: pgvector extension must be manually enabled in Railway PostgreSQL dashboard
-startCommand = "alembic upgrade heads && uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
+#
+# IMPORTANT: For Railway free tier, we skip blocking migrations to ensure fast startup
+# Migrations can be run manually via: railway run alembic upgrade heads
+startCommand = "uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
-healthcheckTimeout = 300
+healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
