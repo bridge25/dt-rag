@@ -107,12 +107,24 @@ jobs:
           curl -fsSL https://railway.app/install.sh | sh
           echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
+      - name: List Railway Services
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "Available services in Railway project:"
+          railway service list || echo "Could not list services"
+
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           echo "Deploying to Railway with Project Token..."
-          railway up --detach
+          # Try common service names, or use the first available service
+          railway up --detach --service norade-api || \
+          railway up --detach --service api || \
+          railway up --detach --service backend || \
+          railway up --detach --service norade || \
+          (echo "Please set RAILWAY_SERVICE_NAME secret with your Railway service name" && exit 1)
 
       - name: Wait for deployment
         run: |
