@@ -21,6 +21,8 @@ on:
       - 'requirements*.txt'
       - 'Dockerfile'
       - 'docker-compose*.yml'
+      - 'railway.toml'
+      - 'vercel.json'
   workflow_dispatch:
     inputs:
       environment:
