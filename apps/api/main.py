@@ -186,10 +186,12 @@ async def lifespan(app: FastAPI) -> Any:
             logger.info("✅ Health checker initialized")
 
             # @CODE:MYPY-CONSOLIDATION-002 | Phase 2: attr-defined resolution
-            # Initialize Redis manager (optional) - try-except handles failures
+            # Initialize Redis manager (optional) - timeout prevents Railway startup hang
             try:
-                await initialize_redis_manager()
+                await asyncio.wait_for(initialize_redis_manager(), timeout=5.0)
                 logger.info("✅ Redis manager initialized")
+            except asyncio.TimeoutError:
+                logger.info("ℹ️ Redis initialization timed out (5s) - using memory cache only")
             except Exception as redis_err:
                 logger.info(f"ℹ️ Redis initialization skipped: {redis_err} - using memory cache only")
 
