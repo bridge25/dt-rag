@@ -2,6 +2,10 @@
 B-O4: CBR (Case-Based Reasoning) 시스템
 A팀 case_bank 테이블 연동 + 유사도 로그/성과 레이블 적재 (PRD 준수)
 
+Railway 배포 최적화: sentence-transformers는 선택적 사용
+- 로컬 환경: sentence-transformers 사용 가능 (메모리 충분 시)
+- Railway: Gemini API 사용 (512MB 메모리 제한 대응)
+
 @CODE:CASEBANK-002
 """
 
@@ -10,10 +14,31 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 import httpx
 import numpy as np
+
+# Optional imports for local ML (heavy, not available on Railway free tier)
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer as SentenceTransformerType
+
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    SentenceTransformer = None  # type: ignore
+
+# Gemini API for lightweight embedding generation
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = bool(os.getenv("GEMINI_API_KEY"))
+    if GEMINI_AVAILABLE:
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+except ImportError:
+    GEMINI_AVAILABLE = False
+    genai = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -361,35 +386,123 @@ class CBRUsageLogger:
             logger.error(f"로그 쓰기 실패: {e}")
 
 
+# 전역 임베딩 모델 (한번만 로드) - 로컬 ML 사용 시에만
+_embedding_model: Optional[Any] = None
 
-# 실제 임베딩 모델 초기화
-from sentence_transformers import SentenceTransformer
+# 환경 설정: 로컬 ML 사용 여부
+USE_LOCAL_EMBEDDING = (
+    SENTENCE_TRANSFORMERS_AVAILABLE
+    and os.getenv("USE_LOCAL_EMBEDDING", "false").lower() == "true"
+)
 
-# 전역 임베딩 모델 (한번만 로드)
-_embedding_model = None
 
+def get_embedding_model() -> Any:
+    """
+    싱글톤 패턴으로 임베딩 모델 반환
 
-# @CODE:MYPY-001:PHASE2:BATCH6
-def get_embedding_model() -> SentenceTransformer:
-    """싱글톤 패턴으로 임베딩 모델 반환"""
+    로컬 ML 사용 시에만 모델을 로드합니다.
+    Railway 배포에서는 None을 반환하고 Gemini API로 폴백합니다.
+    """
     global _embedding_model
-    if _embedding_model is None:
+
+    if not USE_LOCAL_EMBEDDING:
+        logger.debug("Local embedding disabled, using Gemini API fallback")
+        return None
+
+    if _embedding_model is None and SentenceTransformer is not None:
+        logger.info("Loading local sentence-transformers model...")
         # 경량 다국어 모델 사용 (한국어 지원)
         _embedding_model = SentenceTransformer(
             "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
         )
+        logger.info("Local embedding model loaded successfully")
+
     return _embedding_model
 
 
-def create_query_vector_real(query: str) -> list[float]:
-    """실제 임베딩 모델 기반 쿼리 벡터 생성"""
+async def create_query_vector_with_gemini(query: str) -> list[float]:
+    """
+    Gemini API를 사용한 쿼리 벡터 생성 (경량, Railway 최적화)
+
+    Gemini의 embedding-001 모델을 사용하여 768차원 벡터 생성
+    """
+    if not GEMINI_AVAILABLE or genai is None:
+        raise ValueError("Gemini API not available. Set GEMINI_API_KEY environment variable.")
+
     try:
-        model = get_embedding_model()
+        # Gemini embedding model
+        result = genai.embed_content(
+            model="models/embedding-001",
+            content=query,
+            task_type="retrieval_query",
+        )
+        embedding_list: list[float] = list(result["embedding"])
+        logger.debug(f"Gemini embedding generated: {len(embedding_list)} dimensions")
+        return embedding_list
+
+    except Exception as e:
+        logger.error(f"Gemini embedding failed: {e}")
+        raise ValueError(f"Gemini embedding generation failed: {e}")
+
+
+def create_query_vector_local(query: str) -> list[float]:
+    """
+    로컬 sentence-transformers를 사용한 쿼리 벡터 생성
+
+    고성능이지만 메모리 집약적 (Railway free tier에서 사용 불가)
+    """
+    model = get_embedding_model()
+    if model is None:
+        raise ValueError("Local embedding model not available. Use Gemini API instead.")
+
+    try:
         # 실제 임베딩 생성
         embedding_array = model.encode(query, convert_to_numpy=True)
         embedding_list: list[float] = list(embedding_array.tolist())
         return embedding_list
     except Exception as e:
-        logger.error(f"임베딩 생성 실패: {e}")
-        # 실패 시 에러 발생 (시뮬레이션으로 폴백하지 않음)
-        raise ValueError(f"임베딩 생성 실패: {e}")
+        logger.error(f"Local embedding failed: {e}")
+        raise ValueError(f"Local embedding generation failed: {e}")
+
+
+async def create_query_vector_real(query: str) -> list[float]:
+    """
+    실제 임베딩 모델 기반 쿼리 벡터 생성 (자동 백엔드 선택)
+
+    우선순위:
+    1. 로컬 ML (USE_LOCAL_EMBEDDING=true이고 sentence-transformers 설치됨)
+    2. Gemini API (GEMINI_API_KEY 설정됨)
+    3. 에러 발생 (둘 다 사용 불가 시)
+    """
+    # 1. 로컬 ML 사용 가능하면 로컬 사용
+    if USE_LOCAL_EMBEDDING:
+        try:
+            return create_query_vector_local(query)
+        except Exception as e:
+            logger.warning(f"Local embedding failed, trying Gemini: {e}")
+
+    # 2. Gemini API 사용 가능하면 Gemini 사용
+    if GEMINI_AVAILABLE:
+        return await create_query_vector_with_gemini(query)
+
+    # 3. 둘 다 없으면 에러 발생
+    raise ValueError(
+        "No embedding backend available. "
+        "Set GEMINI_API_KEY for Gemini API or USE_LOCAL_EMBEDDING=true with sentence-transformers installed."
+    )
+
+
+def create_query_vector_real_sync(query: str) -> list[float]:
+    """
+    동기 버전의 쿼리 벡터 생성 (레거시 호환용)
+
+    주의: Gemini API는 비동기이므로 로컬 ML만 지원합니다.
+    """
+    if USE_LOCAL_EMBEDDING:
+        return create_query_vector_local(query)
+
+    raise ValueError(
+        "Sync embedding requires local ML. "
+        "Set USE_LOCAL_EMBEDDING=true with sentence-transformers installed, "
+        "or use async create_query_vector_real() for Gemini API."
+    )

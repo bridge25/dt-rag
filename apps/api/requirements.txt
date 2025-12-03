@@ -1,10 +1,25 @@
+# Lightweight API requirements for Railway deployment
+# Heavy ML libraries (torch, sentence-transformers) removed for memory optimization
+# Use Gemini/OpenAI APIs for embeddings instead
+
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 pydantic>=2.7.0
 python-multipart>=0.0.6
-sentence-transformers>=2.2.0
-torch>=2.0.0
-numpy>=1.24.0
-scikit-learn>=1.3.0
+
+# Database
 asyncpg>=0.29.0
 sqlalchemy[asyncio]>=2.0.0
+
+# External embedding APIs (lightweight alternative to local ML)
+google-generativeai>=0.3.0
+openai>=1.0.0
+
+# Utilities (numpy kept for vector operations, sklearn optional)
+numpy>=1.24.0
+# scikit-learn>=1.3.0  # Uncomment for local ML features
+
+# NOTE: For full ML features (local embeddings), add to requirements-full.txt:
+# sentence-transformers>=2.2.0
+# torch>=2.0.0
+# scikit-learn>=1.3.0
