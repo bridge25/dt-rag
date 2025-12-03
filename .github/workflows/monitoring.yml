@@ -1,13 +1,16 @@
 # Health Check Monitoring Pipeline for Norade
 # Runs periodic health checks on production services
 # Tier 3 automation: Proactive monitoring and alerting
+#
+# NOTE: Schedule disabled until production deployment is ready
+# The URLs (norade-production.up.railway.app, norade.vercel.app) are not yet deployed
 
 name: Health Monitoring
 
 on:
-  schedule:
-    # Run every 15 minutes
-    - cron: '*/15 * * * *'
+  # schedule:
+  #   # Run every 15 minutes
+  #   - cron: '*/15 * * * *'
   workflow_dispatch:
     inputs:
       check_type:
