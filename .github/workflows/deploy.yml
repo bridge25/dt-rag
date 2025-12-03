@@ -107,42 +107,59 @@ jobs:
           curl -fsSL https://railway.app/install.sh | sh
           echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
-      - name: Show Railway Project Status
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          echo "Railway project status:"
-          railway status || echo "Could not get status"
-          echo ""
-          echo "Railway whoami:"
-          railway whoami || echo "Could not get whoami"
-
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_NAME }}
         run: |
-          echo "Deploying to Railway with Project Token..."
+          echo "=== Railway Deployment ==="
+          echo ""
 
-          # If RAILWAY_SERVICE_NAME is set, use it directly
+          # Show current status
+          echo "Project status:"
+          railway status || echo "Could not get status"
+          echo ""
+
+          # If RAILWAY_SERVICE_NAME is explicitly set, use it
           if [ -n "$RAILWAY_SERVICE" ]; then
             echo "Using configured service: $RAILWAY_SERVICE"
             railway up --detach --service "$RAILWAY_SERVICE"
-          else
-            # Try deployment without service flag (works if project has single service)
-            echo "Attempting deployment without service flag..."
-            railway up --detach 2>&1 || {
-              echo ""
-              echo "ERROR: Multiple services found in Railway project."
-              echo "Please set RAILWAY_SERVICE_NAME secret in GitHub with your Railway service name."
-              echo ""
-              echo "To find your service name:"
-              echo "1. Go to https://railway.app/dashboard"
-              echo "2. Select your project"
-              echo "3. The service name is shown in the service card (e.g., 'api', 'web', 'backend')"
-              exit 1
-            }
+            exit $?
           fi
+
+          # Try common service names (based on project name and typical patterns)
+          # Priority: norade (from URL), dt-rag (project name), common names
+          SERVICE_NAMES="norade dt-rag backend api web"
+
+          echo "No RAILWAY_SERVICE_NAME set. Trying common service names..."
+          echo "Service names to try: $SERVICE_NAMES"
+          echo ""
+
+          for SERVICE_NAME in $SERVICE_NAMES; do
+            echo "Trying service: $SERVICE_NAME"
+            if railway up --detach --service "$SERVICE_NAME" 2>&1; then
+              echo "✅ Successfully deployed to service: $SERVICE_NAME"
+              echo ""
+              echo "::notice::Deployed to Railway service '$SERVICE_NAME'. To avoid guessing, set RAILWAY_SERVICE_NAME secret."
+              exit 0
+            else
+              echo "Service '$SERVICE_NAME' not found, trying next..."
+            fi
+          done
+
+          # If all service names failed, show helpful error
+          echo ""
+          echo "ERROR: Could not find Railway service."
+          echo "All tried service names failed: $SERVICE_NAMES"
+          echo ""
+          echo "Please set RAILWAY_SERVICE_NAME secret in GitHub with your actual service name."
+          echo ""
+          echo "To find your service name:"
+          echo "1. Go to https://railway.app/dashboard"
+          echo "2. Select your dt-rag project"
+          echo "3. The service name is shown on the service card"
+          echo ""
+          exit 1
 
       - name: Wait for deployment
         run: |
