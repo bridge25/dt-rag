@@ -198,13 +198,13 @@ async def lifespan(app: FastAPI) -> Any:
         except Exception as e:
             logger.warning(f"⚠️ Monitoring initialization failed: {e}")
 
-    # Initialize database with timeout to prevent startup hang on Railway
-    # When database is unavailable, connection attempts can hang indefinitely
-    logger.info("Initializing database connection (10s timeout)...")
+    # Initialize database with aggressive timeout for Railway fast startup
+    # Railway health check has 60s timeout, so keep individual timeouts short
+    logger.info("Initializing database connection (5s timeout)...")
     try:
-        db_connected = await asyncio.wait_for(test_database_connection(), timeout=10.0)
+        db_connected = await asyncio.wait_for(test_database_connection(), timeout=5.0)
     except asyncio.TimeoutError:
-        logger.warning("⚠️ Database connection timed out (10s) - fallback mode")
+        logger.warning("⚠️ Database connection timed out (5s) - fallback mode")
         db_connected = False
     except Exception as e:
         logger.warning(f"⚠️ Database connection failed: {e} - fallback mode")
@@ -213,11 +213,11 @@ async def lifespan(app: FastAPI) -> Any:
     if db_connected:
         logger.info("✅ PostgreSQL 데이터베이스 연결 성공")
 
-        # 데이터베이스 스키마 초기화 (with timeout)
+        # 데이터베이스 스키마 초기화 (with shorter timeout)
         try:
-            db_initialized = await asyncio.wait_for(init_database(), timeout=15.0)
+            db_initialized = await asyncio.wait_for(init_database(), timeout=8.0)
         except asyncio.TimeoutError:
-            logger.warning("⚠️ Database init timed out (15s) - fallback mode")
+            logger.warning("⚠️ Database init timed out (8s) - fallback mode")
             db_initialized = False
         except Exception as e:
             logger.warning(f"⚠️ Database init failed: {e} - fallback mode")
@@ -239,26 +239,21 @@ async def lifespan(app: FastAPI) -> Any:
         except Exception as e:
             logger.warning(f"⚠️ System metrics initialization failed: {e}")
 
-    # Initialize rate limiter (uses Redis, needs timeout)
+    # Initialize rate limiter (uses Redis, needs short timeout for Railway)
     try:
-        await asyncio.wait_for(rate_limiter.initialize(), timeout=5.0)
+        await asyncio.wait_for(rate_limiter.initialize(), timeout=3.0)
         logger.info("✅ Rate limiter initialized")
     except asyncio.TimeoutError:
-        logger.warning("⚠️ Rate limiter init timed out (5s) - fallback to in-memory")
+        logger.warning("⚠️ Rate limiter init timed out (3s) - fallback to in-memory")
     except Exception as e:
         logger.warning(f"⚠️ Rate limiter initialization failed: {e}")
 
-    # Pre-warm JobOrchestrator to avoid cold-start timeout on first /ingestion/upload
-    # This is critical for Railway deployment where first request would otherwise timeout
-    # Use 10-second timeout to prevent blocking server startup indefinitely
-    try:
-        logger.info("Pre-warming JobOrchestrator (10s timeout)...")
-        await asyncio.wait_for(get_job_orchestrator(), timeout=10.0)
-        logger.info("✅ JobOrchestrator pre-warmed successfully")
-    except asyncio.TimeoutError:
-        logger.warning("⚠️ JobOrchestrator pre-warming timed out (10s) - will initialize on first request")
-    except Exception as e:
-        logger.warning(f"⚠️ JobOrchestrator pre-warming failed (will initialize on first request): {e}")
+    # RAILWAY OPTIMIZATION: Skip JobOrchestrator pre-warming at startup
+    # Pre-warming was causing cumulative startup delay exceeding Railway health check timeout
+    # JobOrchestrator will initialize lazily on first /ingestion/upload request
+    # Trade-off: First ingestion request will be slower (~10s cold start)
+    #            but server starts immediately and passes health checks
+    logger.info("ℹ️ JobOrchestrator will initialize lazily on first request (Railway optimization)")
 
     yield
 
