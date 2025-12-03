@@ -196,14 +196,31 @@ async def lifespan(app: FastAPI) -> Any:
         except Exception as e:
             logger.warning(f"⚠️ Monitoring initialization failed: {e}")
 
-    # Initialize database
-    logger.info("Initializing database connection...")
-    db_connected = await test_database_connection()
+    # Initialize database with timeout to prevent startup hang on Railway
+    # When database is unavailable, connection attempts can hang indefinitely
+    logger.info("Initializing database connection (10s timeout)...")
+    try:
+        db_connected = await asyncio.wait_for(test_database_connection(), timeout=10.0)
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ Database connection timed out (10s) - fallback mode")
+        db_connected = False
+    except Exception as e:
+        logger.warning(f"⚠️ Database connection failed: {e} - fallback mode")
+        db_connected = False
+
     if db_connected:
         logger.info("✅ PostgreSQL 데이터베이스 연결 성공")
 
-        # 데이터베이스 스키마 초기화
-        db_initialized = await init_database()
+        # 데이터베이스 스키마 초기화 (with timeout)
+        try:
+            db_initialized = await asyncio.wait_for(init_database(), timeout=15.0)
+        except asyncio.TimeoutError:
+            logger.warning("⚠️ Database init timed out (15s) - fallback mode")
+            db_initialized = False
+        except Exception as e:
+            logger.warning(f"⚠️ Database init failed: {e} - fallback mode")
+            db_initialized = False
+
         if db_initialized:
             logger.info("✅ 데이터베이스 스키마 초기화 완료")
         else:
@@ -220,10 +237,12 @@ async def lifespan(app: FastAPI) -> Any:
         except Exception as e:
             logger.warning(f"⚠️ System metrics initialization failed: {e}")
 
-    # Initialize rate limiter
+    # Initialize rate limiter (uses Redis, needs timeout)
     try:
-        await rate_limiter.initialize()
+        await asyncio.wait_for(rate_limiter.initialize(), timeout=5.0)
         logger.info("✅ Rate limiter initialized")
+    except asyncio.TimeoutError:
+        logger.warning("⚠️ Rate limiter init timed out (5s) - fallback to in-memory")
     except Exception as e:
         logger.warning(f"⚠️ Rate limiter initialization failed: {e}")
 
