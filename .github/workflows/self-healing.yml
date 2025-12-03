@@ -3,7 +3,7 @@
 # Tier 4 automation: Autonomous recovery and resilience
 #
 # NOTE: Schedule and workflow_run triggers disabled until production deployment is ready
-# The URLs (norade-production.up.railway.app, norade.vercel.app) are not yet deployed
+# Backend deployed at dt-rag-production.up.railway.app, Frontend pending at norade.vercel.app
 # Railway backend uses GitHub integration - manual recovery triggers webhook-based redeploy
 #
 # SAFETY FEATURES:
@@ -52,7 +52,7 @@ env:
   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-  BACKEND_URL: https://norade-production.up.railway.app
+  BACKEND_URL: https://dt-rag-production.up.railway.app
   FRONTEND_URL: https://norade.vercel.app
   MAX_RETRY_ATTEMPTS: 3
   RECOVERY_COOLDOWN_MINUTES: 30

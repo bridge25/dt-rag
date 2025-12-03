@@ -96,7 +96,7 @@ jobs:
     if: always() && (needs.validate.result == 'success' || needs.validate.result == 'skipped')
     environment:
       name: ${{ inputs.environment || 'production' }}
-      url: https://norade-production.up.railway.app
+      url: https://dt-rag-production.up.railway.app
 
     steps:
       - name: Checkout code
@@ -170,7 +170,7 @@ jobs:
         continue-on-error: true
         run: |
           echo "Checking backend health..."
-          curl -sf https://norade-production.up.railway.app/health && echo "✅ Backend is healthy" || echo "⚠️ Backend health check pending"
+          curl -sf https://dt-rag-production.up.railway.app/health && echo "✅ Backend is healthy" || echo "⚠️ Backend health check pending"
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Deploy Frontend to Vercel
@@ -234,7 +234,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Status | URL |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------|-----|" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${{ needs.deploy-backend.result }} | https://norade-production.up.railway.app |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.deploy-backend.result }} | https://dt-rag-production.up.railway.app |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend | ${{ needs.deploy-frontend.result }} | https://norade.vercel.app |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Deployed at:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
@@ -245,7 +245,7 @@ jobs:
         run: |
           # Basic health checks
           echo "Checking backend health..."
-          curl -sf https://norade-production.up.railway.app/health || echo "Backend health check skipped"
+          curl -sf https://dt-rag-production.up.railway.app/health || echo "Backend health check skipped"
 
           echo "Checking frontend..."
           curl -sf https://norade.vercel.app || echo "Frontend check skipped"

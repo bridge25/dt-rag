@@ -2,8 +2,8 @@
 # Runs periodic health checks on production services
 # Tier 3 automation: Proactive monitoring and alerting
 #
-# NOTE: Schedule disabled until production deployment is ready
-# The URLs (norade-production.up.railway.app, norade.vercel.app) are not yet deployed
+# NOTE: Production backend is deployed at dt-rag-production.up.railway.app
+# Frontend at norade.vercel.app is pending deployment
 
 name: Health Monitoring
 
@@ -25,7 +25,7 @@ on:
           - database
 
 env:
-  BACKEND_URL: https://norade-production.up.railway.app
+  BACKEND_URL: https://dt-rag-production.up.railway.app
   FRONTEND_URL: https://norade.vercel.app
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
