@@ -40,7 +40,7 @@ from apps.api.routers.health import router as health_router
 # from apps.api.routers.search import router as search_legacy_router
 # from apps.api.routers.taxonomy import router as taxonomy_legacy_router
 # from apps.api.routers.classify import router as classify_legacy_router
-from apps.api.routers.ingestion import router as ingestion_router
+from apps.api.routers.ingestion import router as ingestion_router, get_job_orchestrator
 from apps.api.routers.taxonomy_router import taxonomy_router
 from apps.api.routers.search_router import search_router
 from apps.api.routers.classification_router import classification_router
@@ -225,6 +225,15 @@ async def lifespan(app: FastAPI) -> Any:
         logger.info("✅ Rate limiter initialized")
     except Exception as e:
         logger.warning(f"⚠️ Rate limiter initialization failed: {e}")
+
+    # Pre-warm JobOrchestrator to avoid cold-start timeout on first /ingestion/upload
+    # This is critical for Railway deployment where first request would otherwise timeout
+    try:
+        logger.info("Pre-warming JobOrchestrator...")
+        orchestrator = await get_job_orchestrator()
+        logger.info("✅ JobOrchestrator pre-warmed successfully")
+    except Exception as e:
+        logger.warning(f"⚠️ JobOrchestrator pre-warming failed (will initialize on first request): {e}")
 
     yield
 

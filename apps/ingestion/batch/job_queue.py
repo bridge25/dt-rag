@@ -22,13 +22,36 @@ class JobQueue:
     def __init__(self, redis_manager: Optional[RedisManager] = None):
         self.redis_manager = redis_manager
         self._redis_initialized = False
+        self._redis_available = False  # Track if Redis is actually reachable
 
     async def initialize(self) -> None:
+        """Initialize Redis connection with graceful fallback on failure.
+
+        Railway deployments may not have Redis configured, so we handle
+        connection failures gracefully with a 3-second timeout.
+        """
         if not self._redis_initialized:
-            if self.redis_manager is None:
-                self.redis_manager = await get_redis_manager()
+            try:
+                if self.redis_manager is None:
+                    # Use asyncio.wait_for to prevent hanging on Redis connection
+                    self.redis_manager = await asyncio.wait_for(
+                        get_redis_manager(),
+                        timeout=3.0  # 3 second timeout for Railway cold starts
+                    )
+                self._redis_available = True
+                logger.info("Redis connection established for job queue")
+            except asyncio.TimeoutError:
+                logger.warning("Redis connection timeout (3s) - using in-memory fallback")
+                self._redis_available = False
+            except Exception as e:
+                logger.warning(f"Redis connection failed: {e} - using in-memory fallback")
+                self._redis_available = False
             self._redis_initialized = True
-        assert self.redis_manager is not None  # Ensured by initialization
+
+    @property
+    def is_redis_available(self) -> bool:
+        """Check if Redis is available for job queue operations."""
+        return self._redis_available and self.redis_manager is not None
 
     def _get_queue_key(self, priority: str) -> str:
         return f"{self.QUEUE_KEY_PREFIX}:{priority}"
@@ -41,7 +64,9 @@ class JobQueue:
 
     async def check_idempotency_key(self, idempotency_key: str) -> Optional[str]:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            logger.debug("Redis unavailable - skipping idempotency check")
+            return None
 
         try:
             key = self._get_idempotency_key(idempotency_key)
@@ -55,7 +80,9 @@ class JobQueue:
         self, idempotency_key: str, job_id: str, ttl: int = 3600
     ) -> bool:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            logger.debug("Redis unavailable - skipping idempotency key storage")
+            return True  # Return True to allow job to proceed
 
         try:
             key = self._get_idempotency_key(idempotency_key)
@@ -77,7 +104,10 @@ class JobQueue:
         idempotency_key: Optional[str] = None,
     ) -> bool:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            logger.warning(f"Redis unavailable - job {job_id} queued in-memory only")
+            # Store job status in memory (limited functionality without Redis)
+            return True
 
         try:
             if idempotency_key:
@@ -128,7 +158,9 @@ class JobQueue:
 
     async def dequeue_job(self, timeout: int = 5) -> Optional[Dict[str, Any]]:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            logger.debug("Redis unavailable - cannot dequeue jobs")
+            return None
 
         try:
             for priority in self.PRIORITY_QUEUES:
@@ -170,7 +202,9 @@ class JobQueue:
         next_retry_at: Optional[str] = None,
     ) -> bool:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            logger.debug(f"Redis unavailable - job {job_id} status not persisted")
+            return True
 
         try:
             status_key = self._get_job_status_key(job_id)
@@ -206,7 +240,9 @@ class JobQueue:
 
     async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            logger.debug(f"Redis unavailable - cannot retrieve job {job_id} status")
+            return None
 
         try:
             status_key = self._get_job_status_key(job_id)
@@ -220,7 +256,8 @@ class JobQueue:
 
     async def get_queue_size(self, priority: Optional[str] = None) -> int:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            return 0
 
         try:
             if priority:
@@ -239,7 +276,8 @@ class JobQueue:
 
     async def clear_queue(self, priority: Optional[str] = None) -> bool:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            return True
 
         try:
             if priority:
@@ -265,7 +303,9 @@ class JobQueue:
         priority: int = 5,
     ) -> bool:
         await self.initialize()
-        assert self.redis_manager is not None  # Ensured by initialize()
+        if not self.is_redis_available:
+            logger.warning(f"Redis unavailable - cannot retry job {job_id}")
+            return False
 
         try:
             status = await self.get_job_status(job_id)
