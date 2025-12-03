@@ -452,27 +452,40 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
 # @CODE:MYPY-CONSOLIDATION-002 | Phase 3: no-untyped-def resolution
 @app.get("/health", tags=["Health"])  # Decorator lacks type stubs
 async def health_check() -> Dict[str, Any]:
-    """Basic health check endpoint with database and Redis status"""
+    """Basic health check endpoint with database and Redis status
+
+    IMPORTANT: All checks have timeouts to prevent endpoint hanging.
+    This is critical for Railway deployments where DB may be unavailable.
+    """
     from apps.api.database import test_database_connection
 
     db_status = "connected"
     redis_status = "connected"
 
+    # Database check with 5-second timeout to prevent hanging
     try:
-        db_connected = await test_database_connection()
+        db_connected = await asyncio.wait_for(test_database_connection(), timeout=5.0)
         if not db_connected:
             db_status = "disconnected"
-    except Exception:
+    except asyncio.TimeoutError:
+        db_status = "timeout"
+        logger.warning("Health check: Database connection timed out (5s)")
+    except Exception as e:
         db_status = "error"
+        logger.warning(f"Health check: Database error - {e}")
 
+    # Redis check with 3-second timeout
     try:
         from apps.api.middleware.rate_limiter import rate_limiter
 
         if rate_limiter.redis_client:
-            await rate_limiter.redis_client.ping()
+            await asyncio.wait_for(rate_limiter.redis_client.ping(), timeout=3.0)
             redis_status = "connected"
         else:
             redis_status = "not_initialized"
+    except asyncio.TimeoutError:
+        redis_status = "timeout"
+        logger.warning("Health check: Redis connection timed out (3s)")
     except Exception:
         redis_status = "error"
 
@@ -675,8 +688,15 @@ async def get_rate_limit_info() -> Dict[str, Any]:
 @app.get("/", tags=["Root"])  # Decorator lacks type stubs
 async def root() -> Dict[str, Any]:
     """API root endpoint with comprehensive system information"""
-    # 데이터베이스 연결 상태 확인
-    db_status = await test_database_connection()
+    # 데이터베이스 연결 상태 확인 (5초 타임아웃으로 hanging 방지)
+    try:
+        db_status = await asyncio.wait_for(test_database_connection(), timeout=5.0)
+    except asyncio.TimeoutError:
+        db_status = False
+        logger.warning("Root endpoint: Database connection timed out (5s)")
+    except Exception as e:
+        db_status = False
+        logger.warning(f"Root endpoint: Database error - {e}")
 
     return {
         "name": "Norade API",
