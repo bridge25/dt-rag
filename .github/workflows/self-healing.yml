@@ -2,6 +2,10 @@
 # Automatically recovers from service failures and deployment issues
 # Tier 4 automation: Autonomous recovery and resilience
 #
+# NOTE: Schedule and workflow_run triggers disabled until production deployment is ready
+# The URLs (norade-production.up.railway.app, norade.vercel.app) are not yet deployed
+# Railway backend uses GitHub integration - manual recovery triggers webhook-based redeploy
+#
 # SAFETY FEATURES:
 # - Infinite loop prevention via workflow_run conclusion check
 # - 30-minute cooldown between recovery attempts
@@ -12,10 +16,11 @@ name: Self-Healing
 
 on:
   # Triggered ONLY when Health Monitoring FAILS (not on success)
-  workflow_run:
-    workflows: ["Health Monitoring"]
-    types:
-      - completed
+  # NOTE: Disabled until production is deployed
+  # workflow_run:
+  #   workflows: ["Health Monitoring"]
+  #   types:
+  #     - completed
 
   # Manual trigger for immediate recovery
   workflow_dispatch:
@@ -38,8 +43,9 @@ on:
         type: boolean
 
   # Scheduled resilience check (every 6 hours)
-  schedule:
-    - cron: '0 */6 * * *'
+  # NOTE: Disabled until production is deployed
+  # schedule:
+  #   - cron: '0 */6 * * *'
 
 env:
   RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -261,38 +267,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: |
-          curl -fsSL https://railway.app/install.sh | sh || {
-            echo "::warning::Railway CLI installation failed"
-          }
-
-      - name: Attempt recovery
+      - name: Railway GitHub Integration Notice
         id: recovery
         run: |
-          echo "Attempting backend recovery..."
-
-          if [ -z "${{ env.RAILWAY_TOKEN }}" ]; then
-            echo "::warning::RAILWAY_TOKEN not configured - simulating recovery"
-            echo "recovery_attempted=simulated" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          echo "📢 Railway backend recovery uses GitHub integration"
+          echo ""
+          echo "Railway is configured to automatically deploy when code is pushed"
+          echo "to the connected GitHub branch. Manual recovery options:"
+          echo ""
+          echo "Recovery Steps:"
+          echo "1. Go to https://railway.app/dashboard"
+          echo "2. Select the norade-api service"
+          echo "3. Click 'Redeploy' or roll back to a previous deployment"
+          echo ""
+          echo "Alternative: Push a commit to trigger automatic redeploy"
+          echo ""
 
           ACTION="${{ github.event.inputs.action }}"
 
           if [ "$ACTION" = "rollback-backend" ]; then
-            echo "::warning::Railway CLI rollback requires API - triggering redeploy instead"
+            echo "⚠️ For rollback, use Railway dashboard: Settings > Deployments > Select Previous"
           fi
 
-          # Trigger redeploy via Railway CLI
-          export RAILWAY_TOKEN="${{ env.RAILWAY_TOKEN }}"
-          railway up --service norade-api --detach 2>&1 || {
-            echo "::error::Railway deployment failed"
-            echo "recovery_attempted=failed" >> $GITHUB_OUTPUT
-            exit 1
-          }
-
-          echo "recovery_attempted=triggered" >> $GITHUB_OUTPUT
+          echo "✅ Backend recovery notification complete"
+          echo "recovery_attempted=github_integration" >> $GITHUB_OUTPUT
 
       - name: Wait for service startup
         run: |
