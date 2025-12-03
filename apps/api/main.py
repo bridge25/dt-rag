@@ -18,6 +18,7 @@ Features:
 @CODE:API-001
 """
 
+import asyncio
 import logging
 import os
 import time
@@ -231,7 +232,7 @@ async def lifespan(app: FastAPI) -> Any:
     # Use 10-second timeout to prevent blocking server startup indefinitely
     try:
         logger.info("Pre-warming JobOrchestrator (10s timeout)...")
-        orchestrator = await asyncio.wait_for(get_job_orchestrator(), timeout=10.0)
+        await asyncio.wait_for(get_job_orchestrator(), timeout=10.0)
         logger.info("✅ JobOrchestrator pre-warmed successfully")
     except asyncio.TimeoutError:
         logger.warning("⚠️ JobOrchestrator pre-warming timed out (10s) - will initialize on first request")
