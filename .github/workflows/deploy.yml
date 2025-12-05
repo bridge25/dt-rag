@@ -12,17 +12,19 @@
 name: CD
 
 on:
-  push:
-    branches: [master, main]
-    paths:
-      - 'apps/**'
-      - 'packages/**'
-      - 'pyproject.toml'
-      - 'requirements*.txt'
-      - 'Dockerfile'
-      - 'docker-compose*.yml'
-      - 'railway.toml'
-      - 'vercel.json'
+  # TEMPORARILY DISABLED - Using local Docker instead
+  # Uncomment to re-enable auto-deploy on push
+  # push:
+  #   branches: [master, main]
+  #   paths:
+  #     - 'apps/**'
+  #     - 'packages/**'
+  #     - 'pyproject.toml'
+  #     - 'requirements*.txt'
+  #     - 'Dockerfile'
+  #     - 'docker-compose*.yml'
+  #     - 'railway.toml'
+  #     - 'vercel.json'
   workflow_dispatch:
     inputs:
       environment:
