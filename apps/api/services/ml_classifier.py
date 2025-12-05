@@ -176,7 +176,7 @@ Example: AI/RAG|0.85"""
                 "label": canonical[-1] if canonical else "General AI",
                 "confidence": min(0.95, confidence),
                 "reasoning": [
-                    f"Gemini API classification",
+                    "Gemini API classification",
                     f"Category: {category}",
                     "Lightweight mode (no local ML)",
                 ],
@@ -241,7 +241,7 @@ Example: AI/RAG|0.85"""
                 canonical = ["AI", "General"]
                 label = "General AI"
                 confidence = 0.6
-                reasoning.append(f"Low confidence, defaulting to General AI")
+                reasoning.append("Low confidence, defaulting to General AI")
 
             return {
                 "canonical": canonical,

@@ -41,7 +41,7 @@ from apps.api.routers.health import router as health_router
 # from apps.api.routers.search import router as search_legacy_router
 # from apps.api.routers.taxonomy import router as taxonomy_legacy_router
 # from apps.api.routers.classify import router as classify_legacy_router
-from apps.api.routers.ingestion import router as ingestion_router, get_job_orchestrator
+from apps.api.routers.ingestion import router as ingestion_router
 from apps.api.routers.taxonomy_router import taxonomy_router
 from apps.api.routers.search_router import search_router
 from apps.api.routers.classification_router import classification_router
@@ -363,6 +363,20 @@ async def log_requests_and_track_metrics(request: Request, call_next: Any) -> An
 
         # Log response
         logger.info(f"Response: {status_code} ({response_time_ms:.2f}ms)")
+
+        # Add rate limit headers if available in request state
+        if hasattr(request.state, "rate_limit_info"):
+            from apps.api.security.api_key_storage import RateLimitInfo
+            rate_limit_info: RateLimitInfo = request.state.rate_limit_info
+
+            # Add standard rate limit headers
+            response.headers["X-RateLimit-Limit"] = str(rate_limit_info.limit)
+            response.headers["X-RateLimit-Remaining"] = str(rate_limit_info.remaining)
+            response.headers["X-RateLimit-Reset"] = str(int(rate_limit_info.reset_at.timestamp()))
+
+            # Add Retry-After for 429 responses
+            if status_code == 429 and rate_limit_info.retry_after is not None:
+                response.headers["Retry-After"] = str(rate_limit_info.retry_after)
 
         # Track metrics if monitoring is available
         if MONITORING_AVAILABLE:
