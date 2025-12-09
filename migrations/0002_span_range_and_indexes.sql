@@ -80,13 +80,28 @@ AS $$
     SELECT array_length(path, 1);
 $$;
 
--- Statistics collection for query planning
-ANALYZE taxonomy_nodes;
-ANALYZE taxonomy_edges; 
-ANALYZE chunks;
-ANALYZE embeddings;
-ANALYZE doc_taxonomy;
-ANALYZE documents;
+-- Statistics collection for query planning (conditional)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_nodes') THEN
+        ANALYZE taxonomy_nodes;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'taxonomy_edges') THEN
+        ANALYZE taxonomy_edges;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'chunks') THEN
+        ANALYZE chunks;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'embeddings') THEN
+        ANALYZE embeddings;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'doc_taxonomy') THEN
+        ANALYZE doc_taxonomy;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'documents') THEN
+        ANALYZE documents;
+    END IF;
+END $$;
 
 -- Comments for maintenance (conditional)
 DO $$
